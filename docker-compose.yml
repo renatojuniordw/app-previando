@@ -1,0 +1,36 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: previando-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: previando
+      POSTGRES_PASSWORD: previando_local
+      POSTGRES_DB: previando_db
+    ports:
+      - "60003:5432"
+    volumes:
+      - previando_postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U previando -d previando_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: previando-redis
+    restart: unless-stopped
+    ports:
+      - "60004:6379"
+    volumes:
+      - previando_redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  previando_postgres:
+  previando_redis:

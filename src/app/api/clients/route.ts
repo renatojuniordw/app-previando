@@ -1,0 +1,117 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { auth } from '@/auth'
+import { z } from 'zod'
+import { prisma } from '@/lib/prisma'
+import { hashCPF, sanitizeInput, sanitizePhone } from '@/lib/sanitize'
+import { guardClientLimit } from '@/lib/plan-guard'
+import { handleApiError } from '@/lib/api-error'
+
+const createSchema = z.object({
+  name: z.string().min(2).max(100),
+  cpf: z.string().min(11).max(14),
+  birthDate: z.string().datetime(),
+  phone: z.string().optional(),
+  email: z.string().email().optional().or(z.literal('')),
+  priority: z.enum(['CRITICAL', 'ATTENTION', 'NORMAL']).default('NORMAL'),
+  notes: z.string().max(2000).optional(),
+})
+
+export async function GET(req: NextRequest) {
+  try {
+    const session = await auth()
+    if (!session?.user?.id) return NextResponse.json({ error: 'Não autorizado.' }, { status: 401 })
+
+    const { searchParams } = req.nextUrl
+    const search = searchParams.get('search')?.trim()
+    const priority = searchParams.get('priority')
+    const page = parseInt(searchParams.get('page') ?? '1')
+    const limit = Math.min(parseInt(searchParams.get('limit') ?? '50'), 100)
+    const skip = (page - 1) * limit
+
+    const where: Record<string, unknown> = { userId: session.user.id }
+    if (priority) where.priority = priority
+    if (search) where.name = { contains: search, mode: 'insensitive' }
+
+    const [clients, total] = await Promise.all([
+      prisma.client.findMany({
+        where,
+        orderBy: [{ priority: 'asc' }, { name: 'asc' }],
+        skip,
+        take: limit,
+        include: {
+          cases: {
+            select: { id: true, status: true, benefitType: true },
+            orderBy: { createdAt: 'desc' },
+          },
+        },
+      }),
+      prisma.client.count({ where }),
+    ])
+
+    // Mascarar CPF (nunca retornar hash)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const safe = (clients as any[]).map(({ cpfHash: _hash, ...c }) => ({ ...c, cpf: '***.***.**-**' }))
+
+    return NextResponse.json({ clients: safe, total, page, limit })
+  } catch (err) {
+    return handleApiError(err)
+  }
+}
+
+export async function POST(req: NextRequest) {
+  try {
+    const session = await auth()
+    if (!session?.user?.id) return NextResponse.json({ error: 'Não autorizado.' }, { status: 401 })
+
+    let body: unknown
+    try {
+      body = await req.json()
+    } catch {
+      return NextResponse.json({ error: 'Payload inválido.' }, { status: 400 })
+    }
+
+    const parsed = createSchema.safeParse(body)
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Dados inválidos.', details: parsed.error.flatten() }, { status: 400 })
+    }
+
+    await guardClientLimit(session.user.id, session.user.plan)
+
+    const { name, cpf, birthDate, phone, email, priority, notes } = parsed.data
+
+    const cpfHash = hashCPF(cpf)
+
+    // Verifica duplicidade de CPF para o mesmo usuário
+    const existing = await prisma.client.findFirst({
+      where: { userId: session.user.id, cpfHash },
+      select: { id: true },
+    })
+    if (existing) {
+      return NextResponse.json({ error: 'Cliente com este CPF já cadastrado.' }, { status: 409 })
+    }
+
+    const client = await prisma.client.create({
+      data: {
+        userId: session.user.id,
+        name: sanitizeInput(name),
+        cpfHash,
+        birthDate: new Date(birthDate),
+        phone: phone ? sanitizePhone(phone) : null,
+        email: email || null,
+        priority,
+        notes: notes ? sanitizeInput(notes) : null,
+      },
+    })
+
+    // Incrementa contador
+    await prisma.usageRecord.update({
+      where: { userId: session.user.id },
+      data: { totalClients: { increment: 1 } },
+    })
+
+    const { cpfHash: _, ...safe } = client
+    return NextResponse.json({ client: { ...safe, cpf: '***.***.**-**' } }, { status: 201 })
+  } catch (err) {
+    return handleApiError(err)
+  }
+}
