@@ -6,8 +6,8 @@ export function getOpenAI(): OpenAI {
   if (!_openai) {
     _openai = new OpenAI({
       apiKey: process.env.OPENAI_API_KEY ?? 'placeholder',
-      timeout: 30_000,
-      maxRetries: 2,
+      timeout: 180_000, // Aumentado para 3 minutos para suportar extrações gigantescas (ex: 20+ páginas)
+      maxRetries: 3,
     })
   }
   return _openai

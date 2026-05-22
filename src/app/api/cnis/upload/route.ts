@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
-import { uploadPDF } from '@/services/r2'
+import { uploadPDF, deletePDF } from '@/services/r2'
 import { validatePDFUpload } from '@/lib/upload-validator'
 import { rateLimit } from '@/lib/rate-limit'
 import { handleApiError } from '@/lib/api-error'
@@ -43,6 +43,32 @@ export async function POST(req: NextRequest) {
 
     // Upload para Cloudflare R2
     const r2Key = await uploadPDF(buffer, session.user.id, caseId)
+
+    // Se já existia um CNIS para esse caso, excluímos o arquivo antigo do R2 para não deixar lixo órfão
+    const existingDoc = await prisma.cnisDocument.findUnique({
+      where: { caseId },
+      select: { r2Key: true },
+    })
+    if (existingDoc) {
+      try {
+        await deletePDF(existingDoc.r2Key)
+      } catch (err) {
+        console.error(`[Upload] Failed to delete old CNIS PDF ${existingDoc.r2Key} from R2:`, err)
+      }
+
+      // Forçar a exclusão dos dados calculados em background para manter a consistência
+      try {
+        await prisma.$transaction([
+          prisma.calculation.deleteMany({ where: { caseId } }),
+          prisma.simulation.deleteMany({ where: { caseId } }),
+          prisma.retroativo.deleteMany({ where: { caseId } }),
+          prisma.opinion.deleteMany({ where: { caseId } }),
+          prisma.checklist.deleteMany({ where: { caseId } }),
+        ])
+      } catch (err) {
+        console.error(`[Upload] Failed to cascade delete old calculated data in background for case ${caseId}:`, err)
+      }
+    }
 
     // Criar/atualizar registro CNIS no banco (PENDING)
     const cnisDoc = await prisma.cnisDocument.upsert({

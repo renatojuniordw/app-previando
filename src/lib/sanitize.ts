@@ -19,13 +19,13 @@ export function sanitizePhone(phone: string): string {
   return phone.replace(/\D/g, '').slice(0, 13)
 }
 
-export function sanitizeForAI(input: string): string {
+export function sanitizeForAI(input: string, maxLength: number = 3000): string {
   return input
     .replace(/---/g, '')
     .replace(/```/g, '')
     .replace(/ignore (previous|all) instructions/gi, '')
     .replace(/you are now|act as|pretend (you are|to be)|jailbreak/gi, '')
     .replace(/[\x00-\x1F\x7F]/g, ' ')
-    .slice(0, 3000)
+    .slice(0, maxLength)
     .trim()
 }

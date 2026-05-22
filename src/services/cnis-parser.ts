@@ -19,13 +19,19 @@ interface CnisExtractedData {
 export async function parseCnisWithAI(
   pdfText: string
 ): Promise<{ markdown: string; extractedData: CnisExtractedData }> {
-  const textTruncated = sanitizeForAI(pdfText).slice(0, 8000)
+  const textTruncated = sanitizeForAI(pdfText, 120000)
+
+  console.log(`[Worker] Text before sanitize: ${pdfText.length}`)
+  console.log(`[Worker] Text after sanitize: ${textTruncated.length}`)
 
   const systemPrompt = `Você é um especialista em análise de CNIS (Cadastro Nacional de Informações Sociais) do INSS.
-Extraia os dados estruturados do texto do CNIS fornecido.
+Sua tarefa é analisar EXAUSTIVAMENTE e extrair TODOS os dados estruturados do texto do CNIS fornecido, sem omitir nenhuma página, empresa, empregador ou período de contribuição.
 Retorne APENAS um JSON válido, sem markdown, sem explicações.`
 
-  const userPrompt = `Analise este CNIS e extraia:
+  const userPrompt = `Analise todo o texto do CNIS de forma detalhada e extraia as informações de todos os períodos e empresas.
+ATENÇÃO CRÍTICA: Não resuma nem omita nenhuma empresa ou período de contribuição. Se o CNIS possuir múltiplos empregadores ou páginas, percorra todo o texto e liste absolutamente TODOS eles no array "periodos", mesmo os mais antigos ou mais recentes.
+
+Informações a extrair:
 1. NIT (número de inscrição do trabalhador)
 2. Nome do segurado
 3. Data de nascimento
@@ -57,14 +63,18 @@ Retorne JSON no formato:
 
   const response = await openai.chat.completions.create({
     model: 'gpt-4o-mini',
-    max_tokens: 4000,
+    max_tokens: 16000,
     temperature: 0, // Precisão máxima para extração
     response_format: { type: 'json_object' },
     messages: [
       { role: 'system', content: systemPrompt },
       { role: 'user', content: userPrompt },
     ],
+  }, {
+    timeout: 180_000, // Margem de segurança de 3 minutos para esta chamada
   })
+
+  console.log('[Worker] finish_reason:', response.choices[0]?.finish_reason)
 
   const raw = response.choices[0]?.message?.content ?? '{}'
   let extractedData: CnisExtractedData = {}

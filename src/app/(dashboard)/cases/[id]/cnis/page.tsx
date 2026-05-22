@@ -1,10 +1,11 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useParams } from 'next/navigation'
 import api from '@/lib/api'
 import { formatDate } from '@/lib/utils'
 import { Badge } from '@/components/ui/Badge'
+import { Modal } from '@/components/ui/Modal'
 import {
   Upload,
   FileText,
@@ -12,11 +13,11 @@ import {
   AlertCircle,
   Loader2,
   Calendar,
-  FileJson,
   User,
   Briefcase,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Trash2
 } from 'lucide-react'
 
 interface CnisData {
@@ -84,10 +85,14 @@ export default function CnisCasePage() {
   const [uploading, setUploading] = useState(false)
   const [uploadError, setUploadError] = useState('')
   const [expandedPeriod, setExpandedPeriod] = useState<number | null>(null)
+  const [deleting, setDeleting] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [deleteError, setDeleteError] = useState('')
+  const [showSuccessBanner, setShowSuccessBanner] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
   const pollRef = useRef<NodeJS.Timeout | null>(null)
 
-  const load = async () => {
+  const load = useCallback(async () => {
     try {
       const r = await api.get(`/cnis/${params.id}`)
       const cnisDoc = r.data.cnisDocument
@@ -98,22 +103,27 @@ export default function CnisCasePage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [params.id])
 
   useEffect(() => {
     load()
-  }, [params.id])
+  }, [load])
 
   useEffect(() => {
     if (cnis && (cnis.processingStatus === 'PENDING' || cnis.processingStatus === 'PROCESSING')) {
       pollRef.current = setInterval(async () => {
         const updated = await load()
+        if (updated && updated.processingStatus === 'COMPLETED') {
+          setShowSuccessBanner(true)
+          setTimeout(() => setShowSuccessBanner(false), 5000)
+        }
         if (updated && updated.processingStatus !== 'PENDING' && updated.processingStatus !== 'PROCESSING') {
           if (pollRef.current) clearInterval(pollRef.current)
         }
       }, 3000)
     }
     return () => { if (pollRef.current) clearInterval(pollRef.current) }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cnis?.processingStatus])
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -134,6 +144,20 @@ export default function CnisCasePage() {
     } finally {
       setUploading(false)
       if (fileRef.current) fileRef.current.value = ''
+    }
+  }
+
+  const handleDelete = async () => {
+    setDeleting(true)
+    setDeleteError('')
+    try {
+      await api.delete(`/cnis/${params.id}`)
+      setCnis(null)
+      setShowDeleteModal(false)
+    } catch (err: unknown) {
+      setDeleteError((err as { response?: { data?: { error?: string } } })?.response?.data?.error ?? 'Erro ao excluir extrato do CNIS.')
+    } finally {
+      setDeleting(false)
     }
   }
 
@@ -173,8 +197,8 @@ export default function CnisCasePage() {
         }
       `}} />
 
-      {/* Overlay de Bloqueio com Glassmorphism para Processamento */}
-      {(uploading || isProcessing) && (
+      {/* Overlay de Bloqueio com Glassmorphism para Envio */}
+      {uploading && (
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[999] flex items-center justify-center">
           <div className="bg-white border border-slate-200 rounded-2xl p-8 max-w-md w-full mx-4 shadow-2xl flex flex-col items-center text-center space-y-6 animate-slide-down">
             <div className="relative flex items-center justify-center">
@@ -186,12 +210,10 @@ export default function CnisCasePage() {
             
             <div className="space-y-2">
               <h3 className="font-serif font-bold text-xl text-slate-900">
-                {uploading ? 'Enviando documento...' : 'Processando CNIS...'}
+                Enviando documento...
               </h3>
               <p className="font-sans text-sm text-slate-500 leading-relaxed">
-                {uploading 
-                  ? 'O arquivo está sendo enviado de forma segura para o nosso servidor.' 
-                  : 'A inteligência artificial está lendo e estruturando todos os vínculos e contribuições do extrato. Isso pode levar alguns instantes.'}
+                O arquivo está sendo enviado de forma segura para o nosso servidor.
               </p>
             </div>
             
@@ -209,27 +231,56 @@ export default function CnisCasePage() {
           </h2>
           <p className="font-sans text-sm text-slate-500 mt-1">Gerencie e processe o documento do cliente.</p>
         </div>
-        <div>
+        <div className="flex items-center gap-2">
           <input ref={fileRef} type="file" accept=".pdf" className="hidden" onChange={handleUpload} />
-          <button
-            onClick={() => fileRef.current?.click()}
-            disabled={uploading || isProcessing}
-            className="bg-amber-600 text-white font-sans font-semibold text-sm px-5 py-2.5 rounded-lg hover:bg-amber-700 transition-colors disabled:opacity-50 shadow-sm flex items-center gap-2"
-          >
-            {uploading ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                Enviando...
-              </>
-            ) : (
-              <>
-                <Upload className="w-4 h-4" />
-                Enviar Novo CNIS (PDF)
-              </>
-            )}
-          </button>
+          {cnis && (
+            <button
+              onClick={() => setShowDeleteModal(true)}
+              disabled={uploading || isProcessing || deleting}
+              className="border border-red-200 text-red-600 hover:bg-red-50 font-sans font-semibold text-sm px-5 py-2.5 rounded-lg transition-colors disabled:opacity-50 shadow-sm flex items-center gap-2"
+            >
+              <Trash2 className="w-4 h-4" />
+              Excluir CNIS
+            </button>
+          )}
+          {(!cnis || cnis.processingStatus === 'FAILED') && (
+            <button
+              onClick={() => fileRef.current?.click()}
+              disabled={uploading || isProcessing || deleting}
+              className="bg-amber-600 text-white font-sans font-semibold text-sm px-5 py-2.5 rounded-lg hover:bg-amber-700 transition-colors disabled:opacity-50 shadow-sm flex items-center gap-2"
+            >
+              {uploading ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Enviando...
+                </>
+              ) : (
+                <>
+                  <Upload className="w-4 h-4" />
+                  Enviar Novo CNIS (PDF)
+                </>
+              )}
+            </button>
+          )}
         </div>
       </div>
+
+      {showSuccessBanner && (
+        <div className="border border-emerald-200 bg-emerald-50 text-emerald-800 rounded-xl p-4 flex items-center justify-between gap-3 animate-slide-down shadow-sm">
+          <div className="flex items-center gap-3">
+            <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+            <span className="font-sans text-sm font-semibold">
+              O CNIS foi processado e todos os dados foram extraídos com sucesso pela inteligência artificial!
+            </span>
+          </div>
+          <button 
+            onClick={() => setShowSuccessBanner(false)}
+            className="text-emerald-500 hover:text-emerald-700 font-sans text-xs font-bold uppercase transition-colors shrink-0"
+          >
+            Fechar
+          </button>
+        </div>
+      )}
 
       {uploadError && (
         <div className="border border-red-200 bg-red-50 rounded-xl p-4 flex items-start gap-3">
@@ -451,6 +502,60 @@ export default function CnisCasePage() {
           </div>
         </div>
       )}
+
+      {/* Modal de confirmação de exclusão */}
+      <Modal 
+        open={showDeleteModal} 
+        onClose={() => setShowDeleteModal(false)} 
+        title="EXCLUIR EXTRATO DO CNIS?"
+      >
+        <div className="space-y-4 font-sans text-sm text-slate-600 leading-relaxed">
+          <div className="border border-red-200 bg-red-50 rounded-xl p-4 flex items-start gap-3 text-red-800">
+            <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
+            <div>
+              <p className="font-bold text-sm">Atenção: Ação Irreversível!</p>
+              <p className="text-xs text-red-700 mt-1">
+                Ao excluir o CNIS deste caso, todos os cálculos, simulações, retroativos, checklists e pareceres vinculados a ele serão <strong>excluídos permanentemente</strong> do banco de dados e precisarão ser refeitos.
+              </p>
+            </div>
+          </div>
+
+          <p>
+            <strong>Por que isso acontece?</strong> Os cálculos e pareceres do caso foram gerados e estruturados com base direta nas informações extraídas deste extrato de CNIS. Sem ele, esses dados perdem a consistência e a origem, tornando-se inválidos.
+          </p>
+
+
+          {deleteError && (
+            <div className="text-xs font-semibold text-red-600 bg-red-50 border border-red-200 p-2.5 rounded-lg">
+              {deleteError}
+            </div>
+          )}
+
+          <div className="flex gap-3 pt-2">
+            <button
+              onClick={handleDelete}
+              disabled={deleting}
+              className="flex-1 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white font-semibold py-2.5 px-4 rounded-lg text-center transition-colors font-sans text-sm flex items-center justify-center gap-2"
+            >
+              {deleting ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Excluindo...
+                </>
+              ) : (
+                'SIM, EXCLUIR TUDO'
+              )}
+            </button>
+            <button
+              onClick={() => setShowDeleteModal(false)}
+              disabled={deleting}
+              className="flex-1 border border-slate-200 hover:bg-slate-50 disabled:opacity-50 text-slate-700 font-semibold py-2.5 px-4 rounded-lg text-center transition-colors font-sans text-sm"
+            >
+              CANCELAR
+            </button>
+          </div>
+        </div>
+      </Modal>
     </div>
   )
 }

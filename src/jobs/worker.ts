@@ -37,7 +37,7 @@ const worker = new Worker(
       const pdfParse = await import('pdf-parse')
       let pdfText = ''
       try {
-        const parsed = await pdfParse.default(buffer)
+        const parsed = await pdfParse.default(buffer, { max: 0 })
         pdfText = parsed.text
       } catch {
         // Fallback OCR com Tesseract se pdf-parse falhar
@@ -45,6 +45,9 @@ const worker = new Worker(
         const { data } = await Tesseract.recognize(buffer, 'por')
         pdfText = data.text
       }
+
+      console.log(`[Worker] PDF text length: ${pdfText.length} chars`)
+      console.log(`[Worker] PDF text preview (last 500): ${pdfText.slice(-500)}`)
 
       // 3. Parsear com IA
       const { markdown, extractedData } = await parseCnisWithAI(pdfText)

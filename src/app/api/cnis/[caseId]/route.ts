@@ -43,7 +43,16 @@ export async function DELETE(req: NextRequest, { params }: { params: { caseId: s
     if (!doc) return NextResponse.json({ error: 'CNIS não encontrado.' }, { status: 404 })
 
     await deletePDF(doc.r2Key)
-    await prisma.cnisDocument.delete({ where: { caseId: params.caseId } })
+
+    // Executar em cascata a exclusão de todos os dados do caso que dependem deste CNIS
+    await prisma.$transaction([
+      prisma.calculation.deleteMany({ where: { caseId: params.caseId } }),
+      prisma.simulation.deleteMany({ where: { caseId: params.caseId } }),
+      prisma.retroativo.deleteMany({ where: { caseId: params.caseId } }),
+      prisma.opinion.deleteMany({ where: { caseId: params.caseId } }),
+      prisma.checklist.deleteMany({ where: { caseId: params.caseId } }),
+      prisma.cnisDocument.delete({ where: { caseId: params.caseId } }),
+    ])
 
     return NextResponse.json({ success: true })
   } catch (err) {
