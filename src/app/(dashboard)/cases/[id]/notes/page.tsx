@@ -13,7 +13,7 @@ interface CaseNote {
   content: string
   version: number
   createdAt: string
-  author: { name: string | null }
+  author?: { name: string | null } | null
 }
 
 const NOTE_TYPES = [
@@ -93,9 +93,9 @@ export default function CaseNotesPage() {
                   </div>
                   <div className="text-right">
                     <span className="font-mono text-xs text-slate-500">{formatDate(note.createdAt)}</span>
-                    {note.author.name && (
-                      <p className="font-mono text-xs text-slate-600">{note.author.name}</p>
-                    )}
+                    <p className="font-mono text-xs text-slate-600">
+                      {note.author?.name || 'Sistema'}
+                    </p>
                   </div>
                 </div>
                 <p className="font-mono text-sm text-slate-300 whitespace-pre-wrap">{note.content}</p>

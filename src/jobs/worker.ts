@@ -1,9 +1,13 @@
 import { loadEnvFile } from 'node:process'
+import { Logger } from '../lib/logger'
+
+const logger = new Logger('Worker')
+
 try {
   loadEnvFile('.env')
-  console.log('[Worker] Environment variables loaded from .env')
+  logger.info('Environment variables loaded from .env')
 } catch (e) {
-  console.error('[Worker] Failed to load .env file natively:', e)
+  logger.error('Failed to load .env file natively', e)
 }
 
 import { Worker } from 'bullmq'
@@ -21,7 +25,7 @@ const worker = new Worker(
   async (job) => {
     const { cnisDocumentId, r2Key, caseId } = job.data
 
-    console.log(`[Worker] Processing CNIS: ${cnisDocumentId}`)
+    logger.info(`Processing CNIS: ${cnisDocumentId}`, { cnisDocumentId, r2Key, caseId })
 
     // Marcar como PROCESSING
     await prisma.cnisDocument.update({
@@ -46,8 +50,8 @@ const worker = new Worker(
         pdfText = data.text
       }
 
-      console.log(`[Worker] PDF text length: ${pdfText.length} chars`)
-      console.log(`[Worker] PDF text preview (last 500): ${pdfText.slice(-500)}`)
+      logger.info(`PDF text length: ${pdfText.length} chars`, { cnisDocumentId })
+      logger.debug(`PDF text preview (last 500): ${pdfText.slice(-500)}`, { cnisDocumentId })
 
       // 3. Parsear com IA
       const { markdown, extractedData } = await parseCnisWithAI(pdfText)
@@ -70,17 +74,20 @@ const worker = new Worker(
         },
       })
 
-      console.log(`[Worker] CNIS processed successfully: ${cnisDocumentId}`)
+      logger.info(`CNIS processed successfully: ${cnisDocumentId}`, { cnisDocumentId })
     } catch (err) {
-      console.error(`[Worker] Failed to process CNIS ${cnisDocumentId}:`, err)
+      logger.error(`Failed to process CNIS ${cnisDocumentId} (Attempt ${job.attemptsMade + 1}/${job.opts.attempts ?? 1})`, err)
 
-      await prisma.cnisDocument.update({
-        where: { id: cnisDocumentId },
-        data: {
-          processingStatus: 'FAILED',
-          processingError: String(err),
-        },
-      })
+      const isFinalAttempt = (job.attemptsMade + 1) >= (job.opts.attempts ?? 1)
+      if (isFinalAttempt) {
+        await prisma.cnisDocument.update({
+          where: { id: cnisDocumentId },
+          data: {
+            processingStatus: 'FAILED',
+            processingError: String(err),
+          },
+        })
+      }
 
       throw err
     }
@@ -93,11 +100,11 @@ const worker = new Worker(
 )
 
 worker.on('completed', (job) => {
-  console.log(`[Worker] Job ${job.id} completed`)
+  logger.info(`Job ${job.id} completed`)
 })
 
 worker.on('failed', (job, err) => {
-  console.error(`[Worker] Job ${job?.id} failed:`, err)
+  logger.error(`Job ${job?.id} failed`, err)
 })
 
-console.log('[Worker] BullMQ worker started — waiting for CNIS jobs...')
+logger.info('BullMQ worker started — waiting for CNIS jobs...')

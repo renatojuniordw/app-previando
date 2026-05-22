@@ -1,4 +1,7 @@
 import { NextResponse } from 'next/server'
+import { Logger } from './logger'
+
+const logger = new Logger('APIError')
 
 export class NotFoundError extends Error {
   constructor(message = 'Recurso não encontrado.') {
@@ -53,6 +56,6 @@ export function handleApiError(error: unknown): NextResponse {
       { status: 402 }
     )
   }
-  console.error('[API Error]', error)
+  logger.error('Unhandled API exception', error)
   return NextResponse.json({ error: 'Erro interno. Tente novamente.' }, { status: 500 })
 }

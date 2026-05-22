@@ -1,5 +1,8 @@
 import { openai } from '../lib/openai'
 import { sanitizeForAI } from '../lib/sanitize'
+import { Logger } from '../lib/logger'
+
+const logger = new Logger('CNISParser')
 
 interface CnisExtractedData {
   nit?: string
@@ -21,8 +24,8 @@ export async function parseCnisWithAI(
 ): Promise<{ markdown: string; extractedData: CnisExtractedData }> {
   const textTruncated = sanitizeForAI(pdfText, 120000)
 
-  console.log(`[Worker] Text before sanitize: ${pdfText.length}`)
-  console.log(`[Worker] Text after sanitize: ${textTruncated.length}`)
+  logger.info(`Text before sanitize: ${pdfText.length}`)
+  logger.info(`Text after sanitize: ${textTruncated.length}`)
 
   const systemPrompt = `Você é um especialista em análise de CNIS (Cadastro Nacional de Informações Sociais) do INSS.
 Sua tarefa é analisar EXAUSTIVAMENTE e extrair TODOS os dados estruturados do texto do CNIS fornecido, sem omitir nenhuma página, empresa, empregador ou período de contribuição.
@@ -74,7 +77,7 @@ Retorne JSON no formato:
     timeout: 180_000, // Margem de segurança de 3 minutos para esta chamada
   })
 
-  console.log('[Worker] finish_reason:', response.choices[0]?.finish_reason)
+  logger.info('finish_reason', response.choices[0]?.finish_reason)
 
   const raw = response.choices[0]?.message?.content ?? '{}'
   let extractedData: CnisExtractedData = {}

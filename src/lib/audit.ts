@@ -1,5 +1,8 @@
 import { prisma } from './prisma'
 import { NextRequest } from 'next/server'
+import { Logger } from './logger'
+
+const logger = new Logger('AuditLog')
 
 interface AuditParams {
   userId: string
@@ -23,6 +26,6 @@ export async function logAudit({ userId, action, resource, req, metadata }: Audi
     })
   } catch (err) {
     // Falha em auditoria não deve interromper o fluxo principal
-    console.error('[AuditLog] Failed to write audit log:', err)
+    logger.error('Failed to write audit log', err)
   }
 }

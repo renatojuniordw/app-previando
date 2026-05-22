@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createHmac } from 'crypto'
 import { prisma } from '@/lib/prisma'
+import { Logger } from '@/lib/logger'
+
+const logger = new Logger('WebhookMercadoPago')
 
 function verifyWebhookSignature(req: NextRequest, rawBody: string): boolean {
   const secret = process.env.MERCADOPAGO_WEBHOOK_SECRET
@@ -36,7 +39,7 @@ export async function POST(req: NextRequest) {
 
   // Verificar assinatura criptográfica HMAC-SHA256
   if (!verifyWebhookSignature(req, rawBody)) {
-    console.warn('[Webhook MP] Assinatura inválida')
+    logger.warn('Assinatura inválida')
     return NextResponse.json({ error: 'Assinatura inválida' }, { status: 401 })
   }
 
@@ -127,7 +130,7 @@ export async function POST(req: NextRequest) {
       })
     }
   } catch (err) {
-    console.error('[Webhook MP] Error processing event:', err)
+    logger.error('Error processing event', err)
   }
 
   return NextResponse.json({ received: true })

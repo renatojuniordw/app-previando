@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/auth'
+import { Logger } from '@/lib/logger'
+
+const logger = new Logger('CNISUpload')
 import { prisma } from '@/lib/prisma'
 import { uploadPDF, deletePDF } from '@/services/r2'
 import { validatePDFUpload } from '@/lib/upload-validator'
@@ -53,7 +56,7 @@ export async function POST(req: NextRequest) {
       try {
         await deletePDF(existingDoc.r2Key)
       } catch (err) {
-        console.error(`[Upload] Failed to delete old CNIS PDF ${existingDoc.r2Key} from R2:`, err)
+        logger.error(`Failed to delete old CNIS PDF ${existingDoc.r2Key} from R2`, err)
       }
 
       // Forçar a exclusão dos dados calculados em background para manter a consistência
@@ -66,7 +69,7 @@ export async function POST(req: NextRequest) {
           prisma.checklist.deleteMany({ where: { caseId } }),
         ])
       } catch (err) {
-        console.error(`[Upload] Failed to cascade delete old calculated data in background for case ${caseId}:`, err)
+        logger.error(`Failed to cascade delete old calculated data in background for case ${caseId}`, err)
       }
     }
 
@@ -93,12 +96,22 @@ export async function POST(req: NextRequest) {
       },
     })
 
-    // Enfileirar processamento no BullMQ
-    await cnisQueue.add('process-cnis', {
-      cnisDocumentId: cnisDoc.id,
-      r2Key,
-      caseId,
-    })
+    // Enfileirar processamento no BullMQ com auto-retry (3 tentativas, exponential backoff)
+    await cnisQueue.add(
+      'process-cnis',
+      {
+        cnisDocumentId: cnisDoc.id,
+        r2Key,
+        caseId,
+      },
+      {
+        attempts: 3,
+        backoff: {
+          type: 'exponential',
+          delay: 5000,
+        },
+      }
+    )
 
     return NextResponse.json({
       success: true,
