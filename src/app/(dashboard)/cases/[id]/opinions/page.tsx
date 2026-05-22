@@ -5,6 +5,8 @@ import { useParams } from 'next/navigation'
 import api from '@/lib/api'
 import { Button } from '@/components/ui/Button'
 import { Modal } from '@/components/ui/Modal'
+import { Card } from '@/components/ui/Card'
+import { Badge } from '@/components/ui/Badge'
 import { formatDate } from '@/lib/utils'
 
 interface Opinion {
@@ -12,7 +14,7 @@ interface Opinion {
   status: string
   content: string | null
   editedContent: string | null
-  generationCostUsd: number | null
+  generationCostUsd: number | string | null
   createdAt: string
   updatedAt: string
 }
@@ -78,111 +80,125 @@ export default function OpinionsPage() {
   }
 
   if (loading) {
-    return <div className="font-mono text-slate-400 animate-pulse">Carregando...</div>
+    return (
+      <div className="flex items-center justify-center py-12">
+        <span className="neo-spinner text-amber-600 mr-2" />
+        <span className="font-sans text-sm text-slate-500">Carregando pareceres...</span>
+      </div>
+    )
   }
 
   return (
-    <div className="space-y-6 max-w-3xl">
-      <div className="flex items-center justify-between">
-        <h2 className="font-mono font-black text-white uppercase">Parecer IA</h2>
-        <Button onClick={() => setShowConfirm(true)} loading={generating}>
-          🤖 GERAR PARECER
+    <div className="space-y-6 max-w-3xl font-sans">
+      <div className="flex items-center justify-between border-b border-slate-200 pb-4">
+        <h2 className="font-serif font-semibold text-xl text-slate-900">Pareceres com IA</h2>
+        <Button onClick={() => setShowConfirm(true)} loading={generating} size="sm">
+          🤖 Gerar Parecer
         </Button>
       </div>
 
       {opinions.length === 0 ? (
-        <div className="py-12 text-center border-2 border-dashed border-slate-700">
+        <div className="py-12 text-center border border-dashed border-slate-300 bg-white rounded-lg shadow-sm">
           <div className="text-4xl mb-3">🤖</div>
-          <p className="font-mono text-white font-black uppercase mb-2">NENHUM PARECER GERADO</p>
-          <p className="font-mono text-xs text-slate-400 mb-6 max-w-sm mx-auto">
+          <h3 className="font-sans font-semibold text-slate-900 mb-2">Nenhum parecer gerado</h3>
+          <p className="font-sans text-sm text-slate-500 mb-6 max-w-sm mx-auto leading-relaxed">
             O Previando analisa o caso e gera um parecer preliminar com base nos dados disponíveis.
           </p>
           <Button onClick={() => setShowConfirm(true)} loading={generating}>
-            🤖 GERAR PRIMEIRO PARECER
+            🤖 Gerar Primeiro Parecer
           </Button>
         </div>
       ) : (
         <div className="space-y-6">
           {opinions.map((opinion) => (
-            <div key={opinion.id} className="border-2 border-slate-700">
-              <div className="bg-slate-900 px-5 py-3 border-b-2 border-slate-700 flex items-center justify-between">
+            <Card variant="light" key={opinion.id} className="p-0 overflow-hidden border-slate-200 shadow-sm bg-white">
+              <div className="bg-slate-50 px-5 py-3 border-b border-slate-200 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <span className="font-mono font-black text-[10px] uppercase tracking-widest text-[#ccff00]">
+                  <span className="font-mono font-bold text-[10px] uppercase tracking-wider text-slate-400">
                     PARECER
                   </span>
-                  <span className={`font-mono font-black text-[10px] uppercase tracking-widest px-2 py-0.5 ${
-                    opinion.status === 'FINAL' ? 'bg-[#ccff00] text-slate-950' :
-                    opinion.status === 'REVIEWED' ? 'bg-blue-500 text-white' :
-                    'bg-slate-700 text-slate-300'
-                  }`}>
+                  <Badge
+                    variant={
+                      opinion.status === 'FINAL' ? 'green' :
+                      opinion.status === 'REVIEWED' ? 'blue' :
+                      'slate'
+                    }
+                  >
                     {STATUS_LABELS[opinion.status] ?? opinion.status}
-                  </span>
+                  </Badge>
                 </div>
-                <span className="font-mono text-[9px] uppercase text-slate-500">
+                <span className="font-sans text-xs text-slate-500">
                   {formatDate(opinion.createdAt)}
                 </span>
               </div>
 
               {editingId === opinion.id ? (
-                <div className="p-5 space-y-3">
-                  <textarea
-                    value={editContent}
-                    onChange={(e) => setEditContent(e.target.value)}
-                    className="w-full neo-input min-h-[300px] resize-none font-mono text-sm"
-                  />
+                <div className="p-6 space-y-4">
+                  <div>
+                    <label className="neo-label">Editar Conteúdo do Parecer</label>
+                    <textarea
+                      value={editContent}
+                      onChange={(e) => setEditContent(e.target.value)}
+                      className="w-full neo-input min-h-[300px] resize-none font-sans text-sm focus:ring-amber-500/20 focus:border-amber-500"
+                    />
+                  </div>
                   <div className="flex gap-3">
-                    <Button onClick={handleSaveEdit} loading={saving} className="flex-1">SALVAR</Button>
-                    <Button variant="outline" onClick={() => setEditingId(null)} className="flex-1">CANCELAR</Button>
+                    <Button onClick={handleSaveEdit} loading={saving} className="flex-1">
+                      Salvar Alterações
+                    </Button>
+                    <Button variant="outline" onClick={() => setEditingId(null)} className="flex-1">
+                      Cancelar
+                    </Button>
                   </div>
                 </div>
               ) : (
                 <>
-                  <div className="p-5">
-                    <p className="font-mono text-sm text-slate-300 leading-relaxed whitespace-pre-wrap">
+                  <div className="p-6">
+                    <p className="font-sans text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">
                       {opinion.editedContent ?? opinion.content}
                     </p>
                   </div>
-                  {opinion.generationCostUsd && (
-                    <div className="px-5 pb-2">
-                      <p className="font-mono text-[9px] uppercase tracking-widest text-slate-600">
-                        Custo IA: ${opinion.generationCostUsd.toFixed(4)}
-                      </p>
-                    </div>
-                  )}
-                  <div className="border-t-2 border-slate-700 p-4 flex gap-3">
-                    <button
+
+                  <div className="border-t border-slate-100 bg-slate-50/50 px-6 py-4 flex gap-3">
+                    <Button
+                      variant="outline"
                       onClick={() => handleEdit(opinion)}
-                      className="flex-1 text-center border-2 border-slate-600 text-slate-300 font-mono font-black uppercase tracking-widest text-[10px] py-3 hover:border-slate-400 transition-colors"
+                      className="flex-1 text-xs py-2"
                     >
-                      ✏️ EDITAR
-                    </button>
-                    <button
+                      ✏️ Editar
+                    </Button>
+                    <Button
+                      variant="primary"
                       onClick={() => navigator.clipboard.writeText(opinion.editedContent ?? opinion.content ?? '')}
-                      className="flex-1 text-center bg-[#ccff00] border-2 border-black text-slate-950 font-mono font-black uppercase tracking-widest text-[10px] py-3 hover:bg-[#b3ff00] transition-colors"
+                      className="flex-1 text-xs py-2"
                     >
-                      📋 COPIAR
-                    </button>
+                      📋 Copiar Parecer
+                    </Button>
                   </div>
                 </>
               )}
-            </div>
+            </Card>
           ))}
         </div>
       )}
 
-      <Modal open={showConfirm} onClose={() => setShowConfirm(false)} title="GERAR PARECER COM IA">
-        <div className="space-y-4">
-          <div className="border-2 border-amber-600 bg-amber-950 p-3">
-            <p className="font-mono text-xs text-amber-400">
-              ⚠️ O parecer será gerado com base nos dados do caso. É um parecer preliminar e não substitui análise jurídica completa.
+      <Modal open={showConfirm} onClose={() => setShowConfirm(false)} title="Gerar Parecer com IA">
+        <div className="space-y-4 font-sans">
+          <div className="border border-amber-200 bg-amber-50/50 p-3 rounded-md">
+            <p className="text-xs text-amber-800 leading-relaxed">
+              ⚠️ O parecer será gerado com base nos dados do caso. É um parecer preliminar e não substitui uma análise jurídica completa.
             </p>
           </div>
-          <p className="font-mono text-sm text-slate-300">
+          <p className="text-sm text-slate-600 leading-relaxed">
             Deseja gerar um novo parecer usando inteligência artificial?
           </p>
           <div className="flex gap-3">
-            <Button onClick={handleGenerate} loading={generating} className="flex-1">GERAR</Button>
-            <Button variant="outline" onClick={() => setShowConfirm(false)} className="flex-1">CANCELAR</Button>
+            <Button onClick={handleGenerate} loading={generating} className="flex-1">
+              Gerar
+            </Button>
+            <Button variant="outline" onClick={() => setShowConfirm(false)} className="flex-1">
+              Cancelar
+            </Button>
           </div>
         </div>
       </Modal>
