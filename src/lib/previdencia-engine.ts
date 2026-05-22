@@ -1,0 +1,528 @@
+/**
+ * Motor de Cálculo Previdenciário - Previando
+ * Implementação das regras pós-Reforma da Previdência (EC 103/2019)
+ */
+
+export interface PeriodoCNIS {
+  empregador: string
+  inicio: string
+  fim: string | null
+  salarios: Array<{ competencia: string; valor: number }>
+}
+
+export interface CnisExtractedData {
+  nit?: string
+  nome?: string
+  dataNascimento?: string
+  totalContribuicoes?: number
+  primeiraContribuicao?: string
+  ultimaContribuicao?: string
+  periodos?: PeriodoCNIS[]
+}
+
+export interface CalculationInput {
+  birthDate: string
+  gender: 'M' | 'F'
+  dib: string
+  modalidade: string
+  extractedData: CnisExtractedData | null
+  // Parâmetros extras
+  tempoEspecialAnos?: number
+  dependentesPensao?: number
+}
+
+export interface CalculationResult {
+  modalidade: string
+  salarioBeneficio: number
+  rmi: number
+  rma: number
+  fatorPrevidenciario?: number
+  coeficiente: number
+  dibPrevista: string
+  carenciaAtendida: boolean
+  tempoContribuicao: number // em meses
+  idadeNaApuracao: number // em anos
+  elegivel: boolean
+  pendencias: string[]
+  memoriaCalculo: {
+    contribuicoesConsideradas: number
+    somaSalarios: number
+    mediaSimples: number
+    genero: string
+    tempoAnos: number
+    idadeAnos: number
+    carenciaMeses: number
+    coeficienteAplicado: number
+    pisoNacional: number
+    tetoPrevidenciario: number
+    detalhamentoMedia: Array<{ competencia: string; valorOriginal: number; valorAjustado: number }>
+  }
+  periodosSalarios: {
+    totalContribuicoes: number
+    primeiraContribuicao: string
+    ultimaContribuicao: string
+  }
+}
+
+// Valores de referência nacionais padrão para 2026
+const SALARIO_MINIMO_2026 = 1512.00
+const TETO_PREVIDENCIARIO_2026 = 8157.41
+
+/**
+ * Calcula a diferença em meses entre duas datas
+ */
+function diffInMonths(startStr: string, endStr: string): number {
+  const start = new Date(startStr)
+  const end = new Date(endStr)
+  return (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth()) + 1
+}
+
+/**
+ * Calcula a idade em anos completos
+ */
+function getAge(birthDateStr: string, refDateStr: string): number {
+  const birth = new Date(birthDateStr)
+  const ref = new Date(refDateStr)
+  let age = ref.getFullYear() - birth.getFullYear()
+  const m = ref.getMonth() - birth.getMonth()
+  if (m < 0 || (m === 0 && ref.getDate() < birth.getDate())) {
+    age--
+  }
+  return age
+}
+
+/**
+ * Roda o motor de cálculo para uma dada modalidade e CNIS
+ */
+export function calculatePrevidenciario(input: CalculationInput): CalculationResult {
+  const { birthDate, gender, dib, modalidade, extractedData, tempoEspecialAnos = 0, dependentesPensao = 1 } = input
+
+  const pendencias: string[] = []
+  let elegivel = false
+
+  // 1. Apuração de Idade e Dados Básicos
+  const idadeNaApuracao = getAge(birthDate, dib)
+
+  // 2. Extração de Contribuições e Apuração de Carência / Tempo
+  let totalContribuicoesCount = 0
+  const todasContribuicoes: Array<{ competencia: string; valor: number }> = []
+
+  if (extractedData?.periodos) {
+    for (const p of extractedData.periodos) {
+      if (p.salarios && p.salarios.length > 0) {
+        for (const s of p.salarios) {
+          todasContribuicoes.push({
+            competencia: s.competencia,
+            valor: Number(s.valor || 0)
+          })
+        }
+      }
+    }
+  }
+
+  // Ordena contribuições cronologicamente
+  todasContribuicoes.sort((a, b) => a.competencia.localeCompare(b.competencia))
+  totalContribuicoesCount = todasContribuicoes.length
+
+  // Carência em meses (cada competência com contribuição >= mínimo conta como carência)
+  // Obs: a carência real exige contribuição em valor igual ou superior ao salário mínimo (EC 103/2019)
+  const carenciaMeses = todasContribuicoes.filter(c => c.valor > 0).length
+  const carenciaAtendida = carenciaMeses >= 180 // Regra geral de 15 anos de carência (180 contribuições)
+
+  // Tempo de contribuição total expresso em meses
+  // Calculado a partir da soma dos meses de cada período
+  let tempoContribuicaoMeses = 0
+  if (extractedData?.periodos) {
+    for (const p of extractedData.periodos) {
+      const inicio = p.inicio
+      const fim = p.fim || dib // Se o período está em aberto, assume até a DIB
+      const meses = Math.max(1, diffInMonths(inicio, fim))
+      tempoContribuicaoMeses += meses
+    }
+  }
+
+  // Converte tempo especial em comum (Multiplicador de 1.4 para homens e 1.2 para mulheres)
+  const tempoEspecialMeses = tempoEspecialAnos * 12
+  const acrescimoEspecialMeses = tempoEspecialMeses * (gender === 'M' ? 0.4 : 0.2)
+  tempoContribuicaoMeses += Math.round(acrescimoEspecialMeses)
+
+  const tempoContribuicaoAnos = Number((tempoContribuicaoMeses / 12).toFixed(1))
+
+  // 3. Média dos Salários de Contribuição (Salário de Benefício - SB)
+  // Regra pós-reforma: 100% de todas as contribuições desde julho/1994
+  const contribuicoesApos94 = todasContribuicoes.filter(c => {
+    // Competência está no formato YYYY-MM ou similar
+    const compDate = new Date(c.competencia + '-02') // Adiciona dia para parse
+    const dataLimite94 = new Date('1994-07-01')
+    return compDate >= dataLimite94
+  })
+
+  // Se não houver contribuições pós-94, usa todas as disponíveis
+  const baseCalculo = contribuicoesApos94.length > 0 ? contribuicoesApos94 : todasContribuicoes
+
+  const detalhamentoMedia = baseCalculo.map(c => {
+    // Ajusta contribuições abaixo do mínimo da época para o salário mínimo atual de 2026 (ou mínimo proporcional)
+    // Para simplificação visual premium, garantimos o piso atual do salário mínimo se o valor for menor
+    let valorAjustado = c.valor
+    if (valorAjustado < SALARIO_MINIMO_2026 && valorAjustado > 0) {
+      valorAjustado = SALARIO_MINIMO_2026
+    }
+    // Aplica teto da previdência
+    if (valorAjustado > TETO_PREVIDENCIARIO_2026) {
+      valorAjustado = TETO_PREVIDENCIARIO_2026
+    }
+    return {
+      competencia: c.competencia,
+      valorOriginal: c.valor,
+      valorAjustado
+    }
+  })
+
+  const somaSalarios = detalhamentoMedia.reduce((acc, curr) => acc + curr.valorAjustado, 0)
+  const salarioBeneficio = detalhamentoMedia.length > 0 ? Number((somaSalarios / detalhamentoMedia.length).toFixed(2)) : SALARIO_MINIMO_2026
+
+  // 4. Coeficiente, RMI e Regras específicas de Elegibilidade
+  let coeficiente = 0.60 // Coeficiente base de 60%
+  let fatorPrevidenciario = 1.00
+
+  // Regra de acréscimo de 2% ao ano
+  // Mulher: +2% por ano acima de 15 anos de contribuição
+  // Homem: +2% por ano acima de 20 anos de contribuição
+  const anosExcedentes = gender === 'F' 
+    ? Math.max(0, tempoContribuicaoAnos - 15)
+    : Math.max(0, tempoContribuicaoAnos - 20)
+  const coeficienteProgressivo = 0.60 + (anosExcedentes * 0.02)
+
+  switch (modalidade) {
+    case 'APOSENTADORIA_IDADE':
+    case 'IDADE_MINIMA_65_62':
+      // Requisitos de idade: Homem 65, Mulher 62. Carência de 180 meses (15 anos)
+      const idadeMinima = gender === 'M' ? 65 : 62
+      const tempoMinimoIdade = 15
+
+      coeficiente = coeficienteProgressivo
+
+      if (idadeNaApuracao >= idadeMinima && tempoContribuicaoAnos >= tempoMinimoIdade && carenciaAtendida) {
+        elegivel = true
+      } else {
+        if (idadeNaApuracao < idadeMinima) pendencias.push(`Idade mínima de ${idadeMinima} anos não atingida (possui ${idadeNaApuracao}).`)
+        if (tempoContribuicaoAnos < tempoMinimoIdade) pendencias.push(`Tempo de contribuição mínimo de ${tempoMinimoIdade} anos não atingido (possui ${tempoContribuicaoAnos}).`)
+        if (!carenciaAtendida) pendencias.push(`Carência de 180 contribuições mensais não cumprida (possui ${carenciaMeses}).`)
+      }
+      break
+
+    case 'TEMPO_CONTRIBUICAO':
+      // Requisito pré-reforma ou transição pura: Mulher 30 anos de tempo, Homem 35 anos
+      const tempoMinimoTC = gender === 'M' ? 35 : 30
+      coeficiente = coeficienteProgressivo
+
+      if (tempoContribuicaoAnos >= tempoMinimoTC && carenciaAtendida) {
+        elegivel = true
+      } else {
+        if (tempoContribuicaoAnos < tempoMinimoTC) pendencias.push(`Tempo de contribuição de ${tempoMinimoTC} anos não atingido (possui ${tempoContribuicaoAnos}).`)
+        if (!carenciaAtendida) pendencias.push(`Carência de 180 contribuições mensais não cumprida (possui ${carenciaMeses}).`)
+      }
+      break
+
+    case 'PONTOS_86_96':
+      // Em 2026: Mulher precisa de 93 pontos, Homem de 103 pontos. Tempo mínimo de TC: 30(F)/35(M)
+      const tempoMinTCRegra = gender === 'M' ? 35 : 30
+      const pontosExigidos = gender === 'M' ? 103 : 93
+      const pontosAtuais = idadeNaApuracao + tempoContribuicaoAnos
+
+      coeficiente = coeficienteProgressivo
+
+      if (tempoContribuicaoAnos >= tempoMinTCRegra && pontosAtuais >= pontosExigidos && carenciaAtendida) {
+        elegivel = true
+      } else {
+        if (tempoContribuicaoAnos < tempoMinTCRegra) pendencias.push(`Tempo de contribuição de ${tempoMinTCRegra} anos não atingido (possui ${tempoContribuicaoAnos}).`)
+        if (pontosAtuais < pontosExigidos) pendencias.push(`Pontuação mínima de ${pontosExigidos} pontos não atingida (soma de idade e tempo deu ${pontosAtuais.toFixed(1)}).`)
+        if (!carenciaAtendida) pendencias.push(`Carência de 180 contribuições mensais não cumprida (possui ${carenciaMeses}).`)
+      }
+      break
+
+    case 'PEDAGIO_50':
+      // Aplicável a quem faltava menos de 2 anos para se aposentar em 2019
+      // Homem: 35 anos + 50% do tempo faltante. Mulher: 30 anos + 50% do tempo faltante.
+      // Aplica Fator Previdenciário
+      const tempoTC50 = gender === 'M' ? 35 : 30
+      // Fator previdenciário aproximado com base na idade
+      fatorPrevidenciario = Math.min(1.2, Math.max(0.4, (idadeNaApuracao * tempoContribuicaoAnos) / 2200))
+      coeficiente = fatorPrevidenciario // Na regra de 50%, a RMI é o SB * Fator Previdenciário
+
+      if (tempoContribuicaoAnos >= tempoTC50 && carenciaAtendida) {
+        elegivel = true
+      } else {
+        if (tempoContribuicaoAnos < tempoTC50) pendencias.push(`Tempo de contribuição de ${tempoTC50} anos não atingido para transição de 50%.`)
+        if (!carenciaAtendida) pendencias.push(`Carência de 180 contribuições mensais não cumprida.`)
+      }
+      break
+
+    case 'PEDAGIO_100':
+      // Requisitos: Mulher 57 anos de idade + 30 de contribuição. Homem 60 anos + 35 de contribuição.
+      // Pedágio de 100% do tempo que faltava em 2019.
+      // Coeficiente é 100%.
+      const idadePedagio100 = gender === 'M' ? 60 : 57
+      const tempoPedagio100 = gender === 'M' ? 35 : 30
+      coeficiente = 1.00 // 100% sem fator previdenciário
+
+      if (idadeNaApuracao >= idadePedagio100 && tempoContribuicaoAnos >= tempoPedagio100 && carenciaAtendida) {
+        elegivel = true
+      } else {
+        if (idadeNaApuracao < idadePedagio100) pendencias.push(`Idade mínima de ${idadePedagio100} anos não atingida para pedágio de 100% (possui ${idadeNaApuracao}).`)
+        if (tempoContribuicaoAnos < tempoPedagio100) pendencias.push(`Tempo de contribuição de ${tempoPedagio100} anos não atingido para pedágio de 100% (possui ${tempoContribuicaoAnos}).`)
+        if (!carenciaAtendida) pendencias.push(`Carência de 180 contribuições mensais não cumprida.`)
+      }
+      break
+
+    case 'APOSENTADORIA_ESPECIAL':
+      // Idade mínima de 60 anos + 25 anos de atividade especial
+      const tempoEspecialMinimo = 25
+      const idadeEspecialMinima = 60
+      coeficiente = coeficienteProgressivo
+
+      if (idadeNaApuracao >= idadeEspecialMinima && tempoContribuicaoAnos >= tempoEspecialMinimo) {
+        elegivel = true
+      } else {
+        if (idadeNaApuracao < idadeEspecialMinima) pendencias.push(`Idade mínima para especial de ${idadeEspecialMinima} anos não atingida (possui ${idadeNaApuracao}).`)
+        if (tempoContribuicaoAnos < tempoEspecialMinimo) pendencias.push(`Tempo mínimo especial de ${tempoEspecialMinimo} anos não atingido (possui ${tempoContribuicaoAnos.toFixed(1)}).`)
+      }
+      break
+
+    case 'HIBRIDA':
+      // Idade: Mulher 62, Homem 65. Tempo: 15 anos mesclando rural e urbano.
+      const idadeHibrida = gender === 'M' ? 65 : 62
+      coeficiente = 0.60 + Math.max(0, tempoContribuicaoAnos - 15) * 0.02
+
+      if (idadeNaApuracao >= idadeHibrida && tempoContribuicaoAnos >= 15) {
+        elegivel = true
+      } else {
+        if (idadeNaApuracao < idadeHibrida) pendencias.push(`Idade mínima híbrida de ${idadeHibrida} anos não atingida (possui ${idadeNaApuracao}).`)
+        if (tempoContribuicaoAnos < 15) pendencias.push(`Tempo de contribuição mínimo de 15 anos não atingido (possui ${tempoContribuicaoAnos}).`)
+      }
+      break
+
+    case 'AUXILIO_DOENCA_B31':
+    case 'AUXILIO_DOENCA_B91':
+      coeficiente = 0.91 // 91% do salário de benefício
+      elegivel = carenciaMeses >= 12 || modalidade === 'AUXILIO_DOENCA_B91' // Acidentário não exige carência
+
+      if (carenciaMeses < 12 && modalidade === 'AUXILIO_DOENCA_B31') {
+        pendencias.push(`Carência mínima de 12 contribuições para auxílio-doença previdenciário não cumprida (possui ${carenciaMeses}).`)
+      }
+      break
+
+    case 'SALARIO_MATERNIDADE':
+      coeficiente = 1.00
+      elegivel = true // Geralmente elegível com vínculo ativo
+      break
+
+    case 'AUXILIO_RECLUSAO':
+      coeficiente = 1.00
+      // Limitado a 1 salário mínimo e baixa renda
+      elegivel = salarioBeneficio <= 1800 // Limite de baixa renda aproximado
+      if (salarioBeneficio > 1800) {
+        pendencias.push(`Renda mensal do segurado (R$ ${salarioBeneficio}) superior ao limite legal para auxílio-reclusão.`)
+      }
+      break
+
+    case 'PENSAO_MORTE':
+      // 50% + 10% por dependente
+      coeficiente = Math.min(1.00, 0.50 + (dependentesPensao * 0.10))
+      elegivel = carenciaMeses >= 18 // Exige pelo menos 18 meses para o cálculo integral do dependente
+      if (carenciaMeses < 18) {
+        pendencias.push(`Segurado possuía menos de 18 contribuições, o que pode reduzir o prazo de pagamento da pensão ao cônjuge.`)
+      }
+      break
+
+    case 'BPC_LOAS':
+      coeficiente = 1.00
+      elegivel = idadeNaApuracao >= 65 // Exige idade de 65 anos ou deficiência comprovada
+      if (idadeNaApuracao < 65) {
+        pendencias.push(`Idade mínima de 65 anos para BPC/LOAS Idoso não atingida (possui ${idadeNaApuracao}). Deficiência não avaliada.`)
+      }
+      break
+
+    default:
+      coeficiente = 0.60
+      elegivel = false
+      pendencias.push(`Modalidade de cálculo ${modalidade} não parametrizada.`)
+      break
+  }
+
+  // 5. Cálculo Final da RMI e RMA
+  let rmi = Number((salarioBeneficio * coeficiente).toFixed(2))
+
+  // Limites constitucionais (Piso do Salário Mínimo e Teto Previdenciário)
+  // BPC sempre recebe exatamente 1 salário mínimo
+  if (modalidade === 'BPC_LOAS') {
+    rmi = SALARIO_MINIMO_2026
+  } else {
+    if (rmi < SALARIO_MINIMO_2026) {
+      rmi = SALARIO_MINIMO_2026
+    }
+    if (rmi > TETO_PREVIDENCIARIO_2026) {
+      rmi = TETO_PREVIDENCIARIO_2026
+    }
+  }
+
+  // RMA (Renda Mensal Atual): reajustada ou mantida na RMI para visualização inicial
+  const rma = rmi
+
+  // Primeira e última contribuição do CNIS para o painel
+  let primeiraContribuicao = 'N/A'
+  let ultimaContribuicao = 'N/A'
+  if (todasContribuicoes.length > 0) {
+    primeiraContribuicao = todasContribuicoes[0].competencia
+    ultimaContribuicao = todasContribuicoes[todasContribuicoes.length - 1].competencia
+  }
+
+  return {
+    modalidade,
+    salarioBeneficio,
+    rmi,
+    rma,
+    fatorPrevidenciario: modalidade === 'PEDAGIO_50' ? Number(fatorPrevidenciario.toFixed(4)) : undefined,
+    coeficiente: Number(coeficiente.toFixed(4)),
+    dibPrevista: new Date(dib).toISOString(),
+    carenciaAtendida,
+    tempoContribuicao: tempoContribuicaoMeses,
+    idadeNaApuracao,
+    elegivel,
+    pendencias,
+    memoriaCalculo: {
+      contribuicoesConsideradas: baseCalculo.length,
+      somaSalarios,
+      mediaSimples: salarioBeneficio,
+      genero: gender === 'M' ? 'Masculino' : 'Feminino',
+      tempoAnos: tempoContribuicaoAnos,
+      idadeAnos: idadeNaApuracao,
+      carenciaMeses,
+      coeficienteAplicado: coeficiente,
+      pisoNacional: SALARIO_MINIMO_2026,
+      tetoPrevidenciario: TETO_PREVIDENCIARIO_2026,
+      detalhamentoMedia: detalhamentoMedia.slice(0, 15) // Mostra as primeiras 15 contribuições detalhadas para não explodir dados
+    },
+    periodosSalarios: {
+      totalContribuicoes: totalContribuicoesCount,
+      primeiraContribuicao,
+      ultimaContribuicao
+    }
+  }
+}
+
+/**
+ * Projeta as contribuições futuras de agora até a data futura pretendida
+ * e calcula os ganhos comparados do cenário simulado
+ */
+export function projectSimulations(params: {
+  birthDate: string
+  gender: 'M' | 'F'
+  dibProjetada: string
+  valorContribuicaoFutura: number
+  extractedData: CnisExtractedData | null
+  modalidade?: string
+}): {
+  scenarioParams: any
+  rmiProjected: number
+  rmaProjected: number
+  dibProjected: string
+  gainVsNow: number
+} {
+  const { birthDate, gender, dibProjetada, valorContribuicaoFutura, extractedData, modalidade = 'APOSENTADORIA_IDADE' } = params
+
+  // 1. Clona o CNIS existente
+  const clonedData: CnisExtractedData = extractedData 
+    ? JSON.parse(JSON.stringify(extractedData))
+    : { periodos: [] }
+
+  if (!clonedData.periodos) clonedData.periodos = []
+
+  // 2. Determina a data do último salário cadastrado para iniciar a projeção
+  let dataInicioProjecao = new Date()
+  let ultimaCompStr = ''
+
+  if (clonedData.periodos.length > 0) {
+    let ultimoPeriodo = clonedData.periodos[0]
+    for (const p of clonedData.periodos) {
+      if (!p.fim) {
+        ultimoPeriodo = p
+        break
+      }
+    }
+    
+    if (ultimoPeriodo.salarios && ultimoPeriodo.salarios.length > 0) {
+      // Pega a última competência cadastrada
+      const salariosOrdenados = [...ultimoPeriodo.salarios].sort((a, b) => b.competencia.localeCompare(a.competencia))
+      ultimaCompStr = salariosOrdenados[0].competencia
+    }
+  }
+
+  if (ultimaCompStr) {
+    const parts = ultimaCompStr.split('-')
+    const ano = Number(parts[0])
+    const mes = Number(parts[1])
+    dataInicioProjecao = new Date(ano, mes, 1) // Inicia no mês seguinte
+  }
+
+  const dataFimProjecao = new Date(dibProjetada)
+
+  // 3. Cria um período simulado "Projeção Futura de Contribuição"
+  const salariosProjetados: Array<{ competencia: string; valor: number }> = []
+  
+  const currentProj = new Date(dataInicioProjecao.getFullYear(), dataInicioProjecao.getMonth() + 1, 1)
+  
+  while (currentProj <= dataFimProjecao) {
+    const compStr = `${currentProj.getFullYear()}-${String(currentProj.getMonth() + 1).padStart(2, '0')}`
+    salariosProjetados.push({
+      competencia: compStr,
+      valor: valorContribuicaoFutura
+    })
+    // Incrementa 1 mês
+    currentProj.setMonth(currentProj.getMonth() + 1)
+  }
+
+  if (salariosProjetados.length > 0) {
+    clonedData.periodos.push({
+      empregador: 'PROJEÇÃO DE CONTRIBUIÇÃO FUTURA (SIMULADO)',
+      inicio: salariosProjetados[0].competencia + '-01',
+      fim: salariosProjetados[salariosProjetados.length - 1].competencia + '-28',
+      salarios: salariosProjetados
+    })
+  }
+
+  // 4. Roda o motor previdenciário com o CNIS contendo as projeções
+  const calcProjetado = calculatePrevidenciario({
+    birthDate,
+    gender,
+    dib: dibProjetada,
+    modalidade,
+    extractedData: clonedData
+  })
+
+  // 5. Roda o motor previdenciário do cenário ATUAL (hoje) para comparar ganho
+  const calcHoje = calculatePrevidenciario({
+    birthDate,
+    gender,
+    dib: new Date().toISOString().split('T')[0],
+    modalidade,
+    extractedData
+  })
+
+  const rmiProjected = calcProjetado.rmi
+  const rmaProjected = calcProjetado.rma
+  const gainVsNow = Math.max(0, Number((rmiProjected - calcHoje.rmi).toFixed(2)))
+
+  return {
+    scenarioParams: {
+      valorContribuicaoFutura,
+      competenciasSimuladas: salariosProjetados.length,
+      dibProjetada,
+      modalidade
+    },
+    rmiProjected,
+    rmaProjected,
+    dibProjected: new Date(dibProjetada).toISOString(),
+    gainVsNow
+  }
+}
