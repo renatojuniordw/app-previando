@@ -1,6 +1,7 @@
 import { openai } from '../lib/openai'
 import { sanitizeForAI } from '../lib/sanitize'
 import { Logger } from '../lib/logger'
+import { AI_MODELS, AI_COST_PER_TOKEN } from '../lib/ai-models'
 
 const logger = new Logger('CNISParser')
 
@@ -64,8 +65,10 @@ Retorne JSON no formato:
   ]
 }`
 
+  const model = AI_MODELS.CRITICAL
+
   const response = await openai.chat.completions.create({
-    model: 'gpt-4o-mini',
+    model,
     max_tokens: 16000,
     temperature: 0, // Precisão máxima para extração
     response_format: { type: 'json_object' },
@@ -74,10 +77,11 @@ Retorne JSON no formato:
       { role: 'user', content: userPrompt },
     ],
   }, {
-    timeout: 180_000, // Margem de segurança de 3 minutos para esta chamada
+    timeout: 180_000,
   })
 
   logger.info('finish_reason', response.choices[0]?.finish_reason)
+  logger.info(`model=${model} tokens=${response.usage?.total_tokens} cost=$${((response.usage?.total_tokens ?? 0) * AI_COST_PER_TOKEN[model]).toFixed(6)}`)
 
   const raw = response.choices[0]?.message?.content ?? '{}'
   let extractedData: CnisExtractedData = {}

@@ -1,5 +1,6 @@
 import { openai } from '../lib/openai'
 import { sanitizeForAI } from '../lib/sanitize'
+import { AI_MODELS, AI_COST_PER_TOKEN } from '../lib/ai-models'
 
 interface OpinionInput {
   clientName: string
@@ -76,8 +77,10 @@ Estruture o parecer em:
 Sempre encerre com: "Este parecer é preliminar e não substitui análise jurídica completa"
 Última linha: "Calculado via Previando (app.previando.com.br)"`
 
+  const model = AI_MODELS.CRITICAL
+
   const response = await openai.chat.completions.create({
-    model: 'gpt-4o-mini',
+    model,
     max_tokens: 2000,
     temperature: 0.3,
     messages: [
@@ -88,14 +91,13 @@ Sempre encerre com: "Este parecer é preliminar e não substitui análise juríd
 
   const content = response.choices[0]?.message?.content ?? ''
   const tokensUsed = response.usage?.total_tokens ?? 0
-  // Custo GPT-4o mini: ~$0.30/1M tokens (média input+output)
-  const costUsd = tokensUsed * 0.0000003
+  const costUsd = tokensUsed * AI_COST_PER_TOKEN[model]
 
   return {
     content,
     promptUsed: userPrompt,
     tokensUsed,
     costUsd,
-    model: 'gpt-4o-mini',
+    model,
   }
 }

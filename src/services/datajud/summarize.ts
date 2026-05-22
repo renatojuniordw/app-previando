@@ -1,5 +1,6 @@
 import { openai } from '../../lib/openai'
 import { sanitizeForAI } from '../../lib/sanitize'
+import { AI_MODELS, AI_COST_PER_TOKEN } from '../../lib/ai-models'
 import type { DatajudResponse } from './index'
 
 export async function summarizeProcesso(
@@ -43,8 +44,10 @@ REGRAS ABSOLUTAS:
 - Não use termos jurídicos sem explicação
 `
 
+  const model = AI_MODELS.OPERATIONAL
+
   const response = await openai.chat.completions.create({
-    model: 'gpt-4o-mini',
+    model,
     max_tokens: 500,
     temperature: 0.2,
     messages: [
@@ -60,8 +63,7 @@ Nunca invente informações — use apenas o que está nas movimentações forne
 
   const summary = response.choices[0]?.message?.content ?? ''
   const tokensUsed = response.usage?.total_tokens ?? 0
-  // Custo GPT-4o mini: $0.15/1M input, $0.60/1M output (aprox.)
-  const costUsd = tokensUsed * 0.0000003
+  const costUsd = tokensUsed * AI_COST_PER_TOKEN[model]
 
   return { summary, tokensUsed, costUsd }
 }

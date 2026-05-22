@@ -249,7 +249,7 @@ Histórico versionado de anotações. Imutável — nunca edita, só cria novas 
 ### 3.6 Documento CNIS
 PDF do CNIS. Cada caso tem no máximo um CNIS ativo.
 
-**Fluxo:** Upload → R2 → BullMQ → `pdf-parse` (se < 100 chars → Tesseract OCR) → GPT-4o mini → markdown → banco.
+**Fluxo:** Upload → R2 → BullMQ → `pdf-parse` (se < 100 chars → Tesseract OCR) → `gpt-4.1-mini` → markdown → banco.
 
 ---
 

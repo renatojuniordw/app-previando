@@ -7,6 +7,7 @@ import { sanitizeForAI } from '@/lib/sanitize'
 import { openai } from '@/lib/openai'
 import { handleApiError } from '@/lib/api-error'
 import { rateLimit } from '@/lib/rate-limit'
+import { AI_MODELS } from '@/lib/ai-models'
 
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
   try {
@@ -52,7 +53,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       .join('\n\n')
 
     const response = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
+      model: AI_MODELS.CRITICAL,
       max_tokens: 800,
       temperature: 0.2,
       messages: [
