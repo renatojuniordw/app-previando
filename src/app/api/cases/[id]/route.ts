@@ -13,7 +13,6 @@ const updateSchema = z.object({
   deadlineDays: z.number().int().positive().nullable().optional(),
   deadlineDate: z.string().datetime().nullable().optional(),
   notes: z.string().max(5000).nullable().optional(),
-  processNumber: z.string().nullable().optional(),
 })
 
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
@@ -43,7 +42,6 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       case: {
         ...caso,
         planLimits: {
-          datajudEnabled: planLimits.datajudEnabled,
           simulatorEnabled: planLimits.simulatorEnabled,
           retroativosEnabled: planLimits.retroativosEnabled,
         },

@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useParams, usePathname } from 'next/navigation'
 import api from '@/lib/api'
 import { Badge } from '@/components/ui/Badge'
-import { ArrowLeft, LayoutDashboard, MessageSquare, Scale, FileText, Calculator, BarChart3, History, CheckSquare, Bot, Lock } from 'lucide-react'
+import { ArrowLeft, LayoutDashboard, MessageSquare, FileText, Calculator, BarChart3, History, CheckSquare, Bot, Lock } from 'lucide-react'
 
 interface CaseHeader {
   id: string
@@ -14,7 +14,6 @@ interface CaseHeader {
   priority: string
   client: { id: string; name: string }
   planLimits: {
-    datajudEnabled: boolean
     simulatorEnabled: boolean
     retroativosEnabled: boolean
   }
@@ -65,7 +64,6 @@ export default function CaseLayout({ children }: { children: React.ReactNode }) 
   const tabs = [
     { id: 'overview', label: 'Visão Geral', icon: LayoutDashboard, path: '' },
     { id: 'notes', label: 'Prontuário', icon: MessageSquare, path: '/notes' },
-    { id: 'process', label: 'Processo Jud', icon: Scale, path: '/process', locked: caseData ? !caseData.planLimits?.datajudEnabled : false },
     { id: 'cnis', label: 'Análise CNIS', icon: FileText, path: '/cnis' },
     { id: 'calculator', label: 'Cálculos', icon: Calculator, path: '/calculator' },
     { id: 'simulator', label: 'Simulação', icon: BarChart3, path: '/simulator', locked: caseData ? !caseData.planLimits?.simulatorEnabled : false },

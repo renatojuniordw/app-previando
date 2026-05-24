@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client'
+import { MODALIDADES_PADRAO } from '../src/lib/modalidade-labels'
 
 const prisma = new PrismaClient()
 
@@ -20,7 +21,6 @@ async function main() {
       whatsappEnabled: false,
       watermarkEnabled: true,
       diagnosisEnabled: false,
-      datajudEnabled: false,
     },
   })
 
@@ -39,7 +39,6 @@ async function main() {
       whatsappEnabled: true,
       watermarkEnabled: false,
       diagnosisEnabled: true,
-      datajudEnabled: true,
     },
   })
 
@@ -58,7 +57,6 @@ async function main() {
       whatsappEnabled: true,
       watermarkEnabled: false,
       diagnosisEnabled: true,
-      datajudEnabled: true,
     },
   })
 
@@ -116,6 +114,122 @@ async function main() {
   }
 
   console.log(`✅ ${salarios.length} registros de SalarioMinimo inseridos`)
+
+  // ─── Regras de Aposentadoria ────────────────────────────────────────────────
+  console.log('🌱 Seeding RegrasAposentadoria...')
+
+  // Regra por pontos: pontuação sobe 1 ponto por ano a partir de 2019 (EC 103/2019)
+  // Homens: 96 → 105 (máx). Mulheres: 86 → 96 (máx).
+  const pontosProgH = [
+    { vigencia: '2019-11-13', pontos: 96 },
+    { vigencia: '2020-01-01', pontos: 97 },
+    { vigencia: '2021-01-01', pontos: 98 },
+    { vigencia: '2022-01-01', pontos: 99 },
+    { vigencia: '2023-01-01', pontos: 100 },
+    { vigencia: '2024-01-01', pontos: 101 },
+    { vigencia: '2025-01-01', pontos: 102 },
+    { vigencia: '2026-01-01', pontos: 103 },
+    { vigencia: '2027-01-01', pontos: 104 },
+    { vigencia: '2028-01-01', pontos: 105 },
+  ]
+  const pontosProgF = [
+    { vigencia: '2019-11-13', pontos: 86 },
+    { vigencia: '2020-01-01', pontos: 87 },
+    { vigencia: '2021-01-01', pontos: 88 },
+    { vigencia: '2022-01-01', pontos: 89 },
+    { vigencia: '2023-01-01', pontos: 90 },
+    { vigencia: '2024-01-01', pontos: 91 },
+    { vigencia: '2025-01-01', pontos: 92 },
+    { vigencia: '2026-01-01', pontos: 93 },
+    { vigencia: '2027-01-01', pontos: 94 },
+    { vigencia: '2028-01-01', pontos: 95 },
+    { vigencia: '2029-01-01', pontos: 96 },
+  ]
+
+  const regras = [
+    // ── Regra Permanente / Aposentadoria por Idade ────────────────────────────
+    { modalidade: 'IDADE_MINIMA_65_62', genero: 'M', vigencia: '2019-11-13', idadeMinima: 65, tempoContribuicaoAnos: 20, carenciaMeses: 180, descricao: 'Regra Permanente - Homens', legislacao: 'EC 103/2019' },
+    { modalidade: 'IDADE_MINIMA_65_62', genero: 'F', vigencia: '2019-11-13', idadeMinima: 62, tempoContribuicaoAnos: 15, carenciaMeses: 180, descricao: 'Regra Permanente - Mulheres', legislacao: 'EC 103/2019' },
+    { modalidade: 'APOSENTADORIA_IDADE', genero: 'M', vigencia: '2019-11-13', idadeMinima: 65, tempoContribuicaoAnos: 20, carenciaMeses: 180, descricao: 'Aposentadoria por Idade - Homens', legislacao: 'EC 103/2019' },
+    { modalidade: 'APOSENTADORIA_IDADE', genero: 'F', vigencia: '2019-11-13', idadeMinima: 62, tempoContribuicaoAnos: 15, carenciaMeses: 180, descricao: 'Aposentadoria por Idade - Mulheres', legislacao: 'EC 103/2019' },
+    // ── Tempo de Contribuição (pré-reforma) ───────────────────────────────────
+    { modalidade: 'TEMPO_CONTRIBUICAO', genero: 'M', vigencia: '2019-11-13', tempoContribuicaoAnos: 35, carenciaMeses: 180, descricao: 'Tempo de Contribuição - Homens', legislacao: 'EC 103/2019' },
+    { modalidade: 'TEMPO_CONTRIBUICAO', genero: 'F', vigencia: '2019-11-13', tempoContribuicaoAnos: 30, carenciaMeses: 180, descricao: 'Tempo de Contribuição - Mulheres', legislacao: 'EC 103/2019' },
+    // ── Pedágio 50% ───────────────────────────────────────────────────────────
+    { modalidade: 'PEDAGIO_50', genero: 'M', vigencia: '2019-11-13', tempoContribuicaoAnos: 35, carenciaMeses: 180, descricao: 'Pedágio 50% - Homens', legislacao: 'EC 103/2019', observacoes: 'Válido apenas para quem faltava menos de 2 anos em 13/11/2019.' },
+    { modalidade: 'PEDAGIO_50', genero: 'F', vigencia: '2019-11-13', tempoContribuicaoAnos: 30, carenciaMeses: 180, descricao: 'Pedágio 50% - Mulheres', legislacao: 'EC 103/2019', observacoes: 'Válido apenas para quem faltava menos de 2 anos em 13/11/2019.' },
+    // ── Pedágio 100% ──────────────────────────────────────────────────────────
+    { modalidade: 'PEDAGIO_100', genero: 'M', vigencia: '2019-11-13', idadeMinima: 60, tempoContribuicaoAnos: 35, carenciaMeses: 180, descricao: 'Pedágio 100% - Homens', legislacao: 'EC 103/2019' },
+    { modalidade: 'PEDAGIO_100', genero: 'F', vigencia: '2019-11-13', idadeMinima: 57, tempoContribuicaoAnos: 30, carenciaMeses: 180, descricao: 'Pedágio 100% - Mulheres', legislacao: 'EC 103/2019' },
+    // ── Aposentadoria Especial ────────────────────────────────────────────────
+    { modalidade: 'APOSENTADORIA_ESPECIAL', genero: 'AMBOS', vigencia: '2019-11-13', idadeMinima: 60, tempoContribuicaoAnos: 25, descricao: 'Aposentadoria Especial', legislacao: 'EC 103/2019' },
+    // ── Híbrida ───────────────────────────────────────────────────────────────
+    { modalidade: 'HIBRIDA', genero: 'M', vigencia: '2019-11-13', idadeMinima: 65, tempoContribuicaoAnos: 15, carenciaMeses: 180, descricao: 'Híbrida (Rural/Urbano) - Homens', legislacao: 'EC 103/2019' },
+    { modalidade: 'HIBRIDA', genero: 'F', vigencia: '2019-11-13', idadeMinima: 62, tempoContribuicaoAnos: 15, carenciaMeses: 180, descricao: 'Híbrida (Rural/Urbano) - Mulheres', legislacao: 'EC 103/2019' },
+    // ── BPC/LOAS ──────────────────────────────────────────────────────────────
+    { modalidade: 'BPC_LOAS', genero: 'AMBOS', vigencia: '2019-11-13', idadeMinima: 65, descricao: 'BPC/LOAS - Idoso', legislacao: 'Lei 8.742/1993' },
+    // ── Auxílio-Doença ────────────────────────────────────────────────────────
+    { modalidade: 'AUXILIO_DOENCA_B31', genero: 'AMBOS', vigencia: '1991-07-24', carenciaMeses: 12, descricao: 'Auxílio-Doença Previdenciário (B31)', legislacao: 'Lei 8.213/1991' },
+    // ── Pensão por Morte ──────────────────────────────────────────────────────
+    { modalidade: 'PENSAO_MORTE', genero: 'AMBOS', vigencia: '2019-11-13', carenciaMeses: 18, descricao: 'Pensão por Morte', legislacao: 'EC 103/2019', observacoes: 'Menos de 18 contribuições pode reduzir o prazo de pagamento ao cônjuge.' },
+    // ── Por Pontos (Homens) ───────────────────────────────────────────────────
+    ...pontosProgH.map(p => ({
+      modalidade: 'PONTOS_86_96',
+      genero: 'M',
+      vigencia: p.vigencia,
+      pontosMinimos: p.pontos,
+      tempoContribuicaoAnos: 35,
+      carenciaMeses: 180,
+      descricao: `Por Pontos - Homens (${p.pontos} pts)`,
+      legislacao: 'EC 103/2019',
+    })),
+    // ── Por Pontos (Mulheres) ─────────────────────────────────────────────────
+    ...pontosProgF.map(p => ({
+      modalidade: 'PONTOS_86_96',
+      genero: 'F',
+      vigencia: p.vigencia,
+      pontosMinimos: p.pontos,
+      tempoContribuicaoAnos: 30,
+      carenciaMeses: 180,
+      descricao: `Por Pontos - Mulheres (${p.pontos} pts)`,
+      legislacao: 'EC 103/2019',
+    })),
+  ]
+
+  for (const r of regras) {
+    const vigenciaDate = new Date(r.vigencia + 'T00:00:00.000Z')
+    await prisma.regraAposentadoria.upsert({
+      where: { modalidade_genero_vigencia: { modalidade: r.modalidade, genero: r.genero, vigencia: vigenciaDate } },
+      update: { ...r, vigencia: vigenciaDate },
+      create: { ...r, vigencia: vigenciaDate },
+    })
+  }
+
+  console.log(`✅ ${regras.length} regras de aposentadoria inseridas`)
+
+  // ─── Modalidades de Benefício / Cálculo ────────────────────────────────────
+  console.log('🌱 Seeding Modalidades...')
+
+  for (const modalidade of MODALIDADES_PADRAO) {
+    await prisma.modalidadeLabel.upsert({
+      where: { codigo: modalidade.codigo },
+      update: {
+        label: modalidade.label,
+        descricao: modalidade.descricao ?? null,
+        ordem: modalidade.ordem,
+        ativo: true,
+      },
+      create: {
+        codigo: modalidade.codigo,
+        label: modalidade.label,
+        descricao: modalidade.descricao ?? null,
+        ordem: modalidade.ordem,
+        ativo: true,
+      },
+    })
+  }
+
+  console.log(`✅ ${MODALIDADES_PADRAO.length} modalidades inseridas`)
 }
 
 main()

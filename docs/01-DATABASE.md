@@ -127,8 +127,7 @@ model PlanLimit {
   exportPdfEnabled    Boolean @default(false)
   whatsappEnabled     Boolean @default(false)
   watermarkEnabled    Boolean @default(true)
-  diagnosisEnabled    Boolean @default(false) // Diagnóstico IA via prontuário
-  datajudEnabled      Boolean @default(false) // Consulta de processo via Datajud
+  diagnosisEnabled    Boolean @default(false)
 
   updatedAt DateTime @updatedAt
 
@@ -204,16 +203,6 @@ model Case {
   deadlineDate DateTime?
   notes        String?
 
-  // ── Dados do processo judicial (Datajud) ──────────────
-  // Número CNJ: formato 0001234-55.2024.4.03.6183
-  // Validar com regex antes de salvar:
-  // /^\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4}$/
-  processNumber       String?   // Número CNJ do processo
-  processLastCheck    DateTime? // Última consulta ao Datajud
-  processLastMovDate  DateTime? // Data da última movimentação retornada
-  processLastMovCount Int?      // Total de movimentações (detectar novidades)
-  processLastSummary  String?   @db.Text // Resumo da IA em cache
-
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -229,7 +218,6 @@ model Case {
   @@index([clientId])
   @@index([userId, status])
   @@index([priority, deadlineDate])
-  @@index([processNumber])        // Busca rápida por número de processo
   @@map("cases")
 }
 
@@ -553,7 +541,6 @@ await prisma.planLimit.createMany({
       whatsappEnabled:    false,
       watermarkEnabled:   true,
       diagnosisEnabled:   false,
-      datajudEnabled:     false, // ← Datajud bloqueado no FREE
     },
     {
       plan: 'SOLO',
@@ -567,7 +554,6 @@ await prisma.planLimit.createMany({
       whatsappEnabled:    true,
       watermarkEnabled:   false,
       diagnosisEnabled:   true,
-      datajudEnabled:     true,  // ← Datajud disponível
     },
     {
       plan: 'PRO',
@@ -581,31 +567,10 @@ await prisma.planLimit.createMany({
       whatsappEnabled:    true,
       watermarkEnabled:   false,
       diagnosisEnabled:   true,
-      datajudEnabled:     true,
     },
   ],
 })
 ```
-
----
-
-## Migration para adicionar campos de processo
-
-Se o banco já existir, criar migration específica:
-
-```bash
-npx prisma migrate dev --name "add_process_fields"
-```
-
-Campos adicionados ao `Case`:
-- `processNumber` — String?, indexed
-- `processLastCheck` — DateTime?
-- `processLastMovDate` — DateTime?
-- `processLastMovCount` — Int?
-- `processLastSummary` — Text?
-
-E ao `PlanLimit`:
-- `datajudEnabled` — Boolean, default false
 
 ---
 
@@ -641,11 +606,6 @@ MP_PLAN_ID_SOLO=""
 MP_PLAN_ID_PRO=""
 CPF_HASH_SALT=""
 ADMIN_SECRET=""
-
-# Datajud — API pública do CNJ (sem autenticação necessária)
-# Endpoint base: https://api-publica.datajud.cnj.jus.br
-# Não requer API key — consumido via fetch nativo
-DATAJUD_BASE_URL="https://api-publica.datajud.cnj.jus.br"
 ```
 
 ---
@@ -656,9 +616,7 @@ DATAJUD_BASE_URL="https://api-publica.datajud.cnj.jus.br"
 2. Monetário sempre `Decimal(12,2)` — nunca `Float`
 3. Datas sempre UTC — conversão no frontend
 4. `CaseNote` nunca editada ou deletada (imutabilidade)
-5. `processNumber` validado com regex CNJ antes de salvar
-6. Cache do Datajud: verificar `processLastCheck` + `processLastMovDate` + `processLastMovCount`
-7. `PlanLimit` editável pelo admin sem redeploy
-8. `UsageRecord` criado junto com o usuário no registro
-9. PostgreSQL exposto apenas em `127.0.0.1` (porta 60003)
+5. `PlanLimit` editável pelo admin sem redeploy
+6. `UsageRecord` criado junto com o usuário no registro
+7. PostgreSQL exposto apenas em `127.0.0.1` (porta 60003)
 10. Backup diário via `pg_dump` + cron

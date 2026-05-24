@@ -7,7 +7,6 @@ import { handleApiError } from '@/lib/api-error'
 
 const schema = z.object({
   status: z.enum(['PROSPECCAO', 'ANALISE', 'PRONTO_PARA_REQUERER', 'EM_PROCESSAMENTO', 'FINALIZADO']),
-  processNumber: z.string().optional(),
 })
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
@@ -22,20 +21,10 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       return NextResponse.json({ error: 'Status inválido.' }, { status: 400 })
     }
 
-    const data: Record<string, unknown> = { status: parsed.data.status }
-
-    // Ao protocolar (EM_PROCESSAMENTO), pode salvar número CNJ
-    if (parsed.data.status === 'EM_PROCESSAMENTO' && parsed.data.processNumber) {
-      const cnj = /^\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4}$/
-      if (cnj.test(parsed.data.processNumber)) {
-        data.processNumber = parsed.data.processNumber
-      }
-    }
-
     const caso = await prisma.case.update({
       where: { id: params.id },
-      data,
-      select: { id: true, status: true, processNumber: true },
+      data: { status: parsed.data.status },
+      select: { id: true, status: true },
     })
 
     return NextResponse.json({ case: caso })

@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/Button'
 import { Modal } from '@/components/ui/Modal'
 import { formatDate } from '@/lib/utils'
 import { projectSimulations } from '@/lib/previdencia-engine'
+import { MODALIDADES_PADRAO } from '@/lib/modalidade-labels'
 import {
   TrendingUp,
   Scale,
@@ -32,21 +33,9 @@ interface Simulation {
   createdAt: string
 }
 
-const MODALIDADE_LABELS: Record<string, string> = {
-  PONTOS_86_96: 'Aposentadoria por Pontos (Transição)',
-  PEDAGIO_50: 'Transição - Pedágio de 50%',
-  PEDAGIO_100: 'Transição - Pedágio de 100%',
-  IDADE_MINIMA_65_62: 'Idade Mínima Progressiva',
-  TEMPO_CONTRIBUICAO: 'Tempo de Contribuição (Regra Geral)',
-  APOSENTADORIA_IDADE: 'Aposentadoria por Idade',
-  APOSENTADORIA_ESPECIAL: 'Aposentadoria Especial (25 anos)',
-  HIBRIDA: 'Aposentadoria Híbrida',
-  AUXILIO_DOENCA_B31: 'Auxílio-Doença Previdenciário',
-  AUXILIO_DOENCA_B91: 'Auxílio-Doença Acidentário',
-  SALARIO_MATERNIDADE: 'Salário-Maternidade',
-  AUXILIO_RECLUSAO: 'Auxílio-Reclusão',
-  PENSAO_MORTE: 'Pensão por Morte',
-  BPC_LOAS: 'BPC/LOAS (Idoso)',
+interface Modalidade {
+  codigo: string
+  label: string
 }
 
 const formatCurrency = (val: string | number) => {
@@ -56,6 +45,7 @@ const formatCurrency = (val: string | number) => {
 export default function SimulatorPage() {
   const params = useParams()
   const [simulations, setSimulations] = useState<Simulation[]>([])
+  const [modalidades, setModalidades] = useState<Modalidade[]>([])
   const [cnisDocument, setCnisDocument] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
@@ -71,26 +61,33 @@ export default function SimulatorPage() {
   const [tipoContribuicao, setTipoContribuicao] = useState<'MINIMO' | 'TETO' | 'CUSTOM'>('MINIMO')
   const [valorCustomContribuicao, setValorCustomContribuicao] = useState(1621.00)
   const [salarioVigente, setSalarioVigente] = useState({ valor: 1621.00, teto: 8157.41 })
+  const [regrasVigentes, setRegrasVigentes] = useState<Record<string, any>>({})
   
   const [errorMessage, setErrorMessage] = useState('')
 
   const load = async () => {
     try {
-      // 1. Carrega simulações salvas
-      const rSim = await api.get(`/cases/${params.id}/simulations`)
+      const [rSim, rCnis, rModalidades] = await Promise.all([
+        api.get(`/cases/${params.id}/simulations`),
+        api.get(`/cnis/${params.id}`),
+        api.get('/modalidades'),
+      ])
       setSimulations(rSim.data.simulations ?? [])
+      setModalidades(rModalidades.data.modalidades ?? [])
 
-      // 2. Carrega CNIS
-      const rCnis = await api.get(`/cnis/${params.id}`)
       if (rCnis.data?.cnisDocument?.processingStatus === 'COMPLETED') {
         setCnisDocument(rCnis.data.cnisDocument)
       }
 
-      // 3. Busca salário mínimo e teto vigentes hoje
+      // 3. Busca salário mínimo, teto e regras previdenciárias vigentes hoje
       const hoje = new Date().toISOString().slice(0, 10)
-      const rSalario = await api.get(`/salario-minimo?dib=${hoje}`)
+      const [rSalario, rRegras] = await Promise.all([
+        api.get(`/salario-minimo?dib=${hoje}`),
+        api.get(`/regras-aposentadoria?dib=${hoje}`),
+      ])
       setSalarioVigente({ valor: rSalario.data.valor, teto: rSalario.data.teto })
       setValorCustomContribuicao(rSalario.data.valor)
+      setRegrasVigentes(rRegras.data)
     } catch {
       // noop
     } finally {
@@ -101,6 +98,10 @@ export default function SimulatorPage() {
   useEffect(() => {
     load()
   }, [params.id])
+
+  const modalidadeLabels = Object.fromEntries(
+    (modalidades.length > 0 ? modalidades : MODALIDADES_PADRAO).map(({ codigo, label }) => [codigo, label])
+  )
 
   const handleCreate = async () => {
     setErrorMessage('')
@@ -137,6 +138,7 @@ export default function SimulatorPage() {
         modalidade,
         salarioMinimo: salarioVigente.valor,
         tetoPrevidenciario: salarioVigente.teto,
+        regrasVigentes,
       })
 
       // Salva no banco de dados com a rota estruturada
@@ -247,7 +249,7 @@ export default function SimulatorPage() {
                       {paramsSim?.modalidade && (
                         <span className="flex items-center gap-1">
                           <Scale className="w-3.5 h-3.5 text-slate-400" />
-                          Modalidade: {MODALIDADE_LABELS[paramsSim.modalidade] ?? paramsSim.modalidade}
+                          Modalidade: {modalidadeLabels[paramsSim.modalidade] ?? paramsSim.modalidade}
                         </span>
                       )}
                     </div>
@@ -430,8 +432,8 @@ export default function SimulatorPage() {
                 onChange={(e) => setModalidade(e.target.value)}
                 className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm font-sans focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 outline-none"
               >
-                {Object.entries(MODALIDADE_LABELS).map(([v, l]) => (
-                  <option key={v} value={v}>{l}</option>
+                {(modalidades.length > 0 ? modalidades : MODALIDADES_PADRAO).map((item) => (
+                  <option key={item.codigo} value={item.codigo}>{item.label}</option>
                 ))}
               </select>
             </div>

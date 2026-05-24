@@ -120,7 +120,6 @@ model PlanLimit {
   whatsappEnabled    Boolean @default(false)
   watermarkEnabled   Boolean @default(true)
   diagnosisEnabled   Boolean @default(false)
-  datajudEnabled     Boolean @default(false)
 
   updatedAt DateTime @updatedAt
 
@@ -192,17 +191,14 @@ model Case {
   status       CaseStatus  @default(PROSPECCAO)
   priority     Priority    @default(NORMAL)
   benefitType  BenefitType
+  processNumber      String?
+  processLastCheck   DateTime?
+  processLastMovDate DateTime?
+  processLastMovCount Int?
+  processLastSummary String?   @db.Text
   deadlineDays Int?
   deadlineDate DateTime?
   notes        String?
-
-  // Número CNJ: formato 0001234-55.2024.4.03.6183
-  // Regex: /^\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4}$/
-  processNumber       String?   // Número CNJ do processo
-  processLastCheck    DateTime? // Última consulta ao Datajud
-  processLastMovDate  DateTime? // Data da última movimentação retornada
-  processLastMovCount Int?      // Total de movimentações (detectar novidades)
-  processLastSummary  String?   @db.Text // Resumo da IA em cache
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -517,6 +513,51 @@ model SalarioMinimo {
 
   @@index([vigencia])
   @@map("salarios_minimos")
+}
+
+// ─────────────────────────────────────────
+// REGRAS DE APOSENTADORIA
+// ─────────────────────────────────────────
+
+model RegraAposentadoria {
+  id         String   @id @default(cuid())
+  modalidade String   // Ex: IDADE_MINIMA_65_62, PONTOS_86_96, PEDAGIO_50, etc.
+  genero     String   // 'M', 'F' ou 'AMBOS'
+  vigencia   DateTime // Data de início da vigência desta regra
+
+  idadeMinima           Decimal? @db.Decimal(5, 1) // Ex: 62.0, 59.5
+  tempoContribuicaoAnos Int?
+  pontosMinimos         Int?     // Apenas para a regra por pontos
+  carenciaMeses         Int?
+
+  descricao   String   // Nome legível da regra
+  legislacao  String   // Ex: "EC 103/2019"
+  observacoes String?  @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([modalidade, genero, vigencia])
+  @@index([modalidade, genero, vigencia])
+  @@map("regras_aposentadoria")
+}
+
+// ─────────────────────────────────────────
+// MODALIDADES DE BENEFÍCIO / CÁLCULO
+// ─────────────────────────────────────────
+
+model ModalidadeLabel {
+  id        String   @id @default(cuid())
+  codigo    String   @unique
+  label     String
+  descricao String?  @db.Text
+  ativo     Boolean  @default(true)
+  ordem     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([ativo, ordem])
+  @@map("modalidades_labels")
 }
 
 // ─────────────────────────────────────────

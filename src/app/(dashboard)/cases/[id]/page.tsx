@@ -16,7 +16,6 @@ interface CaseDetail {
   priority: string
   notes: string | null
   deadlineDate: string | null
-  processNumber: string | null
   createdAt: string
   updatedAt: string
   client: { id: string; name: string; phone: string | null }
@@ -127,10 +126,6 @@ export default function CaseOverviewPage() {
           <div>
             <span className="text-slate-400 text-xs uppercase">Prazo</span>
             <p className="text-white mt-0.5">{caseData.deadlineDate ? formatDate(caseData.deadlineDate) : '—'}</p>
-          </div>
-          <div>
-            <span className="text-slate-400 text-xs uppercase">Nº do Processo</span>
-            <p className="text-white mt-0.5 font-mono">{caseData.processNumber ?? '—'}</p>
           </div>
           <div>
             <span className="text-slate-400 text-xs uppercase">CNIS</span>

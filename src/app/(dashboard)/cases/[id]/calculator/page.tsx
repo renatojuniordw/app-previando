@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/Button'
 import { Modal } from '@/components/ui/Modal'
 import { formatDate } from '@/lib/utils'
 import { calculatePrevidenciario } from '@/lib/previdencia-engine'
+import { MODALIDADES_PADRAO } from '@/lib/modalidade-labels'
 import {
   Scale,
   ShieldCheck,
@@ -44,21 +45,9 @@ interface Calculation {
   createdAt: string
 }
 
-const MODALIDADE_LABELS: Record<string, string> = {
-  PONTOS_86_96: 'Aposentadoria por Pontos (Transição)',
-  PEDAGIO_50: 'Transição - Pedágio de 50%',
-  PEDAGIO_100: 'Transição - Pedágio de 100%',
-  IDADE_MINIMA_65_62: 'Idade Mínima Progressiva',
-  TEMPO_CONTRIBUICAO: 'Tempo de Contribuição (Regra Geral)',
-  APOSENTADORIA_IDADE: 'Aposentadoria por Idade',
-  APOSENTADORIA_ESPECIAL: 'Aposentadoria Especial (25 anos)',
-  HIBRIDA: 'Aposentadoria Híbrida',
-  AUXILIO_DOENCA_B31: 'Auxílio-Doença Previdenciário',
-  AUXILIO_DOENCA_B91: 'Auxílio-Doença Acidentário',
-  SALARIO_MATERNIDADE: 'Salário-Maternidade',
-  AUXILIO_RECLUSAO: 'Auxílio-Reclusão',
-  PENSAO_MORTE: 'Pensão por Morte',
-  BPC_LOAS: 'BPC/LOAS (Idoso)',
+interface Modalidade {
+  codigo: string
+  label: string
 }
 
 const formatCurrency = (val: string | number) => {
@@ -73,6 +62,7 @@ const formatPercentage = (val: string | number | undefined | null) => {
 export default function CalculatorPage() {
   const params = useParams()
   const [calculations, setCalculations] = useState<Calculation[]>([])
+  const [modalidades, setModalidades] = useState<Modalidade[]>([])
   const [cnisDocument, setCnisDocument] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
@@ -90,12 +80,14 @@ export default function CalculatorPage() {
 
   const load = async () => {
     try {
-      // 1. Busca os cálculos do caso
-      const rCalc = await api.get(`/cases/${params.id}/calculations`)
+      const [rCalc, rCnis, rModalidades] = await Promise.all([
+        api.get(`/cases/${params.id}/calculations`),
+        api.get(`/cnis/${params.id}`),
+        api.get('/modalidades'),
+      ])
       setCalculations(rCalc.data.calculations ?? [])
+      setModalidades(rModalidades.data.modalidades ?? [])
 
-      // 2. Busca o CNIS do caso para cruzar dados
-      const rCnis = await api.get(`/cnis/${params.id}`)
       if (rCnis.data?.cnisDocument?.processingStatus === 'COMPLETED') {
         setCnisDocument(rCnis.data.cnisDocument)
         // Auto-detecta data de nascimento se disponível no CNIS
@@ -115,6 +107,10 @@ export default function CalculatorPage() {
     load()
   }, [params.id])
 
+  const modalidadeLabels = Object.fromEntries(
+    (modalidades.length > 0 ? modalidades : MODALIDADES_PADRAO).map(({ codigo, label }) => [codigo, label])
+  )
+
   const handleCreate = async () => {
     setErrorMessage('')
     
@@ -129,9 +125,13 @@ export default function CalculatorPage() {
 
     setCreating(true)
     try {
-      // Busca salário mínimo e teto vigentes na DIB
-      const rSalario = await api.get(`/salario-minimo?dib=${dib}`)
+      // Busca salário mínimo, teto e regras previdenciárias vigentes na DIB
+      const [rSalario, rRegras] = await Promise.all([
+        api.get(`/salario-minimo?dib=${dib}`),
+        api.get(`/regras-aposentadoria?dib=${dib}`),
+      ])
       const { valor: salarioMinimo, teto: tetoPrevidenciario } = rSalario.data
+      const regrasVigentes = rRegras.data
 
       // Executa o motor previdenciário no client
       const calculationResult = calculatePrevidenciario({
@@ -144,6 +144,7 @@ export default function CalculatorPage() {
         dependentesPensao: Number(dependentesPensao),
         salarioMinimo,
         tetoPrevidenciario,
+        regrasVigentes,
       })
 
       // Envia os resultados prontos para persistir no backend
@@ -275,7 +276,7 @@ export default function CalculatorPage() {
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
                       <span className="font-sans font-bold text-slate-800 text-base sm:text-lg">
-                        {MODALIDADE_LABELS[calc.modalidade] ?? calc.modalidade}
+                        {modalidadeLabels[calc.modalidade] ?? calc.modalidade}
                       </span>
                       {calc.isSelected && (
                         <span className="bg-amber-50 text-amber-700 border border-amber-200 text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full shrink-0">
@@ -550,8 +551,8 @@ export default function CalculatorPage() {
                 onChange={(e) => setModalidade(e.target.value)}
                 className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm font-sans focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 outline-none"
               >
-                {Object.entries(MODALIDADE_LABELS).map(([v, l]) => (
-                  <option key={v} value={v}>{l}</option>
+                {(modalidades.length > 0 ? modalidades : MODALIDADES_PADRAO).map((item) => (
+                  <option key={item.codigo} value={item.codigo}>{item.label}</option>
                 ))}
               </select>
             </div>

@@ -7,7 +7,6 @@ export type PlanFeature =
   | 'EXPORT_PDF'
   | 'WHATSAPP_SHARE'
   | 'DIAGNOSIS'
-  | 'USE_DATAJUD'
 
 const FEATURE_MAP: Record<PlanFeature, keyof import('@prisma/client').PlanLimit> = {
   SIMULATOR: 'simulatorEnabled',
@@ -15,7 +14,6 @@ const FEATURE_MAP: Record<PlanFeature, keyof import('@prisma/client').PlanLimit>
   EXPORT_PDF: 'exportPdfEnabled',
   WHATSAPP_SHARE: 'whatsappEnabled',
   DIAGNOSIS: 'diagnosisEnabled',
-  USE_DATAJUD: 'datajudEnabled',
 }
 
 const FEATURE_LABELS: Record<PlanFeature, string> = {
@@ -24,7 +22,6 @@ const FEATURE_LABELS: Record<PlanFeature, string> = {
   EXPORT_PDF: 'Exportar PDF',
   WHATSAPP_SHARE: 'Compartilhar via WhatsApp',
   DIAGNOSIS: 'Diagnóstico IA',
-  USE_DATAJUD: 'Consulta de processo (Datajud)',
 }
 
 export async function getPlanLimit(plan: string) {

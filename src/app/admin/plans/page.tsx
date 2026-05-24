@@ -8,7 +8,6 @@ interface PlanLimit {
   maxClients: number | null
   maxCalculationsPerMonth: number | null
   maxOpinionsPerMonth: number | null
-  datajudEnabled: boolean
   simulatorEnabled: boolean
   retroativosEnabled: boolean
   exportPdfEnabled: boolean
@@ -110,7 +109,7 @@ export default function AdminPlansPage() {
                   </div>
                 ))}
                 {([
-                  'datajudEnabled', 'simulatorEnabled', 'retroativosEnabled',
+                  'simulatorEnabled', 'retroativosEnabled',
                   'exportPdfEnabled', 'whatsappShareEnabled', 'watermarkEnabled',
                 ] as const).map((key) => (
                   <label key={key} className="flex items-center gap-2 cursor-pointer">
@@ -135,7 +134,6 @@ export default function AdminPlansPage() {
                 <p className="text-slate-400">Max Pareceres: <span className="text-white">{plan.maxOpinionsPerMonth ?? '∞'}/mês</span></p>
                 <div className="border-t border-slate-700 pt-2 mt-2 space-y-1">
                   {([
-                    ['datajudEnabled', 'Datajud'],
                     ['simulatorEnabled', 'Simulador'],
                     ['retroativosEnabled', 'Retroativos'],
                     ['exportPdfEnabled', 'Export PDF'],

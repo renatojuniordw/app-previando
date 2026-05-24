@@ -71,7 +71,6 @@ ${watermark ? '<div class="watermark">PREVIANDO FREE</div>' : ''}
   <tr><td>Tipo de Benefício</td><td>${caso.benefitType.replace(/_/g, ' ')}</td></tr>
   <tr><td>Status</td><td>${caso.status.replace(/_/g, ' ')}</td></tr>
   <tr><td>Prioridade</td><td>${caso.priority}</td></tr>
-  ${caso.processNumber ? `<tr><td>Processo CNJ</td><td>${caso.processNumber}</td></tr>` : ''}
 </table>
 
 ${selectedCalc ? `

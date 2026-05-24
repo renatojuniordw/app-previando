@@ -81,7 +81,6 @@ export async function POST(req: NextRequest) {
           whatsappEnabled: false,
           watermarkEnabled: true,
           diagnosisEnabled: false,
-          datajudEnabled: false,
         },
       ],
       skipDuplicates: true,

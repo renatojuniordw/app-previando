@@ -20,7 +20,7 @@ O Previando é um SaaS para **advogados previdenciários brasileiros**. O trabal
 5. Protocolar o pedido no INSS ou entrar na Justiça
 6. Acompanhar o processo até o benefício ser concedido
 
-O Previando automatiza os passos 2, 3 e 4 — e com prontuário + consulta de processo, organiza todo o acompanhamento do passo 6.
+O Previando automatiza os passos 2, 3 e 4 — e com prontuário, organiza todo o acompanhamento do passo 6.
 
 ---
 
@@ -70,12 +70,6 @@ Rascunho jurídico gerado com IA. Advogado sempre revisa antes de usar.
 
 ### Prontuário
 Histórico versionado e imutável de anotações de um caso. Cada entrada nunca é editada — só se cria novas.
-
-### Datajud
-API Pública do CNJ (Conselho Nacional de Justiça) que fornece dados de andamento processual. Permite consultar movimentações de processos judiciais sem abrir o sistema PJe ou equivalente.
-
-### Número CNJ
-Formato padronizado de número de processo judicial brasileiro. Ex: `0001234-55.2024.4.03.6183`. Composto por: NNNNNNN-DD.AAAA.J.TT.OOOO (número, dígito, ano, justiça, tribunal, origem).
 
 ---
 
@@ -128,102 +122,9 @@ Atendimento específico para um benefício. Um cliente pode ter múltiplos casos
 - 🟡 ATTENTION: 8–30 dias
 - 🟢 NORMAL: >30 dias ou sem prazo
 
-**Campos de processo judicial (Datajud):**
-
-| Campo | Tipo | Descrição |
-|---|---|---|
-| `processNumber` | String? | Número CNJ do processo (ex: `0001234-55.2024.4.03.6183`) |
-| `processLastCheck` | DateTime? | Última consulta ao Datajud |
-| `processLastMovDate` | DateTime? | Data da última movimentação retornada |
-| `processLastMovCount` | Int? | Total de movimentações na última consulta |
-| `processLastSummary` | String? | Resumo da IA em cache (TEXT) |
-
 ---
 
-### 3.4 Consulta de Processo (Datajud)
-
-**Contexto:** Quando o advogado protocola um processo no INSS ou na Justiça, ele obtém um número CNJ. A partir daí, clientes frequentemente perguntam "doutor, como tá meu processo?" — o que forçava o advogado a abrir o PJe para dar um status simples.
-
-**Solução:** O advogado salva o número CNJ no caso. Dentro do próprio Previando, ele clica em "Consultar Processo", recebe um resumo gerado pela IA e pode copiar ou enviar direto pelo WhatsApp do cliente.
-
-**Por que não rota pública com CPF?**
-- LGPD: expor dados processuais por CPF em rota pública é risco real
-- Segurança: superfície de ataque desnecessária (enumeração de CPFs)
-- Experiência: cliente não encontraria a página, ligaria pro advogado mesmo
-- Complexidade: CAPTCHA, rate limit público, slug por escritório...
-
-A abordagem pelo advogado resolve tudo: seguro, simples, sem dependência do cliente.
-
-**Fluxo de consulta:**
-
-```
-Advogado abre o caso → aba "Processo"
-    │
-    ├── Sem número CNJ salvo
-    │   → campo para informar o número
-    │   → salva no caso → habilita botão de consulta
-    │
-    └── Com número CNJ salvo → botão "CONSULTAR PROCESSO"
-              │
-              ├── Cache válido?
-              │   (última consulta < 4h E movimentações não mudaram)
-              │   → retorna resumo do banco instantaneamente
-              │   → badge "Atualizado às 14h32 · Sem novidades"
-              │
-              └── Cache expirado ou processo atualizado
-                  → chama API Datajud
-                  → retorna JSON com movimentações
-                  → OpenAI resume em linguagem clara
-                  → salva resumo + metadados no banco
-                  → exibe para o advogado
-                  │
-                  └── Advogado decide:
-                      [📋 COPIAR RESUMO] [💬 ENVIAR WHATSAPP]
-```
-
-**Lógica de cache — usar cache se TODAS as condições forem verdade:**
-1. `processLastCheck` há menos de 4 horas
-2. `processLastMovDate` não mudou em relação à última consulta
-3. `processLastMovCount` não aumentou
-
-**Forçar nova consulta se QUALQUER condição for verdade:**
-1. Cache expirado (> 4h)
-2. Data da última movimentação mudou
-3. Número de movimentações aumentou
-
-**Datajud — informações técnicas:**
-- API pública do CNJ: `https://api-publica.datajud.cnj.jus.br`
-- Sem necessidade de autenticação para consulta básica
-- Endpoint principal: `POST /api_publica_{tribunal}/_search`
-- Campo de busca: `numeroProcesso`
-- Tribunais cobertos: TRF1-6, JEF, TRT, TJ estaduais (cobertura variada)
-- Processos previdenciários: geralmente TRF ou JEF (Juizado Especial Federal)
-- Limitação: dados podem chegar com atraso de dias em alguns tribunais
-
-**Formato da mensagem WhatsApp:**
-```
-⚖️ *Atualização do seu processo*
-
-📋 Processo: 0001234-55.2024.4.03.6183
-📅 Última movimentação: 18/05/2025
-
-[Resumo em linguagem clara gerado pela IA]
-
-_Para dúvidas jurídicas, consulte seu advogado._
-_Informação gerada via Previando_
-```
-
-**Regras:**
-- Plano FREE: sem acesso à consulta de processo (feature SOLO/PRO)
-- Cache de 4 horas por processo — não chama Datajud desnecessariamente
-- Resumo salvo no banco evita custo de IA em consultas repetidas sem mudança
-- Sempre exibir data da última movimentação junto ao resumo
-- Aviso obrigatório: "Para dúvidas jurídicas, consulte seu advogado."
-- Validar formato CNJ antes de salvar (regex: `\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4}`)
-
----
-
-### 3.5 Prontuário (CaseNote)
+### 3.4 Prontuário (CaseNote)
 Histórico versionado de anotações. Imutável — nunca edita, só cria novas entradas.
 
 **Tipos:**
@@ -246,39 +147,39 @@ Histórico versionado de anotações. Imutável — nunca edita, só cria novas 
 
 ---
 
-### 3.6 Documento CNIS
+### 3.5 Documento CNIS
 PDF do CNIS. Cada caso tem no máximo um CNIS ativo.
 
 **Fluxo:** Upload → R2 → BullMQ → `pdf-parse` (se < 100 chars → Tesseract OCR) → `gpt-4.1-mini` → markdown → banco.
 
 ---
 
-### 3.7 Cálculo
+### 3.6 Cálculo
 Resultado de uma modalidade. Imutável após criado. Advogado escolhe o definitivo (`isSelected: true`).
 
 ---
 
-### 3.8 Modalidade de Cálculo (Plugin Versionado)
+### 3.7 Modalidade de Cálculo (Plugin Versionado)
 Cada regra previdenciária é um plugin isolado. Vigentes pré-selecionadas. Ver `02-BACKEND.md`.
 
 ---
 
-### 3.9 Retroativo
+### 3.8 Retroativo
 Cálculo de valores não recebidos no passado. INPC mês a mês.
 
 ---
 
-### 3.10 Simulação de Cenário
+### 3.9 Simulação de Cenário
 Projeção do benefício em data futura.
 
 ---
 
-### 3.11 Checklist de Elegibilidade
+### 3.10 Checklist de Elegibilidade
 Verificação automática dos requisitos. Lógica determinística — IA só explica pendências.
 
 ---
 
-### 3.12 Parecer Preliminar
+### 3.11 Parecer Preliminar
 Rascunho gerado pela IA. Advogado sempre revisa. Não substitui análise jurídica.
 
 ---
@@ -318,16 +219,9 @@ PASSO 6 — AÇÕES OPCIONAIS
 
 PASSO 7 — PROTOCOLAR
     Caso → PRONTO_PARA_REQUERER → EM_PROCESSAMENTO
-    Salva número CNJ do processo
     Anotação no prontuário: tipo JURIDICO com data de protocolo
 
-PASSO 8 — ACOMPANHAR PROCESSO
-    Aba "Processo" do caso
-    "CONSULTAR PROCESSO" → Datajud → IA resume
-    Cache evita consultas desnecessárias
-    Advogado copia ou envia no WhatsApp do cliente
-
-PASSO 9 — FINALIZAR
+PASSO 8 — FINALIZAR
     Caso → FINALIZADO
     Anotação final no prontuário
     PDF CNIS deletado do R2 após 90 dias
@@ -352,7 +246,6 @@ PASSO 9 — FINALIZAR
 | Pareceres IA/mês | 1 | 20 | Ilimitado |
 | Prontuário (entradas/caso) | 10 | Ilimitado | Ilimitado |
 | Diagnóstico IA | ❌ | ✅ | ✅ |
-| Consulta Datajud | ❌ | ✅ | ✅ |
 | Simulador | ❌ | ✅ | ✅ |
 | Retroativos | ❌ | ✅ | ✅ |
 | Export PDF | ❌ | ✅ | ✅ |
@@ -367,26 +260,16 @@ Todo limite verificado no banco via API — retorna 402.
 3. FREE: máximo 10 por caso
 4. Diagnóstico IA: SOLO/PRO apenas
 
-### 5.4 Consulta de Processo — Regras
-1. Disponível apenas para SOLO/PRO
-2. Requer número CNJ salvo no caso
-3. Validar formato CNJ antes de salvar
-4. Cache de 4h — verificar data + contagem de movimentações antes de chamar Datajud
-5. Resumo sempre com data da última movimentação
-6. Aviso obrigatório de consultar advogado para dúvidas jurídicas
-7. Rate limit interno: máximo 10 consultas por hora por usuário (evitar abuso da API Datajud)
-8. Em caso de falha da API Datajud: exibir última informação em cache com aviso de erro
-
-### 5.5 CPF — Privacidade
+### 5.4 CPF — Privacidade
 - Hash HMAC-SHA256 com salt fixo — nunca plain text
 - Sempre mascarado na UI: `***.***.**-**`
 
-### 5.6 WhatsApp Share
+### 5.5 WhatsApp Share
 - Formato: `5511999999999`
 - Link: `https://wa.me/{phone}?text={mensagem}`
 - Rodapé: "Informação gerada via Previando"
 
-### 5.7 PDF com Fallback OCR
+### 5.6 PDF com Fallback OCR
 `pdf-parse` → se < 100 chars → `Tesseract.js` (lang: 'por')
 
 ---
@@ -400,7 +283,6 @@ Todo limite verificado no banco via API — retorna 402.
 | Kanban vazio | "Nenhum caso ativo. Cadastre um cliente e crie um caso." | Ver Clientes |
 | CNIS não enviado | "Faça o upload do CNIS para habilitar a calculadora." | Upload CNIS |
 | Prontuário vazio | "Registre o primeiro contato com o cliente." | + Anotação |
-| Sem número de processo | "Informe o número CNJ para habilitar a consulta." | Campo CNJ |
 | Nenhum parecer | "Selecione um cálculo como definitivo para gerar o parecer." | — |
 
 ---
@@ -415,9 +297,6 @@ Todo limite verificado no banco via API — retorna 402.
 
 **O que é o Prontuário?**
 > O diário do caso. Anote ligações, documentos, decisões. Permanente — consulte antes de falar com o cliente. A IA usa suas anotações para gerar diagnósticos.
-
-**O que é a Consulta de Processo?**
-> Informe o número CNJ do processo e o Previando consulta o andamento no Datajud automaticamente. Você recebe um resumo em linguagem clara e pode enviar direto para o cliente pelo WhatsApp — sem precisar abrir o PJe.
 
 **O que é RMI e RMA?**
 > RMI é o valor no primeiro pagamento. RMA é corrigido pela inflação até hoje.
@@ -458,5 +337,3 @@ npm install --save-dev \
   @types/bcryptjs @types/pdf-parse \
   typescript eslint prettier
 ```
-
-> Datajud é API pública — sem SDK adicional. Consumida via `fetch` nativo com tipagem manual.

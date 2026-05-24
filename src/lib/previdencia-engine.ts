@@ -20,6 +20,15 @@ export interface CnisExtractedData {
   periodos?: PeriodoCNIS[]
 }
 
+// Regras vigentes na DIB — buscadas do banco pelo chamador via getRegrasVigentes()
+// Chave: `${modalidade}_${genero}` (genero: 'M', 'F' ou 'AMBOS')
+export type RegrasVigentes = Record<string, {
+  idadeMinima?: number
+  tempoContribuicaoAnos?: number
+  pontosMinimos?: number
+  carenciaMeses?: number
+}>
+
 export interface CalculationInput {
   birthDate: string
   gender: 'M' | 'F'
@@ -32,6 +41,8 @@ export interface CalculationInput {
   // Valores vigentes na DIB (buscados do banco pelo chamador)
   salarioMinimo?: number
   tetoPrevidenciario?: number
+  // Regras de elegibilidade vigentes na DIB (buscadas do banco pelo chamador)
+  regrasVigentes?: RegrasVigentes
 }
 
 export interface CalculationResult {
@@ -98,7 +109,12 @@ function getAge(birthDateStr: string, refDateStr: string): number {
  * Roda o motor de cálculo para uma dada modalidade e CNIS
  */
 export function calculatePrevidenciario(input: CalculationInput): CalculationResult {
-  const { birthDate, gender, dib, modalidade, extractedData, tempoEspecialAnos = 0, dependentesPensao = 1 } = input
+  const { birthDate, gender, dib, modalidade, extractedData, tempoEspecialAnos = 0, dependentesPensao = 1, regrasVigentes } = input
+
+  // Helper: busca a regra vigente para a modalidade/genero atual
+  function regra(mod: string) {
+    return regrasVigentes?.[`${mod}_${gender}`] ?? regrasVigentes?.[`${mod}_AMBOS`]
+  }
   const SALARIO_MINIMO = input.salarioMinimo ?? SALARIO_MINIMO_FALLBACK
   const TETO_PREVIDENCIARIO = input.tetoPrevidenciario ?? TETO_PREVIDENCIARIO_FALLBACK
 
@@ -132,7 +148,7 @@ export function calculatePrevidenciario(input: CalculationInput): CalculationRes
   // Carência em meses (cada competência com contribuição >= mínimo conta como carência)
   // Obs: a carência real exige contribuição em valor igual ou superior ao salário mínimo (EC 103/2019)
   const carenciaMeses = todasContribuicoes.filter(c => c.valor > 0).length
-  const carenciaAtendida = carenciaMeses >= 180 // Regra geral de 15 anos de carência (180 contribuições)
+  const carenciaAtendida = carenciaMeses >= 180
 
   // Tempo de contribuição total expresso em meses
   // Calculado a partir da soma dos meses de cada período
@@ -200,90 +216,95 @@ export function calculatePrevidenciario(input: CalculationInput): CalculationRes
 
   switch (modalidade) {
     case 'APOSENTADORIA_IDADE':
-    case 'IDADE_MINIMA_65_62':
-      // Requisitos de idade: Homem 65, Mulher 62. Carência de 180 meses (15 anos)
-      const idadeMinima = gender === 'M' ? 65 : 62
-      const tempoMinimoIdade = 15
+    case 'IDADE_MINIMA_65_62': {
+      const r = regra(modalidade === 'APOSENTADORIA_IDADE' ? 'APOSENTADORIA_IDADE' : 'IDADE_MINIMA_65_62')
+      const idadeMinima = r?.idadeMinima ?? (gender === 'M' ? 65 : 62)
+      const tempoMinimoIdade = r?.tempoContribuicaoAnos ?? 15
+      const carenciaExigida = r?.carenciaMeses ?? 180
 
       coeficiente = coeficienteProgressivo
 
-      if (idadeNaApuracao >= idadeMinima && tempoContribuicaoAnos >= tempoMinimoIdade && carenciaAtendida) {
+      if (idadeNaApuracao >= idadeMinima && tempoContribuicaoAnos >= tempoMinimoIdade && carenciaMeses >= carenciaExigida) {
         elegivel = true
       } else {
         if (idadeNaApuracao < idadeMinima) pendencias.push(`Idade mínima de ${idadeMinima} anos não atingida (possui ${idadeNaApuracao}).`)
         if (tempoContribuicaoAnos < tempoMinimoIdade) pendencias.push(`Tempo de contribuição mínimo de ${tempoMinimoIdade} anos não atingido (possui ${tempoContribuicaoAnos}).`)
-        if (!carenciaAtendida) pendencias.push(`Carência de 180 contribuições mensais não cumprida (possui ${carenciaMeses}).`)
+        if (carenciaMeses < carenciaExigida) pendencias.push(`Carência de ${carenciaExigida} contribuições mensais não cumprida (possui ${carenciaMeses}).`)
       }
       break
+    }
 
-    case 'TEMPO_CONTRIBUICAO':
-      // Requisito pré-reforma ou transição pura: Mulher 30 anos de tempo, Homem 35 anos
-      const tempoMinimoTC = gender === 'M' ? 35 : 30
+    case 'TEMPO_CONTRIBUICAO': {
+      const r = regra('TEMPO_CONTRIBUICAO')
+      const tempoMinimoTC = r?.tempoContribuicaoAnos ?? (gender === 'M' ? 35 : 30)
+      const carenciaExigida = r?.carenciaMeses ?? 180
       coeficiente = coeficienteProgressivo
 
-      if (tempoContribuicaoAnos >= tempoMinimoTC && carenciaAtendida) {
+      if (tempoContribuicaoAnos >= tempoMinimoTC && carenciaMeses >= carenciaExigida) {
         elegivel = true
       } else {
         if (tempoContribuicaoAnos < tempoMinimoTC) pendencias.push(`Tempo de contribuição de ${tempoMinimoTC} anos não atingido (possui ${tempoContribuicaoAnos}).`)
-        if (!carenciaAtendida) pendencias.push(`Carência de 180 contribuições mensais não cumprida (possui ${carenciaMeses}).`)
+        if (carenciaMeses < carenciaExigida) pendencias.push(`Carência de ${carenciaExigida} contribuições mensais não cumprida (possui ${carenciaMeses}).`)
       }
       break
+    }
 
-    case 'PONTOS_86_96':
-      // Em 2026: Mulher precisa de 93 pontos, Homem de 103 pontos. Tempo mínimo de TC: 30(F)/35(M)
-      const tempoMinTCRegra = gender === 'M' ? 35 : 30
-      const pontosExigidos = gender === 'M' ? 103 : 93
+    case 'PONTOS_86_96': {
+      const r = regra('PONTOS_86_96')
+      const tempoMinTCRegra = r?.tempoContribuicaoAnos ?? (gender === 'M' ? 35 : 30)
+      const pontosExigidos  = r?.pontosMinimos          ?? (gender === 'M' ? 103 : 93)
+      const carenciaExigida = r?.carenciaMeses          ?? 180
       const pontosAtuais = idadeNaApuracao + tempoContribuicaoAnos
 
       coeficiente = coeficienteProgressivo
 
-      if (tempoContribuicaoAnos >= tempoMinTCRegra && pontosAtuais >= pontosExigidos && carenciaAtendida) {
+      if (tempoContribuicaoAnos >= tempoMinTCRegra && pontosAtuais >= pontosExigidos && carenciaMeses >= carenciaExigida) {
         elegivel = true
       } else {
         if (tempoContribuicaoAnos < tempoMinTCRegra) pendencias.push(`Tempo de contribuição de ${tempoMinTCRegra} anos não atingido (possui ${tempoContribuicaoAnos}).`)
         if (pontosAtuais < pontosExigidos) pendencias.push(`Pontuação mínima de ${pontosExigidos} pontos não atingida (soma de idade e tempo deu ${pontosAtuais.toFixed(1)}).`)
-        if (!carenciaAtendida) pendencias.push(`Carência de 180 contribuições mensais não cumprida (possui ${carenciaMeses}).`)
+        if (carenciaMeses < carenciaExigida) pendencias.push(`Carência de ${carenciaExigida} contribuições mensais não cumprida (possui ${carenciaMeses}).`)
       }
       break
+    }
 
-    case 'PEDAGIO_50':
-      // Aplicável a quem faltava menos de 2 anos para se aposentar em 2019
-      // Homem: 35 anos + 50% do tempo faltante. Mulher: 30 anos + 50% do tempo faltante.
-      // Aplica Fator Previdenciário
-      const tempoTC50 = gender === 'M' ? 35 : 30
-      // Fator previdenciário aproximado com base na idade
+    case 'PEDAGIO_50': {
+      const r = regra('PEDAGIO_50')
+      const tempoTC50 = r?.tempoContribuicaoAnos ?? (gender === 'M' ? 35 : 30)
+      const carenciaExigida = r?.carenciaMeses ?? 180
       fatorPrevidenciario = Math.min(1.2, Math.max(0.4, (idadeNaApuracao * tempoContribuicaoAnos) / 2200))
-      coeficiente = fatorPrevidenciario // Na regra de 50%, a RMI é o SB * Fator Previdenciário
+      coeficiente = fatorPrevidenciario
 
-      if (tempoContribuicaoAnos >= tempoTC50 && carenciaAtendida) {
+      if (tempoContribuicaoAnos >= tempoTC50 && carenciaMeses >= carenciaExigida) {
         elegivel = true
       } else {
         if (tempoContribuicaoAnos < tempoTC50) pendencias.push(`Tempo de contribuição de ${tempoTC50} anos não atingido para transição de 50%.`)
-        if (!carenciaAtendida) pendencias.push(`Carência de 180 contribuições mensais não cumprida.`)
+        if (carenciaMeses < carenciaExigida) pendencias.push(`Carência de ${carenciaExigida} contribuições mensais não cumprida.`)
       }
       break
+    }
 
-    case 'PEDAGIO_100':
-      // Requisitos: Mulher 57 anos de idade + 30 de contribuição. Homem 60 anos + 35 de contribuição.
-      // Pedágio de 100% do tempo que faltava em 2019.
-      // Coeficiente é 100%.
-      const idadePedagio100 = gender === 'M' ? 60 : 57
-      const tempoPedagio100 = gender === 'M' ? 35 : 30
-      coeficiente = 1.00 // 100% sem fator previdenciário
+    case 'PEDAGIO_100': {
+      const r = regra('PEDAGIO_100')
+      const idadePedagio100 = r?.idadeMinima           ?? (gender === 'M' ? 60 : 57)
+      const tempoPedagio100 = r?.tempoContribuicaoAnos ?? (gender === 'M' ? 35 : 30)
+      const carenciaExigida = r?.carenciaMeses         ?? 180
+      coeficiente = 1.00
 
-      if (idadeNaApuracao >= idadePedagio100 && tempoContribuicaoAnos >= tempoPedagio100 && carenciaAtendida) {
+      if (idadeNaApuracao >= idadePedagio100 && tempoContribuicaoAnos >= tempoPedagio100 && carenciaMeses >= carenciaExigida) {
         elegivel = true
       } else {
         if (idadeNaApuracao < idadePedagio100) pendencias.push(`Idade mínima de ${idadePedagio100} anos não atingida para pedágio de 100% (possui ${idadeNaApuracao}).`)
         if (tempoContribuicaoAnos < tempoPedagio100) pendencias.push(`Tempo de contribuição de ${tempoPedagio100} anos não atingido para pedágio de 100% (possui ${tempoContribuicaoAnos}).`)
-        if (!carenciaAtendida) pendencias.push(`Carência de 180 contribuições mensais não cumprida.`)
+        if (carenciaMeses < carenciaExigida) pendencias.push(`Carência de ${carenciaExigida} contribuições mensais não cumprida.`)
       }
       break
+    }
 
-    case 'APOSENTADORIA_ESPECIAL':
-      // Idade mínima de 60 anos + 25 anos de atividade especial
-      const tempoEspecialMinimo = 25
-      const idadeEspecialMinima = 60
+    case 'APOSENTADORIA_ESPECIAL': {
+      const r = regra('APOSENTADORIA_ESPECIAL')
+      const idadeEspecialMinima = r?.idadeMinima           ?? 60
+      const tempoEspecialMinimo = r?.tempoContribuicaoAnos ?? 25
       coeficiente = coeficienteProgressivo
 
       if (idadeNaApuracao >= idadeEspecialMinima && tempoContribuicaoAnos >= tempoEspecialMinimo) {
@@ -293,29 +314,35 @@ export function calculatePrevidenciario(input: CalculationInput): CalculationRes
         if (tempoContribuicaoAnos < tempoEspecialMinimo) pendencias.push(`Tempo mínimo especial de ${tempoEspecialMinimo} anos não atingido (possui ${tempoContribuicaoAnos.toFixed(1)}).`)
       }
       break
+    }
 
-    case 'HIBRIDA':
-      // Idade: Mulher 62, Homem 65. Tempo: 15 anos mesclando rural e urbano.
-      const idadeHibrida = gender === 'M' ? 65 : 62
-      coeficiente = 0.60 + Math.max(0, tempoContribuicaoAnos - 15) * 0.02
+    case 'HIBRIDA': {
+      const r = regra('HIBRIDA')
+      const idadeHibrida  = r?.idadeMinima           ?? (gender === 'M' ? 65 : 62)
+      const tempoHibrida  = r?.tempoContribuicaoAnos ?? 15
+      coeficiente = 0.60 + Math.max(0, tempoContribuicaoAnos - tempoHibrida) * 0.02
 
-      if (idadeNaApuracao >= idadeHibrida && tempoContribuicaoAnos >= 15) {
+      if (idadeNaApuracao >= idadeHibrida && tempoContribuicaoAnos >= tempoHibrida) {
         elegivel = true
       } else {
         if (idadeNaApuracao < idadeHibrida) pendencias.push(`Idade mínima híbrida de ${idadeHibrida} anos não atingida (possui ${idadeNaApuracao}).`)
-        if (tempoContribuicaoAnos < 15) pendencias.push(`Tempo de contribuição mínimo de 15 anos não atingido (possui ${tempoContribuicaoAnos}).`)
+        if (tempoContribuicaoAnos < tempoHibrida) pendencias.push(`Tempo de contribuição mínimo de ${tempoHibrida} anos não atingido (possui ${tempoContribuicaoAnos}).`)
       }
       break
+    }
 
     case 'AUXILIO_DOENCA_B31':
-    case 'AUXILIO_DOENCA_B91':
-      coeficiente = 0.91 // 91% do salário de benefício
-      elegivel = carenciaMeses >= 12 || modalidade === 'AUXILIO_DOENCA_B91' // Acidentário não exige carência
+    case 'AUXILIO_DOENCA_B91': {
+      const r = regra('AUXILIO_DOENCA_B31')
+      const carenciaExigida = r?.carenciaMeses ?? 12
+      coeficiente = 0.91
+      elegivel = carenciaMeses >= carenciaExigida || modalidade === 'AUXILIO_DOENCA_B91'
 
-      if (carenciaMeses < 12 && modalidade === 'AUXILIO_DOENCA_B31') {
-        pendencias.push(`Carência mínima de 12 contribuições para auxílio-doença previdenciário não cumprida (possui ${carenciaMeses}).`)
+      if (carenciaMeses < carenciaExigida && modalidade === 'AUXILIO_DOENCA_B31') {
+        pendencias.push(`Carência mínima de ${carenciaExigida} contribuições para auxílio-doença previdenciário não cumprida (possui ${carenciaMeses}).`)
       }
       break
+    }
 
     case 'SALARIO_MATERNIDADE':
       coeficiente = 1.00
@@ -331,22 +358,27 @@ export function calculatePrevidenciario(input: CalculationInput): CalculationRes
       }
       break
 
-    case 'PENSAO_MORTE':
-      // 50% + 10% por dependente
+    case 'PENSAO_MORTE': {
+      const r = regra('PENSAO_MORTE')
+      const carenciaExigida = r?.carenciaMeses ?? 18
       coeficiente = Math.min(1.00, 0.50 + (dependentesPensao * 0.10))
-      elegivel = carenciaMeses >= 18 // Exige pelo menos 18 meses para o cálculo integral do dependente
-      if (carenciaMeses < 18) {
-        pendencias.push(`Segurado possuía menos de 18 contribuições, o que pode reduzir o prazo de pagamento da pensão ao cônjuge.`)
+      elegivel = carenciaMeses >= carenciaExigida
+      if (carenciaMeses < carenciaExigida) {
+        pendencias.push(`Segurado possuía menos de ${carenciaExigida} contribuições, o que pode reduzir o prazo de pagamento da pensão ao cônjuge.`)
       }
       break
+    }
 
-    case 'BPC_LOAS':
+    case 'BPC_LOAS': {
+      const r = regra('BPC_LOAS')
+      const idadeBPC = r?.idadeMinima ?? 65
       coeficiente = 1.00
-      elegivel = idadeNaApuracao >= 65 // Exige idade de 65 anos ou deficiência comprovada
-      if (idadeNaApuracao < 65) {
-        pendencias.push(`Idade mínima de 65 anos para BPC/LOAS Idoso não atingida (possui ${idadeNaApuracao}). Deficiência não avaliada.`)
+      elegivel = idadeNaApuracao >= idadeBPC
+      if (idadeNaApuracao < idadeBPC) {
+        pendencias.push(`Idade mínima de ${idadeBPC} anos para BPC/LOAS Idoso não atingida (possui ${idadeNaApuracao}). Deficiência não avaliada.`)
       }
       break
+    }
 
     default:
       coeficiente = 0.60
@@ -429,6 +461,7 @@ export function projectSimulations(params: {
   modalidade?: string
   salarioMinimo?: number
   tetoPrevidenciario?: number
+  regrasVigentes?: RegrasVigentes
 }): {
   scenarioParams: any
   rmiProjected: number
@@ -436,7 +469,7 @@ export function projectSimulations(params: {
   dibProjected: string
   gainVsNow: number
 } {
-  const { birthDate, gender, dibProjetada, valorContribuicaoFutura, extractedData, modalidade = 'APOSENTADORIA_IDADE', salarioMinimo, tetoPrevidenciario } = params
+  const { birthDate, gender, dibProjetada, valorContribuicaoFutura, extractedData, modalidade = 'APOSENTADORIA_IDADE', salarioMinimo, tetoPrevidenciario, regrasVigentes } = params
 
   // 1. Clona o CNIS existente
   const clonedData: CnisExtractedData = extractedData 
@@ -507,6 +540,7 @@ export function projectSimulations(params: {
     extractedData: clonedData,
     salarioMinimo,
     tetoPrevidenciario,
+    regrasVigentes,
   })
 
   // 5. Roda o motor previdenciário do cenário ATUAL (hoje) para comparar ganho
@@ -518,6 +552,7 @@ export function projectSimulations(params: {
     extractedData,
     salarioMinimo,
     tetoPrevidenciario,
+    regrasVigentes,
   })
 
   const rmiProjected = calcProjetado.rmi
