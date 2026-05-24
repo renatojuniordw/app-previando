@@ -69,7 +69,8 @@ export default function SimulatorPage() {
   
   // Valor padrão de contribuição futura (ex: Salário Mínimo ou customizado)
   const [tipoContribuicao, setTipoContribuicao] = useState<'MINIMO' | 'TETO' | 'CUSTOM'>('MINIMO')
-  const [valorCustomContribuicao, setValorCustomContribuicao] = useState(1512.00)
+  const [valorCustomContribuicao, setValorCustomContribuicao] = useState(1621.00)
+  const [salarioVigente, setSalarioVigente] = useState({ valor: 1621.00, teto: 8157.41 })
   
   const [errorMessage, setErrorMessage] = useState('')
 
@@ -84,6 +85,12 @@ export default function SimulatorPage() {
       if (rCnis.data?.cnisDocument?.processingStatus === 'COMPLETED') {
         setCnisDocument(rCnis.data.cnisDocument)
       }
+
+      // 3. Busca salário mínimo e teto vigentes hoje
+      const hoje = new Date().toISOString().slice(0, 10)
+      const rSalario = await api.get(`/salario-minimo?dib=${hoje}`)
+      setSalarioVigente({ valor: rSalario.data.valor, teto: rSalario.data.teto })
+      setValorCustomContribuicao(rSalario.data.valor)
     } catch {
       // noop
     } finally {
@@ -111,9 +118,9 @@ export default function SimulatorPage() {
     const extracted = cnisDocument.extractedData
     const birthDate = extracted?.dataNascimento || '1965-01-01'
 
-    let valorContribuicaoFutura = 1512.00 // piso
+    let valorContribuicaoFutura = salarioVigente.valor
     if (tipoContribuicao === 'TETO') {
-      valorContribuicaoFutura = 8157.41 // teto
+      valorContribuicaoFutura = salarioVigente.teto
     } else if (tipoContribuicao === 'CUSTOM') {
       valorContribuicaoFutura = Number(valorCustomContribuicao)
     }
@@ -127,7 +134,9 @@ export default function SimulatorPage() {
         dibProjetada,
         valorContribuicaoFutura,
         extractedData: extracted,
-        modalidade
+        modalidade,
+        salarioMinimo: salarioVigente.valor,
+        tetoPrevidenciario: salarioVigente.teto,
       })
 
       // Salva no banco de dados com a rota estruturada
@@ -144,7 +153,7 @@ export default function SimulatorPage() {
       // Reseta form
       setScenarioName('')
       setTipoContribuicao('MINIMO')
-      setValorCustomContribuicao(1512.00)
+      setValorCustomContribuicao(salarioVigente.valor)
       load()
     } catch (err: any) {
       setErrorMessage(err?.response?.data?.error ?? 'Falha ao salvar a simulação no servidor.')
@@ -434,8 +443,8 @@ export default function SimulatorPage() {
                 onChange={(e: any) => setTipoContribuicao(e.target.value)}
                 className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm font-sans focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 outline-none"
               >
-                <option value="MINIMO">Sobre o Salário Mínimo (R$ 1.512,00)</option>
-                <option value="TETO">Sobre o Teto Previdenciário (R$ 8.157,41)</option>
+                <option value="MINIMO">Sobre o Salário Mínimo ({new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(salarioVigente.valor)})</option>
+                <option value="TETO">Sobre o Teto Previdenciário ({new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(salarioVigente.teto)})</option>
                 <option value="CUSTOM">Outro Valor Customizado em R$</option>
               </select>
             </div>
@@ -449,7 +458,7 @@ export default function SimulatorPage() {
                   </div>
                   <input
                     type="number"
-                    min="1412"
+                    min={String(salarioVigente.valor)}
                     max="10000"
                     value={valorCustomContribuicao}
                     onChange={(e) => setValorCustomContribuicao(Number(e.target.value))}

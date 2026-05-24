@@ -129,6 +129,10 @@ export default function CalculatorPage() {
 
     setCreating(true)
     try {
+      // Busca salário mínimo e teto vigentes na DIB
+      const rSalario = await api.get(`/salario-minimo?dib=${dib}`)
+      const { valor: salarioMinimo, teto: tetoPrevidenciario } = rSalario.data
+
       // Executa o motor previdenciário no client
       const calculationResult = calculatePrevidenciario({
         birthDate,
@@ -137,7 +141,9 @@ export default function CalculatorPage() {
         modalidade,
         extractedData: extracted,
         tempoEspecialAnos: Number(tempoEspecialAnos),
-        dependentesPensao: Number(dependentesPensao)
+        dependentesPensao: Number(dependentesPensao),
+        salarioMinimo,
+        tetoPrevidenciario,
       })
 
       // Envia os resultados prontos para persistir no backend
@@ -439,7 +445,7 @@ export default function CalculatorPage() {
                               </div>
                               <div>
                                 <p className="text-slate-500">Piso Nacional (Salário Mínimo):</p>
-                                <p className="font-bold text-slate-800">{formatCurrency(calc.memoriaCalculo.pisoNacional || 1512)}</p>
+                                <p className="font-bold text-slate-800">{formatCurrency(calc.memoriaCalculo.pisoNacional || 1621)}</p>
                               </div>
                               <div>
                                 <p className="text-slate-500">Teto da Previdência:</p>

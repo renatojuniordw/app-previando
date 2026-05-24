@@ -1,4 +1,5 @@
 const DATAJUD_BASE = process.env.DATAJUD_BASE_URL ?? 'https://api-publica.datajud.cnj.jus.br'
+const DATAJUD_API_KEY = process.env.DATAJUD_API_KEY ?? ''
 
 export const CNJ_REGEX = /^\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4}$/
 
@@ -47,15 +48,21 @@ export async function consultarProcesso(numeroProcesso: string): Promise<Datajud
   const tribunal = extractTribunal(numeroProcesso)
   const endpoint = `${DATAJUD_BASE}/${tribunal}/_search`
 
+  // DataJud indexa o campo numeroProcesso somente com dígitos
+  const numeroProcessoDigits = numeroProcesso.replace(/\D/g, '')
+
   const body = {
-    query: { match: { numeroProcesso } },
-    sort: [{ dataHora: { order: 'desc' } }],
+    query: { match: { numeroProcesso: numeroProcessoDigits } },
     size: 1,
   }
 
   const response = await fetch(endpoint, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'Authorization': `APIKey ${DATAJUD_API_KEY}`,
+    },
     signal: AbortSignal.timeout(15_000),
     body: JSON.stringify(body),
   })

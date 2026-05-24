@@ -502,6 +502,24 @@ enum PaymentStatus {
 }
 
 // ─────────────────────────────────────────
+// SALÁRIO MÍNIMO HISTÓRICO
+// ─────────────────────────────────────────
+
+model SalarioMinimo {
+  id         String   @id @default(cuid())
+  vigencia   DateTime @unique // Data de início da vigência
+  valor      Decimal  @db.Decimal(10, 2) // Salário mínimo
+  teto       Decimal  @db.Decimal(10, 2) // Teto do RGPS
+  legislacao String   // Ex: "Decreto 12.797/2025"
+  reajuste   Float?   // Percentual de reajuste (ex: 6.79)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([vigencia])
+  @@map("salarios_minimos")
+}
+
+// ─────────────────────────────────────────
 // AUDITORIA
 // ─────────────────────────────────────────
 

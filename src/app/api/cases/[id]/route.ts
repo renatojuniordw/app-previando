@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/auth'
+import { authWithFreshPlan as auth } from '@/lib/auth-server'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { verifyCaseOwnership } from '@/lib/ownership'
 import { sanitizeInput } from '@/lib/sanitize'
 import { handleApiError } from '@/lib/api-error'
+import { getPlanLimit } from '@/lib/plan-guard'
 
 const updateSchema = z.object({
   status: z.enum(['PROSPECCAO', 'ANALISE', 'PRONTO_PARA_REQUERER', 'EM_PROCESSAMENTO', 'FINALIZADO']).optional(),
@@ -36,7 +37,18 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       },
     })
 
-    return NextResponse.json({ case: caso })
+    const planLimits = await getPlanLimit(session.user.plan)
+
+    return NextResponse.json({
+      case: {
+        ...caso,
+        planLimits: {
+          datajudEnabled: planLimits.datajudEnabled,
+          simulatorEnabled: planLimits.simulatorEnabled,
+          retroativosEnabled: planLimits.retroativosEnabled,
+        },
+      },
+    })
   } catch (err) {
     return handleApiError(err)
   }

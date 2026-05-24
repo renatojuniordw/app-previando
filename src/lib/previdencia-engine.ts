@@ -29,6 +29,9 @@ export interface CalculationInput {
   // Parâmetros extras
   tempoEspecialAnos?: number
   dependentesPensao?: number
+  // Valores vigentes na DIB (buscados do banco pelo chamador)
+  salarioMinimo?: number
+  tetoPrevidenciario?: number
 }
 
 export interface CalculationResult {
@@ -64,9 +67,9 @@ export interface CalculationResult {
   }
 }
 
-// Valores de referência nacionais padrão para 2026
-const SALARIO_MINIMO_2026 = 1512.00
-const TETO_PREVIDENCIARIO_2026 = 8157.41
+// Valores de fallback — usados apenas se o chamador não informar (nunca deve ocorrer em produção)
+const SALARIO_MINIMO_FALLBACK = 1621.00
+const TETO_PREVIDENCIARIO_FALLBACK = 8157.41
 
 /**
  * Calcula a diferença em meses entre duas datas
@@ -96,6 +99,8 @@ function getAge(birthDateStr: string, refDateStr: string): number {
  */
 export function calculatePrevidenciario(input: CalculationInput): CalculationResult {
   const { birthDate, gender, dib, modalidade, extractedData, tempoEspecialAnos = 0, dependentesPensao = 1 } = input
+  const SALARIO_MINIMO = input.salarioMinimo ?? SALARIO_MINIMO_FALLBACK
+  const TETO_PREVIDENCIARIO = input.tetoPrevidenciario ?? TETO_PREVIDENCIARIO_FALLBACK
 
   const pendencias: string[] = []
   let elegivel = false
@@ -164,12 +169,12 @@ export function calculatePrevidenciario(input: CalculationInput): CalculationRes
     // Ajusta contribuições abaixo do mínimo da época para o salário mínimo atual de 2026 (ou mínimo proporcional)
     // Para simplificação visual premium, garantimos o piso atual do salário mínimo se o valor for menor
     let valorAjustado = c.valor
-    if (valorAjustado < SALARIO_MINIMO_2026 && valorAjustado > 0) {
-      valorAjustado = SALARIO_MINIMO_2026
+    if (valorAjustado < SALARIO_MINIMO && valorAjustado > 0) {
+      valorAjustado = SALARIO_MINIMO
     }
     // Aplica teto da previdência
-    if (valorAjustado > TETO_PREVIDENCIARIO_2026) {
-      valorAjustado = TETO_PREVIDENCIARIO_2026
+    if (valorAjustado > TETO_PREVIDENCIARIO) {
+      valorAjustado = TETO_PREVIDENCIARIO
     }
     return {
       competencia: c.competencia,
@@ -179,7 +184,7 @@ export function calculatePrevidenciario(input: CalculationInput): CalculationRes
   })
 
   const somaSalarios = detalhamentoMedia.reduce((acc, curr) => acc + curr.valorAjustado, 0)
-  const salarioBeneficio = detalhamentoMedia.length > 0 ? Number((somaSalarios / detalhamentoMedia.length).toFixed(2)) : SALARIO_MINIMO_2026
+  const salarioBeneficio = detalhamentoMedia.length > 0 ? Number((somaSalarios / detalhamentoMedia.length).toFixed(2)) : SALARIO_MINIMO
 
   // 4. Coeficiente, RMI e Regras específicas de Elegibilidade
   let coeficiente = 0.60 // Coeficiente base de 60%
@@ -356,13 +361,13 @@ export function calculatePrevidenciario(input: CalculationInput): CalculationRes
   // Limites constitucionais (Piso do Salário Mínimo e Teto Previdenciário)
   // BPC sempre recebe exatamente 1 salário mínimo
   if (modalidade === 'BPC_LOAS') {
-    rmi = SALARIO_MINIMO_2026
+    rmi = SALARIO_MINIMO
   } else {
-    if (rmi < SALARIO_MINIMO_2026) {
-      rmi = SALARIO_MINIMO_2026
+    if (rmi < SALARIO_MINIMO) {
+      rmi = SALARIO_MINIMO
     }
-    if (rmi > TETO_PREVIDENCIARIO_2026) {
-      rmi = TETO_PREVIDENCIARIO_2026
+    if (rmi > TETO_PREVIDENCIARIO) {
+      rmi = TETO_PREVIDENCIARIO
     }
   }
 
@@ -399,8 +404,8 @@ export function calculatePrevidenciario(input: CalculationInput): CalculationRes
       idadeAnos: idadeNaApuracao,
       carenciaMeses,
       coeficienteAplicado: coeficiente,
-      pisoNacional: SALARIO_MINIMO_2026,
-      tetoPrevidenciario: TETO_PREVIDENCIARIO_2026,
+      pisoNacional: SALARIO_MINIMO,
+      tetoPrevidenciario: TETO_PREVIDENCIARIO,
       detalhamentoMedia: detalhamentoMedia.slice(0, 15) // Mostra as primeiras 15 contribuições detalhadas para não explodir dados
     },
     periodosSalarios: {
@@ -422,6 +427,8 @@ export function projectSimulations(params: {
   valorContribuicaoFutura: number
   extractedData: CnisExtractedData | null
   modalidade?: string
+  salarioMinimo?: number
+  tetoPrevidenciario?: number
 }): {
   scenarioParams: any
   rmiProjected: number
@@ -429,7 +436,7 @@ export function projectSimulations(params: {
   dibProjected: string
   gainVsNow: number
 } {
-  const { birthDate, gender, dibProjetada, valorContribuicaoFutura, extractedData, modalidade = 'APOSENTADORIA_IDADE' } = params
+  const { birthDate, gender, dibProjetada, valorContribuicaoFutura, extractedData, modalidade = 'APOSENTADORIA_IDADE', salarioMinimo, tetoPrevidenciario } = params
 
   // 1. Clona o CNIS existente
   const clonedData: CnisExtractedData = extractedData 
@@ -497,7 +504,9 @@ export function projectSimulations(params: {
     gender,
     dib: dibProjetada,
     modalidade,
-    extractedData: clonedData
+    extractedData: clonedData,
+    salarioMinimo,
+    tetoPrevidenciario,
   })
 
   // 5. Roda o motor previdenciário do cenário ATUAL (hoje) para comparar ganho
@@ -506,7 +515,9 @@ export function projectSimulations(params: {
     gender,
     dib: new Date().toISOString().split('T')[0],
     modalidade,
-    extractedData
+    extractedData,
+    salarioMinimo,
+    tetoPrevidenciario,
   })
 
   const rmiProjected = calcProjetado.rmi

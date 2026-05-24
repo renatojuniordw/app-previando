@@ -1,7 +1,7 @@
 import { auth } from '@/auth'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { LayoutDashboard, Users, CreditCard, Activity, Package, ArrowLeft } from 'lucide-react'
+import { LayoutDashboard, Users, CreditCard, Activity, Package, ArrowLeft, DollarSign } from 'lucide-react'
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const session = await auth()
@@ -14,6 +14,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     { href: '/admin/payments', label: 'Pagamentos', icon: CreditCard },
     { href: '/admin/metrics', label: 'Métricas', icon: Activity },
     { href: '/admin/plans', label: 'Planos', icon: Package },
+    { href: '/admin/salario-minimo', label: 'Salário Mínimo', icon: DollarSign },
   ]
 
   return (
