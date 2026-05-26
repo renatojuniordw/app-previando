@@ -6,7 +6,6 @@ import api from '@/lib/api'
 import { Button } from '@/components/ui/Button'
 import { Modal } from '@/components/ui/Modal'
 import { formatDate } from '@/lib/utils'
-import { projectSimulations } from '@/lib/previdencia-engine'
 import { MODALIDADES_PADRAO } from '@/lib/modalidade-labels'
 import {
   TrendingUp,
@@ -116,9 +115,6 @@ export default function SimulatorPage() {
       return
     }
 
-    const extracted = cnisDocument.extractedData
-    const birthDate = extracted?.dataNascimento || '1965-01-01'
-
     let valorContribuicaoFutura = salarioVigente.valor
     if (tipoContribuicao === 'TETO') {
       valorContribuicaoFutura = salarioVigente.teto
@@ -128,27 +124,13 @@ export default function SimulatorPage() {
 
     setCreating(true)
     try {
-      // Roda a projeção previdenciária
-      const simulationResult = projectSimulations({
-        birthDate,
+      // Envia apenas os parâmetros brutos do cenário para o servidor calcular com segurança
+      await api.post(`/cases/${params.id}/simulations`, {
+        scenarioName,
         gender,
         dibProjetada,
         valorContribuicaoFutura,
-        extractedData: extracted,
         modalidade,
-        salarioMinimo: salarioVigente.valor,
-        tetoPrevidenciario: salarioVigente.teto,
-        regrasVigentes,
-      })
-
-      // Salva no banco de dados com a rota estruturada
-      await api.post(`/cases/${params.id}/simulations`, {
-        scenarioName,
-        scenarioParams: simulationResult.scenarioParams,
-        rmiProjected: simulationResult.rmiProjected,
-        rmaProjected: simulationResult.rmaProjected,
-        dibProjected: simulationResult.dibProjected,
-        gainVsNow: simulationResult.gainVsNow
       })
 
       setShowModal(false)

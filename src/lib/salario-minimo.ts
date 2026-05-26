@@ -7,14 +7,6 @@ export interface SalarioVigente {
   legislacao: string
 }
 
-// Fallback caso o banco não tenha dados (nunca deveria acontecer após seed)
-const FALLBACK: SalarioVigente = {
-  valor: 1621.0,
-  teto: 8157.41,
-  vigencia: new Date('2026-01-01'),
-  legislacao: 'Decreto 12.797/2025',
-}
-
 export async function getSalarioVigente(dib: string): Promise<SalarioVigente> {
   const dibDate = new Date(dib)
 
@@ -23,7 +15,12 @@ export async function getSalarioVigente(dib: string): Promise<SalarioVigente> {
     orderBy: { vigencia: 'desc' },
   })
 
-  if (!registro) return FALLBACK
+  if (!registro) {
+    throw new Error(
+      `Nenhum valor de salário mínimo e teto do RGPS ativo na DIB ${dib} foi encontrado no banco de dados. ` +
+      'Por favor, certifique-se de que o seed do banco de dados (npx prisma db seed) foi executado com sucesso.'
+    )
+  }
 
   return {
     valor: Number(registro.valor),
@@ -32,3 +29,4 @@ export async function getSalarioVigente(dib: string): Promise<SalarioVigente> {
     legislacao: registro.legislacao,
   }
 }
+

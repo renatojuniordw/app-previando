@@ -349,14 +349,17 @@ export function calculatePrevidenciario(input: CalculationInput): CalculationRes
       elegivel = true // Geralmente elegível com vínculo ativo
       break
 
-    case 'AUXILIO_RECLUSAO':
+    case 'AUXILIO_RECLUSAO': {
       coeficiente = 1.00
-      // Limitado a 1 salário mínimo e baixa renda
-      elegivel = salarioBeneficio <= 1800 // Limite de baixa renda aproximado
-      if (salarioBeneficio > 1800) {
-        pendencias.push(`Renda mensal do segurado (R$ ${salarioBeneficio}) superior ao limite legal para auxílio-reclusão.`)
+      // Limitado a 1 salário mínimo e baixa renda (limite parametrizável)
+      const rRec = regra('AUXILIO_RECLUSAO')
+      const limiteBaixaRenda = rRec?.idadeMinima ? Number(rRec.idadeMinima) : 1800
+      elegivel = salarioBeneficio <= limiteBaixaRenda
+      if (salarioBeneficio > limiteBaixaRenda) {
+        pendencias.push(`Renda mensal do segurado (R$ ${salarioBeneficio}) superior ao limite legal de R$ ${limiteBaixaRenda.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} para auxílio-reclusão.`)
       }
       break
+    }
 
     case 'PENSAO_MORTE': {
       const r = regra('PENSAO_MORTE')

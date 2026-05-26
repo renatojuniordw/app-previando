@@ -104,3 +104,5 @@ api.interceptors.response.use(
 7. Erros: toast com mensagem legível — nunca stack trace
 8. Modal upgrade: automático ao receber 402
 9. Todas as tabs do caso visíveis — bloqueadas com 🔒 se plano não permite
+10. **Zero processamento matemático no cliente:** As views de Cálculos, Simulação e Retroativos atuam estritamente como coletores de parâmetros de input e renderizadores da memória de cálculo detalhada gerada e blindada de forma 100% segura pelo backend.
+

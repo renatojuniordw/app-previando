@@ -129,3 +129,21 @@ PATCH /api/admin/users/:id/plan
 PATCH /api/admin/plans/:plan
 GET   /api/admin/payments
 ```
+
+---
+
+## 🏛️ Camada de Serviços (Service Layer) e Motores de Cálculo
+
+Buscando conformidade estrita com a **Clean Architecture** e garantindo que as regras previdenciárias e projeções financeiras fiquem 100% blindadas de vazamentos ou fraudes, o backend implementa uma Service Layer isolada:
+
+### 1. PrevidenciaService (`src/services/previdencia-service.ts`)
+Esta é a classe centralizadora que orquestra toda a lógica previdenciária. Ela executa de forma síncrona e segura:
+* **Cálculos (`runAndSaveCalculation`):** Carrega o CNIS processado do banco, obtém o teto/salário do banco de dados na data da DIB, executa o motor previdenciário do domínio e grava o resultado verificado no banco de dados.
+* **Simulações (`runAndSaveSimulation`):** Orquestra projeções de contribuições futuras mesclando o CNIS atual com cenários projetados, salvando de forma íntegra.
+* **Retroativos (`runAndSaveRetroativo`):** Carrega os índices de atualização do INPC reais da tabela `indices_inpc` e computa o mês a mês da liquidação com atualização monetária oficial.
+
+### 2. Motores do Domínio (Domain Engines)
+As regras matemáticas puras residem em arquivos desacoplados e sem dependências assíncronas de banco (Funções Puras):
+* **Cálculo de Elegibilidade e RMI:** [previdencia-engine.ts](file:///Users/renatobezerra/Reposit%C3%B3rios/Previando/src/lib/previdencia-engine.ts)
+* **Correção e Parcelamento Monetário (INPC):** [retroativos-engine.ts](file:///Users/renatobezerra/Reposit%C3%B3rios/Previando/src/lib/retroativos-engine.ts)
+

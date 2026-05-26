@@ -6,7 +6,6 @@ import api from '@/lib/api'
 import { Button } from '@/components/ui/Button'
 import { Modal } from '@/components/ui/Modal'
 import { formatDate } from '@/lib/utils'
-import { calculatePrevidenciario } from '@/lib/previdencia-engine'
 import { MODALIDADES_PADRAO } from '@/lib/modalidade-labels'
 import {
   Scale,
@@ -120,64 +119,22 @@ export default function CalculatorPage() {
       return
     }
 
-    const extracted = cnisDocument.extractedData
-    const birthDate = extracted?.dataNascimento || '1965-01-01' // Fallback caso não ache nascimento no CNIS
-
     setCreating(true)
     try {
-      // Busca salário mínimo, teto e regras previdenciárias vigentes na DIB
-      const [rSalario, rRegras] = await Promise.all([
-        api.get(`/salario-minimo?dib=${dib}`),
-        api.get(`/regras-aposentadoria?dib=${dib}`),
-      ])
-      const { valor: salarioMinimo, teto: tetoPrevidenciario } = rSalario.data
-      const regrasVigentes = rRegras.data
-
-      // Executa o motor previdenciário no client
-      const calculationResult = calculatePrevidenciario({
-        birthDate,
-        gender,
-        dib,
+      // Envia apenas os parâmetros brutos de input para o servidor orquestrar de forma segura
+      await api.post(`/cases/${params.id}/calculations`, {
         modalidade,
-        extractedData: extracted,
+        dib,
+        gender,
         tempoEspecialAnos: Number(tempoEspecialAnos),
         dependentesPensao: Number(dependentesPensao),
-        salarioMinimo,
-        tetoPrevidenciario,
-        regrasVigentes,
-      })
-
-      // Envia os resultados prontos para persistir no backend
-      await api.post(`/cases/${params.id}/calculations`, {
-        modalidade: calculationResult.modalidade,
-        inputParams: {
-          birthDate,
-          gender,
-          dib,
-          tempoEspecialAnos,
-          dependentesPensao,
-          clientName: extracted?.nome ?? 'Segurado'
-        },
-        salarioBeneficio: calculationResult.salarioBeneficio,
-        rmi: calculationResult.rmi,
-        rma: calculationResult.rma,
-        fatorPrevidenciario: calculationResult.fatorPrevidenciario,
-        coeficiente: calculationResult.coeficiente,
-        dibPrevista: calculationResult.dibPrevista,
-        carenciaAtendida: calculationResult.carenciaAtendida,
-        tempoContribuicao: calculationResult.tempoContribuicao,
-        idadeNaApuracao: calculationResult.idadeNaApuracao,
-        elegivel: calculationResult.elegivel,
-        pendencias: calculationResult.pendencias,
-        memoriaCalculo: calculationResult.memoriaCalculo,
-        periodosSalarios: calculationResult.periodosSalarios
       })
 
       setShowModal(false)
-      // Reseta forms
+      // Reseta formulários
       setTempoEspecialAnos(0)
       setDependentesPensao(1)
-      load()
+      load() // Recarrega cálculos vindos seguros do backend
     } catch (err: any) {
       setErrorMessage(err?.response?.data?.error ?? 'Falha ao salvar o cálculo no servidor.')
     } finally {

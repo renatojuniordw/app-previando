@@ -519,69 +519,52 @@ model AuditLog {
   @@index([createdAt])
   @@map("audit_logs")
 }
+
+// ─────────────────────────────────────────
+// ÍNDICES DE CORREÇÃO MONETÁRIA (INPC)
+// ─────────────────────────────────────────
+
+model IndiceINPC {
+  id          String   @id @default(cuid())
+  competencia String   @unique // Formato: "YYYY-MM"
+  valor       Decimal  @db.Decimal(10, 6) // Ex: 0.005700
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([competencia])
+  @@map("indices_inpc")
+}
 ```
 
 ---
 
 ## Seed Inicial
 
-```typescript
-// prisma/seed.ts
-await prisma.planLimit.createMany({
-  data: [
-    {
-      plan: 'FREE',
-      maxClients: 3,
-      maxCalculationsPerMonth: 5,
-      maxOpinionsPerMonth: 1,
-      maxNotesPerCase: 10,
-      simulatorEnabled:   false,
-      retroativosEnabled: false,
-      exportPdfEnabled:   false,
-      whatsappEnabled:    false,
-      watermarkEnabled:   true,
-      diagnosisEnabled:   false,
-    },
-    {
-      plan: 'SOLO',
-      maxClients: 30,
-      maxCalculationsPerMonth: -1,
-      maxOpinionsPerMonth: 20,
-      maxNotesPerCase: -1,
-      simulatorEnabled:   true,
-      retroativosEnabled: true,
-      exportPdfEnabled:   true,
-      whatsappEnabled:    true,
-      watermarkEnabled:   false,
-      diagnosisEnabled:   true,
-    },
-    {
-      plan: 'PRO',
-      maxClients: -1,
-      maxCalculationsPerMonth: -1,
-      maxOpinionsPerMonth: -1,
-      maxNotesPerCase: -1,
-      simulatorEnabled:   true,
-      retroativosEnabled: true,
-      exportPdfEnabled:   true,
-      whatsappEnabled:    true,
-      watermarkEnabled:   false,
-      diagnosisEnabled:   true,
-    },
-  ],
-})
-```
+O seed do Prisma ([seed.ts](file:///Users/renatobezerra/Reposit%C3%B3rios/Previando/prisma/seed.ts)) é a **Single Source of Truth** (SST) para todas as configurações estáticas e regras previdenciárias dinâmicas do sistema. Ele popula automaticamente:
+
+1. **PlanLimit (Limites SaaS):** Configurações dos planos FREE, SOLO e PRO.
+2. **SalariosMinimos (Salários e Tetos):** Todos os 37 registros históricos de salários mínimos e tetos do RGPS de 1994 até 2026.
+3. **RegrasAposentadoria (Inteligência Previdenciária):** As 37 regras de elegibilidade da Reforma da Previdência (idade, pedágio 50%, pedágio 100%, especial, BPC, pontos e pensão).
+4. **Modalidades (Categorias):** As 14 modalidades padrão de cálculo previdenciário.
+5. **IndicesINPC (Indexadores de Inflação):** Os 29 meses históricos do INPC para cálculo de parcelas atrasadas.
 
 ---
 
 ## Comandos
 
 ```bash
-npx prisma migrate dev --name init   # Dev
-npx prisma migrate deploy            # Produção
-npx prisma generate                  # Client TypeScript
-npx prisma db seed                   # Popula PlanLimit
-npx prisma studio                    # GUI
+# Desenvolvimento: Rodar migrações e gerar cliente
+npx prisma migrate dev --name <nome_da_migracao>
+npx prisma generate
+
+# Desenvolvimento: Popular o banco com as regras e parâmetros do seed (CommonJS Wrapper)
+npm run db:seed
+
+# Produção: Aplicar migrações pendentes em CI/CD
+npx prisma migrate deploy
+
+# Visualizar dados do PostgreSQL localmente
+npx prisma studio
 ```
 
 ---

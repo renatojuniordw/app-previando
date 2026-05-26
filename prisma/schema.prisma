@@ -579,3 +579,19 @@ model AuditLog {
   @@index([createdAt])
   @@map("audit_logs")
 }
+
+// ─────────────────────────────────────────
+// ÍNDICES DE CORREÇÃO MONETÁRIA (INPC)
+// ─────────────────────────────────────────
+
+model IndiceINPC {
+  id          String   @id @default(cuid())
+  competencia String   @unique // Formato: "YYYY-MM"
+  valor       Decimal  @db.Decimal(10, 6) // Ex: 0.005700
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([competencia])
+  @@map("indices_inpc")
+}
+

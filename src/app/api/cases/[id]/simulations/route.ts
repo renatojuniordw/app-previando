@@ -1,19 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { authWithFreshPlan as auth } from '@/lib/auth-server'
-import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { verifyCaseOwnership } from '@/lib/ownership'
 import { guardFeature } from '@/lib/plan-guard'
 import { handleApiError } from '@/lib/api-error'
-
-const createSchema = z.object({
-  scenarioName: z.string().min(1).max(100),
-  scenarioParams: z.record(z.unknown()),
-  rmiProjected: z.number(),
-  rmaProjected: z.number(),
-  dibProjected: z.string().datetime(),
-  gainVsNow: z.number(),
-})
+import { runSimulationSchema } from './schema'
+import { PrevidenciaService } from '@/services/previdencia-service'
 
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
   try {
@@ -38,24 +30,26 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     const session = await auth()
     if (!session?.user?.id) return NextResponse.json({ error: 'Não autorizado.' }, { status: 401 })
 
+    // Validação de acesso à feature do simulador baseado no plano SaaS
     await guardFeature(session.user.plan, 'SIMULATOR')
+    
+    // Validação estrita de posse do caso (Anti-IDOR)
     await verifyCaseOwnership(params.id, session.user.id)
 
-    const parsed = createSchema.safeParse(await req.json())
+    // Validação estrita dos parâmetros do cenário
+    const parsed = runSimulationSchema.safeParse(await req.json())
     if (!parsed.success) {
       return NextResponse.json({ error: 'Dados inválidos.', details: parsed.error.flatten() }, { status: 400 })
     }
 
-    const simulation = await prisma.simulation.create({
-      data: {
-        caseId: params.id,
-        scenarioName: parsed.data.scenarioName,
-        scenarioParams: parsed.data.scenarioParams as never,
-        rmiProjected: parsed.data.rmiProjected,
-        rmaProjected: parsed.data.rmaProjected,
-        dibProjected: new Date(parsed.data.dibProjected),
-        gainVsNow: parsed.data.gainVsNow,
-      },
+    // Execução e persistência seguras ocorrendo estritamente no backend
+    const simulation = await PrevidenciaService.runAndSaveSimulation({
+      caseId: params.id,
+      scenarioName: parsed.data.scenarioName,
+      gender: parsed.data.gender,
+      dibProjetada: parsed.data.dibProjetada,
+      valorContribuicaoFutura: parsed.data.valorContribuicaoFutura,
+      modalidade: parsed.data.modalidade,
     })
 
     return NextResponse.json({ simulation }, { status: 201 })
@@ -63,3 +57,4 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     return handleApiError(err)
   }
 }
+

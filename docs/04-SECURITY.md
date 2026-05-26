@@ -11,6 +11,8 @@
 4. Prisma em toda query — zero SQL injection por design
 5. Usuário só acessa seus próprios dados (anti-IDOR)
 6. IA sempre recebe input sanitizado
+7. **Cálculos Previdenciários Blindados no Backend:** Toda lógica de cálculo, elegibilidade, planejamento/projeção de cenários e atualização monetária (INPC) é executada estritamente no servidor. O frontend atua apenas como coletor de parâmetros, fechando qualquer vulnerabilidade de fraude de dados (ex: alteração de RMI via DevTools ou interceptores de API).
+
 
 ---
 

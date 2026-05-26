@@ -230,6 +230,40 @@ async function main() {
   }
 
   console.log(`✅ ${MODALIDADES_PADRAO.length} modalidades inseridas`)
+
+  // ─── Índices INPC Históricos ──────────────────────────────────────────────
+  console.log('🌱 Seeding Índices INPC...')
+
+  const indicesINPC = [
+    // 2024
+    { competencia: '2024-01', valor: 0.0057 }, { competencia: '2024-02', valor: 0.0081 },
+    { competencia: '2024-03', valor: 0.0019 }, { competencia: '2024-04', valor: 0.0037 },
+    { competencia: '2024-05', valor: 0.0046 }, { competencia: '2024-06', valor: 0.0025 },
+    { competencia: '2024-07', valor: 0.0012 }, { competencia: '2024-08', valor: -0.0014 },
+    { competencia: '2024-09', valor: 0.0048 }, { competencia: '2024-10', valor: 0.0061 },
+    { competencia: '2024-11', valor: 0.0052 }, { competencia: '2024-12', valor: 0.0038 },
+    // 2025
+    { competencia: '2025-01', valor: 0.0042 }, { competencia: '2025-02', valor: 0.0031 },
+    { competencia: '2025-03', valor: 0.0028 }, { competencia: '2025-04', valor: 0.0035 },
+    { competencia: '2025-05', valor: 0.0022 }, { competencia: '2025-06', valor: 0.0018 },
+    { competencia: '2025-07', valor: 0.0015 }, { competencia: '2025-08', valor: 0.0011 },
+    { competencia: '2025-09', valor: 0.0029 }, { competencia: '2025-10', valor: 0.0039 },
+    { competencia: '2025-11', valor: 0.0041 }, { competencia: '2025-12', valor: 0.0032 },
+    // 2026
+    { competencia: '2026-01', valor: 0.0035 }, { competencia: '2026-02', valor: 0.0038 },
+    { competencia: '2026-03', valor: 0.0032 }, { competencia: '2026-04', valor: 0.0030 },
+    { competencia: '2026-05', valor: 0.0028 },
+  ]
+
+  for (const ind of indicesINPC) {
+    await prisma.indiceINPC.upsert({
+      where: { competencia: ind.competencia },
+      update: { valor: ind.valor },
+      create: ind,
+    })
+  }
+
+  console.log(`✅ ${indicesINPC.length} registros de IndiceINPC inseridos`)
 }
 
 main()
