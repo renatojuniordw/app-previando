@@ -115,7 +115,7 @@ model PlanLimit {
   maxNotesPerCase         Int // -1 = ilimitado | FREE = 10
 
   simulatorEnabled   Boolean @default(false)
-  retroativosEnabled Boolean @default(false)
+  retroactiveEnabled Boolean @default(false)
   exportPdfEnabled   Boolean @default(false)
   whatsappEnabled    Boolean @default(false)
   watermarkEnabled   Boolean @default(true)
@@ -188,7 +188,7 @@ model Case {
   user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   client   Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
 
-  status       CaseStatus  @default(PROSPECCAO)
+  status       CaseStatus  @default(PROSPECTING)
   priority     Priority    @default(NORMAL)
   benefitType  BenefitType
   processNumber      String?
@@ -205,7 +205,7 @@ model Case {
 
   cnisDocument CnisDocument?
   calculations Calculation[]
-  retroativos  Retroativo[]
+  retroactives Retroactive[]
   opinions     Opinion[]
   checklists   Checklist[]
   simulations  Simulation[]
@@ -220,26 +220,26 @@ model Case {
 }
 
 enum CaseStatus {
-  PROSPECCAO
-  ANALISE
-  PRONTO_PARA_REQUERER
-  EM_PROCESSAMENTO
-  FINALIZADO
+  PROSPECTING
+  ANALYSIS
+  READY_TO_REQUEST
+  PROCESSING
+  FINISHED
 }
 
 enum BenefitType {
-  APOSENTADORIA_IDADE
-  APOSENTADORIA_TEMPO_CONTRIBUICAO
-  APOSENTADORIA_ESPECIAL
-  APOSENTADORIA_HIBRIDA
-  APOSENTADORIA_PONTOS
-  AUXILIO_DOENCA
-  AUXILIO_ACIDENTE
-  SALARIO_MATERNIDADE
-  AUXILIO_RECLUSAO
-  PENSAO_POR_MORTE
+  RETIREMENT_BY_AGE
+  RETIREMENT_BY_CONTRIBUTION_TIME
+  SPECIAL_RETIREMENT
+  HYBRID_RETIREMENT
+  POINTS_RETIREMENT
+  SICKNESS_BENEFIT
+  ACCIDENT_BENEFIT
+  MATERNITY_PAY
+  PRISONER_BENEFIT
+  DEATH_PENSION
   BPC_LOAS
-  REVISAO_BENEFICIO
+  BENEFIT_REVIEW
 }
 
 // ─────────────────────────────────────────
@@ -254,7 +254,7 @@ model CaseNote {
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   type    NoteType
-  content String   @db.Text // Máx 5000 chars (validado no backend)
+  content String   @db.Text // @db.Text
   version Int // Sequencial por caso: 1, 2, 3...
 
   // Sem updatedAt — registro imutável por design
@@ -267,12 +267,12 @@ model CaseNote {
 }
 
 enum NoteType {
-  CONTATO
-  DOCUMENTO
-  JURIDICO
-  INTERNO
-  CALCULO
-  PENDENCIA
+  CONTACT
+  DOCUMENT
+  LEGAL
+  INTERNAL
+  CALCULATION
+  PENDING_ISSUE
 }
 
 // ─────────────────────────────────────────
@@ -293,10 +293,10 @@ model CnisDocument {
   processingStatus ProcessingStatus @default(PENDING)
   processingError  String?
 
-  nit                  String?
-  totalContribuicoes   Int?
-  primeiraContribuicao DateTime?
-  ultimaContribuicao   DateTime?
+  nit                String?
+  totalContributions Int?
+  firstContribution  DateTime?
+  lastContribution   DateTime?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -320,25 +320,25 @@ model Calculation {
   caseId String
   case   Case   @relation(fields: [caseId], references: [id], onDelete: Cascade)
 
-  modalidade  CalculationModalidade
-  isSelected  Boolean               @default(false)
+  modality   CalculationModality
+  isSelected Boolean             @default(false)
   inputParams Json
 
-  salarioBeneficio    Decimal  @db.Decimal(12, 2)
+  benefitSalary       Decimal  @db.Decimal(12, 2)
   rmi                 Decimal  @db.Decimal(12, 2)
   rma                 Decimal  @db.Decimal(12, 2)
-  fatorPrevidenciario Decimal? @db.Decimal(6, 4)
-  coeficiente         Decimal? @db.Decimal(6, 4)
+  socialSecurityFactor Decimal? @db.Decimal(6, 4)
+  coefficient         Decimal? @db.Decimal(6, 4)
 
-  dibPrevista      DateTime?
-  carenciaAtendida Boolean   @default(false)
-  tempoContribuicao Int?
-  idadeNaApuracao  Int?
-  elegivel         Boolean   @default(false)
-  pendencias       String[]
+  expectedDib      DateTime?
+  gracePeriodMet   Boolean   @default(false)
+  contributionTime Int?
+  ageAtCalculation Int?
+  eligible         Boolean   @default(false)
+  pendingIssues    String[]
 
-  memoriaCalculo   Json
-  periodosSalarios Json
+  calculationMemory Json
+  salaryPeriods     Json
 
   createdAt DateTime @default(now())
 
@@ -346,20 +346,20 @@ model Calculation {
   @@map("calculations")
 }
 
-enum CalculationModalidade {
-  PONTOS_86_96
-  PEDAGIO_50
-  PEDAGIO_100
-  IDADE_MINIMA_65_62
-  TEMPO_CONTRIBUICAO
-  APOSENTADORIA_IDADE
-  APOSENTADORIA_ESPECIAL
-  HIBRIDA
-  AUXILIO_DOENCA_B31
-  AUXILIO_DOENCA_B91
-  SALARIO_MATERNIDADE
-  AUXILIO_RECLUSAO
-  PENSAO_MORTE
+enum CalculationModality {
+  POINTS_86_96
+  TOLL_50
+  TOLL_100
+  MINIMUM_AGE_65_62
+  CONTRIBUTION_TIME
+  RETIREMENT_BY_AGE
+  SPECIAL_RETIREMENT
+  HYBRID
+  SICKNESS_BENEFIT_B31
+  SICKNESS_BENEFIT_B91
+  MATERNITY_PAY
+  PRISONER_BENEFIT
+  DEATH_PENSION
   BPC_LOAS
 }
 
@@ -367,29 +367,29 @@ enum CalculationModalidade {
 // RETROATIVOS
 // ─────────────────────────────────────────
 
-model Retroativo {
+model Retroactive {
   id     String @id @default(cuid())
   caseId String
   case   Case   @relation(fields: [caseId], references: [id], onDelete: Cascade)
 
-  dataInicioDireito DateTime
-  dataRequerimento  DateTime
-  mesesAtraso       Int
+  entitlementStartDate DateTime
+  requestDate          DateTime
+  monthsLate           Int
 
-  valorMensalBruto    Decimal @db.Decimal(12, 2)
-  valorTotalBruto     Decimal @db.Decimal(12, 2)
-  valorTotalCorrigido Decimal @db.Decimal(12, 2)
-  indiceCorrecao      String
-  valorDescontos      Decimal @default(0) @db.Decimal(12, 2)
-  descricaoDescontos  String?
-  valorLiquidoFinal   Decimal @db.Decimal(12, 2)
+  monthlyGrossValue   Decimal @db.Decimal(12, 2)
+  totalGrossValue     Decimal @db.Decimal(12, 2)
+  totalCorrectedValue Decimal @db.Decimal(12, 2)
+  correctionIndex     String
+  discountValue       Decimal @default(0) @db.Decimal(12, 2)
+  discountDescription String?
+  finalNetValue       Decimal @db.Decimal(12, 2)
 
-  memoriaCalculo Json
+  calculationMemory Json
 
   createdAt DateTime @default(now())
 
   @@index([caseId])
-  @@map("retroativos")
+  @@map("retroactives")
 }
 
 // ─────────────────────────────────────────
@@ -404,7 +404,7 @@ model Checklist {
   benefitType BenefitType
   items       Json
   eligible    Boolean
-  pendencias  String[]
+  pendingIssues String[]
 
   createdAt DateTime @default(now())
 
@@ -501,63 +501,63 @@ enum PaymentStatus {
 // SALÁRIO MÍNIMO HISTÓRICO
 // ─────────────────────────────────────────
 
-model SalarioMinimo {
-  id         String   @id @default(cuid())
-  vigencia   DateTime @unique // Data de início da vigência
-  valor      Decimal  @db.Decimal(10, 2) // Salário mínimo
-  teto       Decimal  @db.Decimal(10, 2) // Teto do RGPS
-  legislacao String   // Ex: "Decreto 12.797/2025"
-  reajuste   Float?   // Percentual de reajuste (ex: 6.79)
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+model MinimumWage {
+  id           String   @id @default(cuid())
+  effectiveDate DateTime @unique // Data de início da vigência
+  value        Decimal  @db.Decimal(10, 2) // Salário mínimo
+  ceiling      Decimal  @db.Decimal(10, 2) // Teto do RGPS
+  legislation  String   // Ex: "Decreto 12.797/2025"
+  readjustment Float?   // Percentual de reajuste (ex: 6.79)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
-  @@index([vigencia])
-  @@map("salarios_minimos")
+  @@index([effectiveDate])
+  @@map("minimum_wages")
 }
 
 // ─────────────────────────────────────────
 // REGRAS DE APOSENTADORIA
 // ─────────────────────────────────────────
 
-model RegraAposentadoria {
+model RetirementRule {
   id         String   @id @default(cuid())
-  modalidade String   // Ex: IDADE_MINIMA_65_62, PONTOS_86_96, PEDAGIO_50, etc.
-  genero     String   // 'M', 'F' ou 'AMBOS'
-  vigencia   DateTime // Data de início da vigência desta regra
+  modality   String   // Ex: IDADE_MINIMA_65_62, PONTOS_86_96, PEDAGIO_50, etc.
+  gender     String   // 'M', 'F' ou 'AMBOS'
+  effectiveDate DateTime // Data de início da vigência desta regra
 
-  idadeMinima           Decimal? @db.Decimal(5, 1) // Ex: 62.0, 59.5
-  tempoContribuicaoAnos Int?
-  pontosMinimos         Int?     // Apenas para a regra por pontos
-  carenciaMeses         Int?
+  minimumAge           Decimal? @db.Decimal(5, 1) // Ex: 62.0, 59.5
+  contributionYears    Int?
+  minimumPoints        Int?     // Apenas para a regra por pontos
+  gracePeriodMonths    Int?
 
-  descricao   String   // Nome legível da regra
-  legislacao  String   // Ex: "EC 103/2019"
-  observacoes String?  @db.Text
+  description String   // Nome legível da regra
+  legislation String   // Ex: "EC 103/2019"
+  notes       String?  @db.Text
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@unique([modalidade, genero, vigencia])
-  @@index([modalidade, genero, vigencia])
-  @@map("regras_aposentadoria")
+  @@unique([modality, gender, effectiveDate])
+  @@index([modality, gender, effectiveDate])
+  @@map("retirement_rules")
 }
 
 // ─────────────────────────────────────────
 // MODALIDADES DE BENEFÍCIO / CÁLCULO
 // ─────────────────────────────────────────
 
-model ModalidadeLabel {
-  id        String   @id @default(cuid())
-  codigo    String   @unique
-  label     String
-  descricao String?  @db.Text
-  ativo     Boolean  @default(true)
-  ordem     Int      @default(0)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+model ModalityLabel {
+  id          String   @id @default(cuid())
+  code        String   @unique
+  label       String
+  description String?  @db.Text
+  active      Boolean  @default(true)
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
-  @@index([ativo, ordem])
-  @@map("modalidades_labels")
+  @@index([active, order])
+  @@map("modality_labels")
 }
 
 // ─────────────────────────────────────────
@@ -584,14 +584,14 @@ model AuditLog {
 // ÍNDICES DE CORREÇÃO MONETÁRIA (INPC)
 // ─────────────────────────────────────────
 
-model IndiceINPC {
-  id          String   @id @default(cuid())
-  competencia String   @unique // Formato: "YYYY-MM"
-  valor       Decimal  @db.Decimal(10, 6) // Ex: 0.005700
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+model InpcIndex {
+  id         String   @id @default(cuid())
+  competence String   @unique // Formato: "YYYY-MM"
+  value      Decimal  @db.Decimal(10, 6) // Ex: 0.005700
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
-  @@index([competencia])
-  @@map("indices_inpc")
+  @@index([competence])
+  @@map("inpc_indices")
 }
 

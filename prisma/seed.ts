@@ -1,7 +1,31 @@
 import { PrismaClient } from '@prisma/client'
-import { MODALIDADES_PADRAO } from '../src/lib/modalidade-labels'
 
 const prisma = new PrismaClient()
+
+// Modalidades padrão traduzidas para o seed
+interface ModalityPadrao {
+  code: string
+  label: string
+  description?: string
+  order: number
+}
+
+const MODALITIES_DEFAULT: ModalityPadrao[] = [
+  { code: 'POINTS_86_96',           label: 'Aposentadoria por Pontos (Transição)', order: 10 },
+  { code: 'TOLL_50',             label: 'Transição - Pedágio de 50%',           order: 20 },
+  { code: 'TOLL_100',            label: 'Transição - Pedágio de 100%',          order: 30 },
+  { code: 'MINIMUM_AGE_65_62',     label: 'Idade Mínima Progressiva',             order: 40 },
+  { code: 'CONTRIBUTION_TIME',     label: 'Tempo de Contribuição (Regra Geral)',  order: 50 },
+  { code: 'RETIREMENT_BY_AGE',    label: 'Aposentadoria por Idade',              order: 60 },
+  { code: 'SPECIAL_RETIREMENT', label: 'Aposentadoria Especial (25 anos)',     order: 70 },
+  { code: 'HYBRID',                label: 'Aposentadoria Híbrida',                order: 80 },
+  { code: 'SICKNESS_BENEFIT_B31',     label: 'Auxílio-Doença Previdenciário',        order: 90 },
+  { code: 'SICKNESS_BENEFIT_B91',     label: 'Auxílio-Doença Acidentário',           order: 100 },
+  { code: 'MATERNITY_PAY',    label: 'Salário-Maternidade',                  order: 110 },
+  { code: 'PRISONER_BENEFIT',       label: 'Auxílio-Reclusão',                     order: 120 },
+  { code: 'DEATH_PENSION',           label: 'Pensão por Morte',                     order: 130 },
+  { code: 'BPC_LOAS',               label: 'BPC/LOAS (Idoso)',                     order: 140 },
+]
 
 async function main() {
   console.log('🌱 Seeding PlanLimits...')
@@ -16,7 +40,7 @@ async function main() {
       maxOpinionsPerMonth: 1,
       maxNotesPerCase: 10,
       simulatorEnabled: false,
-      retroativosEnabled: false,
+      retroactiveEnabled: false,
       exportPdfEnabled: false,
       whatsappEnabled: false,
       watermarkEnabled: true,
@@ -34,7 +58,7 @@ async function main() {
       maxOpinionsPerMonth: 20,
       maxNotesPerCase: -1,
       simulatorEnabled: true,
-      retroativosEnabled: true,
+      retroactiveEnabled: true,
       exportPdfEnabled: true,
       whatsappEnabled: true,
       watermarkEnabled: false,
@@ -52,7 +76,7 @@ async function main() {
       maxOpinionsPerMonth: -1,
       maxNotesPerCase: -1,
       simulatorEnabled: true,
-      retroativosEnabled: true,
+      retroactiveEnabled: true,
       exportPdfEnabled: true,
       whatsappEnabled: true,
       watermarkEnabled: false,
@@ -63,60 +87,60 @@ async function main() {
   console.log('✅ PlanLimits seeded successfully')
 
   // ─── Salários Mínimos Históricos ────────────────────────────────────────────
-  console.log('🌱 Seeding SalariosMinimos...')
+  console.log('🌱 Seeding MinimumWages...')
 
-  const salarios = [
-    { vigencia: new Date('2026-01-01'), valor: 1621.00, teto: 8157.41, legislacao: 'Decreto 12.797/2025', reajuste: 6.79 },
-    { vigencia: new Date('2025-01-01'), valor: 1518.00, teto: 7786.02, legislacao: 'Decreto 12.342/2024', reajuste: 7.95 },
-    { vigencia: new Date('2024-01-01'), valor: 1412.00, teto: 7786.02, legislacao: 'Decreto 11.864/2024', reajuste: 6.97 },
-    { vigencia: new Date('2023-05-01'), valor: 1320.00, teto: 7507.49, legislacao: 'MP 1.172/2023 (Lei 14.663, de 2023)', reajuste: 8.90 },
-    { vigencia: new Date('2023-01-01'), valor: 1302.00, teto: 7507.49, legislacao: 'MP 1.143/2022 (Lei 14.663, de 2023)', reajuste: 7.43 },
-    { vigencia: new Date('2022-01-01'), valor: 1212.00, teto: 7087.22, legislacao: 'MP 1091/2021 (Lei 14.358, de 2022)', reajuste: 10.16 },
-    { vigencia: new Date('2021-01-01'), valor: 1100.00, teto: 6433.57, legislacao: 'MP 1021/2020 (Lei 14.158, de 2021)', reajuste: 5.26 },
-    { vigencia: new Date('2020-02-01'), valor: 1045.00, teto: 6101.06, legislacao: 'MP 919/2020 (Lei 14.013, de 2020)', reajuste: 0.58 },
-    { vigencia: new Date('2020-01-01'), valor: 1039.00, teto: 6101.06, legislacao: 'MP 916/2019 (Lei 14.013, de 2020)', reajuste: 4.10 },
-    { vigencia: new Date('2019-01-01'), valor: 998.00, teto: 5839.45, legislacao: 'Decreto 9.661/2019', reajuste: 4.61 },
-    { vigencia: new Date('2018-01-01'), valor: 954.00, teto: 5645.80, legislacao: 'Decreto 9.255/2017', reajuste: 1.81 },
-    { vigencia: new Date('2017-01-01'), valor: 937.00, teto: 5531.31, legislacao: 'Lei 13.152/2015', reajuste: 6.48 },
-    { vigencia: new Date('2016-01-01'), valor: 880.00, teto: 5189.82, legislacao: 'Decreto 8.618/2015', reajuste: 11.68 },
-    { vigencia: new Date('2015-01-01'), valor: 788.00, teto: 4663.75, legislacao: 'Decreto 8.381/2014', reajuste: 8.84 },
-    { vigencia: new Date('2014-01-01'), valor: 724.00, teto: 4390.24, legislacao: 'Decreto 8.166/2013', reajuste: 6.78 },
-    { vigencia: new Date('2013-01-01'), valor: 678.00, teto: 4159.00, legislacao: 'Decreto 7.872/2012', reajuste: 9.00 },
-    { vigencia: new Date('2012-01-01'), valor: 622.00, teto: 3916.20, legislacao: 'Decreto 7.655/2011', reajuste: 14.13 },
-    { vigencia: new Date('2011-03-01'), valor: 545.00, teto: 3691.74, legislacao: 'Lei 12.382/2011', reajuste: 0.93 },
-    { vigencia: new Date('2011-01-01'), valor: 540.00, teto: 3691.74, legislacao: 'MP 516/2010 (Lei Nº 12.382, 2011)', reajuste: 5.88 },
-    { vigencia: new Date('2010-01-01'), valor: 510.00, teto: 3467.40, legislacao: 'Lei 12.255/2010', reajuste: 9.68 },
-    { vigencia: new Date('2009-02-01'), valor: 465.00, teto: 3218.90, legislacao: 'Lei 11.944/2009', reajuste: 12.05 },
-    { vigencia: new Date('2008-03-01'), valor: 415.00, teto: 3038.99, legislacao: 'Lei 11.709/2008', reajuste: 9.21 },
-    { vigencia: new Date('2007-04-01'), valor: 380.00, teto: 2894.28, legislacao: 'Lei 11.498/2007', reajuste: 8.57 },
-    { vigencia: new Date('2006-04-01'), valor: 350.00, teto: 2801.82, legislacao: 'Lei 11.321/2006', reajuste: 16.67 },
-    { vigencia: new Date('2005-05-01'), valor: 300.00, teto: 2668.15, legislacao: 'Lei 11.164/2005', reajuste: 15.38 },
-    { vigencia: new Date('2004-05-01'), valor: 260.00, teto: 2508.72, legislacao: 'Lei 10.888/2004', reajuste: 8.33 },
-    { vigencia: new Date('2003-06-01'), valor: 240.00, teto: 1869.34, legislacao: 'Lei 10.699/2003', reajuste: 20.00 },
-    { vigencia: new Date('2002-06-01'), valor: 200.00, teto: 1561.56, legislacao: 'Lei 10.525/2002', reajuste: 11.11 },
-    { vigencia: new Date('2001-06-01'), valor: 180.00, teto: 1430.00, legislacao: 'MP 2.194-6/2001', reajuste: 19.21 },
-    { vigencia: new Date('2000-06-01'), valor: 151.00, teto: 1255.32, legislacao: 'Lei 9.971/2000', reajuste: 11.03 },
-    { vigencia: new Date('1999-05-01'), valor: 136.00, teto: 1255.32, legislacao: 'Lei 9.971/2000', reajuste: 4.62 },
-    { vigencia: new Date('1998-05-01'), valor: 130.00, teto: 1081.50, legislacao: 'Lei 9.971/2000', reajuste: 8.33 },
-    { vigencia: new Date('1997-05-01'), valor: 120.00, teto: 1031.87, legislacao: 'Lei 9.971/2000', reajuste: 7.14 },
-    { vigencia: new Date('1996-05-01'), valor: 112.00, teto: 957.87, legislacao: 'Lei 9.971/2000', reajuste: 12.00 },
-    { vigencia: new Date('1995-05-01'), valor: 100.00, teto: 957.87, legislacao: 'Lei 9.032/1995', reajuste: 42.86 },
-    { vigencia: new Date('1994-09-01'), valor: 70.00, teto: 649.18, legislacao: 'MP 598/1994', reajuste: 8.04 },
-    { vigencia: new Date('1994-07-01'), valor: 64.79, teto: 649.18, legislacao: 'Lei 8.880/1994', reajuste: null },
+  const minimumWages = [
+    { effectiveDate: new Date('2026-01-01T00:00:00.000Z'), value: 1621.00, ceiling: 8157.41, legislation: 'Decreto 12.797/2025', readjustment: 6.79 },
+    { effectiveDate: new Date('2025-01-01T00:00:00.000Z'), value: 1518.00, ceiling: 7786.02, legislation: 'Decreto 12.342/2024', readjustment: 7.95 },
+    { effectiveDate: new Date('2024-01-01T00:00:00.000Z'), value: 1412.00, ceiling: 7786.02, legislation: 'Decreto 11.864/2024', readjustment: 6.97 },
+    { effectiveDate: new Date('2023-05-01T00:00:00.000Z'), value: 1320.00, ceiling: 7507.49, legislation: 'MP 1.172/2023 (Lei 14.663, de 2023)', readjustment: 8.90 },
+    { effectiveDate: new Date('2023-01-01T00:00:00.000Z'), value: 1302.00, ceiling: 7507.49, legislation: 'MP 1.143/2022 (Lei 14.663, de 2023)', readjustment: 7.43 },
+    { effectiveDate: new Date('2022-01-01T00:00:00.000Z'), value: 1212.00, ceiling: 7087.22, legislation: 'MP 1091/2021 (Lei 14.358, de 2022)', readjustment: 10.16 },
+    { effectiveDate: new Date('2021-01-01T00:00:00.000Z'), value: 1100.00, ceiling: 6433.57, legislation: 'MP 1021/2020 (Lei 14.158, de 2021)', readjustment: 5.26 },
+    { effectiveDate: new Date('2020-02-01T00:00:00.000Z'), value: 1045.00, ceiling: 6101.06, legislation: 'MP 919/2020 (Lei 14.013, de 2020)', readjustment: 0.58 },
+    { effectiveDate: new Date('2020-01-01T00:00:00.000Z'), value: 1039.00, ceiling: 6101.06, legislation: 'MP 916/2019 (Lei 14.013, de 2020)', readjustment: 4.10 },
+    { effectiveDate: new Date('2019-01-01T00:00:00.000Z'), value: 998.00, ceiling: 5839.45, legislation: 'Decreto 9.661/2019', readjustment: 4.61 },
+    { effectiveDate: new Date('2018-01-01T00:00:00.000Z'), value: 954.00, ceiling: 5645.80, legislation: 'Decreto 9.255/2017', readjustment: 1.81 },
+    { effectiveDate: new Date('2017-01-01T00:00:00.000Z'), value: 937.00, ceiling: 5531.31, legislation: 'Lei 13.152/2015', readjustment: 6.48 },
+    { effectiveDate: new Date('2016-01-01T00:00:00.000Z'), value: 880.00, ceiling: 5189.82, legislation: 'Decreto 8.618/2015', readjustment: 11.68 },
+    { effectiveDate: new Date('2015-01-01T00:00:00.000Z'), value: 788.00, ceiling: 4663.75, legislation: 'Decreto 8.381/2014', readjustment: 8.84 },
+    { effectiveDate: new Date('2014-01-01T00:00:00.000Z'), value: 724.00, ceiling: 4390.24, legislation: 'Decreto 8.166/2013', readjustment: 6.78 },
+    { effectiveDate: new Date('2013-01-01T00:00:00.000Z'), value: 678.00, ceiling: 4159.00, legislation: 'Decreto 7.872/2012', readjustment: 9.00 },
+    { effectiveDate: new Date('2012-01-01T00:00:00.000Z'), value: 622.00, ceiling: 3916.20, legislation: 'Decreto 7.655/2011', readjustment: 14.13 },
+    { effectiveDate: new Date('2011-03-01T00:00:00.000Z'), value: 545.00, ceiling: 3691.74, legislation: 'Lei 12.382/2011', readjustment: 0.93 },
+    { effectiveDate: new Date('2011-01-01T00:00:00.000Z'), value: 540.00, ceiling: 3691.74, legislation: 'MP 516/2010 (Lei Nº 12.382, 2011)', readjustment: 5.88 },
+    { effectiveDate: new Date('2010-01-01T00:00:00.000Z'), value: 510.00, ceiling: 3467.40, legislation: 'Lei 12.255/2010', readjustment: 9.68 },
+    { effectiveDate: new Date('2009-02-01T00:00:00.000Z'), value: 465.00, ceiling: 3218.90, legislation: 'Lei 11.944/2009', readjustment: 12.05 },
+    { effectiveDate: new Date('2008-03-01T00:00:00.000Z'), value: 415.00, ceiling: 3038.99, legislation: 'Lei 11.709/2008', readjustment: 9.21 },
+    { effectiveDate: new Date('2007-04-01T00:00:00.000Z'), value: 380.00, ceiling: 2894.28, legislation: 'Lei 11.498/2007', readjustment: 8.57 },
+    { effectiveDate: new Date('2006-04-01T00:00:00.000Z'), value: 350.00, ceiling: 2801.82, legislation: 'Lei 11.321/2006', readjustment: 16.67 },
+    { effectiveDate: new Date('2005-05-01T00:00:00.000Z'), value: 300.00, ceiling: 2668.15, legislation: 'Lei 11.164/2005', readjustment: 15.38 },
+    { effectiveDate: new Date('2004-05-01T00:00:00.000Z'), value: 260.00, ceiling: 2508.72, legislation: 'Lei 10.888/2004', readjustment: 8.33 },
+    { effectiveDate: new Date('2003-06-01T00:00:00.000Z'), value: 240.00, ceiling: 1869.34, legislation: 'Lei 10.699/2003', readjustment: 20.00 },
+    { effectiveDate: new Date('2002-06-01T00:00:00.000Z'), value: 200.00, ceiling: 1561.56, legislation: 'Lei 10.525/2002', readjustment: 11.11 },
+    { effectiveDate: new Date('2001-06-01T00:00:00.000Z'), value: 180.00, ceiling: 1430.00, legislation: 'MP 2.194-6/2001', readjustment: 19.21 },
+    { effectiveDate: new Date('2000-06-01T00:00:00.000Z'), value: 151.00, ceiling: 1255.32, legislation: 'Lei 9.971/2000', readjustment: 11.03 },
+    { effectiveDate: new Date('1999-05-01T00:00:00.000Z'), value: 136.00, ceiling: 1255.32, legislation: 'Lei 9.971/2000', readjustment: 4.62 },
+    { effectiveDate: new Date('1998-05-01T00:00:00.000Z'), value: 130.00, ceiling: 1081.50, legislation: 'Lei 9.971/2000', readjustment: 8.33 },
+    { effectiveDate: new Date('1997-05-01T00:00:00.000Z'), value: 120.00, ceiling: 1031.87, legislation: 'Lei 9.971/2000', readjustment: 7.14 },
+    { effectiveDate: new Date('1996-05-01T00:00:00.000Z'), value: 112.00, ceiling: 957.87, legislation: 'Lei 9.971/2000', readjustment: 12.00 },
+    { effectiveDate: new Date('1995-05-01T00:00:00.000Z'), value: 100.00, ceiling: 957.87, legislation: 'Lei 9.032/1995', readjustment: 42.86 },
+    { effectiveDate: new Date('1994-09-01T00:00:00.000Z'), value: 70.00, ceiling: 649.18, legislation: 'MP 598/1994', readjustment: 8.04 },
+    { effectiveDate: new Date('1994-07-01T00:00:00.000Z'), value: 64.79, ceiling: 649.18, legislation: 'Lei 8.880/1994', readjustment: null },
   ]
 
-  for (const s of salarios) {
-    await prisma.salarioMinimo.upsert({
-      where: { vigencia: s.vigencia },
-      update: { valor: s.valor, teto: s.teto, legislacao: s.legislacao, reajuste: s.reajuste },
+  for (const s of minimumWages) {
+    await prisma.minimumWage.upsert({
+      where: { effectiveDate: s.effectiveDate },
+      update: { value: s.value, ceiling: s.ceiling, legislation: s.legislation, readjustment: s.readjustment },
       create: s,
     })
   }
 
-  console.log(`✅ ${salarios.length} registros de SalarioMinimo inseridos`)
+  console.log(`✅ ${minimumWages.length} registros de MinimumWage inseridos`)
 
   // ─── Regras de Aposentadoria ────────────────────────────────────────────────
-  console.log('🌱 Seeding RegrasAposentadoria...')
+  console.log('🌱 Seeding RetirementRules...')
 
   // Regra por pontos: pontuação sobe 1 ponto por ano a partir de 2019 (EC 103/2019)
   // Homens: 96 → 105 (máx). Mulheres: 86 → 96 (máx).
@@ -146,124 +170,149 @@ async function main() {
     { vigencia: '2029-01-01', pontos: 96 },
   ]
 
-  const regras = [
+  const rules = [
     // ── Regra Permanente / Aposentadoria por Idade ────────────────────────────
-    { modalidade: 'IDADE_MINIMA_65_62', genero: 'M', vigencia: '2019-11-13', idadeMinima: 65, tempoContribuicaoAnos: 20, carenciaMeses: 180, descricao: 'Regra Permanente - Homens', legislacao: 'EC 103/2019' },
-    { modalidade: 'IDADE_MINIMA_65_62', genero: 'F', vigencia: '2019-11-13', idadeMinima: 62, tempoContribuicaoAnos: 15, carenciaMeses: 180, descricao: 'Regra Permanente - Mulheres', legislacao: 'EC 103/2019' },
-    { modalidade: 'APOSENTADORIA_IDADE', genero: 'M', vigencia: '2019-11-13', idadeMinima: 65, tempoContribuicaoAnos: 20, carenciaMeses: 180, descricao: 'Aposentadoria por Idade - Homens', legislacao: 'EC 103/2019' },
-    { modalidade: 'APOSENTADORIA_IDADE', genero: 'F', vigencia: '2019-11-13', idadeMinima: 62, tempoContribuicaoAnos: 15, carenciaMeses: 180, descricao: 'Aposentadoria por Idade - Mulheres', legislacao: 'EC 103/2019' },
+    { modality: 'MINIMUM_AGE_65_62', gender: 'M', vigencia: '2019-11-13', minimumAge: 65, contributionYears: 20, gracePeriodMonths: 180, description: 'Regra Permanente - Homens', legislation: 'EC 103/2019' },
+    { modality: 'MINIMUM_AGE_65_62', gender: 'F', vigencia: '2019-11-13', minimumAge: 62, contributionYears: 15, gracePeriodMonths: 180, description: 'Regra Permanente - Mulheres', legislation: 'EC 103/2019' },
+    { modality: 'RETIREMENT_BY_AGE', gender: 'M', vigencia: '2019-11-13', minimumAge: 65, contributionYears: 20, gracePeriodMonths: 180, description: 'Aposentadoria por Idade - Homens', legislation: 'EC 103/2019' },
+    { modality: 'RETIREMENT_BY_AGE', gender: 'F', vigencia: '2019-11-13', minimumAge: 62, contributionYears: 15, gracePeriodMonths: 180, description: 'Aposentadoria por Idade - Mulheres', legislation: 'EC 103/2019' },
     // ── Tempo de Contribuição (pré-reforma) ───────────────────────────────────
-    { modalidade: 'TEMPO_CONTRIBUICAO', genero: 'M', vigencia: '2019-11-13', tempoContribuicaoAnos: 35, carenciaMeses: 180, descricao: 'Tempo de Contribuição - Homens', legislacao: 'EC 103/2019' },
-    { modalidade: 'TEMPO_CONTRIBUICAO', genero: 'F', vigencia: '2019-11-13', tempoContribuicaoAnos: 30, carenciaMeses: 180, descricao: 'Tempo de Contribuição - Mulheres', legislacao: 'EC 103/2019' },
+    { modality: 'CONTRIBUTION_TIME', gender: 'M', vigencia: '2019-11-13', contributionYears: 35, gracePeriodMonths: 180, description: 'Tempo de Contribuição - Homens', legislation: 'EC 103/2019' },
+    { modality: 'CONTRIBUTION_TIME', gender: 'F', vigencia: '2019-11-13', contributionYears: 30, gracePeriodMonths: 180, description: 'Tempo de Contribuição - Mulheres', legislation: 'EC 103/2019' },
     // ── Pedágio 50% ───────────────────────────────────────────────────────────
-    { modalidade: 'PEDAGIO_50', genero: 'M', vigencia: '2019-11-13', tempoContribuicaoAnos: 35, carenciaMeses: 180, descricao: 'Pedágio 50% - Homens', legislacao: 'EC 103/2019', observacoes: 'Válido apenas para quem faltava menos de 2 anos em 13/11/2019.' },
-    { modalidade: 'PEDAGIO_50', genero: 'F', vigencia: '2019-11-13', tempoContribuicaoAnos: 30, carenciaMeses: 180, descricao: 'Pedágio 50% - Mulheres', legislacao: 'EC 103/2019', observacoes: 'Válido apenas para quem faltava menos de 2 anos em 13/11/2019.' },
+    { modality: 'TOLL_50', gender: 'M', vigencia: '2019-11-13', contributionYears: 35, gracePeriodMonths: 180, description: 'Pedágio 50% - Homens', legislation: 'EC 103/2019', notes: 'Válido apenas para quem faltava menos de 2 anos em 13/11/2019.' },
+    { modality: 'TOLL_50', gender: 'F', vigencia: '2019-11-13', contributionYears: 30, gracePeriodMonths: 180, description: 'Pedágio 50% - Mulheres', legislation: 'EC 103/2019', notes: 'Válido apenas para quem faltava menos de 2 anos em 13/11/2019.' },
     // ── Pedágio 100% ──────────────────────────────────────────────────────────
-    { modalidade: 'PEDAGIO_100', genero: 'M', vigencia: '2019-11-13', idadeMinima: 60, tempoContribuicaoAnos: 35, carenciaMeses: 180, descricao: 'Pedágio 100% - Homens', legislacao: 'EC 103/2019' },
-    { modalidade: 'PEDAGIO_100', genero: 'F', vigencia: '2019-11-13', idadeMinima: 57, tempoContribuicaoAnos: 30, carenciaMeses: 180, descricao: 'Pedágio 100% - Mulheres', legislacao: 'EC 103/2019' },
+    { modality: 'TOLL_100', gender: 'M', vigencia: '2019-11-13', minimumAge: 60, contributionYears: 35, gracePeriodMonths: 180, description: 'Pedágio 100% - Homens', legislation: 'EC 103/2019' },
+    { modality: 'TOLL_100', gender: 'F', vigencia: '2019-11-13', minimumAge: 57, contributionYears: 30, gracePeriodMonths: 180, description: 'Pedágio 100% - Mulheres', legislation: 'EC 103/2019' },
     // ── Aposentadoria Especial ────────────────────────────────────────────────
-    { modalidade: 'APOSENTADORIA_ESPECIAL', genero: 'AMBOS', vigencia: '2019-11-13', idadeMinima: 60, tempoContribuicaoAnos: 25, descricao: 'Aposentadoria Especial', legislacao: 'EC 103/2019' },
+    { modality: 'SPECIAL_RETIREMENT', gender: 'AMBOS', vigencia: '2019-11-13', minimumAge: 60, contributionYears: 25, description: 'Aposentadoria Especial', legislation: 'EC 103/2019' },
     // ── Híbrida ───────────────────────────────────────────────────────────────
-    { modalidade: 'HIBRIDA', genero: 'M', vigencia: '2019-11-13', idadeMinima: 65, tempoContribuicaoAnos: 15, carenciaMeses: 180, descricao: 'Híbrida (Rural/Urbano) - Homens', legislacao: 'EC 103/2019' },
-    { modalidade: 'HIBRIDA', genero: 'F', vigencia: '2019-11-13', idadeMinima: 62, tempoContribuicaoAnos: 15, carenciaMeses: 180, descricao: 'Híbrida (Rural/Urbano) - Mulheres', legislacao: 'EC 103/2019' },
+    { modality: 'HYBRID', gender: 'M', vigencia: '2019-11-13', minimumAge: 65, contributionYears: 15, gracePeriodMonths: 180, description: 'Híbrida (Rural/Urbano) - Homens', legislation: 'EC 103/2019' },
+    { modality: 'HYBRID', gender: 'F', vigencia: '2019-11-13', minimumAge: 62, contributionYears: 15, gracePeriodMonths: 180, description: 'Híbrida (Rural/Urbano) - Mulheres', legislation: 'EC 103/2019' },
     // ── BPC/LOAS ──────────────────────────────────────────────────────────────
-    { modalidade: 'BPC_LOAS', genero: 'AMBOS', vigencia: '2019-11-13', idadeMinima: 65, descricao: 'BPC/LOAS - Idoso', legislacao: 'Lei 8.742/1993' },
+    { modality: 'BPC_LOAS', gender: 'AMBOS', vigencia: '2019-11-13', minimumAge: 65, description: 'BPC/LOAS - Idoso', legislation: 'Lei 8.742/1993' },
     // ── Auxílio-Doença ────────────────────────────────────────────────────────
-    { modalidade: 'AUXILIO_DOENCA_B31', genero: 'AMBOS', vigencia: '1991-07-24', carenciaMeses: 12, descricao: 'Auxílio-Doença Previdenciário (B31)', legislacao: 'Lei 8.213/1991' },
+    { modality: 'SICKNESS_BENEFIT_B31', gender: 'AMBOS', vigencia: '1991-07-24', gracePeriodMonths: 12, description: 'Auxílio-Doença Previdenciário (B31)', legislation: 'Lei 8.213/1991' },
     // ── Pensão por Morte ──────────────────────────────────────────────────────
-    { modalidade: 'PENSAO_MORTE', genero: 'AMBOS', vigencia: '2019-11-13', carenciaMeses: 18, descricao: 'Pensão por Morte', legislacao: 'EC 103/2019', observacoes: 'Menos de 18 contribuições pode reduzir o prazo de pagamento ao cônjuge.' },
+    { modality: 'DEATH_PENSION', gender: 'AMBOS', vigencia: '2019-11-13', gracePeriodMonths: 18, description: 'Pensão por Morte', legislation: 'EC 103/2019', notes: 'Menos de 18 contribuições pode reduzir o prazo de pagamento ao cônjuge.' },
     // ── Por Pontos (Homens) ───────────────────────────────────────────────────
     ...pontosProgH.map(p => ({
-      modalidade: 'PONTOS_86_96',
-      genero: 'M',
+      modality: 'POINTS_86_96',
+      gender: 'M',
       vigencia: p.vigencia,
-      pontosMinimos: p.pontos,
-      tempoContribuicaoAnos: 35,
-      carenciaMeses: 180,
-      descricao: `Por Pontos - Homens (${p.pontos} pts)`,
-      legislacao: 'EC 103/2019',
+      minimumPoints: p.pontos,
+      contributionYears: 35,
+      gracePeriodMonths: 180,
+      description: `Por Pontos - Homens (${p.pontos} pts)`,
+      legislation: 'EC 103/2019',
     })),
     // ── Por Pontos (Mulheres) ─────────────────────────────────────────────────
     ...pontosProgF.map(p => ({
-      modalidade: 'PONTOS_86_96',
-      genero: 'F',
+      modality: 'POINTS_86_96',
+      gender: 'F',
       vigencia: p.vigencia,
-      pontosMinimos: p.pontos,
-      tempoContribuicaoAnos: 30,
-      carenciaMeses: 180,
-      descricao: `Por Pontos - Mulheres (${p.pontos} pts)`,
-      legislacao: 'EC 103/2019',
+      minimumPoints: p.pontos,
+      contributionYears: 30,
+      gracePeriodMonths: 180,
+      description: `Por Pontos - Mulheres (${p.pontos} pts)`,
+      legislation: 'EC 103/2019',
     })),
   ]
 
-  for (const r of regras) {
-    const vigenciaDate = new Date(r.vigencia + 'T00:00:00.000Z')
-    await prisma.regraAposentadoria.upsert({
-      where: { modalidade_genero_vigencia: { modalidade: r.modalidade, genero: r.genero, vigencia: vigenciaDate } },
-      update: { ...r, vigencia: vigenciaDate },
-      create: { ...r, vigencia: vigenciaDate },
-    })
-  }
-
-  console.log(`✅ ${regras.length} regras de aposentadoria inseridas`)
-
-  // ─── Modalidades de Benefício / Cálculo ────────────────────────────────────
-  console.log('🌱 Seeding Modalidades...')
-
-  for (const modalidade of MODALIDADES_PADRAO) {
-    await prisma.modalidadeLabel.upsert({
-      where: { codigo: modalidade.codigo },
+  for (const r of rules as any[]) {
+    const effectiveDateVal = new Date(r.vigencia + 'T00:00:00.000Z')
+    await prisma.retirementRule.upsert({
+      where: {
+        modality_gender_effectiveDate: {
+          modality: r.modality,
+          gender: r.gender,
+          effectiveDate: effectiveDateVal,
+        },
+      },
       update: {
-        label: modalidade.label,
-        descricao: modalidade.descricao ?? null,
-        ordem: modalidade.ordem,
-        ativo: true,
+        minimumAge: r.minimumAge,
+        contributionYears: r.contributionYears,
+        minimumPoints: r.minimumPoints,
+        gracePeriodMonths: r.gracePeriodMonths,
+        description: r.description,
+        legislation: r.legislation,
+        notes: r.notes,
       },
       create: {
-        codigo: modalidade.codigo,
-        label: modalidade.label,
-        descricao: modalidade.descricao ?? null,
-        ordem: modalidade.ordem,
-        ativo: true,
+        modality: r.modality,
+        gender: r.gender,
+        effectiveDate: effectiveDateVal,
+        minimumAge: r.minimumAge,
+        contributionYears: r.contributionYears,
+        minimumPoints: r.minimumPoints,
+        gracePeriodMonths: r.gracePeriodMonths,
+        description: r.description,
+        legislation: r.legislation,
+        notes: r.notes,
       },
     })
   }
 
-  console.log(`✅ ${MODALIDADES_PADRAO.length} modalidades inseridas`)
+  console.log(`✅ ${rules.length} regras de aposentadoria inseridas`)
+
+  // ─── Modalidades de Benefício / Cálculo ────────────────────────────────────
+  console.log('🌱 Seeding Modalities...')
+
+  for (const modality of MODALITIES_DEFAULT) {
+    await prisma.modalityLabel.upsert({
+      where: { code: modality.code },
+      update: {
+        label: modality.label,
+        description: modality.description ?? null,
+        order: modality.order,
+        active: true,
+      },
+      create: {
+        code: modality.code,
+        label: modality.label,
+        description: modality.description ?? null,
+        order: modality.order,
+        active: true,
+      },
+    })
+  }
+
+  console.log(`✅ ${MODALITIES_DEFAULT.length} modalidades inseridas`)
 
   // ─── Índices INPC Históricos ──────────────────────────────────────────────
   console.log('🌱 Seeding Índices INPC...')
 
   const indicesINPC = [
     // 2024
-    { competencia: '2024-01', valor: 0.0057 }, { competencia: '2024-02', valor: 0.0081 },
-    { competencia: '2024-03', valor: 0.0019 }, { competencia: '2024-04', valor: 0.0037 },
-    { competencia: '2024-05', valor: 0.0046 }, { competencia: '2024-06', valor: 0.0025 },
-    { competencia: '2024-07', valor: 0.0012 }, { competencia: '2024-08', valor: -0.0014 },
-    { competencia: '2024-09', valor: 0.0048 }, { competencia: '2024-10', valor: 0.0061 },
-    { competencia: '2024-11', valor: 0.0052 }, { competencia: '2024-12', valor: 0.0038 },
+    { competence: '2024-01', value: 0.0057 }, { competence: '2024-02', value: 0.0081 },
+    { competence: '2024-03', value: 0.0019 }, { competence: '2024-04', value: 0.0037 },
+    { competence: '2024-05', value: 0.0046 }, { competence: '2024-06', value: 0.0025 },
+    { competence: '2024-07', value: 0.0012 }, { competence: '2024-08', value: -0.0014 },
+    { competence: '2024-09', value: 0.0048 }, { competence: '2024-10', value: 0.0061 },
+    { competence: '2024-11', value: 0.0052 }, { competence: '2024-12', value: 0.0038 },
     // 2025
-    { competencia: '2025-01', valor: 0.0042 }, { competencia: '2025-02', valor: 0.0031 },
-    { competencia: '2025-03', valor: 0.0028 }, { competencia: '2025-04', valor: 0.0035 },
-    { competencia: '2025-05', valor: 0.0022 }, { competencia: '2025-06', valor: 0.0018 },
-    { competencia: '2025-07', valor: 0.0015 }, { competencia: '2025-08', valor: 0.0011 },
-    { competencia: '2025-09', valor: 0.0029 }, { competencia: '2025-10', valor: 0.0039 },
-    { competencia: '2025-11', valor: 0.0041 }, { competencia: '2025-12', valor: 0.0032 },
+    { competence: '2025-01', value: 0.0042 }, { competence: '2025-02', value: 0.0031 },
+    { competence: '2025-03', value: 0.0028 }, { competence: '2025-04', value: 0.0035 },
+    { competence: '2025-05', value: 0.0022 }, { competence: '2025-06', value: 0.0018 },
+    { competence: '2025-07', value: 0.0015 }, { competence: '2025-08', value: 0.0011 },
+    { competence: '2025-09', value: 0.0029 }, { competence: '2025-10', value: 0.0039 },
+    { competence: '2025-11', value: 0.0041 }, { competence: '2025-12', value: 0.0032 },
     // 2026
-    { competencia: '2026-01', valor: 0.0035 }, { competencia: '2026-02', valor: 0.0038 },
-    { competencia: '2026-03', valor: 0.0032 }, { competencia: '2026-04', valor: 0.0030 },
-    { competencia: '2026-05', valor: 0.0028 },
+    { competence: '2026-01', value: 0.0035 }, { competence: '2026-02', value: 0.0038 },
+    { competence: '2026-03', value: 0.0032 }, { competence: '2026-04', value: 0.0030 },
+    { competence: '2026-05', value: 0.0028 },
   ]
 
   for (const ind of indicesINPC) {
-    await prisma.indiceINPC.upsert({
-      where: { competencia: ind.competencia },
-      update: { valor: ind.valor },
+    await prisma.inpcIndex.upsert({
+      where: { competence: ind.competence },
+      update: { value: ind.value },
       create: ind,
     })
   }
 
-  console.log(`✅ ${indicesINPC.length} registros de IndiceINPC inseridos`)
+  console.log(`✅ ${indicesINPC.length} registros de InpcIndex inseridos`)
 }
 
 main()
