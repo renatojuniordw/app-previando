@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma'
 import { verifyCaseOwnership } from '@/lib/ownership'
 import { sanitizeInput } from '@/lib/sanitize'
 import { handleApiError } from '@/lib/api-error'
+import { mapNoteTypeToDb, mapNoteToApi, ApiNoteType } from '@/lib/mappers'
 
 const createSchema = z.object({
   type: z.enum(['CONTATO', 'DOCUMENTO', 'JURIDICO', 'INTERNO', 'CALCULO', 'PENDENCIA']),
@@ -24,7 +25,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     const notes = await prisma.caseNote.findMany({
       where: {
         caseId: params.id,
-        ...(type ? { type: type as never } : {}),
+        ...(type ? { type: mapNoteTypeToDb(type as ApiNoteType) } : {}),
       },
       orderBy: { createdAt: 'desc' },
       include: {
@@ -32,7 +33,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       },
     })
 
-    return NextResponse.json({ notes })
+    return NextResponse.json({ notes: notes.map(mapNoteToApi) })
   } catch (err) {
     return handleApiError(err)
   }
@@ -63,7 +64,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       data: {
         caseId: params.id,
         userId: session.user.id,
-        type: parsed.data.type,
+        type: mapNoteTypeToDb(parsed.data.type as ApiNoteType),
         content: sanitizeInput(parsed.data.content),
         version,
       },
@@ -72,7 +73,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       },
     })
 
-    return NextResponse.json({ note }, { status: 201 })
+    return NextResponse.json({ note: mapNoteToApi(note) }, { status: 201 })
   } catch (err) {
     return handleApiError(err)
   }

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useParams } from 'next/navigation'
 import api from '@/lib/api'
 import { Button } from '@/components/ui/Button'
@@ -13,20 +13,44 @@ import {
   ShieldAlert,
   Calendar,
   User,
-  Percent,
   FileSpreadsheet,
   Trash2,
   ChevronDown,
   ChevronUp,
-  Loader2,
-  HelpCircle,
-  Briefcase
+  Loader2
 } from 'lucide-react'
+
+interface InputParams {
+  birthDate?: string
+  gender?: 'M' | 'F'
+  dib?: string
+  tempoEspecialAnos?: number
+  dependentesPensao?: number
+  clientName?: string
+}
+
+interface MemoriaCalculo {
+  contribuicoesConsideradas?: number
+  genero?: string
+  pisoNacional?: number
+  tetoPrevidenciario?: number
+  detalhamentoMedia?: Array<{
+    competencia: string
+    valorAjustado: number
+    valorOriginal: number
+  }>
+}
+
+interface PeriodosSalarios {
+  totalContribuicoes?: number
+  primeiraContribuicao?: string
+  ultimaContribuicao?: string
+}
 
 interface Calculation {
   id: string
   modalidade: string
-  inputParams: any
+  inputParams: InputParams
   salarioBeneficio: string | number
   rmi: string | number
   rma: string | number
@@ -38,8 +62,8 @@ interface Calculation {
   idadeNaApuracao?: number | null
   elegivel: boolean
   pendencias: string[]
-  memoriaCalculo: any
-  periodosSalarios: any
+  memoriaCalculo: MemoriaCalculo | null
+  periodosSalarios: PeriodosSalarios | null
   isSelected: boolean
   createdAt: string
 }
@@ -60,9 +84,19 @@ const formatPercentage = (val: string | number | undefined | null) => {
 
 export default function CalculatorPage() {
   const params = useParams()
+  interface CnisDocument {
+    extractedData?: {
+      nome?: string
+      nit?: string
+      dataNascimento?: string
+      periodos?: Array<unknown>
+    }
+    processingStatus?: string
+  }
+
   const [calculations, setCalculations] = useState<Calculation[]>([])
   const [modalidades, setModalidades] = useState<Modalidade[]>([])
-  const [cnisDocument, setCnisDocument] = useState<any>(null)
+  const [cnisDocument, setCnisDocument] = useState<CnisDocument | null>(null)
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const [creating, setCreating] = useState(false)
@@ -77,7 +111,7 @@ export default function CalculatorPage() {
   const [expandedCalc, setExpandedCalc] = useState<string | null>(null)
   const [errorMessage, setErrorMessage] = useState('')
 
-  const load = async () => {
+  const load = useCallback(async () => {
     try {
       const [rCalc, rCnis, rModalidades] = await Promise.all([
         api.get(`/cases/${params.id}/calculations`),
@@ -89,22 +123,17 @@ export default function CalculatorPage() {
 
       if (rCnis.data?.cnisDocument?.processingStatus === 'COMPLETED') {
         setCnisDocument(rCnis.data.cnisDocument)
-        // Auto-detecta data de nascimento se disponível no CNIS
-        const extracted = rCnis.data.cnisDocument.extractedData
-        if (extracted?.dataNascimento) {
-          // Mantém dados estruturados
-        }
       }
     } catch {
       // noop
     } finally {
       setLoading(false)
     }
-  }
+  }, [params.id])
 
   useEffect(() => {
     load()
-  }, [params.id])
+  }, [load])
 
   const modalidadeLabels = Object.fromEntries(
     (modalidades.length > 0 ? modalidades : MODALIDADES_PADRAO).map(({ codigo, label }) => [codigo, label])
@@ -135,8 +164,9 @@ export default function CalculatorPage() {
       setTempoEspecialAnos(0)
       setDependentesPensao(1)
       load() // Recarrega cálculos vindos seguros do backend
-    } catch (err: any) {
-      setErrorMessage(err?.response?.data?.error ?? 'Falha ao salvar o cálculo no servidor.')
+    } catch (err) {
+      const apiError = err as { response?: { data?: { error?: string } } }
+      setErrorMessage(apiError.response?.data?.error ?? 'Falha ao salvar o cálculo no servidor.')
     } finally {
       setCreating(false)
     }
@@ -218,7 +248,7 @@ export default function CalculatorPage() {
         <div className="space-y-4">
           {calculations.map((calc) => {
             const isExpanded = expandedCalc === calc.id
-            const parsedInput = calc.inputParams as any
+            const parsedInput = calc.inputParams
             const isCalcElegivel = calc.elegivel
 
             return (
@@ -416,7 +446,7 @@ export default function CalculatorPage() {
                               <div className="space-y-2">
                                 <span className="font-sans text-[10px] text-slate-400 font-bold block">Primeiros Salários do Período de Cálculo:</span>
                                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
-                                  {calc.memoriaCalculo.detalhamentoMedia.map((sal: any, sIdx: number) => {
+                                  {calc.memoriaCalculo.detalhamentoMedia.map((sal, sIdx) => {
                                     const parts = sal.competencia.split('-')
                                     const compFormat = parts.length === 2 ? `${parts[1]}/${parts[0]}` : sal.competencia
                                     return (
@@ -468,7 +498,7 @@ export default function CalculatorPage() {
                 </div>
                 <div>
                   <span className="font-semibold text-slate-500 block mb-0.5">Nascimento</span>
-                  <span className="text-slate-800 font-medium">{formatDate(cnisDocument.extractedData.dataNascimento) ?? 'Não informado'}</span>
+                  <span className="text-slate-800 font-medium">{cnisDocument.extractedData.dataNascimento ? formatDate(cnisDocument.extractedData.dataNascimento) : 'Não informado'}</span>
                 </div>
                 <div>
                   <span className="font-semibold text-slate-500 block mb-0.5">Total Vínculos</span>

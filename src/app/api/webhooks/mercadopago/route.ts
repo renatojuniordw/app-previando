@@ -5,7 +5,7 @@ import { Logger } from '@/lib/logger'
 
 const logger = new Logger('WebhookMercadoPago')
 
-function verifyWebhookSignature(req: NextRequest, rawBody: string): boolean {
+function verifyWebhookSignature(req: NextRequest, _rawBody: string): boolean {
   const secret = process.env.MERCADOPAGO_WEBHOOK_SECRET
   if (!secret) return false
 

@@ -6,6 +6,14 @@ import { verifyClientOwnership } from '@/lib/ownership'
 import { sanitizeInput } from '@/lib/sanitize'
 import { handleApiError } from '@/lib/api-error'
 import { rateLimit } from '@/lib/rate-limit'
+import { CaseStatus as DbCaseStatus } from '@prisma/client'
+import {
+  mapCaseStatusToDb,
+  mapBenefitTypeToDb,
+  mapCaseToApi,
+  ApiCaseStatus,
+  ApiBenefitType,
+} from '@/lib/mappers'
 
 const createSchema = z.object({
   clientId: z.string().cuid(),
@@ -42,7 +50,7 @@ export async function GET(req: NextRequest) {
     const skip = (page - 1) * limit
 
     const where: Record<string, unknown> = { userId: session.user.id }
-    if (status) where.status = status
+    if (status) where.status = mapCaseStatusToDb(status as ApiCaseStatus)
     if (clientId) where.clientId = clientId
 
     const [cases, total] = await prisma.$transaction([
@@ -60,7 +68,7 @@ export async function GET(req: NextRequest) {
       prisma.case.count({ where }),
     ])
 
-    return NextResponse.json({ cases, total, page, limit })
+    return NextResponse.json({ cases: cases.map(mapCaseToApi), total, page, limit })
   } catch (err) {
     return handleApiError(err)
   }
@@ -92,19 +100,19 @@ export async function POST(req: NextRequest) {
       data: {
         userId: session.user.id,
         clientId: parsed.data.clientId,
-        benefitType: parsed.data.benefitType,
+        benefitType: mapBenefitTypeToDb(parsed.data.benefitType as ApiBenefitType),
         priority: parsed.data.priority,
         deadlineDays: parsed.data.deadlineDays ?? null,
         deadlineDate: parsed.data.deadlineDate ? new Date(parsed.data.deadlineDate) : null,
         notes: parsed.data.notes ? sanitizeInput(parsed.data.notes) : null,
-        status: 'PROSPECCAO',
+        status: DbCaseStatus.PROSPECTING,
       },
       include: {
         client: { select: { id: true, name: true } },
       },
     })
 
-    return NextResponse.json({ case: caso }, { status: 201 })
+    return NextResponse.json({ case: mapCaseToApi(caso) }, { status: 201 })
   } catch (err) {
     return handleApiError(err)
   }

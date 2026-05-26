@@ -466,7 +466,7 @@ export function projectSimulations(params: {
   tetoPrevidenciario?: number
   regrasVigentes?: RegrasVigentes
 }): {
-  scenarioParams: any
+  scenarioParams: Record<string, unknown>
   rmiProjected: number
   rmaProjected: number
   dibProjected: string

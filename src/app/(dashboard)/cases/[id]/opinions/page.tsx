@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useParams } from 'next/navigation'
 import api from '@/lib/api'
 import { Button } from '@/components/ui/Button'
@@ -35,14 +35,14 @@ export default function OpinionsPage() {
   const [saving, setSaving] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
 
-  const load = () => {
+  const load = useCallback(() => {
     api.get(`/cases/${params.id}/opinions`)
       .then((r) => setOpinions(r.data.opinions ?? []))
       .catch(() => null)
       .finally(() => setLoading(false))
-  }
+  }, [params.id])
 
-  useEffect(() => { load() }, [params.id])
+  useEffect(() => { load() }, [load])
 
   const handleGenerate = async () => {
     setGenerating(true)

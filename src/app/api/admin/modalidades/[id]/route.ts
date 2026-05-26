@@ -30,7 +30,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       return NextResponse.json({ error: 'Dados inválidos.', details: parsed.error.flatten() }, { status: 400 })
     }
 
-    const modalidade = await prisma.modalidadeLabel.update({
+    const modalidade = await prisma.modalityLabel.update({
       where: { id: params.id },
       data: parsed.data,
     })
@@ -47,7 +47,7 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
     const guard = requireAdmin(session, req)
     if (guard) return guard
 
-    await prisma.modalidadeLabel.delete({ where: { id: params.id } })
+    await prisma.modalityLabel.delete({ where: { id: params.id } })
     return NextResponse.json({ ok: true })
   } catch (err) {
     return handleApiError(err)

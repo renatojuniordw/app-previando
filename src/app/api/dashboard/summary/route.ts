@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
 import { handleApiError } from '@/lib/api-error'
+import { mapCaseStatusToApi, mapNoteTypeToApi } from '@/lib/mappers'
 
 export async function GET() {
   try {
@@ -21,7 +22,7 @@ export async function GET() {
         where: {
           userId,
           priority: 'CRITICAL',
-          status: { not: 'FINALIZADO' },
+          status: { not: 'FINISHED' },
         },
       }),
       prisma.caseNote.findMany({
@@ -38,10 +39,15 @@ export async function GET() {
       }),
     ])
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const statusMap = Object.fromEntries(
-      (casesByStatus as any[]).map((g) => [g.status, g._count.status])
+      casesByStatus.map((g) => [mapCaseStatusToApi(g.status), g._count.status])
     )
+
+    const mappedRecentNotes = recentNotes.map((n) => ({
+      ...n,
+      type: mapNoteTypeToApi(n.type),
+      content: n.content.slice(0, 120) + (n.content.length > 120 ? '...' : ''),
+    }))
 
     return NextResponse.json({
       totalClients,
@@ -50,11 +56,7 @@ export async function GET() {
         byStatus: statusMap,
         critical: criticalCases,
       },
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      recentNotes: (recentNotes as any[]).map((n) => ({
-        ...n,
-        content: n.content.slice(0, 120) + (n.content.length > 120 ? '...' : ''),
-      })),
+      recentNotes: mappedRecentNotes,
     })
   } catch (err) {
     return handleApiError(err)

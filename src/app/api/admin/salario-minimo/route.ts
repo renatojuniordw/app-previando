@@ -25,9 +25,18 @@ export async function GET(req: NextRequest) {
     const guard = requireAdmin(session, req)
     if (guard) return guard
 
-    const registros = await prisma.salarioMinimo.findMany({
-      orderBy: { vigencia: 'desc' },
+    const dbRegistros = await prisma.minimumWage.findMany({
+      orderBy: { effectiveDate: 'desc' },
     })
+
+    const registros = dbRegistros.map((r) => ({
+      id: r.id,
+      vigencia: r.effectiveDate.toISOString(),
+      valor: Number(r.value),
+      teto: Number(r.ceiling),
+      legislacao: r.legislation,
+      reajuste: r.readjustment,
+    }))
 
     return NextResponse.json({ registros })
   } catch (err) {
@@ -49,11 +58,20 @@ export async function POST(req: NextRequest) {
     const { vigencia, valor, teto, legislacao, reajuste } = parsed.data
     const vigenciaDate = new Date(vigencia + 'T00:00:00.000Z')
 
-    const registro = await prisma.salarioMinimo.upsert({
-      where: { vigencia: vigenciaDate },
-      update: { valor, teto, legislacao, reajuste: reajuste ?? null },
-      create: { vigencia: vigenciaDate, valor, teto, legislacao, reajuste: reajuste ?? null },
+    const dbRegistro = await prisma.minimumWage.upsert({
+      where: { effectiveDate: vigenciaDate },
+      update: { value: valor, ceiling: teto, legislation: legislacao, readjustment: reajuste ?? null },
+      create: { effectiveDate: vigenciaDate, value: valor, ceiling: teto, legislation: legislacao, readjustment: reajuste ?? null },
     })
+
+    const registro = {
+      id: dbRegistro.id,
+      vigencia: dbRegistro.effectiveDate.toISOString(),
+      valor: Number(dbRegistro.value),
+      teto: Number(dbRegistro.ceiling),
+      legislacao: dbRegistro.legislation,
+      reajuste: dbRegistro.readjustment,
+    }
 
     return NextResponse.json({ registro }, { status: 201 })
   } catch (err) {

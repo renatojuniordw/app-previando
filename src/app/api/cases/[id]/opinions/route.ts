@@ -48,7 +48,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
         client: { select: { name: true } },
         cnisDocument: { select: { markdownContent: true } },
         calculations: {
-          where: { elegivel: true },
+          where: { eligible: true },
           orderBy: { createdAt: 'desc' },
           take: 5,
         },
@@ -66,14 +66,14 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       benefitType: caso.benefitType,
       caseStatus: caso.status,
       cnisSummary: caso.cnisDocument?.markdownContent?.slice(0, 2000),
-      calculations: caso.calculations.map((c: { modalidade: string; rmi: unknown; rma: unknown; elegivel: unknown; pendencias: string[] }) => ({
-        modalidade: c.modalidade,
+      calculations: caso.calculations.map((c) => ({
+        modalidade: c.modality,
         rmi: c.rmi != null ? String(c.rmi) : '0',
         rma: c.rma != null ? String(c.rma) : '0',
-        elegivel: Boolean(c.elegivel),
-        pendencias: c.pendencias,
+        elegivel: Boolean(c.eligible),
+        pendencias: c.pendingIssues,
       })),
-      notes: caso.caseNotes.map((n: { type: string; content: string; createdAt: Date }) => ({
+      notes: caso.caseNotes.map((n) => ({
         type: n.type,
         content: n.content,
         createdAt: n.createdAt,

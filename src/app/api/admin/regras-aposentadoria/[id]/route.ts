@@ -32,10 +32,42 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       return NextResponse.json({ error: 'Dados inválidos.', details: parsed.error.flatten() }, { status: 400 })
     }
 
-    const registro = await prisma.regraAposentadoria.update({
+    const {
+      idadeMinima,
+      tempoContribuicaoAnos,
+      pontosMinimos,
+      carenciaMeses,
+      descricao,
+      legislacao,
+      observacoes,
+    } = parsed.data
+
+    const dbRegistro = await prisma.retirementRule.update({
       where: { id: params.id },
-      data: parsed.data,
+      data: {
+        minimumAge: idadeMinima,
+        contributionYears: tempoContribuicaoAnos,
+        minimumPoints: pontosMinimos,
+        gracePeriodMonths: carenciaMeses,
+        description: descricao,
+        legislation: legislacao,
+        notes: observacoes !== undefined ? observacoes : undefined,
+      },
     })
+
+    const registro = {
+      id: dbRegistro.id,
+      modalidade: dbRegistro.modality,
+      genero: dbRegistro.gender,
+      vigencia: dbRegistro.effectiveDate.toISOString(),
+      idadeMinima: dbRegistro.minimumAge ? Number(dbRegistro.minimumAge) : null,
+      tempoContribuicaoAnos: dbRegistro.contributionYears,
+      pontosMinimos: dbRegistro.minimumPoints,
+      carenciaMeses: dbRegistro.gracePeriodMonths,
+      descricao: dbRegistro.description,
+      legislacao: dbRegistro.legislation,
+      observacoes: dbRegistro.notes,
+    }
 
     return NextResponse.json({ registro })
   } catch (err) {
@@ -49,7 +81,7 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
     const guard = requireAdmin(session, req)
     if (guard) return guard
 
-    await prisma.regraAposentadoria.delete({ where: { id: params.id } })
+    await prisma.retirementRule.delete({ where: { id: params.id } })
     return NextResponse.json({ ok: true })
   } catch (err) {
     return handleApiError(err)

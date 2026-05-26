@@ -4,6 +4,7 @@ import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { verifyCaseOwnership } from '@/lib/ownership'
 import { handleApiError } from '@/lib/api-error'
+import { mapBenefitTypeToDb, mapBenefitTypeToApi, ApiBenefitType } from '@/lib/mappers'
 
 const createSchema = z.object({
   benefitType: z.enum([
@@ -33,7 +34,19 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       orderBy: { createdAt: 'desc' },
     })
 
-    return NextResponse.json({ checklist })
+    if (!checklist) return NextResponse.json({ checklist: null })
+
+    return NextResponse.json({
+      checklist: {
+        id: checklist.id,
+        caseId: checklist.caseId,
+        benefitType: mapBenefitTypeToApi(checklist.benefitType),
+        items: checklist.items,
+        eligible: checklist.eligible,
+        pendencias: checklist.pendingIssues,
+        createdAt: checklist.createdAt,
+      },
+    })
   } catch (err) {
     return handleApiError(err)
   }
@@ -54,14 +67,24 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     const checklist = await prisma.checklist.create({
       data: {
         caseId: params.id,
-        benefitType: parsed.data.benefitType,
+        benefitType: mapBenefitTypeToDb(parsed.data.benefitType as ApiBenefitType),
         items: parsed.data.items,
         eligible: parsed.data.eligible,
-        pendencias: parsed.data.pendencias,
+        pendingIssues: parsed.data.pendencias,
       },
     })
 
-    return NextResponse.json({ checklist }, { status: 201 })
+    return NextResponse.json({
+      checklist: {
+        id: checklist.id,
+        caseId: checklist.caseId,
+        benefitType: mapBenefitTypeToApi(checklist.benefitType),
+        items: checklist.items,
+        eligible: checklist.eligible,
+        pendencias: checklist.pendingIssues,
+        createdAt: checklist.createdAt,
+      },
+    }, { status: 201 })
   } catch (err) {
     return handleApiError(err)
   }

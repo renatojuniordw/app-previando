@@ -4,7 +4,6 @@ import { redirect } from 'next/navigation'
 import { Sidebar } from '@/components/Sidebar'
 import { Header } from '@/components/Header'
 import { UpgradeModal } from '@/components/UpgradeModal'
-import { UsageBar } from '@/components/UsageBar'
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const session = await auth()

@@ -79,7 +79,7 @@ export default function RegrasAposentadoriaPage() {
     const regrasData = await regrasResponse.json()
     const modalidadesData = await modalidadesResponse.json()
     setRegistros(regrasData.registros ?? [])
-    setModalidades((modalidadesData.modalidades ?? []).filter((item: any) => item.ativo))
+    setModalidades((modalidadesData.modalidades ?? []).filter((item: Modalidade & { ativo: boolean }) => item.ativo))
     setLoading(false)
   }
 

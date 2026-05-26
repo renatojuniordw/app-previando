@@ -76,11 +76,11 @@ ${watermark ? '<div class="watermark">PREVIANDO FREE</div>' : ''}
 ${selectedCalc ? `
 <h2>Cálculo Selecionado</h2>
 <table>
-  <tr><td>Modalidade</td><td>${selectedCalc.modalidade.replace(/_/g, ' ')}</td></tr>
+  <tr><td>Modalidade</td><td>${selectedCalc.modality.replace(/_/g, ' ')}</td></tr>
   <tr><td>RMI</td><td>${formatCurrency(selectedCalc.rmi.toString())}</td></tr>
   <tr><td>RMA</td><td>${formatCurrency(selectedCalc.rma.toString())}</td></tr>
-  <tr><td>Elegível</td><td>${selectedCalc.elegivel ? 'Sim' : 'Não'}</td></tr>
-  ${selectedCalc.dibPrevista ? `<tr><td>DIB Prevista</td><td>${formatDate(selectedCalc.dibPrevista)}</td></tr>` : ''}
+  <tr><td>Elegível</td><td>${selectedCalc.eligible ? 'Sim' : 'Não'}</td></tr>
+  ${selectedCalc.expectedDib ? `<tr><td>DIB Prevista</td><td>${formatDate(selectedCalc.expectedDib)}</td></tr>` : ''}
 </table>
 ` : ''}
 

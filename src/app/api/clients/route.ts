@@ -109,7 +109,8 @@ export async function POST(req: NextRequest) {
       data: { totalClients: { increment: 1 } },
     })
 
-    const { cpfHash: _, ...safe } = client
+    const safe = { ...client } as Record<string, unknown>
+    delete safe.cpfHash
     return NextResponse.json({ client: { ...safe, cpf: '***.***.**-**' } }, { status: 201 })
   } catch (err) {
     return handleApiError(err)

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useParams } from 'next/navigation'
 import api from '@/lib/api'
 import { Button } from '@/components/ui/Button'
@@ -23,14 +23,14 @@ export default function ChecklistPage() {
   const [newItem, setNewItem] = useState('')
   const [category, setCategory] = useState('')
 
-  const load = () => {
+  const load = useCallback(() => {
     api.get(`/cases/${params.id}/checklist`)
       .then((r) => setItems(r.data.checklist ?? []))
       .catch(() => null)
       .finally(() => setLoading(false))
-  }
+  }, [params.id])
 
-  useEffect(() => { load() }, [params.id])
+  useEffect(() => { load() }, [load])
 
   const handleCreate = async () => {
     if (!newItem.trim()) return

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { formatDate } from '@/lib/utils'
 
 interface AdminUser {
@@ -25,7 +25,7 @@ export default function AdminUsersPage() {
   const [page, setPage] = useState(1)
   const [pages, setPages] = useState(1)
 
-  const load = async (q = search, p = page, plan = planFilter) => {
+  const load = useCallback(async (q = search, p = page, plan = planFilter) => {
     setLoading(true)
     const params = new URLSearchParams({ page: String(p), ...(q && { search: q }), ...(plan && { plan }) })
     const r = await fetch(`/api/admin/users?${params}`, { headers: { 'x-admin-secret': ADMIN_SECRET } })
@@ -34,9 +34,9 @@ export default function AdminUsersPage() {
     setTotal(data.total ?? 0)
     setPages(data.pages ?? 1)
     setLoading(false)
-  }
+  }, [search, page, planFilter])
 
-  useEffect(() => { load() }, [])
+  useEffect(() => { load() }, [load])
 
   const handleChangePlan = async (userId: string, plan: string) => {
     await fetch(`/api/admin/users/${userId}/plan`, {

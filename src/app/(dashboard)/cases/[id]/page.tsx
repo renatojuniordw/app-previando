@@ -1,10 +1,9 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useParams } from 'next/navigation'
 import api from '@/lib/api'
 import { Card, CardHeader } from '@/components/ui/Card'
-import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { formatDate } from '@/lib/utils'
 import { Modal } from '@/components/ui/Modal'
@@ -54,7 +53,7 @@ export default function CaseOverviewPage() {
   const [newStatus, setNewStatus] = useState('')
   const [updatingStatus, setUpdatingStatus] = useState(false)
 
-  const load = () => {
+  const load = useCallback(() => {
     api.get(`/cases/${params.id}`)
       .then((r) => {
         setCaseData(r.data.case)
@@ -62,9 +61,9 @@ export default function CaseOverviewPage() {
       })
       .catch(() => null)
       .finally(() => setLoading(false))
-  }
+  }, [params.id])
 
-  useEffect(() => { load() }, [params.id])
+  useEffect(() => { load() }, [load])
 
   const handleStatusChange = async () => {
     setUpdatingStatus(true)

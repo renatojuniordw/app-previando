@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
 import { handleApiError } from '@/lib/api-error'
+import { mapCaseStatusToApi, mapBenefitTypeToApi } from '@/lib/mappers'
 
 export async function GET() {
   try {
@@ -15,7 +16,7 @@ export async function GET() {
     const cases = await prisma.case.findMany({
       where: {
         userId: session.user.id,
-        status: { not: 'FINALIZADO' },
+        status: { not: 'FINISHED' },
         deadlineDate: { lte: in30days },
       },
       orderBy: [{ priority: 'asc' }, { deadlineDate: 'asc' }],
@@ -30,9 +31,10 @@ export async function GET() {
       },
     })
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const withDaysLeft = (cases as any[]).map((c) => ({
+    const withDaysLeft = cases.map((c) => ({
       ...c,
+      status: mapCaseStatusToApi(c.status),
+      benefitType: mapBenefitTypeToApi(c.benefitType),
       daysLeft: c.deadlineDate
         ? Math.ceil((c.deadlineDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
         : null,

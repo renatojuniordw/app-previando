@@ -22,7 +22,7 @@ import { CSS } from '@dnd-kit/utilities'
 import api from '@/lib/api'
 import { Badge } from '@/components/ui/Badge'
 import { ClientSwitcher } from '@/components/ClientSwitcher'
-import { Clock, AlertCircle, FileText, LayoutTemplate, MessageSquare } from 'lucide-react'
+import { Clock, FileText, LayoutTemplate } from 'lucide-react'
 
 interface KanbanCase {
   id: string
@@ -59,7 +59,7 @@ const BENEFIT_LABELS: Record<string, string> = {
   REVISAO_BENEFICIO: 'Revisão',
 }
 
-const PRIORITY_STYLES: Record<string, { label: string, color: string }> = {
+const PRIORITY_STYLES: Record<string, { label: string, color: 'lime' | 'red' | 'yellow' | 'slate' | 'blue' | 'green' }> = {
   CRITICAL: { label: 'Crítico', color: 'red' },
   ATTENTION: { label: 'Atenção', color: 'yellow' },
   NORMAL: { label: 'Normal', color: 'slate' },
@@ -89,7 +89,7 @@ function CaseCard({ caso, isDragging }: { caso: KanbanCase; isDragging?: boolean
               {BENEFIT_LABELS[caso.benefitType] ?? caso.benefitType}
             </h4>
             <div className="shrink-0 ml-2">
-              <Badge variant={badgeConfig.color as any}>{badgeConfig.label}</Badge>
+              <Badge variant={badgeConfig.color}>{badgeConfig.label}</Badge>
             </div>
           </div>
           
@@ -128,7 +128,7 @@ function DragOverlayCard({ caso }: { caso: KanbanCase }) {
           {BENEFIT_LABELS[caso.benefitType] ?? caso.benefitType}
         </h4>
         <div className="shrink-0 ml-2">
-          <Badge variant={badgeConfig.color as any}>{badgeConfig.label}</Badge>
+          <Badge variant={badgeConfig.color}>{badgeConfig.label}</Badge>
         </div>
       </div>
       

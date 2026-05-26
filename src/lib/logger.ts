@@ -6,12 +6,12 @@ export class Logger {
     this.context = context
   }
 
-  private format(level: 'INFO' | 'WARN' | 'ERROR' | 'DEBUG', message: string, meta?: any) {
+  private format(level: 'INFO' | 'WARN' | 'ERROR' | 'DEBUG', message: string, meta?: unknown) {
     const timestamp = new Date().toISOString()
 
     if (this.isProduction) {
       // JSON Estruturado para Produção
-      const logObject: Record<string, any> = {
+      const logObject: Record<string, unknown> = {
         timestamp,
         level,
         context: this.context,
@@ -63,19 +63,19 @@ export class Logger {
     }
   }
 
-  info(message: string, meta?: any) {
+  info(message: string, meta?: unknown) {
     console.log(this.format('INFO', message, meta))
   }
 
-  warn(message: string, meta?: any) {
+  warn(message: string, meta?: unknown) {
     console.warn(this.format('WARN', message, meta))
   }
 
-  error(message: string, error?: any) {
+  error(message: string, error?: unknown) {
     console.error(this.format('ERROR', message, error))
   }
 
-  debug(message: string, meta?: any) {
+  debug(message: string, meta?: unknown) {
     if (!this.isProduction) {
       console.log(this.format('DEBUG', message, meta))
     }

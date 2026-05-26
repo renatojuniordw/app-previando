@@ -10,9 +10,9 @@ export interface SalarioVigente {
 export async function getSalarioVigente(dib: string): Promise<SalarioVigente> {
   const dibDate = new Date(dib)
 
-  const registro = await prisma.salarioMinimo.findFirst({
-    where: { vigencia: { lte: dibDate } },
-    orderBy: { vigencia: 'desc' },
+  const registro = await prisma.minimumWage.findFirst({
+    where: { effectiveDate: { lte: dibDate } },
+    orderBy: { effectiveDate: 'desc' },
   })
 
   if (!registro) {
@@ -23,10 +23,10 @@ export async function getSalarioVigente(dib: string): Promise<SalarioVigente> {
   }
 
   return {
-    valor: Number(registro.valor),
-    teto: Number(registro.teto),
-    vigencia: registro.vigencia,
-    legislacao: registro.legislacao,
+    valor: Number(registro.value),
+    teto: Number(registro.ceiling),
+    vigencia: registro.effectiveDate,
+    legislacao: registro.legislation,
   }
 }
 

@@ -64,7 +64,7 @@ export async function POST(req: NextRequest) {
         await prisma.$transaction([
           prisma.calculation.deleteMany({ where: { caseId } }),
           prisma.simulation.deleteMany({ where: { caseId } }),
-          prisma.retroativo.deleteMany({ where: { caseId } }),
+          prisma.retroactive.deleteMany({ where: { caseId } }),
           prisma.opinion.deleteMany({ where: { caseId } }),
           prisma.checklist.deleteMany({ where: { caseId } }),
         ])

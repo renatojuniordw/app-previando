@@ -16,25 +16,25 @@ export async function getRegrasVigentes(dib: string): Promise<RegrasVigentes> {
   const dibDate = new Date(dib)
 
   // Busca todas as regras cujas vigências iniciaram antes ou na DIB informada
-  const registros = await prisma.regraAposentadoria.findMany({
-    where: { vigencia: { lte: dibDate } },
-    orderBy: { vigencia: 'desc' },
+  const registros = await prisma.retirementRule.findMany({
+    where: { effectiveDate: { lte: dibDate } },
+    orderBy: { effectiveDate: 'desc' },
   })
 
   const regras: RegrasVigentes = {}
 
   for (const r of registros) {
-    const key = `${r.modalidade}_${r.genero}`
+    const key = `${r.modality}_${r.gender}`
     // Como ordenamos por vigência desc, o primeiro registro encontrado para
     // cada par modalidade+genero é o mais recente e, portanto, o vigente na DIB.
     if (!regras[key]) {
       regras[key] = {
-        idadeMinima:           r.idadeMinima           ? Number(r.idadeMinima) : undefined,
-        tempoContribuicaoAnos: r.tempoContribuicaoAnos ?? undefined,
-        pontosMinimos:         r.pontosMinimos         ?? undefined,
-        carenciaMeses:         r.carenciaMeses         ?? undefined,
-        descricao:   r.descricao,
-        legislacao:  r.legislacao,
+        idadeMinima:           r.minimumAge           ? Number(r.minimumAge) : undefined,
+        tempoContribuicaoAnos: r.contributionYears    ?? undefined,
+        pontosMinimos:         r.minimumPoints        ?? undefined,
+        carenciaMeses:         r.gracePeriodMonths    ?? undefined,
+        descricao:   r.description,
+        legislacao:  r.legislation,
       }
     }
   }

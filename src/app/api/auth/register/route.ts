@@ -76,7 +76,7 @@ export async function POST(req: NextRequest) {
           maxOpinionsPerMonth: 1,
           maxNotesPerCase: 10,
           simulatorEnabled: false,
-          retroativosEnabled: false,
+          retroactiveEnabled: false,
           exportPdfEnabled: false,
           whatsappEnabled: false,
           watermarkEnabled: true,

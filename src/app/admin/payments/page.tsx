@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { formatDate } from '@/lib/utils'
 
 interface Payment {
@@ -27,7 +27,7 @@ export default function AdminPaymentsPage() {
   const [pages, setPages] = useState(1)
   const [statusFilter, setStatusFilter] = useState('')
 
-  const load = async (p = page, status = statusFilter) => {
+  const load = useCallback(async (p = page, status = statusFilter) => {
     setLoading(true)
     const params = new URLSearchParams({ page: String(p), ...(status && { status }) })
     const r = await fetch(`/api/admin/payments?${params}`, { headers: { 'x-admin-secret': ADMIN_SECRET } })
@@ -36,9 +36,9 @@ export default function AdminPaymentsPage() {
     setTotal(data.total ?? 0)
     setPages(data.pages ?? 1)
     setLoading(false)
-  }
+  }, [page, statusFilter])
 
-  useEffect(() => { load() }, [])
+  useEffect(() => { load() }, [load])
 
   const STATUS_COLOR: Record<string, string> = {
     APPROVED: 'text-green-400',

@@ -18,9 +18,9 @@ export async function GET(req: NextRequest, { params }: { params: { caseId: stri
         processingStatus: true,
         processingError: true,
         nit: true,
-        totalContribuicoes: true,
-        primeiraContribuicao: true,
-        ultimaContribuicao: true,
+        totalContributions: true,
+        firstContribution: true,
+        lastContribution: true,
         updatedAt: true,
       },
     })
@@ -33,9 +33,9 @@ export async function GET(req: NextRequest, { params }: { params: { caseId: stri
       summary: doc.processingStatus === 'COMPLETED'
         ? {
             nit: doc.nit,
-            totalContribuicoes: doc.totalContribuicoes,
-            primeiraContribuicao: doc.primeiraContribuicao,
-            ultimaContribuicao: doc.ultimaContribuicao,
+            totalContribuicoes: doc.totalContributions,
+            primeiraContribuicao: doc.firstContribution,
+            ultimaContribuicao: doc.lastContribution,
           }
         : null,
     })

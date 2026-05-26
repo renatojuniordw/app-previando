@@ -22,7 +22,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 
     await verifyCaseOwnership(params.id, session.user.id)
 
-    const retroativos = await prisma.retroativo.findMany({
+    const retroativos = await prisma.retroactive.findMany({
       where: { caseId: params.id },
       orderBy: { createdAt: 'desc' },
     })

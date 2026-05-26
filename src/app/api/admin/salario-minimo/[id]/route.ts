@@ -29,10 +29,26 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       return NextResponse.json({ error: 'Dados inválidos.', details: parsed.error.flatten() }, { status: 400 })
     }
 
-    const registro = await prisma.salarioMinimo.update({
+    const { valor, teto, legislacao, reajuste } = parsed.data
+
+    const dbRegistro = await prisma.minimumWage.update({
       where: { id: params.id },
-      data: { ...parsed.data, reajuste: parsed.data.reajuste ?? null },
+      data: {
+        value: valor,
+        ceiling: teto,
+        legislation: legislacao,
+        readjustment: reajuste ?? null,
+      },
     })
+
+    const registro = {
+      id: dbRegistro.id,
+      vigencia: dbRegistro.effectiveDate.toISOString(),
+      valor: Number(dbRegistro.value),
+      teto: Number(dbRegistro.ceiling),
+      legislacao: dbRegistro.legislation,
+      reajuste: dbRegistro.readjustment,
+    }
 
     return NextResponse.json({ registro })
   } catch (err) {
@@ -46,7 +62,7 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
     const guard = requireAdmin(session, req)
     if (guard) return guard
 
-    await prisma.salarioMinimo.delete({ where: { id: params.id } })
+    await prisma.minimumWage.delete({ where: { id: params.id } })
 
     return NextResponse.json({ ok: true })
   } catch (err) {

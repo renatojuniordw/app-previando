@@ -28,11 +28,11 @@ export function getModalidadesFallback(): ModalidadeOption[] {
 }
 
 export async function getModalidades(options: GetModalidadesOptions = {}): Promise<ModalidadeOption[]> {
-  let registros: Awaited<ReturnType<typeof prisma.modalidadeLabel.findMany>> = []
+  let registros: Awaited<ReturnType<typeof prisma.modalityLabel.findMany>> = []
   try {
-    registros = await prisma.modalidadeLabel.findMany({
-      where: options.includeInactive ? undefined : { ativo: true },
-      orderBy: [{ ordem: 'asc' }, { label: 'asc' }],
+    registros = await prisma.modalityLabel.findMany({
+      where: options.includeInactive ? undefined : { active: true },
+      orderBy: [{ order: 'asc' }, { label: 'asc' }],
     })
   } catch {
     return getModalidadesFallback()
@@ -51,13 +51,13 @@ export async function getModalidades(options: GetModalidadesOptions = {}): Promi
   }
 
   for (const registro of registros) {
-    merged.set(registro.codigo, {
+    merged.set(registro.code, {
       id: registro.id,
-      codigo: registro.codigo,
+      codigo: registro.code,
       label: registro.label,
-      descricao: registro.descricao,
-      ativo: registro.ativo,
-      ordem: registro.ordem,
+      descricao: registro.description,
+      ativo: registro.active,
+      ordem: registro.order,
     })
   }
 

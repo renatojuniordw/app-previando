@@ -30,9 +30,23 @@ export async function GET(req: NextRequest) {
     const guard = requireAdmin(session, req)
     if (guard) return guard
 
-    const registros = await prisma.regraAposentadoria.findMany({
-      orderBy: [{ modalidade: 'asc' }, { genero: 'asc' }, { vigencia: 'desc' }],
+    const dbRegistros = await prisma.retirementRule.findMany({
+      orderBy: [{ modality: 'asc' }, { gender: 'asc' }, { effectiveDate: 'desc' }],
     })
+
+    const registros = dbRegistros.map((r) => ({
+      id: r.id,
+      modalidade: r.modality,
+      genero: r.gender,
+      vigencia: r.effectiveDate.toISOString(),
+      idadeMinima: r.minimumAge ? Number(r.minimumAge) : null,
+      tempoContribuicaoAnos: r.contributionYears,
+      pontosMinimos: r.minimumPoints,
+      carenciaMeses: r.gracePeriodMonths,
+      descricao: r.description,
+      legislacao: r.legislation,
+      observacoes: r.notes,
+    }))
 
     return NextResponse.json({ registros })
   } catch (err) {
@@ -51,14 +65,64 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Dados inválidos.', details: parsed.error.flatten() }, { status: 400 })
     }
 
-    const { vigencia, ...rest } = parsed.data
+    const {
+      modalidade,
+      genero,
+      vigencia,
+      idadeMinima,
+      tempoContribuicaoAnos,
+      pontosMinimos,
+      carenciaMeses,
+      descricao,
+      legislacao,
+      observacoes,
+    } = parsed.data
     const vigenciaDate = new Date(vigencia + 'T00:00:00.000Z')
 
-    const registro = await prisma.regraAposentadoria.upsert({
-      where: { modalidade_genero_vigencia: { modalidade: rest.modalidade, genero: rest.genero, vigencia: vigenciaDate } },
-      update: { ...rest, vigencia: vigenciaDate },
-      create: { ...rest, vigencia: vigenciaDate },
+    const dbRegistro = await prisma.retirementRule.upsert({
+      where: {
+        modality_gender_effectiveDate: {
+          modality: modalidade,
+          gender: genero,
+          effectiveDate: vigenciaDate,
+        },
+      },
+      update: {
+        minimumAge: idadeMinima,
+        contributionYears: tempoContribuicaoAnos,
+        minimumPoints: pontosMinimos,
+        gracePeriodMonths: carenciaMeses,
+        description: descricao,
+        legislation: legislacao,
+        notes: observacoes ?? null,
+      },
+      create: {
+        modality: modalidade,
+        gender: genero,
+        effectiveDate: vigenciaDate,
+        minimumAge: idadeMinima,
+        contributionYears: tempoContribuicaoAnos,
+        minimumPoints: pontosMinimos,
+        gracePeriodMonths: carenciaMeses,
+        description: descricao,
+        legislation: legislacao,
+        notes: observacoes ?? null,
+      },
     })
+
+    const registro = {
+      id: dbRegistro.id,
+      modalidade: dbRegistro.modality,
+      genero: dbRegistro.gender,
+      vigencia: dbRegistro.effectiveDate.toISOString(),
+      idadeMinima: dbRegistro.minimumAge ? Number(dbRegistro.minimumAge) : null,
+      tempoContribuicaoAnos: dbRegistro.contributionYears,
+      pontosMinimos: dbRegistro.minimumPoints,
+      carenciaMeses: dbRegistro.gracePeriodMonths,
+      descricao: dbRegistro.description,
+      legislacao: dbRegistro.legislation,
+      observacoes: dbRegistro.notes,
+    }
 
     return NextResponse.json({ registro }, { status: 201 })
   } catch (err) {

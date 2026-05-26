@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useParams } from 'next/navigation'
 import api from '@/lib/api'
 import { Button } from '@/components/ui/Button'
@@ -15,16 +15,14 @@ import {
   ShieldAlert,
   Loader2,
   Trash2,
-  DollarSign,
   Compass,
-  ArrowRight,
-  Info
+  ArrowRight
 } from 'lucide-react'
 
 interface Simulation {
   id: string
   scenarioName: string
-  scenarioParams: any
+  scenarioParams: unknown
   rmiProjected: string | number
   rmaProjected: string | number
   dibProjected: string
@@ -37,6 +35,15 @@ interface Modalidade {
   label: string
 }
 
+interface CnisDocument {
+  extractedData?: {
+    nome?: string
+    nit?: string
+    dataNascimento?: string
+    periodos?: unknown[]
+  }
+}
+
 const formatCurrency = (val: string | number) => {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(val))
 }
@@ -45,7 +52,7 @@ export default function SimulatorPage() {
   const params = useParams()
   const [simulations, setSimulations] = useState<Simulation[]>([])
   const [modalidades, setModalidades] = useState<Modalidade[]>([])
-  const [cnisDocument, setCnisDocument] = useState<any>(null)
+  const [cnisDocument, setCnisDocument] = useState<CnisDocument | null>(null)
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const [creating, setCreating] = useState(false)
@@ -60,11 +67,10 @@ export default function SimulatorPage() {
   const [tipoContribuicao, setTipoContribuicao] = useState<'MINIMO' | 'TETO' | 'CUSTOM'>('MINIMO')
   const [valorCustomContribuicao, setValorCustomContribuicao] = useState(1621.00)
   const [salarioVigente, setSalarioVigente] = useState({ valor: 1621.00, teto: 8157.41 })
-  const [regrasVigentes, setRegrasVigentes] = useState<Record<string, any>>({})
   
   const [errorMessage, setErrorMessage] = useState('')
 
-  const load = async () => {
+  const load = useCallback(async () => {
     try {
       const [rSim, rCnis, rModalidades] = await Promise.all([
         api.get(`/cases/${params.id}/simulations`),
@@ -80,23 +86,21 @@ export default function SimulatorPage() {
 
       // 3. Busca salário mínimo, teto e regras previdenciárias vigentes hoje
       const hoje = new Date().toISOString().slice(0, 10)
-      const [rSalario, rRegras] = await Promise.all([
+      const [rSalario] = await Promise.all([
         api.get(`/salario-minimo?dib=${hoje}`),
-        api.get(`/regras-aposentadoria?dib=${hoje}`),
       ])
       setSalarioVigente({ valor: rSalario.data.valor, teto: rSalario.data.teto })
       setValorCustomContribuicao(rSalario.data.valor)
-      setRegrasVigentes(rRegras.data)
     } catch {
       // noop
     } finally {
       setLoading(false)
     }
-  }
+  }, [params.id])
 
   useEffect(() => {
     load()
-  }, [params.id])
+  }, [load])
 
   const modalidadeLabels = Object.fromEntries(
     (modalidades.length > 0 ? modalidades : MODALIDADES_PADRAO).map(({ codigo, label }) => [codigo, label])
@@ -139,8 +143,8 @@ export default function SimulatorPage() {
       setTipoContribuicao('MINIMO')
       setValorCustomContribuicao(salarioVigente.valor)
       load()
-    } catch (err: any) {
-      setErrorMessage(err?.response?.data?.error ?? 'Falha ao salvar a simulação no servidor.')
+    } catch (err: unknown) {
+      setErrorMessage((err as { response?: { data?: { error?: string } } })?.response?.data?.error ?? 'Falha ao salvar a simulação no servidor.')
     } finally {
       setCreating(false)
     }
@@ -212,7 +216,7 @@ export default function SimulatorPage() {
       ) : (
         <div className="space-y-6">
           {simulations.map((sim) => {
-            const paramsSim = sim.scenarioParams as any
+            const paramsSim = sim.scenarioParams as { modalidade?: string; valorContribuicaoFutura?: number; competenciasSimuladas?: number } | null | undefined
             const gain = Number(sim.gainVsNow)
 
             return (
@@ -361,7 +365,7 @@ export default function SimulatorPage() {
                 </div>
                 <div>
                   <span className="font-semibold text-slate-500 block mb-0.5">Nascimento</span>
-                  <span className="text-slate-800 font-medium">{formatDate(cnisDocument.extractedData.dataNascimento) ?? 'Não informado'}</span>
+                  <span className="text-slate-800 font-medium">{cnisDocument.extractedData.dataNascimento ? formatDate(cnisDocument.extractedData.dataNascimento) : 'Não informado'}</span>
                 </div>
                 <div>
                   <span className="font-semibold text-slate-500 block mb-0.5">Total Vínculos</span>
@@ -424,7 +428,7 @@ export default function SimulatorPage() {
               <label className="font-sans font-bold text-xs text-slate-600 block mb-1">Valor da Contribuição Futura</label>
               <select
                 value={tipoContribuicao}
-                onChange={(e: any) => setTipoContribuicao(e.target.value)}
+                onChange={(e) => setTipoContribuicao(e.target.value as 'MINIMO' | 'TETO' | 'CUSTOM')}
                 className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm font-sans focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 outline-none"
               >
                 <option value="MINIMO">Sobre o Salário Mínimo ({new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(salarioVigente.valor)})</option>

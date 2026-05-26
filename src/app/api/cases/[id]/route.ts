@@ -6,6 +6,7 @@ import { verifyCaseOwnership } from '@/lib/ownership'
 import { sanitizeInput } from '@/lib/sanitize'
 import { handleApiError } from '@/lib/api-error'
 import { getPlanLimit } from '@/lib/plan-guard'
+import { mapCaseStatusToDb, mapCaseToApi, ApiCaseStatus } from '@/lib/mappers'
 
 const updateSchema = z.object({
   status: z.enum(['PROSPECCAO', 'ANALISE', 'PRONTO_PARA_REQUERER', 'EM_PROCESSAMENTO', 'FINALIZADO']).optional(),
@@ -31,19 +32,21 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
         opinions: { orderBy: { createdAt: 'desc' }, select: { id: true, status: true, createdAt: true } },
         checklists: { orderBy: { createdAt: 'desc' }, take: 1 },
         simulations: { orderBy: { createdAt: 'desc' } },
-        retroativos: { orderBy: { createdAt: 'desc' } },
+        retroactives: { orderBy: { createdAt: 'desc' } },
         _count: { select: { caseNotes: true } },
       },
     })
+
+    if (!caso) return NextResponse.json({ error: 'Caso não encontrado.' }, { status: 404 })
 
     const planLimits = await getPlanLimit(session.user.plan)
 
     return NextResponse.json({
       case: {
-        ...caso,
+        ...mapCaseToApi(caso),
         planLimits: {
           simulatorEnabled: planLimits.simulatorEnabled,
-          retroativosEnabled: planLimits.retroativosEnabled,
+          retroativosEnabled: planLimits.retroactiveEnabled,
         },
       },
     })
@@ -65,7 +68,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     }
 
     const data: Record<string, unknown> = {}
-    if (parsed.data.status) data.status = parsed.data.status
+    if (parsed.data.status) data.status = mapCaseStatusToDb(parsed.data.status as ApiCaseStatus)
     if (parsed.data.priority) data.priority = parsed.data.priority
     if (parsed.data.deadlineDays !== undefined) data.deadlineDays = parsed.data.deadlineDays
     if (parsed.data.deadlineDate !== undefined)
@@ -73,8 +76,11 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     if (parsed.data.notes !== undefined)
       data.notes = parsed.data.notes ? sanitizeInput(parsed.data.notes) : null
 
-    const caso = await prisma.case.update({ where: { id: params.id }, data })
-    return NextResponse.json({ case: caso })
+    const caso = await prisma.case.update({
+      where: { id: params.id },
+      data,
+    })
+    return NextResponse.json({ case: mapCaseToApi(caso) })
   } catch (err) {
     return handleApiError(err)
   }

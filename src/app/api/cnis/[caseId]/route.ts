@@ -48,7 +48,7 @@ export async function DELETE(req: NextRequest, { params }: { params: { caseId: s
     await prisma.$transaction([
       prisma.calculation.deleteMany({ where: { caseId: params.caseId } }),
       prisma.simulation.deleteMany({ where: { caseId: params.caseId } }),
-      prisma.retroativo.deleteMany({ where: { caseId: params.caseId } }),
+      prisma.retroactive.deleteMany({ where: { caseId: params.caseId } }),
       prisma.opinion.deleteMany({ where: { caseId: params.caseId } }),
       prisma.checklist.deleteMany({ where: { caseId: params.caseId } }),
       prisma.cnisDocument.delete({ where: { caseId: params.caseId } }),

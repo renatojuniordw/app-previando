@@ -10,7 +10,7 @@ export type PlanFeature =
 
 const FEATURE_MAP: Record<PlanFeature, keyof import('@prisma/client').PlanLimit> = {
   SIMULATOR: 'simulatorEnabled',
-  RETROATIVOS: 'retroativosEnabled',
+  RETROATIVOS: 'retroactiveEnabled',
   EXPORT_PDF: 'exportPdfEnabled',
   WHATSAPP_SHARE: 'whatsappEnabled',
   DIAGNOSIS: 'diagnosisEnabled',

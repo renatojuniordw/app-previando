@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useParams } from 'next/navigation'
 import api from '@/lib/api'
 import { Button } from '@/components/ui/Button'
@@ -11,7 +11,6 @@ import {
   Calendar,
   Trash2,
   Loader2,
-  DollarSign,
   ChevronDown,
   ChevronUp,
   ShieldAlert,
@@ -71,7 +70,7 @@ export default function RetroativosPage() {
   const [expandedRetro, setExpandedRetro] = useState<string | null>(null)
   const [errorMessage, setErrorMessage] = useState('')
 
-  const load = async () => {
+  const load = useCallback(async () => {
     try {
       const response = await api.get(`/cases/${params.id}/retroativos`)
       setRetroativos(response.data.retroativos ?? [])
@@ -80,11 +79,11 @@ export default function RetroativosPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [params.id])
 
   useEffect(() => {
     load()
-  }, [params.id])
+  }, [load])
 
   const handleCreate = async () => {
     setErrorMessage('')
@@ -125,8 +124,8 @@ export default function RetroativosPage() {
       setValorDescontos('0')
       setDescricaoDescontos('')
       load()
-    } catch (err: any) {
-      setErrorMessage(err?.response?.data?.error ?? 'Falha ao rodar o cálculo de retroativos.')
+    } catch (err: unknown) {
+      setErrorMessage((err as { response?: { data?: { error?: string } } })?.response?.data?.error ?? 'Falha ao rodar o cálculo de retroativos.')
     } finally {
       setCreating(false)
     }

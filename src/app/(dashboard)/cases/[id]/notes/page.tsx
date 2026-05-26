@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useParams } from 'next/navigation'
 import api from '@/lib/api'
 import { Button } from '@/components/ui/Button'
@@ -35,14 +35,14 @@ export default function CaseNotesPage() {
   const [content, setContent] = useState('')
   const [error, setError] = useState('')
 
-  const load = () => {
+  const load = useCallback(() => {
     api.get(`/cases/${params.id}/notes`)
       .then((r) => setNotes(r.data.notes ?? []))
       .catch(() => null)
       .finally(() => setLoading(false))
-  }
+  }, [params.id])
 
-  useEffect(() => { load() }, [params.id])
+  useEffect(() => { load() }, [load])
 
   const handleCreate = async () => {
     if (!content.trim()) { setError('Conteúdo obrigatório.'); return }

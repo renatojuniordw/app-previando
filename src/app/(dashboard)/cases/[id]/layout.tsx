@@ -42,7 +42,7 @@ const STATUS_LABELS: Record<string, string> = {
   FINALIZADO: 'Finalizado',
 }
 
-const PRIORITY_STYLES: Record<string, { label: string, color: string }> = {
+const PRIORITY_STYLES: Record<string, { label: string, color: 'lime' | 'red' | 'yellow' | 'slate' | 'blue' | 'green' }> = {
   CRITICAL: { label: 'Crítico', color: 'red' },
   ATTENTION: { label: 'Atenção', color: 'yellow' },
   NORMAL: { label: 'Normal', color: 'slate' },
@@ -96,7 +96,7 @@ export default function CaseLayout({ children }: { children: React.ReactNode }) 
                       <Badge variant="slate" className="bg-slate-100 text-slate-700 border-slate-200">
                         {STATUS_LABELS[caseData.status] ?? caseData.status}
                       </Badge>
-                      <Badge variant={PRIORITY_STYLES[caseData.priority]?.color as any}>
+                      <Badge variant={PRIORITY_STYLES[caseData.priority]?.color ?? 'slate'}>
                         {PRIORITY_STYLES[caseData.priority]?.label}
                       </Badge>
                     </div>

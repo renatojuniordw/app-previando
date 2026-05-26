@@ -64,11 +64,11 @@ const worker = new Worker(
           markdownContent: markdown,
           extractedData: extractedData as never,
           nit: extractedData.nit ?? null,
-          totalContribuicoes: extractedData.totalContribuicoes ?? null,
-          primeiraContribuicao: extractedData.primeiraContribuicao
+          totalContributions: extractedData.totalContribuicoes ?? null,
+          firstContribution: extractedData.primeiraContribuicao
             ? new Date(extractedData.primeiraContribuicao + '-01')
             : null,
-          ultimaContribuicao: extractedData.ultimaContribuicao
+          lastContribution: extractedData.ultimaContribuicao
             ? new Date(extractedData.ultimaContribuicao + '-01')
             : null,
         },

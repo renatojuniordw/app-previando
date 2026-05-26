@@ -1,9 +1,8 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, ComponentType } from 'react'
 import api from '@/lib/api'
 import { Card } from '@/components/ui/Card'
-import { Badge } from '@/components/ui/Badge'
 import { formatDate } from '@/lib/utils'
 import Link from 'next/link'
 import { Users, Briefcase, AlertCircle, CheckCircle2, MessageSquare, FileText, Scale, StickyNote, Calculator, ChevronRight, Activity, Columns } from 'lucide-react'
@@ -28,7 +27,7 @@ const STATUS_LABELS: Record<string, string> = {
   FINALIZADO: 'Finalizado',
 }
 
-const NOTE_TYPE_ICON: Record<string, any> = {
+const NOTE_TYPE_ICON: Record<string, ComponentType<{ className?: string }>> = {
   CONTATO: MessageSquare,
   DOCUMENTO: FileText,
   JURIDICO: Scale,

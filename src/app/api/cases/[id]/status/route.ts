@@ -4,6 +4,7 @@ import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { verifyCaseOwnership } from '@/lib/ownership'
 import { handleApiError } from '@/lib/api-error'
+import { mapCaseStatusToDb, mapCaseStatusToApi, ApiCaseStatus } from '@/lib/mappers'
 
 const schema = z.object({
   status: z.enum(['PROSPECCAO', 'ANALISE', 'PRONTO_PARA_REQUERER', 'EM_PROCESSAMENTO', 'FINALIZADO']),
@@ -23,11 +24,16 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 
     const caso = await prisma.case.update({
       where: { id: params.id },
-      data: { status: parsed.data.status },
+      data: { status: mapCaseStatusToDb(parsed.data.status as ApiCaseStatus) },
       select: { id: true, status: true },
     })
 
-    return NextResponse.json({ case: caso })
+    return NextResponse.json({
+      case: {
+        id: caso.id,
+        status: mapCaseStatusToApi(caso.status),
+      },
+    })
   } catch (err) {
     return handleApiError(err)
   }

@@ -51,14 +51,13 @@ export function calculateRetroativos(input: RetroativoInput): RetroativoResult {
   }
 
   const parcelas: ParcelaRetroativa[] = []
-  let current = new Date(start.getFullYear(), start.getMonth(), 1)
+  const current = new Date(start.getFullYear(), start.getMonth(), 1)
   const limit = new Date(end.getFullYear(), end.getMonth(), 1)
 
   let valorTotalBruto = 0
   let valorTotalCorrigido = 0
 
   while (current <= limit) {
-    const compStr = `${current.getFullYear()}-${String(current.getMonth() + 1).padStart(2, '0')}`
     const competenciaLabel = `${String(current.getMonth() + 1).padStart(2, '0')}/${current.getFullYear()}`
 
     // Calcula os meses de atraso desta parcela em relação à DDB

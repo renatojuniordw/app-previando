@@ -34,7 +34,8 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 
     if (!client) return NextResponse.json({ error: 'Cliente não encontrado.' }, { status: 404 })
 
-    const { cpfHash: _, ...safe } = client
+    const safe = { ...client } as Record<string, unknown>
+    delete safe.cpfHash
     return NextResponse.json({ client: { ...safe, cpf: '***.***.**-**' } })
   } catch (err) {
     return handleApiError(err)
@@ -69,7 +70,8 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     if (parsed.data.notes !== undefined) data.notes = parsed.data.notes ? sanitizeInput(parsed.data.notes) : null
 
     const client = await prisma.client.update({ where: { id: params.id }, data })
-    const { cpfHash: _, ...safe } = client
+    const safe = { ...client } as Record<string, unknown>
+    delete safe.cpfHash
     return NextResponse.json({ client: { ...safe, cpf: '***.***.**-**' } })
   } catch (err) {
     return handleApiError(err)

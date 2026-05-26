@@ -44,20 +44,20 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Dados inválidos.', details: parsed.error.flatten() }, { status: 400 })
     }
 
-    const modalidade = await prisma.modalidadeLabel.upsert({
-      where: { codigo: parsed.data.codigo },
+    const modalidade = await prisma.modalityLabel.upsert({
+      where: { code: parsed.data.codigo },
       update: {
         label: parsed.data.label,
-        descricao: parsed.data.descricao ?? null,
-        ativo: parsed.data.ativo ?? true,
-        ordem: parsed.data.ordem ?? 0,
+        description: parsed.data.descricao ?? null,
+        active: parsed.data.ativo ?? true,
+        order: parsed.data.ordem ?? 0,
       },
       create: {
-        codigo: parsed.data.codigo,
+        code: parsed.data.codigo,
         label: parsed.data.label,
-        descricao: parsed.data.descricao ?? null,
-        ativo: parsed.data.ativo ?? true,
-        ordem: parsed.data.ordem ?? 0,
+        description: parsed.data.descricao ?? null,
+        active: parsed.data.ativo ?? true,
+        order: parsed.data.ordem ?? 0,
       },
     })
 
