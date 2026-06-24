@@ -7,7 +7,7 @@ import { sanitizeForAI } from '@/lib/sanitize'
 import { openai } from '@/lib/openai'
 import { handleApiError } from '@/lib/api-error'
 import { rateLimit } from '@/lib/rate-limit'
-import { AI_MODELS } from '@/lib/ai-models'
+import { AI_MODELS, AI_MAX_TOKENS } from '@/lib/ai-models'
 
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
   try {
@@ -54,7 +54,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 
     const response = await openai.chat.completions.create({
       model: AI_MODELS.CRITICAL,
-      max_tokens: 800,
+      max_tokens: AI_MAX_TOKENS ?? 800,
       temperature: 0.2,
       messages: [
         {

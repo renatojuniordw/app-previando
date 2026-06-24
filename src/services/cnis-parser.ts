@@ -1,7 +1,7 @@
 import { openai } from '../lib/openai'
 import { sanitizeForAI } from '../lib/sanitize'
 import { Logger } from '../lib/logger'
-import { AI_MODELS, AI_COST_PER_TOKEN } from '../lib/ai-models'
+import { AI_MODELS, AI_COST_PER_TOKEN, AI_MAX_TOKENS } from '../lib/ai-models'
 
 const logger = new Logger('CNISParser')
 
@@ -69,7 +69,7 @@ Retorne JSON no formato:
 
   const response = await openai.chat.completions.create({
     model,
-    max_tokens: 16000,
+    max_tokens: AI_MAX_TOKENS ?? 16000,
     temperature: 0, // Precisão máxima para extração
     response_format: { type: 'json_object' },
     messages: [

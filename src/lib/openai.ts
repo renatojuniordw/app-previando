@@ -4,9 +4,15 @@ let _openai: OpenAI | null = null
 
 export function getOpenAI(): OpenAI {
   if (!_openai) {
+    const provider = process.env.AI_PROVIDER ?? 'openai'
+    const isVerboo = provider === 'verboo'
+
     _openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY ?? 'placeholder',
-      timeout: 180_000, // Aumentado para 3 minutos para suportar extrações gigantescas (ex: 20+ páginas)
+      apiKey: isVerboo
+        ? (process.env.VERBOO_API_KEY ?? 'placeholder')
+        : (process.env.OPENAI_API_KEY ?? 'placeholder'),
+      baseURL: isVerboo ? 'https://code.verboo.ai/router/v1' : undefined,
+      timeout: 180_000,
       maxRetries: 3,
     })
   }

@@ -1,6 +1,6 @@
 import { openai } from '../lib/openai'
 import { sanitizeForAI } from '../lib/sanitize'
-import { AI_MODELS, AI_COST_PER_TOKEN } from '../lib/ai-models'
+import { AI_MODELS, AI_COST_PER_TOKEN, AI_MAX_TOKENS } from '../lib/ai-models'
 
 interface OpinionInput {
   clientName: string
@@ -81,7 +81,7 @@ Sempre encerre com: "Este parecer é preliminar e não substitui análise juríd
 
   const response = await openai.chat.completions.create({
     model,
-    max_tokens: 2000,
+    max_tokens: AI_MAX_TOKENS ?? 2000,
     temperature: 0.3,
     messages: [
       { role: 'system', content: SYSTEM_PROMPT },
