@@ -6,6 +6,30 @@ interface RateLimitResult {
   reset: number
 }
 
+// In-memory fallback rate limiter (used when Redis is unavailable)
+const localRateLimits = new Map<string, { count: number; reset: number }>()
+
+function localRateLimit(key: string, limit: number, windowMs: number): RateLimitResult {
+  const now = Date.now()
+  const existing = localRateLimits.get(key)
+
+  if (!existing || now > existing.reset) {
+    localRateLimits.set(key, { count: 1, reset: now + windowMs })
+    return { success: true, remaining: limit - 1, reset: now + windowMs }
+  }
+
+  existing.count++
+  return { success: existing.count <= limit, remaining: Math.max(0, limit - existing.count), reset: existing.reset }
+}
+
+// Periodically clean expired entries from local rate limiter
+setInterval(() => {
+  const now = Date.now()
+  for (const [key, val] of localRateLimits.entries()) {
+    if (now > val.reset) localRateLimits.delete(key)
+  }
+}, 60000)
+
 export async function rateLimit(
   key: string,
   limit: number,
@@ -31,7 +55,7 @@ export async function rateLimit(
       reset: now + windowMs,
     }
   } catch {
-    // Redis indisponível — permite a request (fail open)
-    return { success: true, remaining: limit, reset: now + windowMs }
+    // Redis indisponível — usa fallback local
+    return localRateLimit(key, limit, windowMs)
   }
 }

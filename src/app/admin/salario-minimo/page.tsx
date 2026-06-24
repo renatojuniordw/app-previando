@@ -1,8 +1,6 @@
 'use client'
-
 import { useEffect, useState } from 'react'
 import { Plus, Pencil, Trash2, Check, X } from 'lucide-react'
-
 interface SalarioMinimo {
   id: string
   vigencia: string
@@ -11,19 +9,13 @@ interface SalarioMinimo {
   legislacao: string
   reajuste: number | null
 }
-
-const ADMIN_SECRET = process.env.NEXT_PUBLIC_ADMIN_SECRET ?? ''
-
 const fmt = (v: string | number) =>
   new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(v))
-
 const fmtDate = (d: string) => {
   const date = new Date(d)
   return new Intl.DateTimeFormat('pt-BR', { month: 'long', year: 'numeric', timeZone: 'UTC' }).format(date)
 }
-
 const EMPTY_FORM = { vigencia: '', valor: '', teto: '', legislacao: '', reajuste: '' }
-
 export default function SalarioMinimoPage() {
   const [registros, setRegistros] = useState<SalarioMinimo[]>([])
   const [loading, setLoading] = useState(true)
@@ -32,24 +24,20 @@ export default function SalarioMinimoPage() {
   const [form, setForm] = useState(EMPTY_FORM)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
-
   const load = async () => {
     setLoading(true)
-    const r = await fetch('/api/admin/salario-minimo', { headers: { 'x-admin-secret': ADMIN_SECRET } })
+    const r = await fetch('/api/admin/salario-minimo')
     const data = await r.json()
     setRegistros(data.registros ?? [])
     setLoading(false)
   }
-
   useEffect(() => { load() }, [])
-
   const handleSubmit = async () => {
     setError('')
     if (!form.vigencia || !form.valor || !form.teto || !form.legislacao) {
       setError('Preencha todos os campos obrigatórios.')
       return
     }
-
     setSaving(true)
     try {
       const body = {
@@ -59,21 +47,19 @@ export default function SalarioMinimoPage() {
         legislacao: form.legislacao,
         reajuste: form.reajuste ? parseFloat(form.reajuste.replace(',', '.')) : null,
       }
-
       if (editingId) {
         await fetch(`/api/admin/salario-minimo/${editingId}`, {
           method: 'PATCH',
-          headers: { 'Content-Type': 'application/json', 'x-admin-secret': ADMIN_SECRET },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(body),
         })
       } else {
         await fetch('/api/admin/salario-minimo', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'x-admin-secret': ADMIN_SECRET },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(body),
         })
       }
-
       setForm(EMPTY_FORM)
       setShowForm(false)
       setEditingId(null)
@@ -84,7 +70,6 @@ export default function SalarioMinimoPage() {
       setSaving(false)
     }
   }
-
   const handleEdit = (r: SalarioMinimo) => {
     setEditingId(r.id)
     setForm({
@@ -97,23 +82,19 @@ export default function SalarioMinimoPage() {
     setShowForm(true)
     setError('')
   }
-
   const handleDelete = async (id: string) => {
     if (!confirm('Confirma a exclusão deste registro?')) return
     await fetch(`/api/admin/salario-minimo/${id}`, {
       method: 'DELETE',
-      headers: { 'x-admin-secret': ADMIN_SECRET },
     })
     await load()
   }
-
   const handleCancel = () => {
     setForm(EMPTY_FORM)
     setShowForm(false)
     setEditingId(null)
     setError('')
   }
-
   return (
     <div className="p-8 space-y-6">
       <div className="flex items-center justify-between">
@@ -133,13 +114,11 @@ export default function SalarioMinimoPage() {
           </button>
         )}
       </div>
-
       {showForm && (
         <div className="bg-white border border-slate-200 rounded-xl p-6 space-y-4 shadow-sm">
           <h2 className="font-serif font-bold text-lg text-slate-900">
             {editingId ? 'Editar Registro' : 'Novo Registro'}
           </h2>
-
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <div>
               <label className="block font-sans text-xs font-bold text-slate-600 mb-1">Vigência (início) *</label>
@@ -195,9 +174,7 @@ export default function SalarioMinimoPage() {
               />
             </div>
           </div>
-
           {error && <p className="font-sans text-sm text-red-600">{error}</p>}
-
           <div className="flex gap-3">
             <button
               onClick={handleSubmit}
@@ -217,7 +194,6 @@ export default function SalarioMinimoPage() {
           </div>
         </div>
       )}
-
       <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
         <div className="grid grid-cols-[1fr_1fr_1fr_1.5fr_0.8fr_auto] px-5 py-3 bg-slate-50 border-b border-slate-200 text-xs font-bold text-slate-500 uppercase tracking-wider">
           <span>Vigência</span>
@@ -227,7 +203,6 @@ export default function SalarioMinimoPage() {
           <span>Reajuste</span>
           <span></span>
         </div>
-
         {loading ? (
           <div className="py-12 text-center font-sans text-sm text-slate-400">Carregando...</div>
         ) : registros.length === 0 ? (
@@ -268,7 +243,6 @@ export default function SalarioMinimoPage() {
           ))
         )}
       </div>
-
       <p className="font-sans text-xs text-slate-400">
         Total: {registros.length} registros · O sistema sempre usa o registro com vigência mais recente anterior à DIB do cálculo.
       </p>

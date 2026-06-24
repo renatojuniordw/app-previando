@@ -1,8 +1,6 @@
 'use client'
-
 import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/Button'
-
 interface PlanLimit {
   plan: string
   maxClients: number | null
@@ -14,9 +12,6 @@ interface PlanLimit {
   whatsappShareEnabled: boolean
   watermarkEnabled: boolean
 }
-
-const ADMIN_SECRET = process.env.NEXT_PUBLIC_ADMIN_SECRET ?? ''
-
 export default function AdminPlansPage() {
   const [plans, setPlans] = useState<PlanLimit[]>([])
   const [loading, setLoading] = useState(true)
@@ -24,11 +19,10 @@ export default function AdminPlansPage() {
   const [editData, setEditData] = useState<Partial<PlanLimit>>({})
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState('')
-
   useEffect(() => {
     Promise.all(
       ['FREE', 'SOLO', 'PRO'].map((plan) =>
-        fetch(`/api/billing/plans?plan=${plan}`, { headers: { 'x-admin-secret': ADMIN_SECRET } })
+        fetch(`/api/billing/plans?plan=${plan}`)
           .then((r) => r.json())
           .then((d) => d.planLimit as PlanLimit)
           .catch(() => null)
@@ -37,26 +31,24 @@ export default function AdminPlansPage() {
       .then((results) => setPlans(results.filter(Boolean) as PlanLimit[]))
       .finally(() => setLoading(false))
   }, [])
-
   const handleEdit = (plan: PlanLimit) => {
     setEditing(plan.plan)
     setEditData({ ...plan })
     setMessage('')
   }
-
   const handleSave = async () => {
     if (!editing) return
     setSaving(true)
     try {
       await fetch(`/api/admin/plans/${editing}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', 'x-admin-secret': ADMIN_SECRET },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(editData),
       })
       setMessage(`Plano ${editing} atualizado.`)
       setEditing(null)
       // Reload
-      const r = await fetch(`/api/billing/plans?plan=${editing}`, { headers: { 'x-admin-secret': ADMIN_SECRET } })
+      const r = await fetch(`/api/billing/plans?plan=${editing}`)
       const data = await r.json()
       setPlans((prev) => prev.map((p) => p.plan === editing ? (data.planLimit ?? p) : p))
     } catch {
@@ -65,9 +57,7 @@ export default function AdminPlansPage() {
       setSaving(false)
     }
   }
-
   if (loading) return <div className="p-8 font-mono text-slate-400 animate-pulse">Carregando...</div>
-
   return (
     <div className="p-6 space-y-6">
       <h1 className="font-mono font-black text-2xl text-white uppercase">PLANOS</h1>
@@ -76,7 +66,6 @@ export default function AdminPlansPage() {
           <p className="font-mono text-xs text-[#ccff00]">{message}</p>
         </div>
       )}
-
       <div className="grid grid-cols-3 gap-4">
         {plans.map((plan) => (
           <div key={plan.plan} className="border-2 border-slate-700 p-4 space-y-3">
@@ -89,7 +78,6 @@ export default function AdminPlansPage() {
                 EDITAR
               </button>
             </div>
-
             {editing === plan.plan ? (
               <div className="space-y-3">
                 {([

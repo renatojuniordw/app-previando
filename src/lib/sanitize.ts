@@ -1,6 +1,17 @@
 import DOMPurify from 'isomorphic-dompurify'
 import { createHmac } from 'crypto'
 
+// Escapes user-controlled strings for safe embedding in HTML
+export function escapeHtml(str: string): string {
+  if (typeof str !== 'string') return String(str ?? '')
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
 export function sanitizeInput(value: string): string {
   return DOMPurify.sanitize(value, { ALLOWED_TAGS: [], ALLOWED_ATTR: [] })
     .trim()

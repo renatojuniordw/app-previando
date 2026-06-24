@@ -5,8 +5,6 @@ import { prisma } from '@/lib/prisma'
 
 function requireAdmin(session: Session | null, req: NextRequest) {
   if (!session?.user?.isAdmin) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-  const secret = req.headers.get('x-admin-secret')
-  if (secret !== process.env.ADMIN_SECRET) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   return null
 }
 
