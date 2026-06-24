@@ -6,8 +6,8 @@ import { cn } from '@/lib/utils'
 
 interface Usage {
   plan: string
-  usage: { totalClients: number; calculationsThisMonth: number; opinionsThisMonth: number }
-  limits: { maxClients: number; maxCalculationsPerMonth: number; maxOpinionsPerMonth: number }
+  usage: { totalClients: number; calculationsThisMonth: number; opinionsThisMonth: number; bpcAnalysesThisMonth: number; bpcSocialMediaThisMonth: number }
+  limits: { maxClients: number; maxCalculationsPerMonth: number; maxOpinionsPerMonth: number; bpcEnabled: boolean; bpcAnalysesPerMonth: number; bpcSocialMediaPerMonth: number }
 }
 
 function UsageItem({ label, used, max }: { label: string; used: number; max: number }) {
@@ -53,6 +53,13 @@ export function UsageBar() {
         used={usage.usage.calculationsThisMonth}
         max={usage.limits.maxCalculationsPerMonth}
       />
+      {usage.limits.bpcEnabled && usage.limits.bpcSocialMediaPerMonth > 0 && (
+        <UsageItem
+          label="Carrosséis BPC"
+          used={usage.usage.bpcSocialMediaThisMonth}
+          max={usage.limits.bpcSocialMediaPerMonth}
+        />
+      )}
     </div>
   )
 }

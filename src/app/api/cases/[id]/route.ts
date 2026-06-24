@@ -47,6 +47,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
         planLimits: {
           simulatorEnabled: planLimits.simulatorEnabled,
           retroativosEnabled: planLimits.retroactiveEnabled,
+          bpcEnabled: planLimits.bpcEnabled,
         },
       },
     })

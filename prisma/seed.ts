@@ -45,6 +45,9 @@ async function main() {
       whatsappEnabled: false,
       watermarkEnabled: true,
       diagnosisEnabled: false,
+      bpcEnabled: false,
+      bpcAnalysesPerMonth: 0,
+      bpcSocialMediaPerMonth: 0,
     },
   })
 
@@ -63,6 +66,9 @@ async function main() {
       whatsappEnabled: true,
       watermarkEnabled: false,
       diagnosisEnabled: true,
+      bpcEnabled: true,
+      bpcAnalysesPerMonth: 50,
+      bpcSocialMediaPerMonth: 5,
     },
   })
 
@@ -81,6 +87,9 @@ async function main() {
       whatsappEnabled: true,
       watermarkEnabled: false,
       diagnosisEnabled: true,
+      bpcEnabled: true,
+      bpcAnalysesPerMonth: -1,
+      bpcSocialMediaPerMonth: -1,
     },
   })
 

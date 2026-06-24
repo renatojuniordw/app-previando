@@ -120,6 +120,9 @@ model PlanLimit {
   whatsappEnabled    Boolean @default(false)
   watermarkEnabled   Boolean @default(true)
   diagnosisEnabled   Boolean @default(false)
+  bpcEnabled                  Boolean @default(false)
+  bpcAnalysesPerMonth         Int     @default(0)
+  bpcSocialMediaPerMonth      Int     @default(0)
 
   updatedAt DateTime @updatedAt
 
@@ -138,6 +141,8 @@ model UsageRecord {
   totalClients          Int      @default(0)
   calculationsThisMonth Int      @default(0)
   opinionsThisMonth     Int      @default(0)
+  bpcAnalysesThisMonth  Int      @default(0)
+  bpcSocialMediaThisMonth Int    @default(0)
   usageMonthRef         DateTime @default(now())
 
   updatedAt DateTime @updatedAt
@@ -210,6 +215,7 @@ model Case {
   checklists   Checklist[]
   simulations  Simulation[]
   caseNotes    CaseNote[]
+  bpcAnalysis  BpcAnalysis?
 
   @@index([userId])
   @@index([clientId])
@@ -558,6 +564,42 @@ model ModalityLabel {
 
   @@index([active, order])
   @@map("modality_labels")
+}
+
+enum BpcFaixaEtaria {
+  MENOR_16
+  MAIOR_16
+}
+
+// ─────────────────────────────────────────
+// ANÁLISE BPC/LOAS
+// ─────────────────────────────────────────
+
+model BpcAnalysis {
+  id               String         @id @default(cuid())
+  caseId           String         @unique
+  case             Case           @relation(fields: [caseId], references: [id], onDelete: Cascade)
+
+  patologia        String
+  cid              String?
+  idade            Int
+  faixaEtaria      BpcFaixaEtaria
+  rendaFamiliar    Float
+  membrosGrupo     Int
+  rendaPerCapita   Float
+  barreiras        String?        @db.Text
+  resumoLaudos     String?        @db.Text
+
+  preAnalise       String?        @db.Text
+  analiseLaudo     String?        @db.Text
+  perguntasSocial  String?        @db.Text
+  perguntasMedicas String?        @db.Text
+  checklist        String?        @db.Text
+
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  @@map("bpc_analyses")
 }
 
 // ─────────────────────────────────────────
