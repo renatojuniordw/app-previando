@@ -1,5 +1,7 @@
 import { prisma } from './prisma'
+import { redis } from './redis'
 import { PlanLimitError } from './api-error'
+import type { PlanLimit } from '@prisma/client'
 
 export type PlanFeature =
   | 'SIMULATOR'
@@ -10,7 +12,7 @@ export type PlanFeature =
   | 'USE_BPC_MODULE'
   | 'BPC_SOCIAL_MEDIA'
 
-const FEATURE_MAP: Record<PlanFeature, keyof import('@prisma/client').PlanLimit> = {
+const FEATURE_MAP: Record<PlanFeature, keyof PlanLimit> = {
   SIMULATOR: 'simulatorEnabled',
   RETROATIVOS: 'retroactiveEnabled',
   EXPORT_PDF: 'exportPdfEnabled',
@@ -30,12 +32,42 @@ const FEATURE_LABELS: Record<PlanFeature, string> = {
   BPC_SOCIAL_MEDIA: 'Gerador de carrossel BPC',
 }
 
-export async function getPlanLimit(plan: string) {
+const PLAN_LIMIT_TTL = 300 // 5 minutos
+
+function planLimitCacheKey(plan: string) {
+  return `plan-limit:${plan}`
+}
+
+export async function getPlanLimit(plan: string): Promise<PlanLimit> {
+  const cacheKey = planLimitCacheKey(plan)
+
+  try {
+    const cached = await redis.get(cacheKey)
+    if (cached) return JSON.parse(cached) as PlanLimit
+  } catch {
+    // Redis indisponível — consulta direta ao DB
+  }
+
   const limit = await prisma.planLimit.findUnique({
     where: { plan: plan as import('@prisma/client').Plan },
   })
   if (!limit) throw new Error(`PlanLimit não encontrado para plano: ${plan}`)
+
+  try {
+    await redis.setex(cacheKey, PLAN_LIMIT_TTL, JSON.stringify(limit))
+  } catch {
+    // Ignorar falha ao cachear
+  }
+
   return limit
+}
+
+export async function invalidatePlanLimitCache(plan: string): Promise<void> {
+  try {
+    await redis.del(planLimitCacheKey(plan))
+  } catch {
+    // Não crítico
+  }
 }
 
 export async function guardFeature(plan: string, feature: PlanFeature): Promise<void> {

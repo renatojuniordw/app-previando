@@ -14,30 +14,31 @@ import { Worker } from 'bullmq'
 import { prisma } from '../lib/prisma'
 import { downloadPDF } from '../services/r2'
 import { parseCnisWithAI } from '../services/cnis-parser'
+import { writeAuditDirect } from '../lib/audit'
+import type { AuditJobData } from '../lib/audit'
 import Redis from 'ioredis'
 
 const redis = new Redis(process.env.REDIS_URL || 'redis://localhost:60004', {
   maxRetriesPerRequest: null,
 })
 
-const worker = new Worker(
+// ─── Worker: CNIS processing ───────────────────────────────────────────────
+
+const cnisWorker = new Worker(
   'cnis-processing',
   async (job) => {
     const { cnisDocumentId, r2Key, caseId } = job.data
 
     logger.info(`Processing CNIS: ${cnisDocumentId}`, { cnisDocumentId, r2Key, caseId })
 
-    // Marcar como PROCESSING
     await prisma.cnisDocument.update({
       where: { id: cnisDocumentId },
       data: { processingStatus: 'PROCESSING' },
     })
 
     try {
-      // 1. Baixar PDF do R2
       const buffer = await downloadPDF(r2Key)
 
-      // 2. Extrair texto do PDF
       const pdfParse = await import('pdf-parse')
       let pdfText = ''
       try {
@@ -53,10 +54,8 @@ const worker = new Worker(
       logger.info(`PDF text length: ${pdfText.length} chars`, { cnisDocumentId })
       logger.debug(`PDF text preview (last 500): ${pdfText.slice(-500)}`, { cnisDocumentId })
 
-      // 3. Parsear com IA
       const { markdown, extractedData } = await parseCnisWithAI(pdfText)
 
-      // 4. Salvar no banco
       await prisma.cnisDocument.update({
         where: { id: cnisDocumentId },
         data: {
@@ -99,12 +98,30 @@ const worker = new Worker(
   }
 )
 
-worker.on('completed', (job) => {
-  logger.info(`Job ${job.id} completed`)
+cnisWorker.on('completed', (job) => {
+  logger.info(`CNIS job ${job.id} completed`)
 })
 
-worker.on('failed', (job, err) => {
-  logger.error(`Job ${job?.id} failed`, err)
+cnisWorker.on('failed', (job, err) => {
+  logger.error(`CNIS job ${job?.id} failed`, err)
 })
 
-logger.info('BullMQ worker started — waiting for CNIS jobs...')
+// ─── Worker: Audit log (async, fire-and-forget) ────────────────────────────
+
+const auditWorker = new Worker(
+  'audit-log',
+  async (job) => {
+    const data = job.data as AuditJobData
+    await writeAuditDirect(data)
+  },
+  {
+    connection: redis,
+    concurrency: 10,
+  }
+)
+
+auditWorker.on('failed', (job, err) => {
+  logger.error(`Audit job ${job?.id} failed`, err)
+})
+
+logger.info('BullMQ workers started — CNIS processing + audit log')

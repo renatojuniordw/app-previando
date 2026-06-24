@@ -38,7 +38,17 @@ export async function GET(req: NextRequest) {
         orderBy: [{ priority: 'asc' }, { name: 'asc' }],
         skip,
         take: limit,
-        include: {
+        select: {
+          id: true,
+          userId: true,
+          name: true,
+          birthDate: true,
+          phone: true,
+          email: true,
+          priority: true,
+          notes: true,
+          createdAt: true,
+          updatedAt: true,
           cases: {
             select: { id: true, status: true, benefitType: true },
             orderBy: { createdAt: 'desc' },
@@ -48,9 +58,7 @@ export async function GET(req: NextRequest) {
       prisma.client.count({ where }),
     ])
 
-    // Mascarar CPF (nunca retornar hash)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const safe = (clients as any[]).map(({ cpfHash: _hash, ...c }) => ({ ...c, cpf: '***.***.**-**' }))
+    const safe = clients.map((c) => ({ ...c, cpf: '***.***.**-**' }))
 
     return NextResponse.json({ clients: safe, total, page, limit })
   } catch (err) {

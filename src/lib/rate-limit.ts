@@ -25,9 +25,9 @@ function localRateLimit(key: string, limit: number, windowMs: number): RateLimit
 // Periodically clean expired entries from local rate limiter
 setInterval(() => {
   const now = Date.now()
-  for (const [key, val] of localRateLimits.entries()) {
+  localRateLimits.forEach((val, key) => {
     if (now > val.reset) localRateLimits.delete(key)
-  }
+  })
 }, 60000)
 
 export async function rateLimit(

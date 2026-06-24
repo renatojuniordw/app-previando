@@ -17,9 +17,21 @@ interface BpcAnalysis {
   resumoLaudos: string | null
 }
 
+interface BpcSavePayload {
+  patologia: string
+  cid?: string
+  idade: number
+  faixaEtaria: string
+  rendaFamiliar: number
+  membrosGrupo: number
+  rendaPerCapita: number
+  barreirasRelatadas: string
+  resumoLaudos?: string
+}
+
 interface BpcFormProps {
   analysis: BpcAnalysis | null
-  onSave: (data: any) => void
+  onSave: (data: BpcSavePayload) => void
   saving: boolean
 }
 
@@ -29,7 +41,7 @@ const LIMITE_PER_CAPITA = SM_2025 / 4
 export function BpcForm({ analysis, onSave, saving }: BpcFormProps) {
   const [patologia, setPatologia] = useState(analysis?.patologia ?? '')
   const [cid, setCid] = useState(analysis?.cid ?? '')
-  const [idade, setIdade] = useState(analysis?.idade ?? '')
+  const [idade, setIdade] = useState(analysis?.idade?.toString() ?? '')
   const [rendaFamiliar, setRendaFamiliar] = useState(analysis?.rendaFamiliar?.toString() ?? '')
   const [membrosGrupo, setMembrosGrupo] = useState(analysis?.membrosGrupo?.toString() ?? '')
   const [barreiras, setBarreiras] = useState(analysis?.barreiras ?? '')
@@ -46,7 +58,7 @@ export function BpcForm({ analysis, onSave, saving }: BpcFormProps) {
     if (analysis) {
       setPatologia(analysis.patologia)
       setCid(analysis.cid ?? '')
-      setIdade(analysis.idade.toString())
+      setIdade(String(analysis.idade))
       setRendaFamiliar(analysis.rendaFamiliar.toString())
       setMembrosGrupo(analysis.membrosGrupo.toString())
       setBarreiras(analysis.barreiras ?? '')
