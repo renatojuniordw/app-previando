@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client'
+import bcrypt from 'bcryptjs'
 
 const prisma = new PrismaClient()
 
@@ -28,6 +29,31 @@ const MODALITIES_DEFAULT: ModalityPadrao[] = [
 ]
 
 async function main() {
+  // ─── Usuário Admin Padrão ───────────────────────────────────────────────────
+  const adminEmail = process.env.ADMIN_EMAIL
+  const adminPassword = process.env.ADMIN_PASSWORD
+  const adminName = process.env.ADMIN_NAME ?? 'Administrador'
+
+  if (adminEmail && adminPassword) {
+    console.log('🌱 Seeding Admin user...')
+    const passwordHash = await bcrypt.hash(adminPassword, 12)
+    await prisma.user.upsert({
+      where: { email: adminEmail },
+      update: { name: adminName, isAdmin: true, plan: 'PRO', planStatus: 'ACTIVE' },
+      create: {
+        email: adminEmail,
+        name: adminName,
+        password: passwordHash,
+        isAdmin: true,
+        plan: 'PRO',
+        planStatus: 'ACTIVE',
+      },
+    })
+    console.log(`✅ Admin criado/atualizado: ${adminEmail}`)
+  } else {
+    console.warn('⚠️  ADMIN_EMAIL ou ADMIN_PASSWORD não definidos no .env — pulando seed do admin')
+  }
+
   console.log('🌱 Seeding PlanLimits...')
 
   await prisma.planLimit.upsert({
