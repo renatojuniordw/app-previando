@@ -116,7 +116,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       return token
     },
     async session({ session, token }) {
-      if (!session.user?.id) return session
+      if (token.sub) {
+        session.user.id = token.sub
+      }
 
       session.user.plan = (token.plan as string | undefined) ?? 'FREE'
       session.user.isAdmin = (token.isAdmin as boolean | undefined) ?? false
