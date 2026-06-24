@@ -57,8 +57,8 @@ export async function guardClientLimit(userId: string, plan: string): Promise<vo
   const count = await prisma.client.count({ where: { userId } })
   if (count >= limit.maxClients) {
     throw new PlanLimitError(
-      `Você atingiu o limite de ${limit.maxClients} clientes do plano ${plan}.`,
-      'MAX_CLIENTS',
+      `Você atingiu o limite de ${limit.maxClients} clientes no plano ${plan}. Atualize para criar mais.`,
+      'CLIENTS',
       plan === 'FREE' ? 'SOLO' : 'PRO'
     )
   }
@@ -66,15 +66,17 @@ export async function guardClientLimit(userId: string, plan: string): Promise<vo
 
 export async function guardCalculationLimit(userId: string, plan: string): Promise<void> {
   const limit = await getPlanLimit(plan)
-  if (limit.maxCalculationsPerMonth === -1) return
+  if (!limit.simulatorEnabled) {
+    throw new PlanLimitError('Simulação não está disponível no seu plano.', 'CALCULATIONS', plan === 'FREE' ? 'SOLO' : 'PRO')
+  }
 
-  const usage = await prisma.usageRecord.findUnique({ where: { userId } })
-  const count = usage?.calculationsThisMonth ?? 0
+  const record = await prisma.usageRecord.findUnique({ where: { userId } })
+  const currentCount = record?.calculationsThisMonth ?? 0
 
-  if (count >= limit.maxCalculationsPerMonth) {
+  if (currentCount >= limit.maxCalculationsPerMonth) {
     throw new PlanLimitError(
-      `Você atingiu o limite de ${limit.maxCalculationsPerMonth} cálculos este mês.`,
-      'MAX_CALCULATIONS',
+      `Limite de ${limit.maxCalculationsPerMonth} simulações/mês atingido. Atualize seu plano ou aguarde o próximo mês.`,
+      'CALCULATIONS',
       plan === 'FREE' ? 'SOLO' : 'PRO'
     )
   }
@@ -82,15 +84,17 @@ export async function guardCalculationLimit(userId: string, plan: string): Promi
 
 export async function guardOpinionLimit(userId: string, plan: string): Promise<void> {
   const limit = await getPlanLimit(plan)
-  if (limit.maxOpinionsPerMonth === -1) return
+  if (!limit.simulatorEnabled) {
+    throw new PlanLimitError('Consulta de jurisprudência não está disponível no seu plano.', 'OPINIONS', plan === 'FREE' ? 'SOLO' : 'PRO')
+  }
 
-  const usage = await prisma.usageRecord.findUnique({ where: { userId } })
-  const count = usage?.opinionsThisMonth ?? 0
+  const record = await prisma.usageRecord.findUnique({ where: { userId } })
+  const currentCount = record?.opinionsThisMonth ?? 0
 
-  if (count >= limit.maxOpinionsPerMonth) {
+  if (currentCount >= limit.maxOpinionsPerMonth) {
     throw new PlanLimitError(
-      `Você atingiu o limite de ${limit.maxOpinionsPerMonth} pareceres este mês.`,
-      'MAX_OPINIONS',
+      `Limite de ${limit.maxOpinionsPerMonth} consultas/mês atingido. Atualize seu plano ou aguarde o próximo mês.`,
+      'OPINIONS',
       plan === 'FREE' ? 'SOLO' : 'PRO'
     )
   }
@@ -99,21 +103,18 @@ export async function guardOpinionLimit(userId: string, plan: string): Promise<v
 export async function guardBpcAnalysisLimit(userId: string, plan: string): Promise<void> {
   const limit = await getPlanLimit(plan)
   if (!limit.bpcEnabled) {
-    throw new PlanLimitError(
-      'Módulo BPC/LOAS disponível a partir do plano SOLO.',
-      'USE_BPC_MODULE',
-      'SOLO'
-    )
+    throw new PlanLimitError('Análise BPC não está disponível no seu plano.', 'BPC_ANALYSIS', plan === 'FREE' ? 'SOLO' : 'PRO')
   }
+
   if (limit.bpcAnalysesPerMonth === -1) return
 
-  const usage = await prisma.usageRecord.findUnique({ where: { userId } })
-  const count = usage?.bpcAnalysesThisMonth ?? 0
+  const record = await prisma.usageRecord.findUnique({ where: { userId } })
+  const currentCount = record?.bpcAnalysesThisMonth ?? 0
 
-  if (count >= limit.bpcAnalysesPerMonth) {
+  if (currentCount >= limit.bpcAnalysesPerMonth) {
     throw new PlanLimitError(
-      `Você atingiu o limite de ${limit.bpcAnalysesPerMonth} análises BPC este mês.`,
-      'MAX_BPC_ANALYSES',
+      `Limite de ${limit.bpcAnalysesPerMonth} análises BPC/mês atingido. Atualize seu plano ou aguarde o próximo mês.`,
+      'BPC_ANALYSIS',
       plan === 'FREE' ? 'SOLO' : 'PRO'
     )
   }
@@ -122,21 +123,18 @@ export async function guardBpcAnalysisLimit(userId: string, plan: string): Promi
 export async function guardBpcSocialMediaLimit(userId: string, plan: string): Promise<void> {
   const limit = await getPlanLimit(plan)
   if (!limit.bpcEnabled) {
-    throw new PlanLimitError(
-      'Gerador de carrossel disponível a partir do plano SOLO.',
-      'BPC_SOCIAL_MEDIA',
-      'SOLO'
-    )
+    throw new PlanLimitError('Gerador de carrossel BPC não está disponível no seu plano.', 'BPC_SOCIAL_MEDIA', plan === 'FREE' ? 'SOLO' : 'PRO')
   }
+
   if (limit.bpcSocialMediaPerMonth === -1) return
 
-  const usage = await prisma.usageRecord.findUnique({ where: { userId } })
-  const count = usage?.bpcSocialMediaThisMonth ?? 0
+  const record = await prisma.usageRecord.findUnique({ where: { userId } })
+  const currentCount = record?.bpcSocialMediaThisMonth ?? 0
 
-  if (count >= limit.bpcSocialMediaPerMonth) {
+  if (currentCount >= limit.bpcSocialMediaPerMonth) {
     throw new PlanLimitError(
-      `Você atingiu o limite de ${limit.bpcSocialMediaPerMonth} carrosséis este mês.`,
-      'MAX_BPC_SOCIAL_MEDIA',
+      `Limite de ${limit.bpcSocialMediaPerMonth} carrosséis BPC/mês atingido. Atualize seu plano ou aguarde o próximo mês.`,
+      'BPC_SOCIAL_MEDIA',
       plan === 'FREE' ? 'SOLO' : 'PRO'
     )
   }

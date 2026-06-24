@@ -1,3 +1,4 @@
+import { Prisma } from '@prisma/client'
 import { prisma } from './prisma'
 import { NextRequest } from 'next/server'
 import { Logger } from './logger'
@@ -9,10 +10,10 @@ interface AuditParams {
   action: string
   resource: string
   req?: NextRequest
-  metadata?: Record<string, unknown>
+  metadata?: unknown
 }
 
-export async function logAudit({ userId, action, resource, req, metadata }: AuditParams) {
+export async function logAudit({ userId, action, resource, req, metadata }: AuditParams): Promise<void> {
   try {
     await prisma.auditLog.create({
       data: {
@@ -24,7 +25,7 @@ export async function logAudit({ userId, action, resource, req, metadata }: Audi
           req?.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ??
           null,
         userAgent: req?.headers.get('user-agent') ?? null,
-        metadata: (metadata ?? null) as never,
+        metadata: metadata ? (metadata as Prisma.InputJsonValue) : undefined,
       },
     })
   } catch (err) {

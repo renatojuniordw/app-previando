@@ -6,6 +6,9 @@ import bcrypt from 'bcryptjs'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 
+// Session duration in seconds (24h)
+const SESSION_MAX_AGE = 86400
+
 declare module 'next-auth' {
   interface Session {
     user: {
@@ -19,9 +22,16 @@ declare module 'next-auth' {
   }
 }
 
+async function enrichSessionUser(userId: string) {
+  return prisma.user.findUnique({
+    where: { id: userId },
+    select: { plan: true, isAdmin: true },
+  })
+}
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
-  session: { strategy: 'jwt', maxAge: 86400 },
+  session: { strategy: 'jwt', maxAge: SESSION_MAX_AGE },
 
   providers: [
     GoogleProvider({
@@ -65,8 +75,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         return {
           id: user.id,
-          email: user.email,
           name: user.name,
+          email: user.email,
           plan: user.plan,
           isAdmin: user.isAdmin,
         }
@@ -75,18 +85,42 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   ],
 
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger }) {
       if (user) {
-        token.id = user.id
-        token.plan = (user as { plan?: string }).plan ?? 'FREE'
-        token.isAdmin = (user as { isAdmin?: boolean }).isAdmin ?? false
+        // Initial sign-in — CredentialsProvider returns plan/isAdmin directly;
+        // Google OAuth does not, so fall back to a DB fetch.
+        const credPlan = (user as any).plan as string | undefined
+        const credIsAdmin = (user as any).isAdmin as boolean | undefined
+        if (credPlan !== undefined && credIsAdmin !== undefined) {
+          token.plan = credPlan
+          token.isAdmin = credIsAdmin
+        } else if (user.id) {
+          const dbUser = await enrichSessionUser(user.id)
+          if (!dbUser) return null // user not found in DB → reject token
+          token.plan = dbUser.plan
+          token.isAdmin = dbUser.isAdmin
+        }
       }
+
+      if (trigger === 'update') {
+        const userId = (typeof token.sub === 'string' ? token.sub : undefined)
+                    ?? (typeof token.id === 'string' ? token.id : undefined)
+        if (userId) {
+          const dbUser = await enrichSessionUser(userId)
+          if (!dbUser) return null // user deleted → invalidate token
+          token.plan = dbUser.plan
+          token.isAdmin = dbUser.isAdmin
+        }
+      }
+
       return token
     },
     async session({ session, token }) {
-      session.user.id = token.id as string
-      session.user.plan = token.plan as string
-      session.user.isAdmin = token.isAdmin as boolean
+      if (!session.user?.id) return session
+
+      session.user.plan = (token.plan as string | undefined) ?? 'FREE'
+      session.user.isAdmin = (token.isAdmin as boolean | undefined) ?? false
+
       return session
     },
   },
@@ -94,16 +128,5 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   pages: {
     signIn: '/login',
     error: '/login',
-  },
-
-  cookies: {
-    sessionToken: {
-      options: {
-        httpOnly: true,
-        sameSite: 'strict' as const,
-        path: '/',
-        secure: process.env.NODE_ENV === 'production',
-      },
-    },
   },
 })
