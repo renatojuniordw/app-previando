@@ -9,7 +9,7 @@ import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
 
 const LaudoSchema = z.object({
-  texto: z.string().min(10, 'O texto do laudo deve ter pelo menos 10 caracteres.'),
+  texto: z.string().min(10, 'O texto do laudo deve ter pelo menos 10 caracteres.').max(10000),
 })
 
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {

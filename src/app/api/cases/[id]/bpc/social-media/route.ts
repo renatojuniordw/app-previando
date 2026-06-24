@@ -9,8 +9,8 @@ import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
 
 const SocialMediaSchema = z.object({
-  tema: z.string().min(1),
-  contexto: z.string().optional(),
+  tema: z.string().min(1).max(500),
+  contexto: z.string().max(3000).optional(),
 })
 
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
