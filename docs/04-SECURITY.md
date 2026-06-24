@@ -118,15 +118,11 @@ export default auth(async (req) => {
     return NextResponse.redirect(new URL('/login', req.url))
   }
 
-  // Admin
+  // Admin: apenas verificação de isAdmin via sessão
   if (ADMIN_ROUTES.some(r => pathname.startsWith(r))) {
     if (!session.user.isAdmin) {
       if (pathname.startsWith('/api/')) return NextResponse.json({ error: 'Acesso negado' }, { status: 403 })
       return NextResponse.redirect(new URL('/dashboard', req.url))
-    }
-    if (pathname.startsWith('/api/admin')) {
-      const secret = req.headers.get('x-admin-secret')
-      if (secret !== process.env.ADMIN_SECRET) return NextResponse.json({ error: 'Acesso negado' }, { status: 403 })
     }
   }
 
@@ -264,11 +260,11 @@ export function sanitizeForAI(input: string): string {
 module.exports = {
   async headers() {
     return [{ source: '/(.*)', headers: [
-      { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
+      { key: 'X-Frame-Options', value: 'DENY' },
       { key: 'X-Content-Type-Options', value: 'nosniff' },
-      { key: 'X-XSS-Protection', value: '1; mode=block' },
-      { key: 'Referrer-Policy', value: 'origin-when-cross-origin' },
-      { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains; preload' },
+      { key: 'Strict-Transport-Security', value: 'max-age=31536000; includeSubDomains' },
+      { key: 'Content-Security-Policy', value: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'" },
+      { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
       { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
     ]}]
   }
@@ -281,7 +277,6 @@ module.exports = {
 
 - [ ] `NEXTAUTH_SECRET` gerado com `openssl rand -base64 32`
 - [ ] `CPF_HASH_SALT` gerado e **nunca alterado**
-- [ ] `ADMIN_SECRET` configurado
 - [ ] Google OAuth com redirect URI `https://app.previando.com.br/api/auth/callback/google`
 - [ ] Cookies `httpOnly + secure` em produção
 - [ ] PostgreSQL exposto apenas em `127.0.0.1` (porta 60003)
