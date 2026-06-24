@@ -21,7 +21,7 @@ declare module 'next-auth' {
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
-  session: { strategy: 'jwt' },
+  session: { strategy: 'jwt', maxAge: 86400 },
 
   providers: [
     GoogleProvider({
@@ -100,7 +100,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     sessionToken: {
       options: {
         httpOnly: true,
-        sameSite: 'lax' as const,
+        sameSite: 'strict' as const,
         path: '/',
         secure: process.env.NODE_ENV === 'production',
       },

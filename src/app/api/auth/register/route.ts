@@ -16,7 +16,10 @@ const schema = z.object({
 })
 
 export async function POST(req: NextRequest) {
-  const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown'
+  const ip =
+    req.headers.get('cf-connecting-ip') ??
+    req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ??
+    'unknown'
 
   // Rate limit: 3 registros/hora por IP
   const limit = await rateLimit(`register:${ip}`, 3, 3600)

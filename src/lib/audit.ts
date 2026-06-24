@@ -19,7 +19,10 @@ export async function logAudit({ userId, action, resource, req, metadata }: Audi
         userId,
         action,
         resource,
-        ipAddress: req?.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? null,
+        ipAddress:
+          req?.headers.get('cf-connecting-ip') ??
+          req?.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ??
+          null,
         userAgent: req?.headers.get('user-agent') ?? null,
         metadata: (metadata ?? null) as never,
       },
