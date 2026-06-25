@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import bcrypt from 'bcryptjs'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { rateLimit } from '@/lib/rate-limit'
+import { logAudit } from '@/lib/audit'
+import { createUser } from '@/services/register'
 
 const schema = z.object({
   name: z.string().min(2).max(100),
@@ -15,77 +16,70 @@ const schema = z.object({
   oabNumber: z.string().optional(),
 })
 
-export async function POST(req: NextRequest) {
-  const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown'
+async function checkRateLimit(req: NextRequest): Promise<NextResponse | null> {
+  const ip =
+    req.headers.get('cf-connecting-ip') ??
+    req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ??
+    'unknown'
 
-  // Rate limit: 3 registros/hora por IP
   const limit = await rateLimit(`register:${ip}`, 3, 3600)
   if (!limit.success) {
     return NextResponse.json({ error: 'Muitas tentativas de cadastro. Tente em 1 hora.' }, { status: 429 })
   }
+  return null
+}
 
-  let body: unknown
+async function parseBody(req: NextRequest): Promise<{ body: unknown; error?: NextResponse }> {
   try {
-    body = await req.json()
+    return { body: await req.json() }
   } catch {
-    return NextResponse.json({ error: 'Payload inválido.' }, { status: 400 })
+    return { body: null, error: NextResponse.json({ error: 'Payload inválido.' }, { status: 400 }) }
   }
+}
 
+async function validateInput(body: unknown): Promise<{ data: z.infer<typeof schema>; error?: NextResponse }> {
   const parsed = schema.safeParse(body)
   if (!parsed.success) {
-    return NextResponse.json({ error: 'Dados inválidos.', details: parsed.error.flatten() }, { status: 400 })
+    return {
+      data: null as any,
+      error: NextResponse.json({ error: 'Dados inválidos.', details: parsed.error.flatten() }, { status: 400 }),
+    }
   }
+  return { data: parsed.data }
+}
 
-  const { name, email, password, oabNumber } = parsed.data
+export async function POST(req: NextRequest) {
+  // Rate limiting
+  const rateError = await checkRateLimit(req)
+  if (rateError) return rateError
 
-  const existing = await prisma.user.findUnique({ where: { email }, select: { id: true } })
+  // Parse body
+  const { body, error: parseError } = await parseBody(req)
+  if (parseError) return parseError
+
+  // Validate
+  const { data: input, error: validationError } = await validateInput(body)
+  if (validationError) return validationError
+
+  // Check duplicate email
+  const existing = await prisma.user.findUnique({ where: { email: input.email }, select: { id: true } })
   if (existing) {
     return NextResponse.json({ error: 'Email já cadastrado.' }, { status: 409 })
   }
 
-  const passwordHash = await bcrypt.hash(password, 12)
-
-  const user = await prisma.user.create({
-    data: {
-      name,
-      email,
-      password: passwordHash,
-      oabNumber,
-      plan: 'FREE',
-      planStatus: 'ACTIVE',
-      usageRecord: {
-        create: {
-          totalClients: 0,
-          calculationsThisMonth: 0,
-          opinionsThisMonth: 0,
-        },
-      },
-    },
-    select: { id: true, name: true, email: true, plan: true },
-  })
-
-  // Garante que PlanLimits existam (idempotente)
-  const planLimitExists = await prisma.planLimit.findUnique({ where: { plan: 'FREE' } })
-  if (!planLimitExists) {
-    await prisma.planLimit.createMany({
-      data: [
-        {
-          plan: 'FREE',
-          maxClients: 3,
-          maxCalculationsPerMonth: 5,
-          maxOpinionsPerMonth: 1,
-          maxNotesPerCase: 10,
-          simulatorEnabled: false,
-          retroactiveEnabled: false,
-          exportPdfEnabled: false,
-          whatsappEnabled: false,
-          watermarkEnabled: true,
-          diagnosisEnabled: false,
-        },
-      ],
-      skipDuplicates: true,
-    })
+  // Create user (transactional)
+  let user: Awaited<ReturnType<typeof createUser>>
+  try {
+    user = await createUser(input)
+  } catch (e: any) {
+    if (e?.code === 'P2002') {
+      return NextResponse.json({ error: 'Email já cadastrado.' }, { status: 409 })
+    }
+    throw e
   }
 
-  return NextResponse.json({ user }, { status: 201 })
+  // Audit log (non-blocking)
+  await logAudit({ userId: user.id, action: 'REGISTER', resource: 'user', req })
+
+  return NextResponse.json({ user: { id: user.id, email: user.email, plan: user.plan } }, { status: 201 })
 }

@@ -1,8 +1,6 @@
 'use client'
-
 import { useEffect, useState } from 'react'
 import { Plus, Pencil, Trash2, Check, X, ChevronDown, ChevronUp } from 'lucide-react'
-
 interface RegraAposentadoria {
   id: string
   modalidade: string
@@ -16,21 +14,15 @@ interface RegraAposentadoria {
   legislacao: string
   observacoes: string | null
 }
-
 interface Modalidade {
   codigo: string
   label: string
 }
-
-const ADMIN_SECRET = process.env.NEXT_PUBLIC_ADMIN_SECRET ?? ''
-
-
 const GENERO_LABELS: Record<string, string> = {
   M:     'Homens',
   F:     'Mulheres',
   AMBOS: 'Ambos',
 }
-
 const EMPTY_FORM = {
   modalidade: '',
   genero: 'M',
@@ -43,12 +35,10 @@ const EMPTY_FORM = {
   legislacao: '',
   observacoes: '',
 }
-
 const fmtDate = (d: string) => {
   const date = new Date(d)
   return new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'UTC' }).format(date)
 }
-
 // Agrupa registros por modalidade para exibição
 function groupByModalidade(registros: RegraAposentadoria[]) {
   const map: Record<string, RegraAposentadoria[]> = {}
@@ -58,7 +48,6 @@ function groupByModalidade(registros: RegraAposentadoria[]) {
   }
   return map
 }
-
 export default function RegrasAposentadoriaPage() {
   const [registros, setRegistros] = useState<RegraAposentadoria[]>([])
   const [modalidades, setModalidades] = useState<Modalidade[]>([])
@@ -69,12 +58,11 @@ export default function RegrasAposentadoriaPage() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({})
-
   const load = async () => {
     setLoading(true)
     const [regrasResponse, modalidadesResponse] = await Promise.all([
-      fetch('/api/admin/regras-aposentadoria', { headers: { 'x-admin-secret': ADMIN_SECRET } }),
-      fetch('/api/admin/modalidades', { headers: { 'x-admin-secret': ADMIN_SECRET } }),
+      fetch('/api/admin/regras-aposentadoria'),
+      fetch('/api/admin/modalidades'),
     ])
     const regrasData = await regrasResponse.json()
     const modalidadesData = await modalidadesResponse.json()
@@ -82,23 +70,18 @@ export default function RegrasAposentadoriaPage() {
     setModalidades((modalidadesData.modalidades ?? []).filter((item: Modalidade & { ativo: boolean }) => item.ativo))
     setLoading(false)
   }
-
   useEffect(() => { load() }, [])
-
   const toggleGroup = (modalidade: string) => {
     setExpandedGroups(prev => ({ ...prev, [modalidade]: !prev[modalidade] }))
   }
-
   const parseNum = (v: string) => v.trim() === '' ? null : parseFloat(v.replace(',', '.'))
   const parseIntVal = (v: string) => v.trim() === '' ? null : window.parseInt(v, 10)
-
   const handleSubmit = async () => {
     setError('')
     if (!form.modalidade || !form.genero || !form.vigencia || !form.descricao || !form.legislacao) {
       setError('Preencha os campos obrigatórios: modalidade, gênero, vigência, descrição e legislação.')
       return
     }
-
     setSaving(true)
     try {
       const body = {
@@ -113,21 +96,19 @@ export default function RegrasAposentadoriaPage() {
         legislacao:            form.legislacao,
         observacoes:           form.observacoes || null,
       }
-
       if (editingId) {
         await fetch(`/api/admin/regras-aposentadoria/${editingId}`, {
           method: 'PATCH',
-          headers: { 'Content-Type': 'application/json', 'x-admin-secret': ADMIN_SECRET },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(body),
         })
       } else {
         await fetch('/api/admin/regras-aposentadoria', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'x-admin-secret': ADMIN_SECRET },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(body),
         })
       }
-
       setForm(EMPTY_FORM)
       setShowForm(false)
       setEditingId(null)
@@ -138,7 +119,6 @@ export default function RegrasAposentadoriaPage() {
       setSaving(false)
     }
   }
-
   const handleEdit = (r: RegraAposentadoria) => {
     setEditingId(r.id)
     setForm({
@@ -156,26 +136,21 @@ export default function RegrasAposentadoriaPage() {
     setShowForm(true)
     setError('')
   }
-
   const handleDelete = async (id: string) => {
     if (!confirm('Confirma a exclusão deste registro?')) return
     await fetch(`/api/admin/regras-aposentadoria/${id}`, {
       method: 'DELETE',
-      headers: { 'x-admin-secret': ADMIN_SECRET },
     })
     await load()
   }
-
   const handleCancel = () => {
     setForm(EMPTY_FORM)
     setShowForm(false)
     setEditingId(null)
     setError('')
   }
-
   const grouped = groupByModalidade(registros)
   const modalidadeLabels = Object.fromEntries(modalidades.map(({ codigo, label }) => [codigo, label]))
-
   return (
     <div className="p-8 space-y-6">
       <div className="flex items-center justify-between">
@@ -195,13 +170,11 @@ export default function RegrasAposentadoriaPage() {
           </button>
         )}
       </div>
-
       {showForm && (
         <div className="bg-white border border-slate-200 rounded-xl p-6 space-y-4 shadow-sm">
           <h2 className="font-serif font-bold text-lg text-slate-900">
             {editingId ? 'Editar Regra' : 'Nova Regra'}
           </h2>
-
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <div>
               <label className="block font-sans text-xs font-bold text-slate-600 mb-1">Modalidade *</label>
@@ -217,7 +190,6 @@ export default function RegrasAposentadoriaPage() {
                 ))}
               </select>
             </div>
-
             <div>
               <label className="block font-sans text-xs font-bold text-slate-600 mb-1">Gênero *</label>
               <select
@@ -231,7 +203,6 @@ export default function RegrasAposentadoriaPage() {
                 <option value="AMBOS">Ambos</option>
               </select>
             </div>
-
             <div>
               <label className="block font-sans text-xs font-bold text-slate-600 mb-1">Vigência (início) *</label>
               <input
@@ -242,7 +213,6 @@ export default function RegrasAposentadoriaPage() {
                 className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm font-sans focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 outline-none disabled:bg-slate-50 disabled:text-slate-400"
               />
             </div>
-
             <div>
               <label className="block font-sans text-xs font-bold text-slate-600 mb-1">Idade Mínima (anos)</label>
               <input
@@ -254,7 +224,6 @@ export default function RegrasAposentadoriaPage() {
                 className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm font-sans focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 outline-none"
               />
             </div>
-
             <div>
               <label className="block font-sans text-xs font-bold text-slate-600 mb-1">Tempo de Contribuição (anos)</label>
               <input
@@ -266,7 +235,6 @@ export default function RegrasAposentadoriaPage() {
                 className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm font-sans focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 outline-none"
               />
             </div>
-
             <div>
               <label className="block font-sans text-xs font-bold text-slate-600 mb-1">Pontos Mínimos</label>
               <input
@@ -278,7 +246,6 @@ export default function RegrasAposentadoriaPage() {
                 className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm font-sans focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 outline-none"
               />
             </div>
-
             <div>
               <label className="block font-sans text-xs font-bold text-slate-600 mb-1">Carência (meses)</label>
               <input
@@ -290,7 +257,6 @@ export default function RegrasAposentadoriaPage() {
                 className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm font-sans focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 outline-none"
               />
             </div>
-
             <div className="sm:col-span-2">
               <label className="block font-sans text-xs font-bold text-slate-600 mb-1">Descrição *</label>
               <input
@@ -301,7 +267,6 @@ export default function RegrasAposentadoriaPage() {
                 className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm font-sans focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 outline-none"
               />
             </div>
-
             <div>
               <label className="block font-sans text-xs font-bold text-slate-600 mb-1">Legislação *</label>
               <input
@@ -312,7 +277,6 @@ export default function RegrasAposentadoriaPage() {
                 className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm font-sans focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 outline-none"
               />
             </div>
-
             <div className="sm:col-span-3">
               <label className="block font-sans text-xs font-bold text-slate-600 mb-1">Observações</label>
               <textarea
@@ -324,9 +288,7 @@ export default function RegrasAposentadoriaPage() {
               />
             </div>
           </div>
-
           {error && <p className="font-sans text-sm text-red-600">{error}</p>}
-
           <div className="flex gap-3">
             <button
               onClick={handleSubmit}
@@ -346,7 +308,6 @@ export default function RegrasAposentadoriaPage() {
           </div>
         </div>
       )}
-
       {loading ? (
         <div className="py-12 text-center font-sans text-sm text-slate-400">Carregando...</div>
       ) : registros.length === 0 ? (
@@ -356,7 +317,6 @@ export default function RegrasAposentadoriaPage() {
           {Object.entries(grouped).map(([modalidade, regs]) => {
             const isExpanded = expandedGroups[modalidade] !== false // padrão: aberto
             const label = modalidadeLabels[modalidade] ?? modalidade
-
             return (
               <div key={modalidade} className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
                 <button
@@ -372,7 +332,6 @@ export default function RegrasAposentadoriaPage() {
                   </div>
                   {isExpanded ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
                 </button>
-
                 {isExpanded && (
                   <div className="border-t border-slate-100">
                     <div className="grid grid-cols-[80px_1fr_80px_100px_80px_80px_1fr_80px_auto] px-5 py-2.5 bg-slate-50 text-xs font-bold text-slate-500 uppercase tracking-wider">
@@ -429,7 +388,6 @@ export default function RegrasAposentadoriaPage() {
           })}
         </div>
       )}
-
       <p className="font-sans text-xs text-slate-400">
         Total: {registros.length} registros · Para atualizar uma regra, adicione um novo registro com a mesma modalidade/gênero e uma vigência futura.
       </p>

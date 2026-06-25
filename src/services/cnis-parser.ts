@@ -3,6 +3,8 @@ import { sanitizeForAI } from '../lib/sanitize'
 import { Logger } from '../lib/logger'
 import { AI_MODELS, AI_COST_PER_TOKEN, AI_MAX_TOKENS } from '../lib/ai-models'
 
+const isVerboo = (process.env.AI_PROVIDER ?? 'openai') === 'verboo'
+
 const logger = new Logger('CNISParser')
 
 interface CnisExtractedData {
@@ -70,8 +72,8 @@ Retorne JSON no formato:
   const response = await openai.chat.completions.create({
     model,
     max_tokens: AI_MAX_TOKENS ?? 16000,
-    temperature: 0, // Precisão máxima para extração
-    response_format: { type: 'json_object' },
+    temperature: 0,
+    ...(!isVerboo && { response_format: { type: 'json_object' } }),
     messages: [
       { role: 'system', content: systemPrompt },
       { role: 'user', content: userPrompt },

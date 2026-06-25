@@ -1,8 +1,6 @@
 'use client'
-
 import { useEffect, useState, useCallback } from 'react'
 import { formatDate } from '@/lib/utils'
-
 interface AdminUser {
   id: string
   name: string | null
@@ -13,9 +11,6 @@ interface AdminUser {
   createdAt: string
   _count: { clients: number; cases: number }
 }
-
-const ADMIN_SECRET = process.env.NEXT_PUBLIC_ADMIN_SECRET ?? ''
-
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<AdminUser[]>([])
   const [total, setTotal] = useState(0)
@@ -24,44 +19,38 @@ export default function AdminUsersPage() {
   const [planFilter, setPlanFilter] = useState('')
   const [page, setPage] = useState(1)
   const [pages, setPages] = useState(1)
-
   const load = useCallback(async (q = search, p = page, plan = planFilter) => {
     setLoading(true)
     const params = new URLSearchParams({ page: String(p), ...(q && { search: q }), ...(plan && { plan }) })
-    const r = await fetch(`/api/admin/users?${params}`, { headers: { 'x-admin-secret': ADMIN_SECRET } })
+    const r = await fetch(`/api/admin/users?${params}`)
     const data = await r.json()
     setUsers(data.users ?? [])
     setTotal(data.total ?? 0)
     setPages(data.pages ?? 1)
     setLoading(false)
   }, [search, page, planFilter])
-
   useEffect(() => { load() }, [load])
-
   const handleChangePlan = async (userId: string, plan: string) => {
     await fetch(`/api/admin/users/${userId}/plan`, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json', 'x-admin-secret': ADMIN_SECRET },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ plan }),
     })
     load()
   }
-
   const handleToggleStatus = async (userId: string, isSuspended: boolean) => {
     await fetch(`/api/admin/users/${userId}/status`, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json', 'x-admin-secret': ADMIN_SECRET },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: isSuspended ? 'activate' : 'suspend' }),
     })
     load()
   }
-
   return (
     <div className="p-6 space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="font-mono font-black text-2xl text-white uppercase">Usuários ({total})</h1>
       </div>
-
       <div className="flex gap-3">
         <input
           value={search}
@@ -80,7 +69,6 @@ export default function AdminUsersPage() {
           <option value="PRO">PRO</option>
         </select>
       </div>
-
       {loading ? (
         <div className="font-mono text-slate-400 animate-pulse py-8 text-center">Carregando...</div>
       ) : (
@@ -125,7 +113,6 @@ export default function AdminUsersPage() {
           ))}
         </div>
       )}
-
       {pages > 1 && (
         <div className="flex gap-2">
           <button

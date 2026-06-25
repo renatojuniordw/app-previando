@@ -17,6 +17,8 @@ const isVerboo = provider === 'verboo'
 
 export const AI_MODELS = isVerboo ? MODELS_VERBOO : MODELS_OPENAI
 
+console.log(`[AI] Provider: ${provider} | CRITICAL: ${AI_MODELS.CRITICAL} | OPERATIONAL: ${AI_MODELS.OPERATIONAL}`)
+
 // Quando Verboo (ilimitado): usa 32768. Quando OpenAI: null → cada call site define seu próprio limite.
 export const AI_MAX_TOKENS: number | null = isVerboo ? 32768 : null
 

@@ -1,21 +1,15 @@
 'use client'
-
 import { useEffect, useState } from 'react'
 import { Card } from '@/components/ui/Card'
-
 interface Metrics {
   users: { total: number; byPlan: Record<string, number>; newThisMonth: number }
   revenue: { mrr: number; totalThisMonth: number; totalAllTime: number }
   usage: { totalCalculations: number; totalOpinions: number; aiCostThisMonthUsd: number }
   cases: { total: number; byStatus: Record<string, number> }
 }
-
-const ADMIN_SECRET = process.env.NEXT_PUBLIC_ADMIN_SECRET ?? ''
-
 function formatBRL(value: number) {
   return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 }
-
 const STATUS_LABELS: Record<string, string> = {
   PROSPECCAO: 'Prospecção',
   ANALISE: 'Análise',
@@ -23,26 +17,21 @@ const STATUS_LABELS: Record<string, string> = {
   EM_PROCESSAMENTO: 'Em Processamento',
   FINALIZADO: 'Finalizado',
 }
-
 export default function AdminMetricsPage() {
   const [metrics, setMetrics] = useState<Metrics | null>(null)
   const [loading, setLoading] = useState(true)
-
   useEffect(() => {
-    fetch('/api/admin/metrics', { headers: { 'x-admin-secret': ADMIN_SECRET } })
+    fetch('/api/admin/metrics')
       .then((r) => r.json())
       .then(setMetrics)
       .catch(() => null)
       .finally(() => setLoading(false))
   }, [])
-
   if (loading) return <div className="p-8 font-mono text-slate-400 animate-pulse">Carregando...</div>
   if (!metrics) return <div className="p-8 font-mono text-red-400">Erro ao carregar métricas.</div>
-
   return (
     <div className="p-6 space-y-6">
       <h1 className="font-mono font-black text-2xl text-white uppercase">MÉTRICAS</h1>
-
       <div className="grid grid-cols-2 gap-6">
         <Card variant="dark">
           <p className="font-mono font-black text-xs uppercase tracking-widest text-slate-400 mb-4">RECEITA</p>
@@ -59,7 +48,6 @@ export default function AdminMetricsPage() {
             ))}
           </div>
         </Card>
-
         <Card variant="dark">
           <p className="font-mono font-black text-xs uppercase tracking-widest text-slate-400 mb-4">USUÁRIOS</p>
           <div className="space-y-2">
@@ -81,7 +69,6 @@ export default function AdminMetricsPage() {
             </div>
           </div>
         </Card>
-
         <Card variant="dark">
           <p className="font-mono font-black text-xs uppercase tracking-widest text-slate-400 mb-4">USO DE IA</p>
           <div className="space-y-3">
@@ -97,7 +84,6 @@ export default function AdminMetricsPage() {
             ))}
           </div>
         </Card>
-
         <Card variant="dark">
           <p className="font-mono font-black text-xs uppercase tracking-widest text-slate-400 mb-4">PIPELINE DE CASOS</p>
           <div className="space-y-2">

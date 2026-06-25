@@ -2,15 +2,15 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from "@/auth"
 import type { Session } from "next-auth"
 import { prisma } from '@/lib/prisma'
+import { handleApiError } from '@/lib/api-error'
 
 function requireAdmin(session: Session | null, req: NextRequest) {
   if (!session?.user?.isAdmin) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-  const secret = req.headers.get('x-admin-secret')
-  if (secret !== process.env.ADMIN_SECRET) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   return null
 }
 
 export async function GET(req: NextRequest) {
+  try {
   const session = await auth()
   const guard = requireAdmin(session, req)
   if (guard) return guard
@@ -76,4 +76,7 @@ export async function GET(req: NextRequest) {
       byStatus: byStatusMap,
     },
   })
+  } catch (err) {
+    return handleApiError(err)
+  }
 }

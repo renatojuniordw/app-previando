@@ -6,6 +6,7 @@ import { guardFeature } from '@/lib/plan-guard'
 import { handleApiError } from '@/lib/api-error'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import { rateLimit } from '@/lib/rate-limit'
+import { escapeHtml } from '@/lib/sanitize'
 
 // Gera um PDF simples em HTML + CSS para o caso
 // Em produção considerar puppeteer ou react-pdf
@@ -44,6 +45,7 @@ export async function GET(req: NextRequest, { params }: { params: { caseId: stri
     const selectedCalc = caso.calculations[0]
     const finalOpinion = caso.opinions[0]
 
+    const e = escapeHtml
     const html = `<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -67,26 +69,26 @@ ${watermark ? '<div class="watermark">PREVIANDO FREE</div>' : ''}
 
 <h2>Dados do Cliente</h2>
 <table>
-  <tr><td>Nome</td><td>${caso.client?.name ?? '-'}</td></tr>
-  <tr><td>Tipo de Benefício</td><td>${caso.benefitType.replace(/_/g, ' ')}</td></tr>
-  <tr><td>Status</td><td>${caso.status.replace(/_/g, ' ')}</td></tr>
-  <tr><td>Prioridade</td><td>${caso.priority}</td></tr>
+  <tr><td>Nome</td><td>${e(caso.client?.name ?? '-')}</td></tr>
+  <tr><td>Tipo de Benefício</td><td>${e(caso.benefitType.replace(/_/g, ' '))}</td></tr>
+  <tr><td>Status</td><td>${e(caso.status.replace(/_/g, ' '))}</td></tr>
+  <tr><td>Prioridade</td><td>${e(caso.priority)}</td></tr>
 </table>
 
 ${selectedCalc ? `
 <h2>Cálculo Selecionado</h2>
 <table>
-  <tr><td>Modalidade</td><td>${selectedCalc.modality.replace(/_/g, ' ')}</td></tr>
-  <tr><td>RMI</td><td>${formatCurrency(selectedCalc.rmi.toString())}</td></tr>
-  <tr><td>RMA</td><td>${formatCurrency(selectedCalc.rma.toString())}</td></tr>
+  <tr><td>Modalidade</td><td>${e(selectedCalc.modality.replace(/_/g, ' '))}</td></tr>
+  <tr><td>RMI</td><td>${e(formatCurrency(selectedCalc.rmi.toString()))}</td></tr>
+  <tr><td>RMA</td><td>${e(formatCurrency(selectedCalc.rma.toString()))}</td></tr>
   <tr><td>Elegível</td><td>${selectedCalc.eligible ? 'Sim' : 'Não'}</td></tr>
-  ${selectedCalc.expectedDib ? `<tr><td>DIB Prevista</td><td>${formatDate(selectedCalc.expectedDib)}</td></tr>` : ''}
+  ${selectedCalc.expectedDib ? `<tr><td>DIB Prevista</td><td>${e(formatDate(selectedCalc.expectedDib))}</td></tr>` : ''}
 </table>
 ` : ''}
 
 ${finalOpinion ? `
 <h2>Parecer Jurídico Preliminar</h2>
-<div class="opinion">${(finalOpinion.customizedContent ?? finalOpinion.generatedContent).slice(0, 10000)}</div>
+<div class="opinion">${e((finalOpinion.customizedContent ?? finalOpinion.generatedContent).slice(0, 10000))}</div>
 ` : ''}
 
 <div class="footer">

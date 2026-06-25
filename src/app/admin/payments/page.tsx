@@ -1,8 +1,6 @@
 'use client'
-
 import { useEffect, useState, useCallback } from 'react'
 import { formatDate } from '@/lib/utils'
-
 interface Payment {
   id: string
   plan: string
@@ -12,13 +10,9 @@ interface Payment {
   createdAt: string
   user: { name: string | null; email: string | null }
 }
-
-const ADMIN_SECRET = process.env.NEXT_PUBLIC_ADMIN_SECRET ?? ''
-
 function formatBRL(value: number) {
   return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 }
-
 export default function AdminPaymentsPage() {
   const [payments, setPayments] = useState<Payment[]>([])
   const [total, setTotal] = useState(0)
@@ -26,27 +20,23 @@ export default function AdminPaymentsPage() {
   const [page, setPage] = useState(1)
   const [pages, setPages] = useState(1)
   const [statusFilter, setStatusFilter] = useState('')
-
   const load = useCallback(async (p = page, status = statusFilter) => {
     setLoading(true)
     const params = new URLSearchParams({ page: String(p), ...(status && { status }) })
-    const r = await fetch(`/api/admin/payments?${params}`, { headers: { 'x-admin-secret': ADMIN_SECRET } })
+    const r = await fetch(`/api/admin/payments?${params}`)
     const data = await r.json()
     setPayments(data.payments ?? [])
     setTotal(data.total ?? 0)
     setPages(data.pages ?? 1)
     setLoading(false)
   }, [page, statusFilter])
-
   useEffect(() => { load() }, [load])
-
   const STATUS_COLOR: Record<string, string> = {
     APPROVED: 'text-green-400',
     PENDING: 'text-amber-400',
     FAILED: 'text-red-400',
     CANCELLED: 'text-slate-500',
   }
-
   return (
     <div className="p-6 space-y-4">
       <div className="flex items-center justify-between">
@@ -63,7 +53,6 @@ export default function AdminPaymentsPage() {
           <option value="CANCELLED">Cancelado</option>
         </select>
       </div>
-
       {loading ? (
         <div className="font-mono text-slate-400 animate-pulse py-8 text-center">Carregando...</div>
       ) : (
@@ -97,7 +86,6 @@ export default function AdminPaymentsPage() {
           )}
         </div>
       )}
-
       {pages > 1 && (
         <div className="flex gap-2">
           <button

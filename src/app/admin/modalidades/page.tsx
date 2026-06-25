@@ -1,8 +1,6 @@
 'use client'
-
 import { useEffect, useState } from 'react'
 import { Plus, Pencil, Trash2, Check, X } from 'lucide-react'
-
 interface Modalidade {
   id?: string
   codigo: string
@@ -11,9 +9,6 @@ interface Modalidade {
   ativo: boolean
   ordem: number
 }
-
-const ADMIN_SECRET = process.env.NEXT_PUBLIC_ADMIN_SECRET ?? ''
-
 const EMPTY_FORM = {
   codigo: '',
   label: '',
@@ -21,7 +16,6 @@ const EMPTY_FORM = {
   ativo: true,
   ordem: '0',
 }
-
 export default function ModalidadesPage() {
   const [modalidades, setModalidades] = useState<Modalidade[]>([])
   const [loading, setLoading] = useState(true)
@@ -30,25 +24,20 @@ export default function ModalidadesPage() {
   const [form, setForm] = useState(EMPTY_FORM)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
-
   const load = async () => {
     setLoading(true)
-    const r = await fetch('/api/admin/modalidades', { headers: { 'x-admin-secret': ADMIN_SECRET } })
+    const r = await fetch('/api/admin/modalidades')
     const data = await r.json()
     setModalidades(data.modalidades ?? [])
     setLoading(false)
   }
-
   useEffect(() => { load() }, [])
-
   const handleSubmit = async () => {
     setError('')
-
     if (!form.codigo.trim() || !form.label.trim()) {
       setError('Preencha os campos obrigatórios: código e nome de exibição.')
       return
     }
-
     setSaving(true)
     try {
       const body = {
@@ -58,21 +47,19 @@ export default function ModalidadesPage() {
         ativo: form.ativo,
         ordem: Number(form.ordem || 0),
       }
-
       if (editingId) {
         await fetch(`/api/admin/modalidades/${editingId}`, {
           method: 'PATCH',
-          headers: { 'Content-Type': 'application/json', 'x-admin-secret': ADMIN_SECRET },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(body),
         })
       } else {
         await fetch('/api/admin/modalidades', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'x-admin-secret': ADMIN_SECRET },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(body),
         })
       }
-
       setForm(EMPTY_FORM)
       setShowForm(false)
       setEditingId(null)
@@ -83,7 +70,6 @@ export default function ModalidadesPage() {
       setSaving(false)
     }
   }
-
   const handleEdit = (modalidade: Modalidade) => {
     setEditingId(modalidade.id ?? null)
     setForm({
@@ -96,23 +82,19 @@ export default function ModalidadesPage() {
     setShowForm(true)
     setError('')
   }
-
   const handleDelete = async (id?: string) => {
     if (!id || !confirm('Confirma a exclusão desta modalidade?')) return
     await fetch(`/api/admin/modalidades/${id}`, {
       method: 'DELETE',
-      headers: { 'x-admin-secret': ADMIN_SECRET },
     })
     await load()
   }
-
   const handleCancel = () => {
     setForm(EMPTY_FORM)
     setShowForm(false)
     setEditingId(null)
     setError('')
   }
-
   return (
     <div className="p-8 space-y-6">
       <div className="flex items-center justify-between">
@@ -132,13 +114,11 @@ export default function ModalidadesPage() {
           </button>
         )}
       </div>
-
       {showForm && (
         <div className="bg-white border border-slate-200 rounded-xl p-6 space-y-4 shadow-sm">
           <h2 className="font-serif font-bold text-lg text-slate-900">
             {editingId ? 'Editar Modalidade' : 'Nova Modalidade'}
           </h2>
-
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
               <label className="block font-sans text-xs font-bold text-slate-600 mb-1">Código *</label>
@@ -191,9 +171,7 @@ export default function ModalidadesPage() {
               Modalidade ativa
             </label>
           </div>
-
           {error && <p className="font-sans text-sm text-red-600">{error}</p>}
-
           <div className="flex gap-3">
             <button
               onClick={handleSubmit}
@@ -213,7 +191,6 @@ export default function ModalidadesPage() {
           </div>
         </div>
       )}
-
       <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
         <div className="grid grid-cols-[1.1fr_1.5fr_0.7fr_0.7fr_1fr_auto] px-5 py-3 bg-slate-50 border-b border-slate-200 text-xs font-bold text-slate-500 uppercase tracking-wider">
           <span>Código</span>
@@ -223,7 +200,6 @@ export default function ModalidadesPage() {
           <span>Descrição</span>
           <span></span>
         </div>
-
         {loading ? (
           <div className="py-12 text-center font-sans text-sm text-slate-400">Carregando...</div>
         ) : modalidades.length === 0 ? (
@@ -262,7 +238,6 @@ export default function ModalidadesPage() {
           ))
         )}
       </div>
-
       <p className="font-sans text-xs text-slate-400">
         O app usa esta tabela para montar selects e exibir nomes legíveis das modalidades. Inative uma modalidade para escondê-la do uso diário sem perder o histórico.
       </p>

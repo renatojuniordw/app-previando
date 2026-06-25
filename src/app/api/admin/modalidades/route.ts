@@ -8,7 +8,6 @@ import { handleApiError } from '@/lib/api-error'
 
 function requireAdmin(session: Session | null, req: NextRequest) {
   if (!session?.user?.isAdmin) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-  if (req.headers.get('x-admin-secret') !== process.env.ADMIN_SECRET) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   return null
 }
 

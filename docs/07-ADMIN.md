@@ -6,7 +6,7 @@
 ## Acesso
 
 - Rota: `app.previando.com.br/admin`
-- Requer: `isAdmin: true` no banco + header `x-admin-secret` nas API Routes
+- Requer: `isAdmin: true` no banco (autenticação via sessão NextAuth)
 - Tornar-se admin (apenas no deploy inicial):
 ```sql
 UPDATE users SET is_admin = true WHERE email = 'seu@previando.com.br';
@@ -81,7 +81,6 @@ Toda ação admin registrada em `AuditLog`:
 ## Segurança do Admin
 
 1. `isAdmin: true` no banco — único ponto de verdade
-2. Middleware bloqueia acesso sem flag
-3. Header `x-admin-secret` obrigatório nas API Routes
-4. Toda ação logada com IP e user-agent
-5. Comprometimento: `UPDATE users SET is_admin = false WHERE email = '...'`
+2. Middleware bloqueia acesso sem flag via sessão NextAuth
+3. Toda ação logada com IP e user-agent
+4. Comprometimento: `UPDATE users SET is_admin = false WHERE email = '...'`
