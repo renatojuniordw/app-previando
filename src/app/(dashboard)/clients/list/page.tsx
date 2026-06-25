@@ -179,7 +179,7 @@ export default function ClientsListPage() {
                           <Link href={`/clients/list/${client.id}`} className="font-sans font-semibold text-sm text-slate-900 hover:text-amber-600 transition-colors">
                             {client.name}
                           </Link>
-                          <p className="font-sans text-xs text-slate-500 mt-0.5 font-medium">CPF: {maskCPF()}</p>
+                          <p className="font-sans text-xs text-slate-500 mt-0.5 font-medium">CPF: {maskCPF(client.cpf)}</p>
                         </div>
                       </div>
                     </td>

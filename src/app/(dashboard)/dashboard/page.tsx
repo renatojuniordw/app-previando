@@ -136,7 +136,7 @@ export default function DashboardPage() {
           <p className="font-sans text-slate-500 mb-6 max-w-md mx-auto">
             Cadastre seu primeiro cliente para começar.
           </p>
-          <Link href="/clients/list" className="neo-btn inline-flex items-center gap-2">
+          <Link href="/clients/list" className="inline-flex items-center justify-center gap-2 px-4 py-2.5 font-sans font-medium text-sm rounded-md bg-slate-900 text-white hover:bg-slate-800 transition-colors duration-200 cursor-pointer select-none shadow-sm">
             Cadastrar Cliente <ChevronRight className="w-4 h-4" />
           </Link>
         </div>

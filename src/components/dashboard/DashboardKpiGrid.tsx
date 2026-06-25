@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import { Card } from '@/components/ui/Card'
 import { Users, Briefcase, AlertCircle, CheckCircle2, TrendingUp } from 'lucide-react'
 
@@ -15,7 +16,13 @@ function formatCurrency(val: number) {
   return val.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 }
 
-export function DashboardKpiGrid({ data }: { data: KpiData }) {
+const COLOR_STYLES: Record<string, { bg: string; text: string; hover: string }> = {
+  amber: { bg: 'bg-amber-50', text: 'text-amber-500', hover: 'hover:border-amber-200' },
+  red: { bg: 'bg-red-50', text: 'text-red-500', hover: 'hover:border-red-200' },
+  green: { bg: 'bg-green-50', text: 'text-green-500', hover: 'hover:border-green-200' },
+}
+
+export const DashboardKpiGrid = memo(function DashboardKpiGrid({ data }: { data: KpiData }) {
   const items = [
     { icon: Users, label: 'Total de Clientes', value: data.totalClients, color: 'amber' },
     { icon: Briefcase, label: 'Casos Ativos', value: data.totalCases, color: 'amber' },
@@ -26,17 +33,20 @@ export function DashboardKpiGrid({ data }: { data: KpiData }) {
   return (
     <>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {items.map(({ icon: Icon, label, value, color }) => (
-          <Card key={label} variant="light" className={`p-6 flex flex-col gap-4 group hover:border-${color}-200 transition-colors`}>
-            <div className={`w-10 h-10 rounded-full bg-${color}-50 flex items-center justify-center text-${color}-500`}>
-              <Icon className="w-5 h-5" />
-            </div>
-            <div>
-              <p className="font-sans font-semibold text-3xl text-slate-900">{value}</p>
-              <p className="font-sans font-medium text-sm text-slate-500 mt-1">{label}</p>
-            </div>
-          </Card>
-        ))}
+        {items.map(({ icon: Icon, label, value, color }) => {
+          const styles = COLOR_STYLES[color] ?? COLOR_STYLES.amber
+          return (
+            <Card key={label} variant="light" className={`p-6 flex flex-col gap-4 group ${styles.hover} transition-colors`}>
+              <div className={`w-10 h-10 rounded-full ${styles.bg} flex items-center justify-center ${styles.text}`}>
+                <Icon className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="font-sans font-semibold text-3xl text-slate-900">{value}</p>
+                <p className="font-sans font-medium text-sm text-slate-500 mt-1">{label}</p>
+              </div>
+            </Card>
+          )
+        })}
       </div>
 
       {(data.calculationsTotal ?? 0) > 0 && (
@@ -66,4 +76,4 @@ export function DashboardKpiGrid({ data }: { data: KpiData }) {
       )}
     </>
   )
-}
+})

@@ -1,9 +1,10 @@
 'use client'
 
-import { Bell, Search, X } from 'lucide-react'
+import { Bell, Search, X, ArrowRight } from 'lucide-react'
 import { useSession } from 'next-auth/react'
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 
 interface AppNotification {
   id: string
@@ -16,9 +17,11 @@ interface AppNotification {
 
 export function Header() {
   const { data: session } = useSession()
+  const router = useRouter()
   const [notifications, setNotifications] = useState<AppNotification[]>([])
   const [unreadCount, setUnreadCount] = useState(0)
   const [open, setOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
   const dropdownRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -60,9 +63,27 @@ export function Header() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <input
             type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && searchQuery.trim()) {
+                router.push(`/cases?search=${encodeURIComponent(searchQuery.trim())}`)
+              }
+            }}
             placeholder="Pesquisar casos, clientes..."
-            className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-full text-sm font-sans focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all placeholder:text-slate-400 text-slate-900"
+            className="w-full pl-9 pr-12 py-2 bg-slate-50 border border-slate-200 rounded-full text-sm font-sans focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all placeholder:text-slate-400 text-slate-900"
           />
+          {searchQuery.trim() && (
+            <button
+              onClick={() => {
+                router.push(`/cases?search=${encodeURIComponent(searchQuery.trim())}`)
+              }}
+              className="absolute right-1.5 top-1/2 -translate-y-1/2 w-7 h-7 flex items-center justify-center bg-amber-600 hover:bg-amber-700 text-white rounded-full transition-colors"
+              aria-label="Pesquisar"
+            >
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
       </div>
 

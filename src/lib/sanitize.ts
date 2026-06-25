@@ -26,7 +26,12 @@ export function hashCPF(cpf: string): string {
   return createHmac('sha256', salt).update(clean).digest('hex')
 }
 
-export const maskCPF = () => '***.***.**-**'
+export const maskCPF = (cpf?: string) => {
+  if (!cpf) return '***.***.**-**'
+  const digits = cpf.replace(/\D/g, '')
+  if (digits.length !== 11) return '***.***.**-**'
+  return `${digits.slice(0, 3)}.***.${digits.slice(6, 9)}-**`
+}
 
 export function sanitizePhone(phone: string): string {
   return phone.replace(/\D/g, '').slice(0, 13)

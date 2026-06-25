@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import { Card } from '@/components/ui/Card'
 import { Clock } from 'lucide-react'
 import Link from 'next/link'
@@ -8,7 +9,7 @@ interface Deadline {
   client: { name: string }
 }
 
-export function DashboardDeadlines({ deadlines }: { deadlines: Deadline[] }) {
+export const DashboardDeadlines = memo(function DashboardDeadlines({ deadlines }: { deadlines: Deadline[] }) {
   if (!deadlines.length) return null
 
   function deadlineDays(date: string) {
@@ -53,4 +54,4 @@ export function DashboardDeadlines({ deadlines }: { deadlines: Deadline[] }) {
       </div>
     </Card>
   )
-}
+})

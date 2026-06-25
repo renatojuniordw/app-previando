@@ -93,7 +93,7 @@ export default function ClientDetailPage() {
             </Link>
           </div>
           <h1 className="font-serif font-bold text-3xl text-slate-900 tracking-tight">{client.name}</h1>
-          <p className="font-sans text-sm text-slate-500 font-medium">CPF: {maskCPF()}</p>
+          <p className="font-sans text-sm text-slate-500 font-medium">CPF: {maskCPF(client.cpf)}</p>
         </div>
         <Button onClick={() => setShowCaseModal(true)}>+ Novo Caso</Button>
       </div>

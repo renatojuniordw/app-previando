@@ -18,9 +18,9 @@ const config: Config = {
         },
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
-        serif: ['Playfair Display', 'Merriweather', 'serif'],
-        mono: ['JetBrains Mono', 'Fira Code', 'monospace'],
+        sans: ['var(--font-inter)', 'system-ui', 'sans-serif'],
+        serif: ['var(--font-playfair)', 'Merriweather', 'serif'],
+        mono: ['var(--font-jetbrains)', 'Fira Code', 'monospace'],
       },
       boxShadow: {
         // Soft elevation shadows replacing solid brutalist shadows

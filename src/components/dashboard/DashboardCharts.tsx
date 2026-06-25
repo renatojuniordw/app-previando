@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import { Card } from '@/components/ui/Card'
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
@@ -14,7 +15,7 @@ function formatMonthLabel(monthStr: string): string {
   return monthStr.slice(5) // só MM
 }
 
-export function DashboardCharts({ data }: { data: ChartsData }) {
+export const DashboardCharts = memo(function DashboardCharts({ data }: { data: ChartsData }) {
   const monthChartData = (data.createdByMonth ?? []).map((m) => ({
     name: formatMonthLabel(m.month),
     casos: m.count,
@@ -68,4 +69,4 @@ export function DashboardCharts({ data }: { data: ChartsData }) {
       )}
     </div>
   )
-}
+})

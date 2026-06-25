@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import { Card } from '@/components/ui/Card'
 import { FileText, MessageSquare, Scale, StickyNote, Calculator, AlertCircle } from 'lucide-react'
 import type { ComponentType } from 'react'
@@ -19,7 +20,7 @@ interface ActivityNote {
   case: { id: string; client: { name: string } }
 }
 
-export function DashboardActivityFeed({ notes }: { notes: ActivityNote[] }) {
+export const DashboardActivityFeed = memo(function DashboardActivityFeed({ notes }: { notes: ActivityNote[] }) {
   return (
     <Card variant="light" className="p-0 overflow-hidden flex-1">
       <div className="p-4 border-b border-slate-100">
@@ -48,4 +49,4 @@ export function DashboardActivityFeed({ notes }: { notes: ActivityNote[] }) {
       </div>
     </Card>
   )
-}
+})

@@ -141,7 +141,7 @@ export default function BillingPage() {
                 <button
                   onClick={() => handleSubscribe(plan.id as 'SOLO' | 'PRO')}
                   disabled={!!subscribing}
-                  className="neo-btn w-full mt-2"
+                  className="inline-flex items-center justify-center gap-2 px-4 py-2.5 font-sans font-medium text-sm rounded-md bg-slate-900 text-white hover:bg-slate-800 transition-colors duration-200 cursor-pointer select-none shadow-sm w-full mt-2"
                 >
                   {subscribing === plan.id ? 'Aguarde...' : `Assinar ${plan.name}`}
                 </button>

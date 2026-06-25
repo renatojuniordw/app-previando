@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import { Card } from '@/components/ui/Card'
 import { Activity } from 'lucide-react'
 import { STATUS_LABELS } from '@/lib/constants'
@@ -8,7 +9,7 @@ interface PipelineData {
   byBenefitType: Array<{ name: string; count: number }>
 }
 
-export function DashboardPipeline({ data }: { data: PipelineData }) {
+export const DashboardPipeline = memo(function DashboardPipeline({ data }: { data: PipelineData }) {
   return (
     <Card variant="light" className="p-0 overflow-hidden lg:col-span-2">
       <div className="p-6 border-b border-slate-100 flex items-center justify-between">
@@ -49,4 +50,4 @@ export function DashboardPipeline({ data }: { data: PipelineData }) {
       )}
     </Card>
   )
-}
+})

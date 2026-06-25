@@ -5,7 +5,7 @@ import Link from 'next/link'
 import api from '@/lib/api'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
-import { Search, SlidersHorizontal, X } from 'lucide-react'
+import { Search, SlidersHorizontal, X, ChevronLeft, ChevronRight } from 'lucide-react'
 import { formatDate } from '@/lib/utils'
 import { BENEFIT_SHORT_LABELS, STATUS_LABELS } from '@/lib/constants'
 
@@ -21,6 +21,7 @@ interface CaseItem {
 }
 
 const ALL_BENEFIT_TYPES = Object.keys(BENEFIT_SHORT_LABELS)
+const PAGE_SIZE = 20
 
 const PRIORITY_VARIANT: Record<string, 'red' | 'yellow' | 'slate'> = {
   CRITICAL: 'red',
@@ -34,8 +35,6 @@ const PRIORITY_LABEL: Record<string, string> = {
   NORMAL: 'Normal',
 }
 
-
-
 function formatCurrency(val: number | null) {
   if (!val) return '—'
   return val.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
@@ -46,6 +45,7 @@ export default function CasesPage() {
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
   const [showFilters, setShowFilters] = useState(false)
+  const [page, setPage] = useState(1)
 
   const [search, setSearch] = useState('')
   const [priority, setPriority] = useState('')
@@ -56,11 +56,12 @@ export default function CasesPage() {
   const [createdTo, setCreatedTo] = useState('')
 
   const hasActiveFilters = priority || benefitType || rmiMin || rmiMax || createdFrom || createdTo
+  const totalPages = Math.ceil(total / PAGE_SIZE)
 
   const fetchCases = useCallback(async () => {
     setLoading(true)
     try {
-      const params: Record<string, string> = { limit: '100' }
+      const params: Record<string, string> = { limit: String(PAGE_SIZE), page: String(page) }
       if (search) params.search = search
       if (priority) params.priority = priority
       if (benefitType) params.benefitType = benefitType
@@ -74,7 +75,7 @@ export default function CasesPage() {
       setTotal(res.data.total ?? 0)
     } catch { /* noop */ }
     setLoading(false)
-  }, [search, priority, benefitType, rmiMin, rmiMax, createdFrom, createdTo])
+  }, [search, priority, benefitType, rmiMin, rmiMax, createdFrom, createdTo, page])
 
   useEffect(() => { fetchCases() }, [fetchCases])
 
@@ -85,6 +86,7 @@ export default function CasesPage() {
     setRmiMax('')
     setCreatedFrom('')
     setCreatedTo('')
+    setPage(1)
   }
 
   return (
@@ -99,7 +101,7 @@ export default function CasesPage() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <input
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => { setSearch(e.target.value); setPage(1) }}
               placeholder="Buscar por cliente..."
               className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-sans focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all placeholder:text-slate-400 text-slate-900 shadow-sm"
             />
@@ -121,7 +123,7 @@ export default function CasesPage() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div>
               <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Prioridade</label>
-              <select value={priority} onChange={(e) => setPriority(e.target.value)} className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500">
+              <select value={priority} onChange={(e) => { setPriority(e.target.value); setPage(1) }} className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500">
                 <option value="">Todas</option>
                 <option value="CRITICAL">Crítico</option>
                 <option value="ATTENTION">Atenção</option>
@@ -130,7 +132,7 @@ export default function CasesPage() {
             </div>
             <div>
               <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Tipo de Benefício</label>
-              <select value={benefitType} onChange={(e) => setBenefitType(e.target.value)} className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500">
+              <select value={benefitType} onChange={(e) => { setBenefitType(e.target.value); setPage(1) }} className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500">
                 <option value="">Todos</option>
                 {ALL_BENEFIT_TYPES.map((t) => (
                   <option key={t} value={t}>{BENEFIT_SHORT_LABELS[t]}</option>
@@ -139,19 +141,19 @@ export default function CasesPage() {
             </div>
             <div>
               <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">RMI mínima (R$)</label>
-              <input type="number" value={rmiMin} onChange={(e) => setRmiMin(e.target.value)} placeholder="0,00" className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500" />
+              <input type="number" value={rmiMin} onChange={(e) => { setRmiMin(e.target.value); setPage(1) }} placeholder="0,00" className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500" />
             </div>
             <div>
               <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">RMI máxima (R$)</label>
-              <input type="number" value={rmiMax} onChange={(e) => setRmiMax(e.target.value)} placeholder="99999,00" className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500" />
+              <input type="number" value={rmiMax} onChange={(e) => { setRmiMax(e.target.value); setPage(1) }} placeholder="99999,00" className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500" />
             </div>
             <div>
               <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Criado a partir de</label>
-              <input type="date" value={createdFrom} onChange={(e) => setCreatedFrom(e.target.value)} className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500" />
+              <input type="date" value={createdFrom} onChange={(e) => { setCreatedFrom(e.target.value); setPage(1) }} className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500" />
             </div>
             <div>
               <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Criado até</label>
-              <input type="date" value={createdTo} onChange={(e) => setCreatedTo(e.target.value)} className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500" />
+              <input type="date" value={createdTo} onChange={(e) => { setCreatedTo(e.target.value); setPage(1) }} className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500" />
             </div>
             <div className="col-span-2 flex items-end">
               {hasActiveFilters && (
@@ -198,7 +200,7 @@ export default function CasesPage() {
                         {c.client.name}
                       </Link>
                     </td>
-                    <td className="px-5 py-4 text-sm text-slate-700">                {BENEFIT_SHORT_LABELS[c.benefitType] ?? c.benefitType}</td>
+                    <td className="px-5 py-4 text-sm text-slate-700">{BENEFIT_SHORT_LABELS[c.benefitType] ?? c.benefitType}</td>
                     <td className="px-5 py-4">
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700">
                         {STATUS_LABELS[c.status] ?? c.status}
@@ -221,6 +223,32 @@ export default function CasesPage() {
           </div>
         )}
       </Card>
+
+      {/* Paginação */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between">
+          <span className="text-sm text-slate-500">{total} casos no total</span>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page === 1}
+              className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            <span className="text-sm text-slate-700 font-medium">
+              {page} / {totalPages}
+            </span>
+            <button
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={page === totalPages}
+              className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -32,7 +32,7 @@ export function Modal({ open, onClose, title, children, className, size = 'md' }
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
       <div
-        className={cn('neo-card w-full p-0 overflow-hidden', sizes[size], className)}
+        className={cn('bg-white text-slate-900 border border-slate-200 rounded-lg w-full p-0 overflow-hidden', sizes[size], className)}
         role="dialog"
         aria-modal="true"
       >

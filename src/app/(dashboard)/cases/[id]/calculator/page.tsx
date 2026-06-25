@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/Button'
 import { Modal } from '@/components/ui/Modal'
 import { formatDate } from '@/lib/utils'
 import { MODALIDADES_PADRAO } from '@/lib/modalidade-labels'
+import { CnisInfoCard } from '@/components/cases/CnisInfoCard'
 import {
   Scale,
   ShieldCheck,
@@ -482,31 +483,7 @@ export default function CalculatorPage() {
             </div>
           )}
 
-          {cnisDocument && cnisDocument.extractedData && (
-            <div className="bg-amber-50/20 border border-amber-100 rounded-xl p-4 space-y-3">
-              <span className="font-sans text-[10px] uppercase font-bold tracking-wider text-amber-700 flex items-center gap-1 font-semibold">
-                <User className="w-3.5 h-3.5" />
-                Segurado Vinculado (CNIS)
-              </span>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs font-sans text-slate-700">
-                <div className="sm:col-span-3 pb-1.5 border-b border-amber-100/50">
-                  <span className="font-bold text-slate-800 text-sm">{cnisDocument.extractedData.nome ?? 'Não informado'}</span>
-                </div>
-                <div>
-                  <span className="font-semibold text-slate-500 block mb-0.5">NIT</span>
-                  <span className="text-slate-800 font-medium">{cnisDocument.extractedData.nit ?? 'Não informado'}</span>
-                </div>
-                <div>
-                  <span className="font-semibold text-slate-500 block mb-0.5">Nascimento</span>
-                  <span className="text-slate-800 font-medium">{cnisDocument.extractedData.dataNascimento ? formatDate(cnisDocument.extractedData.dataNascimento) : 'Não informado'}</span>
-                </div>
-                <div>
-                  <span className="font-semibold text-slate-500 block mb-0.5">Total Vínculos</span>
-                  <span className="text-slate-800 font-medium">{cnisDocument.extractedData.periodos?.length ?? 0}</span>
-                </div>
-              </div>
-            </div>
-          )}
+          <CnisInfoCard cnisDocument={cnisDocument} />
 
           <div className="space-y-4">
             <div>
