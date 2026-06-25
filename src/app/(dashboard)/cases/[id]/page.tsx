@@ -5,10 +5,12 @@ import { useParams } from 'next/navigation'
 import api from '@/lib/api'
 import { Card, CardHeader } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
+import { Badge } from '@/components/ui/Badge'
 import { formatDate } from '@/lib/utils'
 import { Modal } from '@/components/ui/Modal'
 import { useToast } from '@/store/toast'
 import { BENEFIT_LABELS } from '@/lib/constants'
+import { Scale, MessageSquare, CheckSquare, AlertCircle } from 'lucide-react'
 
 interface CaseDetail {
   id: string
@@ -32,7 +34,11 @@ const STATUS_OPTIONS = [
   { value: 'FINALIZADO', label: 'Finalizado' },
 ]
 
-
+const PRIORITY_VARIANT: Record<string, 'red' | 'yellow' | 'slate'> = {
+  CRITICAL: 'red',
+  ATTENTION: 'yellow',
+  NORMAL: 'slate',
+}
 
 export default function CaseOverviewPage() {
   const params = useParams()
@@ -74,90 +80,138 @@ export default function CaseOverviewPage() {
   }
 
   if (loading) {
-    return <div className="font-mono text-slate-400 animate-pulse">Carregando...</div>
+    return (
+      <div className="space-y-6 max-w-3xl animate-pulse">
+        <div className="bg-white border border-slate-200 rounded-xl p-6 space-y-4">
+          <div className="h-6 w-48 bg-slate-200 rounded" />
+          <div className="grid grid-cols-2 gap-4">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="space-y-1.5">
+                <div className="h-3 w-16 bg-slate-200 rounded" />
+                <div className="h-5 w-32 bg-slate-100 rounded" />
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="grid grid-cols-3 gap-4">
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className="bg-white border border-slate-200 rounded-xl p-6 space-y-2">
+              <div className="h-3 w-20 bg-slate-200 rounded" />
+              <div className="h-8 w-12 bg-slate-100 rounded" />
+            </div>
+          ))}
+        </div>
+      </div>
+    )
   }
 
   if (!caseData) {
-    return <div className="font-mono text-slate-400">Caso não encontrado.</div>
+    return (
+      <div className="p-12 text-center">
+        <AlertCircle className="w-10 h-10 text-slate-300 mx-auto mb-3" />
+        <p className="font-sans font-medium text-slate-500">Caso não encontrado.</p>
+      </div>
+    )
   }
 
   return (
     <div className="space-y-6 max-w-3xl">
       {/* Informações principais */}
-      <Card variant="dark">
+      <Card variant="light" className="overflow-hidden">
         <CardHeader
           title="Informações do Caso"
           action={
             <div className="flex gap-2">
               <Button size="sm" variant="outline" onClick={() => setShowStatusModal(true)}>
-                ALTERAR STATUS
+                Alterar Status
               </Button>
               <Button size="sm" onClick={handleExportPDF}>
-                EXPORTAR PDF
+                Exportar PDF
               </Button>
             </div>
           }
         />
-        <div className="grid grid-cols-2 gap-4 text-sm font-mono">
-          <div>
-            <span className="text-slate-400 text-xs uppercase">Benefício</span>
-            <p className="text-white mt-0.5">{BENEFIT_LABELS[caseData.benefitType] ?? caseData.benefitType}</p>
+        <div className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <div className="space-y-4">
+            <div>
+              <span className="font-sans text-[10px] uppercase font-bold tracking-wider text-slate-400 block mb-1">Benefício</span>
+              <p className="font-sans font-semibold text-slate-900">{BENEFIT_LABELS[caseData.benefitType] ?? caseData.benefitType}</p>
+            </div>
+            <div>
+              <span className="font-sans text-[10px] uppercase font-bold tracking-wider text-slate-400 block mb-1">Status</span>
+              <Badge variant="slate">{STATUS_OPTIONS.find((s) => s.value === caseData.status)?.label ?? caseData.status}</Badge>
+            </div>
+            <div>
+              <span className="font-sans text-[10px] uppercase font-bold tracking-wider text-slate-400 block mb-1">Prioridade</span>
+              <Badge variant={PRIORITY_VARIANT[caseData.priority] ?? 'slate'}>{caseData.priority}</Badge>
+            </div>
           </div>
-          <div>
-            <span className="text-slate-400 text-xs uppercase">Status</span>
-            <p className="text-white mt-0.5">
-              {STATUS_OPTIONS.find((s) => s.value === caseData.status)?.label ?? caseData.status}
-            </p>
-          </div>
-          <div>
-            <span className="text-slate-400 text-xs uppercase">Criado em</span>
-            <p className="text-white mt-0.5">{formatDate(caseData.createdAt)}</p>
-          </div>
-          <div>
-            <span className="text-slate-400 text-xs uppercase">Prazo</span>
-            <p className="text-white mt-0.5">{caseData.deadlineDate ? formatDate(caseData.deadlineDate) : '—'}</p>
-          </div>
-          <div>
-            <span className="text-slate-400 text-xs uppercase">CNIS</span>
-            <p className="text-white mt-0.5">
-              {caseData.cnisDocument
-                ? caseData.cnisDocument.processingStatus
-                : 'Não enviado'}
-            </p>
+          <div className="space-y-4">
+            <div>
+              <span className="font-sans text-[10px] uppercase font-bold tracking-wider text-slate-400 block mb-1">Criado em</span>
+              <p className="font-sans font-semibold text-slate-900">{formatDate(caseData.createdAt)}</p>
+            </div>
+            <div>
+              <span className="font-sans text-[10px] uppercase font-bold tracking-wider text-slate-400 block mb-1">Prazo</span>
+              <p className="font-sans font-semibold text-slate-900">{caseData.deadlineDate ? formatDate(caseData.deadlineDate) : '—'}</p>
+            </div>
+            <div>
+              <span className="font-sans text-[10px] uppercase font-bold tracking-wider text-slate-400 block mb-1">CNIS</span>
+              <p className="font-sans font-semibold text-slate-900">
+                {caseData.cnisDocument
+                  ? caseData.cnisDocument.processingStatus === 'COMPLETED' ? 'Processado' : caseData.cnisDocument.processingStatus
+                  : 'Não enviado'}
+              </p>
+            </div>
           </div>
         </div>
         {caseData.notes && (
-          <div className="mt-4 p-3 border border-slate-700 font-mono text-xs text-slate-300">
-            {caseData.notes}
+          <div className="mx-6 mb-6 p-4 bg-amber-50 border border-amber-100 rounded-lg">
+            <p className="font-sans text-sm text-amber-800 whitespace-pre-wrap">{caseData.notes}</p>
           </div>
         )}
       </Card>
 
       {/* Resumo de atividades */}
-      <div className="grid grid-cols-3 gap-4">
-        <Card variant="dark">
-          <div className="font-mono text-slate-400 text-xs uppercase mb-1">Anotações</div>
-          <div className="font-mono font-black text-2xl text-white">{caseData._count.caseNotes}</div>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <Card variant="light" className="p-6 flex items-center gap-4">
+          <div className="w-12 h-12 rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 shrink-0">
+            <MessageSquare className="w-5 h-5" />
+          </div>
+          <div>
+            <p className="font-sans text-xs text-slate-500 uppercase font-bold tracking-wider">Anotações</p>
+            <p className="font-sans font-bold text-2xl text-slate-900 mt-0.5">{caseData._count.caseNotes}</p>
+          </div>
         </Card>
-        <Card variant="dark">
-          <div className="font-mono text-slate-400 text-xs uppercase mb-1">Cálculos</div>
-          <div className="font-mono font-black text-2xl text-white">{caseData._count.calculations}</div>
+        <Card variant="light" className="p-6 flex items-center gap-4">
+          <div className="w-12 h-12 rounded-full bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-600 shrink-0">
+            <Scale className="w-5 h-5" />
+          </div>
+          <div>
+            <p className="font-sans text-xs text-slate-500 uppercase font-bold tracking-wider">Cálculos</p>
+            <p className="font-sans font-bold text-2xl text-slate-900 mt-0.5">{caseData._count.calculations}</p>
+          </div>
         </Card>
-        <Card variant="dark">
-          <div className="font-mono text-slate-400 text-xs uppercase mb-1">Checklist</div>
-          <div className="font-mono font-black text-2xl text-white">{caseData._count.checklists}</div>
+        <Card variant="light" className="p-6 flex items-center gap-4">
+          <div className="w-12 h-12 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 shrink-0">
+            <CheckSquare className="w-5 h-5" />
+          </div>
+          <div>
+            <p className="font-sans text-xs text-slate-500 uppercase font-bold tracking-wider">Checklist</p>
+            <p className="font-sans font-bold text-2xl text-slate-900 mt-0.5">{caseData._count.checklists}</p>
+          </div>
         </Card>
       </div>
 
       {/* Modal alterar status */}
-      <Modal open={showStatusModal} onClose={() => setShowStatusModal(false)} title="ALTERAR STATUS">
+      <Modal open={showStatusModal} onClose={() => setShowStatusModal(false)} title="Alterar Status do Caso">
         <div className="space-y-4">
           <div>
-            <label className="neo-label">Novo Status</label>
+            <label className="block font-sans font-medium text-sm text-slate-700 mb-1">Novo Status</label>
             <select
               value={newStatus}
               onChange={(e) => setNewStatus(e.target.value)}
-              className="neo-input"
+              className="w-full px-3 py-2 font-sans text-sm rounded-md bg-white text-slate-900 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-600 focus:border-transparent"
             >
               {STATUS_OPTIONS.map((s) => (
                 <option key={s.value} value={s.value}>{s.label}</option>
@@ -166,10 +220,10 @@ export default function CaseOverviewPage() {
           </div>
           <div className="flex gap-3">
             <Button onClick={handleStatusChange} loading={updatingStatus} className="flex-1">
-              SALVAR
+              Salvar
             </Button>
             <Button variant="outline" onClick={() => setShowStatusModal(false)} className="flex-1">
-              CANCELAR
+              Cancelar
             </Button>
           </div>
         </div>

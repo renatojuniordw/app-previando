@@ -66,6 +66,7 @@ export default function CasesPage() {
   const [page, setPage] = useState(1)
 
   const [search, setSearch] = useState(searchParams.get('search') ?? '')
+  const [statusFilter, setStatusFilter] = useState('')
   const [priority, setPriority] = useState('')
   const [benefitType, setBenefitType] = useState('')
   const [rmiMin, setRmiMin] = useState('')
@@ -73,7 +74,7 @@ export default function CasesPage() {
   const [createdFrom, setCreatedFrom] = useState('')
   const [createdTo, setCreatedTo] = useState('')
 
-  const hasActiveFilters = priority || benefitType || rmiMin || rmiMax || createdFrom || createdTo
+  const hasActiveFilters = statusFilter || priority || benefitType || rmiMin || rmiMax || createdFrom || createdTo
   const totalPages = Math.ceil(total / PAGE_SIZE)
 
   const fetchCases = useCallback(async () => {
@@ -81,6 +82,7 @@ export default function CasesPage() {
     try {
       const params: Record<string, string> = { limit: String(PAGE_SIZE), page: String(page) }
       if (search) params.search = search
+      if (statusFilter) params.status = statusFilter
       if (priority) params.priority = priority
       if (benefitType) params.benefitType = benefitType
       if (rmiMin) params.rmiMin = rmiMin
@@ -93,7 +95,7 @@ export default function CasesPage() {
       setTotal(res.data.total ?? 0)
     } catch { /* noop */ }
     setLoading(false)
-  }, [search, priority, benefitType, rmiMin, rmiMax, createdFrom, createdTo, page])
+  }, [search, statusFilter, priority, benefitType, rmiMin, rmiMax, createdFrom, createdTo, page])
 
   useEffect(() => { fetchCases() }, [fetchCases])
 
@@ -113,6 +115,7 @@ export default function CasesPage() {
   }
 
   function clearFilters() {
+    setStatusFilter('')
     setPriority('')
     setBenefitType('')
     setRmiMin('')
@@ -154,6 +157,15 @@ export default function CasesPage() {
       {showFilters && (
         <Card variant="light" className="p-5">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div>
+              <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Status</label>
+              <select value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setPage(1) }} className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500">
+                <option value="">Todos</option>
+                {STATUS_OPTIONS.map((s) => (
+                  <option key={s.value} value={s.value}>{s.label}</option>
+                ))}
+              </select>
+            </div>
             <div>
               <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Prioridade</label>
               <select value={priority} onChange={(e) => { setPriority(e.target.value); setPage(1) }} className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500">
