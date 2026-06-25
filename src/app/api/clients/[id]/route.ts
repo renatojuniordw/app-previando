@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma'
 import { verifyClientOwnership } from '@/lib/ownership'
 import { sanitizeInput, sanitizePhone } from '@/lib/sanitize'
 import { handleApiError } from '@/lib/api-error'
+import { logAudit } from '@/lib/audit'
 
 const updateSchema = z.object({
   name: z.string().min(2).max(100).optional(),
@@ -70,6 +71,15 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     if (parsed.data.notes !== undefined) data.notes = parsed.data.notes ? sanitizeInput(parsed.data.notes) : null
 
     const client = await prisma.client.update({ where: { id: params.id }, data })
+
+    await logAudit({
+      userId: session.user.id,
+      action: 'client.updated',
+      resource: client.name,
+      req,
+      metadata: { clientId: client.id },
+    })
+
     const safe = { ...client } as Record<string, unknown>
     delete safe.cpfHash
     return NextResponse.json({ client: { ...safe, cpf: '***.***.**-**' } })
@@ -85,6 +95,11 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
 
     await verifyClientOwnership(params.id, session.user.id)
 
+    const client = await prisma.client.findUnique({
+      where: { id: params.id },
+      select: { name: true },
+    })
+
     await prisma.client.delete({ where: { id: params.id } })
 
     await prisma.usageRecord.upsert({
@@ -92,6 +107,16 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
       create: { userId: session.user.id },
       update: { totalClients: { decrement: 1 } },
     })
+
+    if (client) {
+      await logAudit({
+        userId: session.user.id,
+        action: 'client.deleted',
+        resource: client.name,
+        req,
+        metadata: { clientId: params.id },
+      })
+    }
 
     return NextResponse.json({ success: true })
   } catch (err) {

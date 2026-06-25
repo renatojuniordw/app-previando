@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma'
 import { verifyCaseOwnership } from '@/lib/ownership'
 import { guardFeature } from '@/lib/plan-guard'
 import { handleApiError } from '@/lib/api-error'
+import { logAudit } from '@/lib/audit'
 import { PrevidenciaService } from '@/services/previdencia-service'
 
 const createSchema = z.object({
@@ -57,6 +58,15 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       valorMensalBruto: parsed.data.valorMensalBruto,
       valorDescontos: parsed.data.valorDescontos,
       descricaoDescontos: parsed.data.descricaoDescontos,
+    })
+
+    // Registrar log de atividade
+    await logAudit({
+      userId: session.user.id,
+      action: 'retroative.created',
+      resource: `Retroativo calculado`,
+      req,
+      metadata: { caseId: params.id, retroactiveId: retroativo.id },
     })
 
     return NextResponse.json({ retroativo }, { status: 201 })

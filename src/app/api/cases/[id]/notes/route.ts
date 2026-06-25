@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma'
 import { verifyCaseOwnership } from '@/lib/ownership'
 import { sanitizeInput } from '@/lib/sanitize'
 import { handleApiError } from '@/lib/api-error'
+import { logAudit } from '@/lib/audit'
 import { mapNoteTypeToDb, mapNoteToApi, ApiNoteType } from '@/lib/mappers'
 
 const createSchema = z.object({
@@ -71,6 +72,15 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       include: {
         user: { select: { id: true, name: true } },
       },
+    })
+
+    // Registrar log de atividade
+    await logAudit({
+      userId: session.user.id,
+      action: 'note.created',
+      resource: `Nota adicionada (${note.type.replace(/_/g, ' ')})`,
+      req,
+      metadata: { caseId: params.id, noteId: note.id },
     })
 
     return NextResponse.json({ note: mapNoteToApi(note) }, { status: 201 })

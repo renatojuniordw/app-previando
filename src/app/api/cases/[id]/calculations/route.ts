@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { verifyCaseOwnership } from '@/lib/ownership'
 import { guardCalculationLimit } from '@/lib/plan-guard'
 import { handleApiError } from '@/lib/api-error'
+import { logAudit } from '@/lib/audit'
 import { runCalculationSchema } from './schema'
 import { PrevidenciaService } from '@/services/previdencia-service'
 
@@ -57,6 +58,15 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       where: { userId: session.user.id },
       create: { userId: session.user.id, calculationsThisMonth: 1 },
       update: { calculationsThisMonth: { increment: 1 } },
+    })
+
+    // Registrar log de atividade
+    await logAudit({
+      userId: session.user.id,
+      action: 'calculation.created',
+      resource: `Cálculo (${calc.modality.replace(/_/g, ' ')}) realizado`,
+      req,
+      metadata: { caseId: params.id, calculationId: calc.id },
     })
 
     return NextResponse.json({ calculation: calc }, { status: 201 })

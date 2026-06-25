@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma'
 import { verifyCaseOwnership } from '@/lib/ownership'
 import { sanitizeInput } from '@/lib/sanitize'
 import { handleApiError } from '@/lib/api-error'
+import { logAudit } from '@/lib/audit'
 import { getPlanLimit } from '@/lib/plan-guard'
 import { mapCaseStatusToDb, mapCaseToApi, ApiCaseStatus } from '@/lib/mappers'
 
@@ -80,7 +81,22 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     const caso = await prisma.case.update({
       where: { id: params.id },
       data,
+      include: { client: { select: { name: true } } },
     })
+
+    const action = parsed.data.status ? 'case.status.changed' : 'case.updated'
+    await logAudit({
+      userId: session.user.id,
+      action,
+      resource: `Caso (${caso.benefitType.replace(/_/g, ' ')}) - ${caso.client?.name ?? 'Cliente'}`,
+      req,
+      metadata: {
+        caseId: caso.id,
+        clientId: caso.clientId,
+        ...(parsed.data.status ? { novoStatus: parsed.data.status } : {}),
+      },
+    })
+
     return NextResponse.json({ case: mapCaseToApi(caso) })
   } catch (err) {
     return handleApiError(err)
@@ -94,7 +110,23 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
 
     await verifyCaseOwnership(params.id, session.user.id)
 
+    const caso = await prisma.case.findUnique({
+      where: { id: params.id },
+      select: { benefitType: true, client: { select: { name: true } }, clientId: true },
+    })
+
     await prisma.case.delete({ where: { id: params.id } })
+
+    if (caso) {
+      await logAudit({
+        userId: session.user.id,
+        action: 'case.deleted',
+        resource: `Caso (${caso.benefitType.replace(/_/g, ' ')}) - ${caso.client?.name ?? 'Cliente'}`,
+        req,
+        metadata: { caseId: params.id, clientId: caso.clientId },
+      })
+    }
+
     return NextResponse.json({ success: true })
   } catch (err) {
     return handleApiError(err)

@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma'
 import { verifyClientOwnership } from '@/lib/ownership'
 import { sanitizeInput } from '@/lib/sanitize'
 import { handleApiError } from '@/lib/api-error'
+import { logAudit } from '@/lib/audit'
 import { rateLimit } from '@/lib/rate-limit'
 import { CaseStatus as DbCaseStatus } from '@prisma/client'
 import {
@@ -145,6 +146,14 @@ export async function POST(req: NextRequest) {
       include: {
         client: { select: { id: true, name: true } },
       },
+    })
+
+    await logAudit({
+      userId: session.user.id,
+      action: 'case.created',
+      resource: `Caso (${caso.benefitType.replace(/_/g, ' ')}) - ${caso.client?.name ?? 'Cliente'}`,
+      req,
+      metadata: { caseId: caso.id, clientId: caso.clientId },
     })
 
     return NextResponse.json({ case: mapCaseToApi(caso) }, { status: 201 })

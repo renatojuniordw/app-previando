@@ -4,6 +4,7 @@ import { verifyCaseOwnership } from '@/lib/ownership'
 import { guardFeature, guardBpcAnalysisLimit } from '@/lib/plan-guard'
 import { rateLimit } from '@/lib/rate-limit'
 import { handleApiError } from '@/lib/api-error'
+import { logAudit } from '@/lib/audit'
 import { analisarLaudo } from '@/services/bpc'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
@@ -47,6 +48,15 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     await prisma.bpcAnalysis.update({
       where: { id: analysis.id },
       data: { analiseLaudo: result },
+    })
+
+    // Registrar log de atividade
+    await logAudit({
+      userId: session.user.id,
+      action: 'bpc.laudo',
+      resource: `Laudo BPC analisado`,
+      req,
+      metadata: { caseId: params.id },
     })
 
     return NextResponse.json({ result })

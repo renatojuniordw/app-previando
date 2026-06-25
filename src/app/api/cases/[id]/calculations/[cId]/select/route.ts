@@ -3,6 +3,7 @@ import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
 import { verifyCaseOwnership } from '@/lib/ownership'
 import { handleApiError } from '@/lib/api-error'
+import { logAudit } from '@/lib/audit'
 
 export async function PATCH(
   req: NextRequest,
@@ -30,6 +31,14 @@ export async function PATCH(
         data: { isSelected: true },
       }),
     ])
+
+    await logAudit({
+      userId: session.user.id,
+      action: 'calculation.selected',
+      resource: `Cálculo (${calc.modality.replace(/_/g, ' ')}) selecionado`,
+      req,
+      metadata: { caseId: params.id, calculationId: params.cId },
+    })
 
     return NextResponse.json({ success: true, selectedId: params.cId })
   } catch (err) {

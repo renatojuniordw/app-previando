@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma'
 import { hashCPF, sanitizeInput, sanitizePhone } from '@/lib/sanitize'
 import { guardClientLimit } from '@/lib/plan-guard'
 import { handleApiError } from '@/lib/api-error'
+import { logAudit } from '@/lib/audit'
 
 const createSchema = z.object({
   name: z.string().min(2).max(100),
@@ -116,6 +117,15 @@ export async function POST(req: NextRequest) {
       where: { userId: session.user.id },
       create: { userId: session.user.id, totalClients: 1 },
       update: { totalClients: { increment: 1 } },
+    })
+
+    // Registrar log de atividade
+    await logAudit({
+      userId: session.user.id,
+      action: 'client.created',
+      resource: client.name,
+      req,
+      metadata: { clientId: client.id },
     })
 
     const safe = { ...client } as Record<string, unknown>

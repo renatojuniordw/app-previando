@@ -6,6 +6,7 @@ import { guardOpinionLimit } from '@/lib/plan-guard'
 import { generateOpinion } from '@/services/opinion-generator'
 import { rateLimit } from '@/lib/rate-limit'
 import { handleApiError } from '@/lib/api-error'
+import { logAudit } from '@/lib/audit'
 
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
   try {
@@ -97,6 +98,15 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       where: { userId: session.user.id },
       create: { userId: session.user.id, opinionsThisMonth: 1 },
       update: { opinionsThisMonth: { increment: 1 } },
+    })
+
+    // Registrar log de atividade
+    await logAudit({
+      userId: session.user.id,
+      action: 'opinion.created',
+      resource: `Parecer gerado para ${caso.client?.name ?? 'Cliente'}`,
+      req,
+      metadata: { caseId: params.id, opinionId: opinion.id },
     })
 
     return NextResponse.json({ opinion }, { status: 201 })

@@ -4,6 +4,7 @@ import { verifyCaseOwnership } from '@/lib/ownership'
 import { guardFeature, guardBpcAnalysisLimit } from '@/lib/plan-guard'
 import { rateLimit } from '@/lib/rate-limit'
 import { handleApiError } from '@/lib/api-error'
+import { logAudit } from '@/lib/audit'
 import { gerarPreAnalise } from '@/services/bpc'
 import { prisma } from '@/lib/prisma'
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
@@ -38,6 +39,15 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     await prisma.bpcAnalysis.update({
       where: { id: analysis.id },
       data: { preAnalise: result },
+    })
+
+    // Registrar log de atividade
+    await logAudit({
+      userId: session.user.id,
+      action: 'bpc.pre-analysis',
+      resource: `Pré-análise BPC gerada`,
+      req,
+      metadata: { caseId: params.id },
     })
 
     return NextResponse.json({ result })

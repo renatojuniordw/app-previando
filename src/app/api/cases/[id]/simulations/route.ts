@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { verifyCaseOwnership } from '@/lib/ownership'
 import { guardFeature } from '@/lib/plan-guard'
 import { handleApiError } from '@/lib/api-error'
+import { logAudit } from '@/lib/audit'
 import { runSimulationSchema } from './schema'
 import { PrevidenciaService } from '@/services/previdencia-service'
 
@@ -50,6 +51,15 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       dibProjetada: parsed.data.dibProjetada,
       valorContribuicaoFutura: parsed.data.valorContribuicaoFutura,
       modalidade: parsed.data.modalidade,
+    })
+
+    // Registrar log de atividade
+    await logAudit({
+      userId: session.user.id,
+      action: 'simulation.created',
+      resource: `Simulação (${simulation.scenarioName}) realizada`,
+      req,
+      metadata: { caseId: params.id, simulationId: simulation.id },
     })
 
     return NextResponse.json({ simulation }, { status: 201 })

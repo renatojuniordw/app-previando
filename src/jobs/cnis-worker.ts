@@ -4,6 +4,7 @@ import { prisma } from '../lib/prisma'
 import { downloadPDF } from '../services/r2'
 import { parseCnisWithAI, parseCnisProgrammatically } from '../services/cnis-parser'
 import { Logger } from '../lib/logger'
+import { writeAuditDirect } from '../lib/audit'
 
 const logger = new Logger('CnisWorker')
 
@@ -115,6 +116,17 @@ export function createCnisWorker(redis: Redis): Worker {
           }).catch((err) => {
             logger.error(`Failed to create success notification for case ${caseId}`, err)
           })
+
+          await writeAuditDirect({
+            userId: caseRecord.userId,
+            action: 'cnis.processed',
+            resource: `CNIS processado para ${extractedData.nome || 'Segurado'}`,
+            ipAddress: null,
+            userAgent: null,
+            metadata: { caseId, cnisDocumentId, isProgrammatic },
+          }).catch((err) => {
+            logger.error(`Failed to write success audit log for case ${caseId}`, err)
+          })
         }
 
         logger.info(`CNIS processado com sucesso (${isProgrammatic ? 'Programático' : `${tokens} tokens via IA`}): ${cnisDocumentId}`)
@@ -143,6 +155,17 @@ export function createCnisWorker(redis: Redis): Worker {
             },
           }).catch((err) => {
             logger.error(`Failed to create fail notification for case ${caseId}`, err)
+          })
+
+          await writeAuditDirect({
+            userId: caseRecord.userId,
+            action: 'cnis.failed',
+            resource: `Falha no processamento CNIS`,
+            ipAddress: null,
+            userAgent: null,
+            metadata: { caseId, cnisDocumentId, error: error.message },
+          }).catch((err) => {
+            logger.error(`Failed to write failure audit log for case ${caseId}`, err)
           })
         }
 

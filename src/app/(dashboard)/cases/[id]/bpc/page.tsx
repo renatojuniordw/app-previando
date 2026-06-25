@@ -75,7 +75,7 @@ export default function BpcPage() {
 
     try {
       let endpoint = ''
-      let body: any = {}
+      const body = {}
 
       switch (type) {
         case 'preAnalise':

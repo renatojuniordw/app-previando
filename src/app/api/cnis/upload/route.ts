@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/auth'
 import { Logger } from '@/lib/logger'
+import { logAudit } from '@/lib/audit'
 
 const logger = new Logger('CNISUpload')
 import { prisma } from '@/lib/prisma'
@@ -35,7 +36,7 @@ export async function POST(req: NextRequest) {
     // Verificar ownership do caso
     const caso = await prisma.case.findFirst({
       where: { id: caseId, userId: session.user.id },
-      select: { id: true },
+      select: { id: true, client: { select: { name: true } } },
     })
     if (!caso) return NextResponse.json({ error: 'Caso não encontrado.' }, { status: 404 })
 
@@ -94,6 +95,15 @@ export async function POST(req: NextRequest) {
         markdownContent: '',
         extractedData: {},
       },
+    })
+
+    // Registrar log de atividade
+    await logAudit({
+      userId: session.user.id,
+      action: 'cnis.upload',
+      resource: `CNIS enviado para ${caso.client?.name ?? 'Cliente'}`,
+      req,
+      metadata: { caseId, fileName: file.name, fileSize: buffer.byteLength },
     })
 
     // Enfileirar processamento no BullMQ com auto-retry (3 tentativas, exponential backoff)

@@ -51,21 +51,21 @@ interface PeriodosSalarios {
 
 interface Calculation {
   id: string
-  modalidade: string
+  modality: string
   inputParams: InputParams
-  salarioBeneficio: string | number
+  benefitSalary: string | number
   rmi: string | number
   rma: string | number
-  fatorPrevidenciario?: string | number | null
-  coeficiente?: string | number | null
-  dibPrevista?: string | null
-  carenciaAtendida: boolean
-  tempoContribuicao?: number | null
-  idadeNaApuracao?: number | null
-  elegivel: boolean
-  pendencias: string[]
-  memoriaCalculo: MemoriaCalculo | null
-  periodosSalarios: PeriodosSalarios | null
+  socialSecurityFactor?: string | number | null
+  coefficient?: string | number | null
+  expectedDib?: string | null
+  gracePeriodMet: boolean
+  contributionTime?: number | null
+  ageAtCalculation?: number | null
+  eligible: boolean
+  pendingIssues: string[]
+  calculationMemory: MemoriaCalculo | null
+  salaryPeriods: PeriodosSalarios | null
   isSelected: boolean
   createdAt: string
 }
@@ -140,6 +140,70 @@ export default function CalculatorPage() {
 
   const modalidadeLabels = Object.fromEntries(
     (modalidades.length > 0 ? modalidades : MODALIDADES_PADRAO).map(({ codigo, label }) => [codigo, label])
+  )
+
+  const mapEnglishToPortugueseModality = (code: string): string => {
+    const map: Record<string, string> = {
+      RETIREMENT_BY_AGE: 'APOSENTADORIA_IDADE',
+      MINIMUM_AGE_65_62: 'IDADE_MINIMA_65_62',
+      CONTRIBUTION_TIME: 'TEMPO_CONTRIBUICAO',
+      POINTS_86_96: 'PONTOS_86_96',
+      TOLL_50: 'PEDAGIO_50',
+      TOLL_100: 'PEDAGIO_100',
+      SPECIAL_RETIREMENT: 'APOSENTADORIA_ESPECIAL',
+      HYBRID: 'HIBRIDA',
+      SICKNESS_BENEFIT_B31: 'AUXILIO_DOENCA_B31',
+      SICKNESS_BENEFIT_B91: 'AUXILIO_DOENCA_B91',
+      MATERNITY_PAY: 'SALARIO_MATERNIDADE',
+      PRISONER_BENEFIT: 'AUXILIO_RECLUSAO',
+      DEATH_PENSION: 'PENSAO_MORTE',
+      BPC_LOAS: 'BPC_LOAS',
+    }
+    return map[code] || code
+  }
+
+  const getModalityLabel = (modalityCode: string | undefined | null) => {
+    if (!modalityCode) return ''
+    const localMap: Record<string, string> = {
+      POINTS_86_96: 'Aposentadoria por Pontos (Transição)',
+      TOLL_50: 'Transição - Pedágio de 50%',
+      TOLL_100: 'Transição - Pedágio de 100%',
+      MINIMUM_AGE_65_62: 'Idade Mínima Progressiva',
+      CONTRIBUTION_TIME: 'Tempo de Contribuição (Regra Geral)',
+      RETIREMENT_BY_AGE: 'Aposentadoria por Idade',
+      SPECIAL_RETIREMENT: 'Aposentadoria Especial (25 anos)',
+      HYBRID: 'Aposentadoria Híbrida',
+      SICKNESS_BENEFIT_B31: 'Auxílio-Doença Previdenciário',
+      SICKNESS_BENEFIT_B91: 'Auxílio-Doença Acidentário',
+      MATERNITY_PAY: 'Salário-Maternidade',
+      PRISONER_BENEFIT: 'Auxílio-Reclusão',
+      DEATH_PENSION: 'Pensão por Morte',
+      BPC_LOAS: 'BPC/LOAS (Idoso)',
+      PONTOS_86_96: 'Aposentadoria por Pontos (Transição)',
+      PEDAGIO_50: 'Transição - Pedágio de 50%',
+      PEDAGIO_100: 'Transição - Pedágio de 100%',
+      IDADE_MINIMA_65_62: 'Idade Mínima Progressiva',
+      TEMPO_CONTRIBUICAO: 'Tempo de Contribuição (Regra Geral)',
+      APOSENTADORIA_IDADE: 'Aposentadoria por Idade',
+      APOSENTADORIA_ESPECIAL: 'Aposentadoria Especial (25 anos)',
+      HIBRIDA: 'Aposentadoria Híbrida',
+      AUXILIO_DOENCA_B31: 'Auxílio-Doença Previdenciário',
+      AUXILIO_DOENCA_B91: 'Auxílio-Doença Acidentário',
+      SALARIO_MATERNIDADE: 'Salário-Maternidade',
+      AUXILIO_RECLUSAO: 'Auxílio-Reclusão',
+      PENSAO_MORTE: 'Pensão por Morte',
+    }
+    return modalidadeLabels[modalityCode] || localMap[modalityCode] || modalityCode
+  }
+
+  const uniqueModalidades = Array.from(
+    new Map(
+      (modalidades.length > 0 ? modalidades : MODALIDADES_PADRAO)
+        .map((item) => {
+          const apiCode = mapEnglishToPortugueseModality(item.codigo)
+          return [apiCode, { ...item, codigo: apiCode }]
+        })
+    ).values()
   )
 
   const handleCreate = async () => {
@@ -255,7 +319,7 @@ export default function CalculatorPage() {
           {calculations.map((calc) => {
             const isExpanded = expandedCalc === calc.id
             const parsedInput = calc.inputParams
-            const isCalcElegivel = calc.elegivel
+            const isCalcElegivel = calc.eligible
 
             return (
               <div
@@ -269,7 +333,7 @@ export default function CalculatorPage() {
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
                       <span className="font-sans font-bold text-slate-800 text-base sm:text-lg">
-                        {modalidadeLabels[calc.modalidade] ?? calc.modalidade}
+                        {getModalityLabel(calc.modality)}
                       </span>
                       {calc.isSelected && (
                         <span className="bg-amber-50 text-amber-700 border border-amber-200 text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full shrink-0">
@@ -280,7 +344,7 @@ export default function CalculatorPage() {
                     <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500 font-medium">
                       <span className="flex items-center gap-1">
                         <Calendar className="w-3.5 h-3.5 text-slate-400" />
-                        DIB: {formatDate(calc.dibPrevista || calc.createdAt)}
+                        DIB: {formatDate(calc.expectedDib || calc.createdAt)}
                       </span>
                       <span className="flex items-center gap-1">
                         <User className="w-3.5 h-3.5 text-slate-400" />
@@ -344,7 +408,7 @@ export default function CalculatorPage() {
                       Salário de Benefício (Média)
                     </span>
                     <span className="font-sans font-bold text-slate-900 text-xl tracking-tight">
-                      {formatCurrency(calc.salarioBeneficio)}
+                      {formatCurrency(calc.benefitSalary)}
                     </span>
                   </div>
 
@@ -372,14 +436,14 @@ export default function CalculatorPage() {
                 {isExpanded && (
                   <div className="p-6 border-t border-slate-150 bg-slate-50/20 space-y-6 animate-slide-down">
                     {/* Exibição de Pendências */}
-                    {!isCalcElegivel && calc.pendencias && calc.pendencias.length > 0 && (
+                    {!isCalcElegivel && calc.pendingIssues && calc.pendingIssues.length > 0 && (
                       <div className="border border-rose-200 bg-rose-50/50 rounded-xl p-5 space-y-2">
                         <span className="font-sans text-xs uppercase font-bold tracking-wider text-rose-700 flex items-center gap-1.5">
                           <ShieldAlert className="w-4.5 h-4.5" />
                           O que falta para conceder o benefício?
                         </span>
                         <ul className="list-disc pl-5 font-sans text-sm text-rose-800 space-y-1">
-                          {calc.pendencias.map((pend, pIdx) => (
+                          {calc.pendingIssues.map((pend, pIdx) => (
                             <li key={pIdx}>{pend}</li>
                           ))}
                         </ul>
@@ -391,31 +455,31 @@ export default function CalculatorPage() {
                       <div className="bg-white border border-slate-200 rounded-xl p-4">
                         <span className="font-sans text-[10px] text-slate-400 font-bold block mb-1">Tempo Contribuição</span>
                         <span className="font-sans font-bold text-slate-800 text-sm">
-                          {calc.tempoContribuicao ? (calc.tempoContribuicao / 12).toFixed(1) : '0'} anos
+                          {calc.contributionTime ? (calc.contributionTime / 12).toFixed(1) : '0'} anos
                         </span>
                       </div>
                       <div className="bg-white border border-slate-200 rounded-xl p-4">
                         <span className="font-sans text-[10px] text-slate-400 font-bold block mb-1">Carência Apurada</span>
                         <span className="font-sans font-bold text-slate-800 text-sm">
-                          {calc.carenciaAtendida ? 'Atendida' : 'Não Atendida'}
+                          {calc.gracePeriodMet ? 'Atendida' : 'Não Atendida'}
                         </span>
                       </div>
                       <div className="bg-white border border-slate-200 rounded-xl p-4">
                         <span className="font-sans text-[10px] text-slate-400 font-bold block mb-1">Alíquota / Coeficiente</span>
                         <span className="font-sans font-bold text-slate-800 text-sm">
-                          {formatPercentage(calc.coeficiente)}
+                          {formatPercentage(calc.coefficient)}
                         </span>
                       </div>
                       <div className="bg-white border border-slate-200 rounded-xl p-4">
                         <span className="font-sans text-[10px] text-slate-400 font-bold block mb-1">Idade na Apuração</span>
                         <span className="font-sans font-bold text-slate-800 text-sm">
-                          {calc.idadeNaApuracao ?? 'N/A'} anos
+                          {calc.ageAtCalculation ?? 'N/A'} anos
                         </span>
                       </div>
                     </div>
 
                     {/* Memória de Cálculo Expansível */}
-                    {calc.memoriaCalculo && (
+                    {calc.calculationMemory && (
                       <div className="space-y-3">
                         <span className="font-sans text-xs uppercase font-bold tracking-wider text-slate-500 flex items-center gap-1.5">
                           <FileSpreadsheet className="w-4 h-4 text-slate-400" />
@@ -432,28 +496,28 @@ export default function CalculatorPage() {
                             <div className="flex flex-col sm:flex-row justify-between gap-4 font-sans text-sm pb-4 border-b border-slate-100">
                               <div>
                                 <p className="text-slate-500">Contribuições computadas:</p>
-                                <p className="font-bold text-slate-800">{calc.memoriaCalculo.contribuicoesConsideradas ?? 'N/A'} competências</p>
+                                <p className="font-bold text-slate-800">{calc.calculationMemory.contribuicoesConsideradas ?? 'N/A'} competências</p>
                               </div>
                               <div>
                                 <p className="text-slate-500">Gênero utilizado:</p>
-                                <p className="font-bold text-slate-800">{calc.memoriaCalculo.genero ?? 'N/A'}</p>
+                                <p className="font-bold text-slate-800">{calc.calculationMemory.genero ?? 'N/A'}</p>
                               </div>
                               <div>
                                 <p className="text-slate-500">Piso Nacional (Salário Mínimo):</p>
-                                <p className="font-bold text-slate-800">{formatCurrency(calc.memoriaCalculo.pisoNacional || 1621)}</p>
+                                <p className="font-bold text-slate-800">{formatCurrency(calc.calculationMemory.pisoNacional || 1621)}</p>
                               </div>
                               <div>
                                 <p className="text-slate-500">Teto da Previdência:</p>
-                                <p className="font-bold text-slate-800">{formatCurrency(calc.memoriaCalculo.tetoPrevidenciario || 8157.41)}</p>
+                                <p className="font-bold text-slate-800">{formatCurrency(calc.calculationMemory.tetoPrevidenciario || 8157.41)}</p>
                               </div>
                             </div>
 
                             {/* Tabela Parcial de Salários */}
-                            {calc.memoriaCalculo.detalhamentoMedia && calc.memoriaCalculo.detalhamentoMedia.length > 0 && (
+                            {calc.calculationMemory.detalhamentoMedia && calc.calculationMemory.detalhamentoMedia.length > 0 && (
                               <div className="space-y-2">
                                 <span className="font-sans text-[10px] text-slate-400 font-bold block">Primeiros Salários do Período de Cálculo:</span>
                                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
-                                  {calc.memoriaCalculo.detalhamentoMedia.map((sal, sIdx) => {
+                                  {calc.calculationMemory.detalhamentoMedia.map((sal, sIdx) => {
                                     const parts = sal.competencia.split('-')
                                     const compFormat = parts.length === 2 ? `${parts[1]}/${parts[0]}` : sal.competencia
                                     return (
@@ -521,7 +585,7 @@ export default function CalculatorPage() {
                 onChange={(e) => setModalidade(e.target.value)}
                 className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm font-sans focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 outline-none"
               >
-                {(modalidades.length > 0 ? modalidades : MODALIDADES_PADRAO).map((item) => (
+                {uniqueModalidades.map((item) => (
                   <option key={item.codigo} value={item.codigo}>{item.label}</option>
                 ))}
               </select>

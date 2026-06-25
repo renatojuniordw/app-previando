@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { verifyCaseOwnership } from '@/lib/ownership'
 import { guardFeature } from '@/lib/plan-guard'
 import { handleApiError } from '@/lib/api-error'
+import { logAudit } from '@/lib/audit'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import { rateLimit } from '@/lib/rate-limit'
 import { escapeHtml } from '@/lib/sanitize'
@@ -41,6 +42,14 @@ export async function GET(req: NextRequest, { params }: { params: { caseId: stri
     })
 
     if (!caso) return NextResponse.json({ error: 'Caso não encontrado.' }, { status: 404 })
+
+    await logAudit({
+      userId: session.user.id,
+      action: 'export.pdf',
+      resource: `PDF exportado para ${caso.client?.name ?? 'Cliente'}`,
+      req,
+      metadata: { caseId: params.caseId },
+    })
 
     const selectedCalc = caso.calculations[0]
     const finalOpinion = caso.opinions[0]
