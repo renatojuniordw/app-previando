@@ -125,10 +125,32 @@ export default function CnisCasePage() {
 
       pollRef.current = setInterval(async () => {
         const updated = await load()
-        if (updated && updated.processingStatus === 'COMPLETED') {
-          setShowSuccessBanner(true)
-          setStuckWarning(false)
-          setTimeout(() => setShowSuccessBanner(false), 5000)
+        if (updated) {
+          if (updated.processingStatus === 'COMPLETED') {
+            setShowSuccessBanner(true)
+            setStuckWarning(false)
+            setTimeout(() => setShowSuccessBanner(false), 5000)
+
+            if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+              try {
+                new Notification('Previando - CNIS Concluído', {
+                  body: `O processamento do CNIS do segurado foi concluído com sucesso.`,
+                })
+              } catch (err) {
+                console.error(err)
+              }
+            }
+          } else if (updated.processingStatus === 'FAILED') {
+            if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+              try {
+                new Notification('Previando - Falha no CNIS', {
+                  body: `Ocorreu uma falha no processamento do CNIS: ${updated.processingError || 'Erro desconhecido'}`,
+                })
+              } catch (err) {
+                console.error(err)
+              }
+            }
+          }
         }
         if (updated && !isProcessingStatus(updated.processingStatus)) {
           if (pollRef.current) clearInterval(pollRef.current)
@@ -146,6 +168,12 @@ export default function CnisCasePage() {
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
+
+    // Solicitar permissão de notificação nativa ao subir arquivo
+    if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission()
+    }
+
     setUploading(true)
     setUploadError('')
     try {

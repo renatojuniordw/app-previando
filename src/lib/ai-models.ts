@@ -28,7 +28,7 @@ console.log(
 
 // Verboo: 32768. OpenAI gpt-4.1-mini: máximo suportado = 16384.
 // export const AI_MAX_TOKENS: number = isVerboo ? 32768 : 16384
-export const AI_MAX_TOKENS: number = 32768
+export const AI_MAX_TOKENS: number = 999999
 
 export type AiModel =
   | (typeof MODELS_OPENAI)[keyof typeof MODELS_OPENAI]

@@ -29,6 +29,11 @@ export function Header() {
   useEffect(() => {
     fetchNotifications()
     const interval = setInterval(fetchNotifications, 60000)
+
+    if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission()
+    }
+
     return () => clearInterval(interval)
   }, [])
 
@@ -47,7 +52,26 @@ export function Header() {
       const res = await fetch('/api/notifications')
       if (!res.ok) return
       const data = await res.json()
-      setNotifications(data.notifications)
+
+      // Disparar notificações do navegador apenas para as novas não lidas
+      setNotifications((prev) => {
+        if (prev.length > 0 && typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+          const newUnread = (data.notifications as AppNotification[]).filter(
+            (n) => !n.read && !prev.some((p) => p.id === n.id)
+          )
+          newUnread.forEach((n) => {
+            try {
+              new Notification('Previando', {
+                body: n.message,
+              })
+            } catch (err) {
+              console.error('Erro ao disparar notificação nativa:', err)
+            }
+          })
+        }
+        return data.notifications
+      })
+
       setUnreadCount(data.unreadCount)
     } catch {}
   }
