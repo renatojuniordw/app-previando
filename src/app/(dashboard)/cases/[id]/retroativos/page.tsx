@@ -236,9 +236,9 @@ export default function RetroativosPage() {
                     <button
                       onClick={() => handleDelete(retro.id)}
                       className="p-2 border border-red-200 text-red-600 rounded-lg hover:bg-red-50 hover:text-red-700 transition-colors"
-                      title="Excluir Cálculo"
+                      aria-label="Excluir este cálculo de retroativos"
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 className="w-4 h-4" aria-hidden="true" />
                     </button>
                   </div>
                 </div>

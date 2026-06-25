@@ -1,10 +1,11 @@
 'use client'
 
-import { Bell, Search, X, ArrowRight } from 'lucide-react'
+import { Bell, Search, X, ArrowRight, Menu } from 'lucide-react'
 import { useSession } from 'next-auth/react'
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { useSidebarStore } from '@/store/sidebar'
 
 interface AppNotification {
   id: string
@@ -18,6 +19,7 @@ interface AppNotification {
 export function Header() {
   const { data: session } = useSession()
   const router = useRouter()
+  const { toggle: toggleSidebar } = useSidebarStore()
   const [notifications, setNotifications] = useState<AppNotification[]>([])
   const [unreadCount, setUnreadCount] = useState(0)
   const [open, setOpen] = useState(false)
@@ -57,7 +59,15 @@ export function Header() {
   }
 
   return (        <header className="h-16 border-b border-slate-200 bg-white flex items-center justify-between px-4 sm:px-6 shrink-0" role="banner">
-      <div className="flex-1 flex items-center">
+      {/* Hamburger + Search */}
+      <div className="flex items-center gap-3 flex-1">
+        <button
+          onClick={toggleSidebar}
+          className="lg:hidden w-10 h-10 flex items-center justify-center rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors -ml-1.5"
+          aria-label="Abrir menu de navegação"
+        >
+          <Menu className="w-5 h-5" />
+        </button>
         <div className="relative w-full max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <input

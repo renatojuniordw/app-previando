@@ -248,8 +248,9 @@ export default function SimulatorPage() {
                   <button
                     onClick={() => handleDelete(sim.id)}
                     className="p-2 border border-red-200 text-red-600 rounded-lg hover:bg-red-50 hover:text-red-700 transition-colors shrink-0 flex items-center gap-1.5 font-sans font-semibold text-xs self-start sm:self-center"
+                    aria-label={`Excluir cenário "${sim.scenarioName}"`}
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <Trash2 className="w-4 h-4" aria-hidden="true" />
                     Excluir Cenário
                   </button>
                 </div>

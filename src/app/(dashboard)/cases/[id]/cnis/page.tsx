@@ -257,8 +257,9 @@ export default function CnisCasePage() {
               onClick={() => setShowDeleteModal(true)}
               disabled={uploading || deleting}
               className="border border-red-200 text-red-600 hover:bg-red-50 font-sans font-semibold text-sm px-5 py-2.5 rounded-lg transition-colors disabled:opacity-50 shadow-sm flex items-center gap-2"
+              aria-label="Excluir extrato do CNIS"
             >
-              <Trash2 className="w-4 h-4" />
+              <Trash2 className="w-4 h-4" aria-hidden="true" />
               Excluir CNIS
             </button>
           )}

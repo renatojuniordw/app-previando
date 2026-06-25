@@ -312,6 +312,7 @@ export default function CalculatorPage() {
                       <button
                         onClick={() => handleSelect(calc.id)}
                         className="font-sans font-semibold text-xs text-amber-700 bg-amber-50 border border-amber-200 px-3 py-2 rounded-lg hover:bg-amber-100 transition-colors"
+                        aria-label="Selecionar este cálculo como referência"
                       >
                         Selecionar
                       </button>
@@ -320,9 +321,9 @@ export default function CalculatorPage() {
                     <button
                       onClick={() => handleDelete(calc.id)}
                       className="p-2 border border-red-200 text-red-600 rounded-lg hover:bg-red-50 hover:text-red-700 transition-colors"
-                      title="Excluir Cálculo"
+                      aria-label="Excluir este cálculo"
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 className="w-4 h-4" aria-hidden="true" />
                     </button>
                   </div>
                 </div>

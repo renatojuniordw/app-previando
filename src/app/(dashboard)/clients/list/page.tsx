@@ -223,8 +223,8 @@ export default function ClientsListPage() {
                     </td>
                     <td className="px-6 py-4 text-right">
                       <Link href={`/clients/list/${client.id}`}>
-                        <button className="p-2 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors">
-                          <MoreHorizontal className="w-5 h-5" />
+                        <button className="p-2 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors" aria-label="Abrir menu de ações do cliente">
+                          <MoreHorizontal className="w-5 h-5" aria-hidden="true" />
                         </button>
                       </Link>
                     </td>
