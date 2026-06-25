@@ -81,8 +81,9 @@ return { initPoint: subscription.init_point }
 
 // 1. Verificar assinatura criptográfica do webhook
 // 2. Processar evento por tipo:
-//    - subscription_preapproval → atualizar plan + planStatus
+//    - subscription_preapproval → atualizar plan + planStatus (em prisma.$transaction)
 //    - payment → registrar em payments (evitar duplicatas)
+// 3. Invalidar cache de plano após mudança: invalidatePlanLimitCache(plan)
 
 function verifyMPSignature(body: string, signature: string, requestId: string): boolean {
   const secret = process.env.MERCADOPAGO_WEBHOOK_SECRET!
@@ -92,14 +93,73 @@ function verifyMPSignature(body: string, signature: string, requestId: string): 
   return crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(received))
 }
 
-// Mapeamento de status MP → PlanStatus
-const statusMap = {
-  authorized: 'ACTIVE',
-  paused:     'PAST_DUE',
-  cancelled:  'CANCELLED',
-  pending:    'ACTIVE',
+// Mapeamento COMPLETO de status MP → PaymentStatus enum (prisma)
+// Inclui todos os valores que o MP pode enviar
+function mapMpPaymentStatus(mpStatus: string): PaymentStatus {
+  const map: Record<string, PaymentStatus> = {
+    approved:       'APPROVED',
+    pending:        'PENDING',
+    in_process:     'PENDING',
+    rejected:       'FAILED',
+    cancelled:      'CANCELLED',
+    refunded:       'REFUNDED',
+    charged_back:   'REFUNDED',   // chargeback → trata como refund
+    in_mediation:   'PENDING',
+    authorized:     'APPROVED',
+  }
+  return map[mpStatus] ?? 'PENDING'
 }
 ```
+
+---
+
+## Notificações de Limite Próximo (PLAN_LIMIT_NEAR)
+
+Quando o uso mensal atinge **80% do limite**, uma notificação `PLAN_LIMIT_NEAR` é criada automaticamente no banco. Deduplicação via Redis — máximo 1 notificação por usuário por dia.
+
+```typescript
+// src/lib/plan-guard.ts
+const NEAR_LIMIT_THRESHOLD = 0.8
+
+// Acionado em guardCalculationLimit e guardOpinionLimit
+if (currentCount / limit.maxXPerMonth >= NEAR_LIMIT_THRESHOLD) {
+  notifyLimitNear(userId, `Você usou ${currentCount} de ${limit.maxXPerMonth} ...`)
+}
+```
+
+A notificação aparece no bell do Header com a label "Limite próximo".
+
+---
+
+## Reset Mensal de Uso
+
+O reset dos contadores mensais (`calculationsThisMonth`, `opinionsThisMonth`, etc.) é feito **inline** na verificação de limite, não via cron job.
+
+```typescript
+// src/lib/plan-guard.ts
+
+async function getOrResetUsageRecord(userId: string): Promise<UsageRecord | null> {
+  const record = await prisma.usageRecord.findUnique({ where: { userId } })
+  if (!record) return null
+  const now = new Date()
+  // Compara ano+mês — se mudou, zera todos os contadores
+  if (!isSameMonth(now, new Date(record.usageMonthRef))) {
+    return prisma.usageRecord.update({
+      where: { userId },
+      data: {
+        calculationsThisMonth: 0,
+        opinionsThisMonth: 0,
+        bpcAnalysesThisMonth: 0,
+        bpcSocialMediaThisMonth: 0,
+        usageMonthRef: now,
+      },
+    })
+  }
+  return record
+}
+```
+
+> **Invariante:** `usageMonthRef` no banco sempre representa o mês de referência atual dos contadores. Nunca usar `findUnique` direto no `UsageRecord` sem passar por `getOrResetUsageRecord`.
 
 ---
 
@@ -173,6 +233,20 @@ MP_PLAN_ID_PRO=""
 Feature bloqueada:
 🔒 Botão com tooltip + clique abre modal de upgrade
 ```
+
+---
+
+## Verificação de Assinatura do Webhook
+
+O webhook do Mercado Pago valida a assinatura HMAC-SHA256 usando `x-signature`, `x-request-id` e `data.id` no formato oficial do MP. Rejeita com 401 se inválida.
+
+```typescript
+const manifest = `id:${dataId};request-id:${xRequestId};ts:${ts};`
+const expected = createHmac('sha256', secret).update(manifest).digest('hex')
+return expected === v1  // v1 extraído do header x-signature
+```
+
+> Configurar `MERCADOPAGO_WEBHOOK_SECRET` igual ao valor definido no painel do MP. Sem este secret, TODOS os webhooks são rejeitados.
 
 ---
 

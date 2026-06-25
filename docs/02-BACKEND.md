@@ -39,8 +39,12 @@ npm install --save-dev \
 ## BullMQ
 
 ```typescript
-// Filas: cnis-processing, crons
-// Crons: reset-usage (dia 1), update-priorities (diário), cleanup-pdfs (semanal)
+// Filas: cnis-processing, crons, deadlines
+// Crons:
+//   reset-usage      → dia 1 de cada mês (substituído por reset inline — ver plan-guard.ts)
+//   update-priorities → diário
+//   cleanup-pdfs     → semanal
+//   deadline-check   → diário às 8h (0 8 * * *) — cria Notification para prazos 1/3/7 dias
 // Worker em container separado (Dockerfile.worker)
 ```
 
@@ -63,14 +67,16 @@ GET   /api/clients/:id
 PUT   /api/clients/:id
 DELETE /api/clients/:id
 PATCH /api/clients/:id/priority
+POST  /api/clients/import           (CSV bulk import — max 500 linhas, rate limit 3/h)
 
 ── CASES ─────────────────────────────────────────────────────
-GET   /api/cases
+GET   /api/cases                    (filtros: priority, benefitType, search, rmiMin, rmiMax, createdFrom, createdTo — retorna selectedRmi)
 POST  /api/cases
 GET   /api/cases/:id
 PUT   /api/cases/:id
 PATCH /api/cases/:id/status
 DELETE /api/cases/:id
+GET   /api/cases/:id/suggest-modalities  (rate limit 10/min — compara 11 modalidades × 2 gêneros)
 
 ── PRONTUÁRIO ────────────────────────────────────────────────
 GET   /api/cases/:id/notes          Lista (filtro: type, order)
@@ -118,14 +124,25 @@ POST  /api/billing/subscribe
 POST  /api/billing/cancel
 POST  /api/webhooks/mercadopago
 
+── NOTIFICAÇÕES ──────────────────────────────────────────────
+GET   /api/notifications            (últimas 50 + unreadCount)
+POST  /api/notifications/:id/read   (marca como lida — verifica ownership)
+
+── SOCIAL MEDIA ─────────────────────────────────────────────
+POST  /api/social-media             (carrossel para qualquer benefitType)
+
+── ATIVIDADE ─────────────────────────────────────────────────
+GET   /api/activity                 (log paginado — ?page=1&limit=25)
+
 ── DASHBOARD ─────────────────────────────────────────────────
-GET   /api/dashboard/summary
-GET   /api/dashboard/deadlines
+GET   /api/dashboard/summary        (+ casesByBenefitType, casesCreatedByMonth, upcomingDeadlines, clientsByPriority, RMI stats)
+GET   /api/dashboard/deadlines      (prazos nos próximos 30 dias)
 
 ── ADMIN ─────────────────────────────────────────────────────
 GET   /api/admin/users
 GET   /api/admin/metrics
-PATCH /api/admin/users/:id/plan
+PATCH /api/admin/users/:id/plan     (invalida cache de plano após mudança)
+PATCH /api/admin/users/:id/status   (invalida cache de plano após mudança)
 PATCH /api/admin/plans/:plan
 GET   /api/admin/payments
 ```

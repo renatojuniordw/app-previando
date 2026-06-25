@@ -45,6 +45,13 @@ export async function GET(req: NextRequest) {
     const { searchParams } = req.nextUrl
     const status = searchParams.get('status')
     const clientId = searchParams.get('clientId')
+    const priority = searchParams.get('priority')
+    const benefitType = searchParams.get('benefitType')
+    const search = searchParams.get('search')
+    const rmiMin = searchParams.get('rmiMin')
+    const rmiMax = searchParams.get('rmiMax')
+    const createdFrom = searchParams.get('createdFrom')
+    const createdTo = searchParams.get('createdTo')
     const page = parseInt(searchParams.get('page') ?? '1')
     const limit = Math.min(parseInt(searchParams.get('limit') ?? '50'), 100)
     const skip = (page - 1) * limit
@@ -52,6 +59,29 @@ export async function GET(req: NextRequest) {
     const where: Record<string, unknown> = { userId: session.user.id }
     if (status) where.status = mapCaseStatusToDb(status as ApiCaseStatus)
     if (clientId) where.clientId = clientId
+    if (priority && ['CRITICAL', 'ATTENTION', 'NORMAL'].includes(priority)) where.priority = priority
+    if (benefitType) where.benefitType = mapBenefitTypeToDb(benefitType as ApiBenefitType)
+    if (createdFrom || createdTo) {
+      where.createdAt = {
+        ...(createdFrom ? { gte: new Date(createdFrom) } : {}),
+        ...(createdTo ? { lte: new Date(createdTo) } : {}),
+      }
+    }
+    if (search) {
+      const q = sanitizeInput(search).slice(0, 100)
+      where.client = { name: { contains: q, mode: 'insensitive' } }
+    }
+    if (rmiMin || rmiMax) {
+      where.calculations = {
+        some: {
+          isSelected: true,
+          rmi: {
+            ...(rmiMin ? { gte: parseFloat(rmiMin) } : {}),
+            ...(rmiMax ? { lte: parseFloat(rmiMax) } : {}),
+          },
+        },
+      }
+    }
 
     const [cases, total] = await prisma.$transaction([
       prisma.case.findMany({
@@ -62,13 +92,18 @@ export async function GET(req: NextRequest) {
         include: {
           client: { select: { id: true, name: true, phone: true } },
           cnisDocument: { select: { processingStatus: true } },
-          calculations: { select: { id: true, isSelected: true }, orderBy: { createdAt: 'desc' } },
+          calculations: { select: { id: true, isSelected: true, rmi: true }, orderBy: { createdAt: 'desc' } },
         },
       }),
       prisma.case.count({ where }),
     ])
 
-    return NextResponse.json({ cases: cases.map(mapCaseToApi), total, page, limit })
+    const mapped = cases.map((c) => ({
+      ...mapCaseToApi(c),
+      selectedRmi: c.calculations.find((calc) => calc.isSelected)?.rmi ?? null,
+    }))
+
+    return NextResponse.json({ cases: mapped, total, page, limit })
   } catch (err) {
     return handleApiError(err)
   }
@@ -91,7 +126,7 @@ export async function POST(req: NextRequest) {
 
     const parsed = createSchema.safeParse(body)
     if (!parsed.success) {
-      return NextResponse.json({ error: 'Dados inválidos.', details: parsed.error.flatten() }, { status: 400 })
+      return NextResponse.json({ error: 'Dados inválidos.' }, { status: 400 })
     }
 
     await verifyClientOwnership(parsed.data.clientId, session.user.id)

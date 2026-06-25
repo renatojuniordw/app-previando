@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useParams, usePathname } from 'next/navigation'
 import api from '@/lib/api'
 import { Badge } from '@/components/ui/Badge'
-import { ArrowLeft, LayoutDashboard, MessageSquare, FileText, Calculator, BarChart3, History, CheckSquare, Bot, Lock, Building2 } from 'lucide-react'
+import { ArrowLeft, LayoutDashboard, MessageSquare, FileText, Calculator, BarChart3, History, CheckSquare, Bot, Lock, Building2, GitCompareArrows } from 'lucide-react'
 
 interface CaseHeader {
   id: string
@@ -71,6 +71,7 @@ export default function CaseLayout({ children }: { children: React.ReactNode }) 
     { id: 'retroativos', label: 'Retroativos', icon: History, path: '/retroativos', locked: caseData ? !caseData.planLimits?.retroativosEnabled : false },
     { id: 'checklist', label: 'Checklist', icon: CheckSquare, path: '/checklist' },
     { id: 'opinions', label: 'Parecer IA', icon: Bot, path: '/opinions' },
+    { id: 'compare', label: 'Comparar', icon: GitCompareArrows, path: '/compare' },
     ...(caseData?.benefitType === 'BPC_LOAS'
       ? [{ id: 'bpc', label: 'BPC/LOAS', icon: Building2, path: '/bpc', locked: !caseData.planLimits?.bpcEnabled }]
       : []),

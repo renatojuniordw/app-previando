@@ -6,7 +6,7 @@ const csp = [
   // 'unsafe-inline' required for Next.js hydration scripts; 'unsafe-eval' required for dev HMR
   isDev ? "script-src 'self' 'unsafe-inline' 'unsafe-eval'" : "script-src 'self' 'unsafe-inline'",
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: https://images.unsplash.com",
+  "img-src 'self' data: https://images.unsplash.com https://lh3.googleusercontent.com",
   "font-src 'self'",
   // ws:/wss: required for Next.js dev HMR websocket
   isDev ? "connect-src 'self' ws: wss:" : "connect-src 'self'",

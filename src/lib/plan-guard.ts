@@ -1,7 +1,28 @@
 import { prisma } from './prisma'
 import { redis } from './redis'
 import { PlanLimitError } from './api-error'
-import type { PlanLimit } from '@prisma/client'
+import type { PlanLimit, UsageRecord } from '@prisma/client'
+
+const NEAR_LIMIT_THRESHOLD = 0.8
+
+async function notifyLimitNear(userId: string, message: string): Promise<void> {
+  // Deduplicar: máximo 1 notificação PLAN_LIMIT_NEAR por tipo por dia
+  const today = new Date().toISOString().slice(0, 10)
+  const dedupKey = `plan-limit-notif:${userId}:${today}`
+  try {
+    const already = await redis.get(dedupKey)
+    if (already) return
+    await redis.setex(dedupKey, 86400, '1')
+  } catch {
+    // Redis indisponível — envia sem deduplicação
+  }
+
+  await prisma.notification.create({
+    data: { userId, type: 'PLAN_LIMIT_NEAR', message },
+  }).catch(() => {
+    // Notificação não crítica — não propaga erro
+  })
+}
 
 export type PlanFeature =
   | 'SIMULATOR'
@@ -70,6 +91,31 @@ export async function invalidatePlanLimitCache(plan: string): Promise<void> {
   }
 }
 
+function isSameMonth(a: Date, b: Date): boolean {
+  return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth()
+}
+
+async function getOrResetUsageRecord(userId: string): Promise<UsageRecord | null> {
+  const record = await prisma.usageRecord.findUnique({ where: { userId } })
+  if (!record) return null
+
+  const now = new Date()
+  if (!isSameMonth(now, new Date(record.usageMonthRef))) {
+    return prisma.usageRecord.update({
+      where: { userId },
+      data: {
+        calculationsThisMonth: 0,
+        opinionsThisMonth: 0,
+        bpcAnalysesThisMonth: 0,
+        bpcSocialMediaThisMonth: 0,
+        usageMonthRef: now,
+      },
+    })
+  }
+
+  return record
+}
+
 export async function guardFeature(plan: string, feature: PlanFeature): Promise<void> {
   const limit = await getPlanLimit(plan)
   const field = FEATURE_MAP[feature]
@@ -102,7 +148,7 @@ export async function guardCalculationLimit(userId: string, plan: string): Promi
     throw new PlanLimitError('Simulação não está disponível no seu plano.', 'CALCULATIONS', plan === 'FREE' ? 'SOLO' : 'PRO')
   }
 
-  const record = await prisma.usageRecord.findUnique({ where: { userId } })
+  const record = await getOrResetUsageRecord(userId)
   const currentCount = record?.calculationsThisMonth ?? 0
 
   if (currentCount >= limit.maxCalculationsPerMonth) {
@@ -112,15 +158,25 @@ export async function guardCalculationLimit(userId: string, plan: string): Promi
       plan === 'FREE' ? 'SOLO' : 'PRO'
     )
   }
+
+  if (
+    limit.maxCalculationsPerMonth > 0 &&
+    currentCount / limit.maxCalculationsPerMonth >= NEAR_LIMIT_THRESHOLD
+  ) {
+    notifyLimitNear(
+      userId,
+      `Você usou ${currentCount} de ${limit.maxCalculationsPerMonth} cálculos disponíveis neste mês.`
+    )
+  }
 }
 
 export async function guardOpinionLimit(userId: string, plan: string): Promise<void> {
   const limit = await getPlanLimit(plan)
-  if (!limit.simulatorEnabled) {
+  if (!limit.diagnosisEnabled) {
     throw new PlanLimitError('Consulta de jurisprudência não está disponível no seu plano.', 'OPINIONS', plan === 'FREE' ? 'SOLO' : 'PRO')
   }
 
-  const record = await prisma.usageRecord.findUnique({ where: { userId } })
+  const record = await getOrResetUsageRecord(userId)
   const currentCount = record?.opinionsThisMonth ?? 0
 
   if (currentCount >= limit.maxOpinionsPerMonth) {
@@ -128,6 +184,16 @@ export async function guardOpinionLimit(userId: string, plan: string): Promise<v
       `Limite de ${limit.maxOpinionsPerMonth} consultas/mês atingido. Atualize seu plano ou aguarde o próximo mês.`,
       'OPINIONS',
       plan === 'FREE' ? 'SOLO' : 'PRO'
+    )
+  }
+
+  if (
+    limit.maxOpinionsPerMonth > 0 &&
+    currentCount / limit.maxOpinionsPerMonth >= NEAR_LIMIT_THRESHOLD
+  ) {
+    notifyLimitNear(
+      userId,
+      `Você usou ${currentCount} de ${limit.maxOpinionsPerMonth} pareceres IA disponíveis neste mês.`
     )
   }
 }
@@ -140,7 +206,7 @@ export async function guardBpcAnalysisLimit(userId: string, plan: string): Promi
 
   if (limit.bpcAnalysesPerMonth === -1) return
 
-  const record = await prisma.usageRecord.findUnique({ where: { userId } })
+  const record = await getOrResetUsageRecord(userId)
   const currentCount = record?.bpcAnalysesThisMonth ?? 0
 
   if (currentCount >= limit.bpcAnalysesPerMonth) {
@@ -160,7 +226,7 @@ export async function guardBpcSocialMediaLimit(userId: string, plan: string): Pr
 
   if (limit.bpcSocialMediaPerMonth === -1) return
 
-  const record = await prisma.usageRecord.findUnique({ where: { userId } })
+  const record = await getOrResetUsageRecord(userId)
   const currentCount = record?.bpcSocialMediaThisMonth ?? 0
 
   if (currentCount >= limit.bpcSocialMediaPerMonth) {

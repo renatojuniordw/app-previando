@@ -4,6 +4,7 @@ import type { Session } from 'next-auth'
 import { prisma } from '@/lib/prisma'
 import { logAudit } from '@/lib/audit'
 import { handleApiError } from '@/lib/api-error'
+import { invalidatePlanLimitCache } from '@/lib/plan-guard'
 
 function requireAdmin(session: Session | null, req: NextRequest) {
   if (!session?.user?.isAdmin) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
@@ -27,6 +28,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     if (!user) return NextResponse.json({ error: 'Usuário não encontrado' }, { status: 404 })
 
     await prisma.user.update({ where: { id: params.id }, data: { plan, planStatus: 'ACTIVE' } })
+    await invalidatePlanLimitCache(plan)
 
     await logAudit({
       userId: session!.user!.id!,

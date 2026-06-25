@@ -4,15 +4,21 @@ import { auth } from '@/auth'
 // ioredis não é compatível com Edge Runtime (middleware).
 // O rate limiting é aplicado diretamente nas API routes, onde o Node.js runtime está disponível.
 
-const PUBLIC_ROUTES = ['/login', '/register', '/api/auth']
+const PUBLIC_PAGES = ['/login', '/register']
 const ADMIN_ROUTES = ['/admin', '/api/admin']
+
+function isPublic(pathname: string): boolean {
+  if (PUBLIC_PAGES.includes(pathname)) return true
+  // Rotas do NextAuth: /api/auth/** (exato ou com subpath)
+  if (pathname === '/api/auth' || pathname.startsWith('/api/auth/')) return true
+  return false
+}
 
 export default auth(async (req) => {
   const { pathname } = req.nextUrl
   const session = req.auth
 
-  // Rotas públicas passam livremente
-  if (PUBLIC_ROUTES.some((r) => pathname.startsWith(r))) {
+  if (isPublic(pathname)) {
     return NextResponse.next()
   }
 

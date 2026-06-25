@@ -70,6 +70,7 @@ export interface CalculationResult {
     pisoNacional: number
     tetoPrevidenciario: number
     detalhamentoMedia: Array<{ competencia: string; valorOriginal: number; valorAjustado: number }>
+    detalhamentoMediaTotalCount: number
   }
   periodosSalarios: {
     totalContribuicoes: number
@@ -78,17 +79,42 @@ export interface CalculationResult {
   }
 }
 
-// Valores de fallback — usados apenas se o chamador não informar (nunca deve ocorrer em produção)
 const SALARIO_MINIMO_FALLBACK = 1621.00
 const TETO_PREVIDENCIARIO_FALLBACK = 8157.41
 
-/**
- * Calcula a diferença em meses entre duas datas
- */
+// Constantes previdenciárias EC 103/2019
+const CARENCIA_APOSENTADORIA_MESES = 180       // Art. 27 Lei 8.213/91
+const CARENCIA_AUXILIO_DOENCA_MESES = 12       // Art. 25, I
+const CARENCIA_PENSAO_MORTE_MESES = 18         // Afeta duração, não elegibilidade
+
+const COEFICIENTE_BASE = 0.60                  // Art. 26, EC 103/2019
+const ACRESCIMO_ANUAL = 0.02                   // 2% por ano excedente
+const ANOS_BASE_EXCEDENTE_M = 20               // Homens: acréscimo a partir de 20 anos
+const ANOS_BASE_EXCEDENTE_F = 15               // Mulheres: acréscimo a partir de 15 anos
+
+const MULTIPLICADOR_ESPECIAL_ACRESCIMO_M = 0.4 // Conversão tempo especial → comum (homem)
+const MULTIPLICADOR_ESPECIAL_ACRESCIMO_F = 0.2 // Conversão tempo especial → comum (mulher)
+
+const FATOR_PREVID_MIN = 0.4                   // Limite mínimo do fator previdenciário
+const FATOR_PREVID_MAX = 1.2                   // Limite máximo do fator previdenciário
+const DENOMINADOR_PEDAGIO_50 = 2200            // Denominador da fórmula do pedágio 50%
+
+const COEFICIENTE_AUXILIO_DOENCA = 0.91        // Art. 61 Lei 8.213/91
+
+const DATA_LIMITE_94 = new Date('1994-07-01')  // Início do Plano Real — base de cálculo pós-reforma
+
 function diffInMonths(startStr: string, endStr: string): number {
   const start = new Date(startStr)
   const end = new Date(endStr)
+  if (isNaN(start.getTime()) || isNaN(end.getTime())) return 0
+  if (start > end) return 0
   return (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth()) + 1
+}
+
+function parseCompetenciaDate(competencia: string): Date | null {
+  if (!/^\d{4}-\d{2}$/.test(competencia)) return null
+  const d = new Date(competencia + '-02')
+  return isNaN(d.getTime()) ? null : d
 }
 
 /**
@@ -145,10 +171,9 @@ export function calculatePrevidenciario(input: CalculationInput): CalculationRes
   todasContribuicoes.sort((a, b) => a.competencia.localeCompare(b.competencia))
   totalContribuicoesCount = todasContribuicoes.length
 
-  // Carência em meses (cada competência com contribuição >= mínimo conta como carência)
-  // Obs: a carência real exige contribuição em valor igual ou superior ao salário mínimo (EC 103/2019)
+  // Carência em meses (EC 103/2019: contribuição > 0 conta como válida para fins de carência)
   const carenciaMeses = todasContribuicoes.filter(c => c.valor > 0).length
-  const carenciaAtendida = carenciaMeses >= 180
+  const carenciaAtendida = carenciaMeses >= CARENCIA_APOSENTADORIA_MESES
 
   // Tempo de contribuição total expresso em meses
   // Calculado a partir da soma dos meses de cada período
@@ -162,20 +187,18 @@ export function calculatePrevidenciario(input: CalculationInput): CalculationRes
     }
   }
 
-  // Converte tempo especial em comum (Multiplicador de 1.4 para homens e 1.2 para mulheres)
   const tempoEspecialMeses = tempoEspecialAnos * 12
-  const acrescimoEspecialMeses = tempoEspecialMeses * (gender === 'M' ? 0.4 : 0.2)
+  const acrescimoEspecialMeses = tempoEspecialMeses * (gender === 'M' ? MULTIPLICADOR_ESPECIAL_ACRESCIMO_M : MULTIPLICADOR_ESPECIAL_ACRESCIMO_F)
   tempoContribuicaoMeses += Math.round(acrescimoEspecialMeses)
 
   const tempoContribuicaoAnos = Number((tempoContribuicaoMeses / 12).toFixed(1))
 
   // 3. Média dos Salários de Contribuição (Salário de Benefício - SB)
   // Regra pós-reforma: 100% de todas as contribuições desde julho/1994
+  const dataLimite94 = new Date('1994-07-01')
   const contribuicoesApos94 = todasContribuicoes.filter(c => {
-    // Competência está no formato YYYY-MM ou similar
-    const compDate = new Date(c.competencia + '-02') // Adiciona dia para parse
-    const dataLimite94 = new Date('1994-07-01')
-    return compDate >= dataLimite94
+    const compDate = parseCompetenciaDate(c.competencia)
+    return compDate !== null && compDate >= DATA_LIMITE_94
   })
 
   // Se não houver contribuições pós-94, usa todas as disponíveis
@@ -203,16 +226,13 @@ export function calculatePrevidenciario(input: CalculationInput): CalculationRes
   const salarioBeneficio = detalhamentoMedia.length > 0 ? Number((somaSalarios / detalhamentoMedia.length).toFixed(2)) : SALARIO_MINIMO
 
   // 4. Coeficiente, RMI e Regras específicas de Elegibilidade
-  let coeficiente = 0.60 // Coeficiente base de 60%
+  let coeficiente = COEFICIENTE_BASE
   let fatorPrevidenciario = 1.00
 
-  // Regra de acréscimo de 2% ao ano
-  // Mulher: +2% por ano acima de 15 anos de contribuição
-  // Homem: +2% por ano acima de 20 anos de contribuição
-  const anosExcedentes = gender === 'F' 
-    ? Math.max(0, tempoContribuicaoAnos - 15)
-    : Math.max(0, tempoContribuicaoAnos - 20)
-  const coeficienteProgressivo = 0.60 + (anosExcedentes * 0.02)
+  const anosExcedentes = gender === 'F'
+    ? Math.max(0, tempoContribuicaoAnos - ANOS_BASE_EXCEDENTE_F)
+    : Math.max(0, tempoContribuicaoAnos - ANOS_BASE_EXCEDENTE_M)
+  const coeficienteProgressivo = COEFICIENTE_BASE + (anosExcedentes * ACRESCIMO_ANUAL)
 
   switch (modalidade) {
     case 'APOSENTADORIA_IDADE':
@@ -272,7 +292,7 @@ export function calculatePrevidenciario(input: CalculationInput): CalculationRes
       const r = regra('PEDAGIO_50')
       const tempoTC50 = r?.tempoContribuicaoAnos ?? (gender === 'M' ? 35 : 30)
       const carenciaExigida = r?.carenciaMeses ?? 180
-      fatorPrevidenciario = Math.min(1.2, Math.max(0.4, (idadeNaApuracao * tempoContribuicaoAnos) / 2200))
+      fatorPrevidenciario = Math.min(FATOR_PREVID_MAX, Math.max(FATOR_PREVID_MIN, (idadeNaApuracao * tempoContribuicaoAnos) / DENOMINADOR_PEDAGIO_50))
       coeficiente = fatorPrevidenciario
 
       if (tempoContribuicaoAnos >= tempoTC50 && carenciaMeses >= carenciaExigida) {
@@ -320,7 +340,7 @@ export function calculatePrevidenciario(input: CalculationInput): CalculationRes
       const r = regra('HIBRIDA')
       const idadeHibrida  = r?.idadeMinima           ?? (gender === 'M' ? 65 : 62)
       const tempoHibrida  = r?.tempoContribuicaoAnos ?? 15
-      coeficiente = 0.60 + Math.max(0, tempoContribuicaoAnos - tempoHibrida) * 0.02
+      coeficiente = COEFICIENTE_BASE + Math.max(0, tempoContribuicaoAnos - tempoHibrida) * ACRESCIMO_ANUAL
 
       if (idadeNaApuracao >= idadeHibrida && tempoContribuicaoAnos >= tempoHibrida) {
         elegivel = true
@@ -334,8 +354,8 @@ export function calculatePrevidenciario(input: CalculationInput): CalculationRes
     case 'AUXILIO_DOENCA_B31':
     case 'AUXILIO_DOENCA_B91': {
       const r = regra('AUXILIO_DOENCA_B31')
-      const carenciaExigida = r?.carenciaMeses ?? 12
-      coeficiente = 0.91
+      const carenciaExigida = r?.carenciaMeses ?? CARENCIA_AUXILIO_DOENCA_MESES
+      coeficiente = COEFICIENTE_AUXILIO_DOENCA
       elegivel = carenciaMeses >= carenciaExigida || modalidade === 'AUXILIO_DOENCA_B91'
 
       if (carenciaMeses < carenciaExigida && modalidade === 'AUXILIO_DOENCA_B31') {
@@ -363,7 +383,7 @@ export function calculatePrevidenciario(input: CalculationInput): CalculationRes
 
     case 'PENSAO_MORTE': {
       const r = regra('PENSAO_MORTE')
-      const carenciaExigida = r?.carenciaMeses ?? 18
+      const carenciaExigida = r?.carenciaMeses ?? CARENCIA_PENSAO_MORTE_MESES
       coeficiente = Math.min(1.00, 0.50 + (dependentesPensao * 0.10))
       elegivel = carenciaMeses >= carenciaExigida
       if (carenciaMeses < carenciaExigida) {
@@ -384,7 +404,7 @@ export function calculatePrevidenciario(input: CalculationInput): CalculationRes
     }
 
     default:
-      coeficiente = 0.60
+      coeficiente = COEFICIENTE_BASE
       elegivel = false
       pendencias.push(`Modalidade de cálculo ${modalidade} não parametrizada.`)
       break
@@ -441,7 +461,8 @@ export function calculatePrevidenciario(input: CalculationInput): CalculationRes
       coeficienteAplicado: coeficiente,
       pisoNacional: SALARIO_MINIMO,
       tetoPrevidenciario: TETO_PREVIDENCIARIO,
-      detalhamentoMedia: detalhamentoMedia.slice(0, 15) // Mostra as primeiras 15 contribuições detalhadas para não explodir dados
+      detalhamentoMedia: detalhamentoMedia.slice(0, 15),
+      detalhamentoMediaTotalCount: detalhamentoMedia.length
     },
     periodosSalarios: {
       totalContribuicoes: totalContribuicoesCount,

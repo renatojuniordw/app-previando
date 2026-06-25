@@ -10,7 +10,7 @@ try {
   logger.error('Failed to load .env file natively', e)
 }
 
-import { Worker } from 'bullmq'
+import { Worker, Queue } from 'bullmq'
 import { prisma } from '../lib/prisma'
 import { downloadPDF } from '../services/r2'
 import { parseCnisWithAI } from '../services/cnis-parser'
@@ -124,4 +124,82 @@ auditWorker.on('failed', (job, err) => {
   logger.error(`Audit job ${job?.id} failed`, err)
 })
 
-logger.info('BullMQ workers started — CNIS processing + audit log')
+// ─── Worker: Deadline notifications (daily job) ────────────────────────────
+
+const deadlineQueue = new Queue('deadline-notifications', { connection: redis })
+
+const deadlineWorker = new Worker(
+  'deadline-notifications',
+  async () => {
+    const now = new Date()
+    const thresholds = [
+      { days: 1, type: 'DEADLINE_1D' as const },
+      { days: 3, type: 'DEADLINE_3D' as const },
+      { days: 7, type: 'DEADLINE_7D' as const },
+    ]
+
+    for (const { days, type } of thresholds) {
+      const windowStart = new Date(now)
+      windowStart.setDate(windowStart.getDate() + days)
+      windowStart.setHours(0, 0, 0, 0)
+
+      const windowEnd = new Date(windowStart)
+      windowEnd.setHours(23, 59, 59, 999)
+
+      const cases = await prisma.case.findMany({
+        where: {
+          deadlineDate: { gte: windowStart, lte: windowEnd },
+          status: { notIn: ['FINISHED'] },
+        },
+        select: {
+          id: true,
+          userId: true,
+          deadlineDate: true,
+          benefitType: true,
+          client: { select: { name: true } },
+        },
+      })
+
+      for (const c of cases) {
+        const dateStr = c.deadlineDate!.toLocaleDateString('pt-BR')
+        const alreadyExists = await prisma.notification.findFirst({
+          where: { userId: c.userId, caseId: c.id, type, createdAt: { gte: windowStart } },
+        })
+        if (alreadyExists) continue
+
+        await prisma.notification.create({
+          data: {
+            userId: c.userId,
+            caseId: c.id,
+            type,
+            message: `Prazo do caso de ${c.client.name} vence em ${days} dia${days > 1 ? 's' : ''} (${dateStr}).`,
+          },
+        })
+      }
+    }
+
+    logger.info('Deadline notification job completed')
+  },
+  { connection: redis, concurrency: 1 }
+)
+
+deadlineWorker.on('failed', (job, err) => {
+  logger.error(`Deadline job ${job?.id} failed`, err)
+})
+
+// Agenda o job diário para rodar às 08:00 (se não existir)
+async function scheduleDeadlineJob() {
+  const repeatableJobs = await deadlineQueue.getRepeatableJobs()
+  const alreadyScheduled = repeatableJobs.some((j) => j.name === 'daily-deadline-check')
+  if (!alreadyScheduled) {
+    await deadlineQueue.add('daily-deadline-check', {}, {
+      repeat: { pattern: '0 8 * * *' },
+      removeOnComplete: true,
+    })
+    logger.info('Scheduled daily deadline check job at 08:00')
+  }
+}
+
+scheduleDeadlineJob().catch((err) => logger.error('Failed to schedule deadline job', err))
+
+logger.info('BullMQ workers started — CNIS processing + audit log + deadline notifications')

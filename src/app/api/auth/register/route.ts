@@ -42,7 +42,7 @@ async function validateInput(body: unknown): Promise<{ data: z.infer<typeof sche
   if (!parsed.success) {
     return {
       data: null as any,
-      error: NextResponse.json({ error: 'Dados inválidos.', details: parsed.error.flatten() }, { status: 400 }),
+      error: NextResponse.json({ error: 'Dados inválidos.' }, { status: 400 }),
     }
   }
   return { data: parsed.data }

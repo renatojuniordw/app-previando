@@ -76,14 +76,15 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  accounts    Account[]
-  sessions    Session[]
-  clients     Client[]
-  cases       Case[]
-  caseNotes   CaseNote[]
-  usageRecord UsageRecord?
-  payments    Payment[]
-  auditLogs   AuditLog[]
+  accounts      Account[]
+  sessions      Session[]
+  clients       Client[]
+  cases         Case[]
+  caseNotes     CaseNote[]
+  usageRecord   UsageRecord?
+  payments      Payment[]
+  auditLogs     AuditLog[]
+  notifications Notification[]
 
   @@map("users")
 }
@@ -600,6 +601,34 @@ model BpcAnalysis {
   updatedAt        DateTime       @updatedAt
 
   @@map("bpc_analyses")
+}
+
+// ─────────────────────────────────────────
+// NOTIFICAÇÕES IN-APP
+// ─────────────────────────────────────────
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      NotificationType
+  caseId    String?
+  message   String
+  read      Boolean          @default(false)
+  createdAt DateTime         @default(now())
+
+  @@index([userId, read])
+  @@index([userId, createdAt])
+  @@map("notifications")
+}
+
+enum NotificationType {
+  DEADLINE_7D
+  DEADLINE_3D
+  DEADLINE_1D
+  PLAN_LIMIT_NEAR
+  CNIS_PROCESSED
+  CNIS_FAILED
 }
 
 // ─────────────────────────────────────────

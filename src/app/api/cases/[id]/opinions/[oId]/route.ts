@@ -28,7 +28,7 @@ export async function PUT(
 
     const parsed = updateSchema.safeParse(await req.json())
     if (!parsed.success) {
-      return NextResponse.json({ error: 'Dados inválidos.', details: parsed.error.flatten() }, { status: 400 })
+      return NextResponse.json({ error: 'Dados inválidos.' }, { status: 400 })
     }
 
     const data: Record<string, unknown> = {}

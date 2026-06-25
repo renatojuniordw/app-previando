@@ -4,6 +4,7 @@ import type { Session } from 'next-auth'
 import { prisma } from '@/lib/prisma'
 import { logAudit } from '@/lib/audit'
 import { handleApiError } from '@/lib/api-error'
+import { invalidatePlanLimitCache } from '@/lib/plan-guard'
 
 function requireAdmin(session: Session | null, req: NextRequest) {
   if (!session?.user?.isAdmin) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
@@ -29,6 +30,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     const newStatus = action === 'suspend' ? 'SUSPENDED' : 'ACTIVE'
 
     await prisma.user.update({ where: { id: params.id }, data: { planStatus: newStatus } })
+    await invalidatePlanLimitCache(user.plan)
 
     await logAudit({
       userId: session!.user!.id!,

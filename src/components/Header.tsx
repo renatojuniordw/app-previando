@@ -1,10 +1,57 @@
 'use client'
 
-import { Bell, Search } from 'lucide-react'
+import { Bell, Search, X } from 'lucide-react'
 import { useSession } from 'next-auth/react'
+import { useEffect, useRef, useState } from 'react'
+import Link from 'next/link'
+
+interface AppNotification {
+  id: string
+  type: string
+  caseId: string | null
+  message: string
+  read: boolean
+  createdAt: string
+}
 
 export function Header() {
   const { data: session } = useSession()
+  const [notifications, setNotifications] = useState<AppNotification[]>([])
+  const [unreadCount, setUnreadCount] = useState(0)
+  const [open, setOpen] = useState(false)
+  const dropdownRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    fetchNotifications()
+    const interval = setInterval(fetchNotifications, 60000)
+    return () => clearInterval(interval)
+  }, [])
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  async function fetchNotifications() {
+    try {
+      const res = await fetch('/api/notifications')
+      if (!res.ok) return
+      const data = await res.json()
+      setNotifications(data.notifications)
+      setUnreadCount(data.unreadCount)
+    } catch {}
+  }
+
+  async function markAsRead(id: string) {
+    await fetch(`/api/notifications/${id}/read`, { method: 'POST' })
+    setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)))
+    setUnreadCount((c) => Math.max(0, c - 1))
+  }
 
   return (
     <header className="h-16 border-b border-slate-200 bg-white flex items-center justify-between px-6 shrink-0">
@@ -20,10 +67,62 @@ export function Header() {
       </div>
 
       <div className="flex items-center gap-4">
-        <button className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-slate-50 text-slate-500 transition-colors relative">
-          <Bell className="w-5 h-5" />
-          <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
-        </button>
+        <div className="relative" ref={dropdownRef}>
+          <button
+            onClick={() => setOpen((o) => !o)}
+            className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-slate-50 text-slate-500 transition-colors relative"
+          >
+            <Bell className="w-5 h-5" />
+            {unreadCount > 0 && (
+              <span className="absolute top-2 right-2 min-w-[16px] h-4 px-0.5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white leading-none">
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </span>
+            )}
+          </button>
+
+          {open && (
+            <div className="absolute right-0 top-12 w-80 bg-white border border-slate-200 rounded-xl shadow-lg z-50 overflow-hidden">
+              <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
+                <span className="font-semibold text-sm text-slate-900">Notificações</span>
+                <button onClick={() => setOpen(false)} className="text-slate-400 hover:text-slate-600">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="max-h-72 overflow-y-auto divide-y divide-slate-50">
+                {notifications.length === 0 ? (
+                  <p className="text-sm text-slate-500 text-center py-8">Nenhuma notificação</p>
+                ) : (
+                  notifications.map((n) => (
+                    <div
+                      key={n.id}
+                      className={`px-4 py-3 flex gap-3 items-start cursor-pointer hover:bg-slate-50 transition-colors ${n.read ? 'opacity-60' : ''}`}
+                      onClick={() => !n.read && markAsRead(n.id)}
+                    >
+                      <div className={`mt-1 w-2 h-2 rounded-full shrink-0 ${n.read ? 'bg-slate-300' : 'bg-amber-500'}`} />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm text-slate-800 leading-snug">{n.message}</p>
+                        <p className="text-xs text-slate-400 mt-1">
+                          {new Date(n.createdAt).toLocaleDateString('pt-BR')}
+                        </p>
+                        {n.caseId && (
+                          <Link
+                            href={`/cases/${n.caseId}`}
+                            className="text-xs text-amber-600 hover:underline mt-0.5 inline-block"
+                            onClick={() => setOpen(false)}
+                          >
+                            Ver caso →
+                          </Link>
+                        )}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+
         <div className="h-8 w-px bg-slate-200"></div>
         <button className="flex items-center gap-3 hover:bg-slate-50 py-1.5 px-3 rounded-full transition-colors">
           <div className="flex flex-col items-end">

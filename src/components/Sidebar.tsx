@@ -4,13 +4,16 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { signOut } from 'next-auth/react'
 import { cn } from '@/lib/utils'
-import { LayoutDashboard, Users, Columns, CreditCard, Settings, LogOut } from 'lucide-react'
+import { LayoutDashboard, Users, Columns, CreditCard, Settings, LogOut, Activity, Calendar, FolderOpen } from 'lucide-react'
 import { UsageBar } from '@/components/UsageBar'
 
 const NAV_ITEMS = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/clients/list', label: 'Clientes', icon: Users },
   { href: '/clients/kanban', label: 'Kanban', icon: Columns },
+  { href: '/cases', label: 'Casos', icon: FolderOpen },
+  { href: '/deadlines', label: 'Prazos', icon: Calendar },
+  { href: '/activity', label: 'Atividade', icon: Activity },
   { href: '/settings/billing', label: 'Plano', icon: CreditCard },
   { href: '/settings/profile', label: 'Perfil', icon: Settings },
 ]

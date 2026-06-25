@@ -89,8 +89,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (user) {
         // Initial sign-in — CredentialsProvider returns plan/isAdmin directly;
         // Google OAuth does not, so fall back to a DB fetch.
-        const credPlan = (user as any).plan as string | undefined
-        const credIsAdmin = (user as any).isAdmin as boolean | undefined
+        const extUser = user as typeof user & { plan?: string; isAdmin?: boolean }
+        const credPlan = extUser.plan
+        const credIsAdmin = extUser.isAdmin
         if (credPlan !== undefined && credIsAdmin !== undefined) {
           token.plan = credPlan
           token.isAdmin = credIsAdmin

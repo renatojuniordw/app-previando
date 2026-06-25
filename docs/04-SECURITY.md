@@ -62,8 +62,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id
-        token.plan = (user as any).plan
-        token.isAdmin = (user as any).isAdmin
+        // Cast estruturado — sem `as any` — para propriedades customizadas do provider
+        const extUser = user as typeof user & { plan?: string; isAdmin?: boolean }
+        token.plan = extUser.plan
+        token.isAdmin = extUser.isAdmin
       }
       return token
     },
@@ -97,8 +99,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 ```typescript
 // middleware.ts
 
-const PUBLIC_ROUTES = ['/login', '/register', '/api/auth']
+// Rotas públicas verificadas por igualdade exata (não startsWith) para evitar bypass
+// ex: '/api/auth-hacked' NÃO é pública — só '/api/auth' e seus sub-caminhos são
+const PUBLIC_PAGES = ['/login', '/register']
 const ADMIN_ROUTES = ['/admin', '/api/admin']
+
+function isPublic(pathname: string): boolean {
+  if (PUBLIC_PAGES.includes(pathname)) return true
+  if (pathname === '/api/auth' || pathname.startsWith('/api/auth/')) return true
+  return false
+}
 
 export default auth(async (req) => {
   const { pathname } = req.nextUrl
@@ -106,7 +116,7 @@ export default auth(async (req) => {
   const ip = req.headers.get('x-forwarded-for') ?? 'unknown'
 
   // Públicas
-  if (PUBLIC_ROUTES.some(r => pathname.startsWith(r))) return NextResponse.next()
+  if (isPublic(pathname)) return NextResponse.next()
 
   // Rate limit global (100 req/min por IP via Redis)
   const limit = await rateLimit(`global:${ip}`, 100, 60)
@@ -207,9 +217,12 @@ export function sanitizeInput(value: string): string {
 }
 
 export function hashCPF(cpf: string): string {
+  const salt = process.env.CPF_HASH_SALT
+  // Falha explícita — nunca calcula HMAC com salt undefined
+  if (!salt) throw new Error('CPF_HASH_SALT não configurado — defina a variável de ambiente antes de usar esta função')
   const clean = cpf.replace(/\D/g, '')
   if (clean.length !== 11) throw new Error('CPF inválido')
-  return crypto.createHmac('sha256', process.env.CPF_HASH_SALT!).update(clean).digest('hex')
+  return createHmac('sha256', salt).update(clean).digest('hex')
 }
 
 export const maskCPF = () => '***.***.**-**'
@@ -256,19 +269,30 @@ export function sanitizeForAI(input: string): string {
 ## Headers de Segurança
 
 ```typescript
-// next.config.ts
-module.exports = {
-  async headers() {
-    return [{ source: '/(.*)', headers: [
-      { key: 'X-Frame-Options', value: 'DENY' },
-      { key: 'X-Content-Type-Options', value: 'nosniff' },
-      { key: 'Strict-Transport-Security', value: 'max-age=31536000; includeSubDomains' },
-      { key: 'Content-Security-Policy', value: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'" },
-      { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
-      { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
-    ]}]
-  }
-}
+// next.config.mjs
+// img-src inclui lh3.googleusercontent.com para avatares do Google OAuth
+const csp = [
+  "default-src 'self'",
+  "script-src 'self'",
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data: https://images.unsplash.com https://lh3.googleusercontent.com",
+  "font-src 'self'",
+  "connect-src 'self'",
+  "frame-ancestors 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+].join('; ')
+```
+
+> **Regra sobre respostas de erro Zod:** Nunca expor `details: parsed.error.flatten()` em respostas 400.
+> Isso vaza nomes de campos internos do schema. Retornar apenas `{ error: 'Dados inválidos.' }`.
+
+```typescript
+// ❌ NUNCA — vaza schema interno
+return NextResponse.json({ error: 'Dados inválidos.', details: parsed.error.flatten() }, { status: 400 })
+
+// ✅ CORRETO
+return NextResponse.json({ error: 'Dados inválidos.' }, { status: 400 })
 ```
 
 ---

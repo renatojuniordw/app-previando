@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createHmac } from 'crypto'
 import { prisma } from '@/lib/prisma'
+import { invalidatePlanLimitCache } from '@/lib/plan-guard'
 import { Logger } from '@/lib/logger'
+import type { PaymentStatus } from '@prisma/client'
 
 const logger = new Logger('WebhookMercadoPago')
 
@@ -23,7 +25,7 @@ function verifyWebhookSignature(req: NextRequest, _rawBody: string): boolean {
   return expected === v1
 }
 
-function mapMpStatus(mpStatus: string): string {
+function mapMpSubscriptionStatus(mpStatus: string): string {
   const map: Record<string, string> = {
     authorized: 'ACTIVE',
     paused: 'PAST_DUE',
@@ -32,6 +34,21 @@ function mapMpStatus(mpStatus: string): string {
     suspended: 'SUSPENDED',
   }
   return map[mpStatus] ?? 'ACTIVE'
+}
+
+function mapMpPaymentStatus(mpStatus: string): PaymentStatus {
+  const map: Record<string, PaymentStatus> = {
+    pending: 'PENDING',
+    approved: 'APPROVED',
+    authorized: 'APPROVED',
+    in_process: 'PENDING',
+    in_mediation: 'PENDING',
+    rejected: 'REJECTED',
+    cancelled: 'CANCELLED',
+    refunded: 'REFUNDED',
+    charged_back: 'REFUNDED',
+  }
+  return map[mpStatus] ?? 'PENDING'
 }
 
 export async function POST(req: NextRequest) {
@@ -59,38 +76,41 @@ export async function POST(req: NextRequest) {
     if (type === 'subscription_preapproval') {
       const subId = String(data.id)
 
-      // Buscar dados da assinatura no MP
       const mpSub = await fetch(`https://api.mercadopago.com/preapproval/${subId}`, {
         headers: { Authorization: `Bearer ${process.env.MERCADOPAGO_ACCESS_TOKEN}` },
       }).then((r) => r.json())
 
       if (!mpSub?.payer_email) return NextResponse.json({ received: true })
 
-      const user = await prisma.user.findUnique({
-        where: { email: mpSub.payer_email },
-        select: { id: true, plan: true },
-      })
+      const planStatus = mapMpSubscriptionStatus(mpSub.status)
 
-      if (!user) return NextResponse.json({ received: true })
+      await prisma.$transaction(async (tx) => {
+        const user = await tx.user.findUnique({
+          where: { email: mpSub.payer_email },
+          select: { id: true, plan: true },
+        })
 
-      const planStatus = mapMpStatus(mpSub.status)
-      let plan = user.plan
+        if (!user) return
 
-      if (planStatus === 'ACTIVE' && mpSub.preapproval_plan_id) {
-        if (mpSub.preapproval_plan_id === process.env.MP_PLAN_ID_SOLO) plan = 'SOLO'
-        else if (mpSub.preapproval_plan_id === process.env.MP_PLAN_ID_PRO) plan = 'PRO'
-      } else if (planStatus === 'CANCELLED') {
-        plan = 'FREE'
-      }
+        let plan = user.plan
+        if (planStatus === 'ACTIVE' && mpSub.preapproval_plan_id) {
+          if (mpSub.preapproval_plan_id === process.env.MP_PLAN_ID_SOLO) plan = 'SOLO'
+          else if (mpSub.preapproval_plan_id === process.env.MP_PLAN_ID_PRO) plan = 'PRO'
+        } else if (planStatus === 'CANCELLED') {
+          plan = 'FREE'
+        }
 
-      await prisma.user.update({
-        where: { id: user.id },
-        data: {
-          plan: plan as never,
-          planStatus: planStatus as never,
-          mpSubscriptionId: subId,
-          mpSubscriptionStatus: mpSub.status,
-        },
+        await tx.user.update({
+          where: { id: user.id },
+          data: {
+            plan: plan as never,
+            planStatus: planStatus as never,
+            mpSubscriptionId: subId,
+            mpSubscriptionStatus: mpSub.status,
+          },
+        })
+
+        await invalidatePlanLimitCache(plan)
       })
     }
 
@@ -110,10 +130,11 @@ export async function POST(req: NextRequest) {
 
       if (!user) return NextResponse.json({ received: true })
 
+      const paymentStatus = mapMpPaymentStatus(mpPayment.status ?? '')
       await prisma.payment.upsert({
         where: { mpPaymentId: paymentId },
         update: {
-          status: mpPayment.status?.toUpperCase() ?? 'PENDING',
+          status: paymentStatus,
           paidAt: mpPayment.date_approved ? new Date(mpPayment.date_approved) : null,
         },
         create: {
@@ -123,7 +144,7 @@ export async function POST(req: NextRequest) {
           plan: user.plan,
           amount: mpPayment.transaction_amount ?? 0,
           currency: mpPayment.currency_id ?? 'BRL',
-          status: mpPayment.status?.toUpperCase() ?? 'PENDING',
+          status: paymentStatus,
           paidAt: mpPayment.date_approved ? new Date(mpPayment.date_approved) : null,
           periodStart: mpPayment.date_created ? new Date(mpPayment.date_created) : null,
         },

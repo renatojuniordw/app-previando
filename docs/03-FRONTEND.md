@@ -18,11 +18,14 @@
 
 ```
 /(dashboard)
-├── /dashboard
+├── /dashboard                    ← Métricas com recharts (BarChart, PieChart, RMI stats)
+├── /deadlines                    ← Prazos dos próximos 30 dias (grupos: atrasados, urgentes, próximos)
+├── /activity                     ← Log de atividades paginado (AuditLog)
 ├── /clients
 │   ├── /list                     ← TODOS os clientes
 │   │   └── /[id]                 ← Perfil + casos
 │   └── /kanban                   ← Apenas com casos
+├── /cases                        ← Busca global de casos com filtros avançados
 ├── /cases/[id]
 │   ├── /                         ← Visão geral
 │   ├── /notes                    ← Prontuário
@@ -31,7 +34,8 @@
 │   ├── /simulator
 │   ├── /retroativos
 │   ├── /checklist
-│   └── /opinions
+│   ├── /opinions
+│   └── /compare                  ← Comparativo de todas as modalidades × 2 gêneros (botão "Exportar PDF")
 └── /settings
     ├── /profile
     └── /billing
@@ -51,7 +55,9 @@ const CASE_TABS = [
   { id: 'retroativos', label: 'RETROATIVOS', icon: '💰', path: '/retroativos', plan: 'SOLO' },
   { id: 'checklist',   label: 'CHECKLIST',   icon: '✅', path: '/checklist' },
   { id: 'opinions',    label: 'PARECER',     icon: '🤖', path: '/opinions' },
+  { id: 'compare',     label: 'COMPARAR',    icon: '⚖️', path: '/compare' },  // todas as modalidades
 ]
+// BPC_LOAS: tab extra "BPC/LOAS" inserida dinamicamente se benefitType === 'BPC_LOAS'
 ```
 
 ---
@@ -90,6 +96,29 @@ api.interceptors.response.use(
   }
 )
 ```
+
+---
+
+## Sidebar — Navegação Principal
+
+```
+LayoutDashboard  → /dashboard
+Users            → /clients/list
+Columns          → /clients/kanban
+FolderOpen       → /cases            ← busca global de casos com filtros
+Calendar         → /deadlines        ← prazos dos próximos 30 dias
+Activity         → /activity         ← log de atividades
+CreditCard       → /settings/billing
+Settings         → /settings/profile
+```
+
+## Header — Bell de Notificações
+
+- Polling a cada 60s em `GET /api/notifications`
+- Badge vermelho com contagem de não-lidas
+- Dropdown com lista (tipo, mensagem, data, link para o caso)
+- Clique na notificação → `POST /api/notifications/:id/read` + navega para o caso
+- Tipos: `DEADLINE_7D`, `DEADLINE_3D`, `DEADLINE_1D`, `CNIS_PROCESSED`, `CNIS_FAILED`, `PLAN_LIMIT_NEAR`
 
 ---
 
