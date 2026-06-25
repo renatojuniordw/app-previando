@@ -14,8 +14,9 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Input } from '@/components/ui/Input'
 import { useToast } from '@/store/toast'
-import { Search, Plus, MoreHorizontal, User, FileText, Phone, Mail, AlertCircle } from 'lucide-react'
+import { Search, Plus, User, FileText, Phone, Mail, AlertCircle } from 'lucide-react'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
+import { ActionsDropdown } from '@/components/ui/ActionsDropdown'
 
 interface Client {
   id: string
@@ -57,7 +58,12 @@ export default function ClientsListPage() {
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [showModal, setShowModal] = useState(false)
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [editingClient, setEditingClient] = useState<Client | null>(null)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [deletingClient, setDeletingClient] = useState<Client | null>(null)
   const [creating, setCreating] = useState(false)
+  const [deleting, setDeleting] = useState(false)
   const [error, setError] = useState('')
   const { addToast } = useToast()
 
@@ -105,6 +111,27 @@ export default function ClientsListPage() {
       setError(msg)
     } finally {
       setCreating(false)
+    }
+  }
+
+  const handleEdit = (client: Client) => {
+    setEditingClient(client)
+    setShowEditModal(true)
+  }
+
+  const handleDeleteConfirm = async () => {
+    if (!deletingClient) return
+    setDeleting(true)
+    try {
+      await api.delete(`/clients/${deletingClient.id}`)
+      addToast({ type: 'success', title: 'Cliente excluído', message: `${deletingClient.name} foi removido.` })
+      setShowDeleteModal(false)
+      setDeletingClient(null)
+      load()
+    } catch {
+      addToast({ type: 'error', title: 'Erro', message: 'Não foi possível excluir o cliente.' })
+    } finally {
+      setDeleting(false)
     }
   }
 
@@ -222,11 +249,32 @@ export default function ClientsListPage() {
                       {formatDate(client.createdAt)}
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <Link href={`/clients/list/${client.id}`}>
-                        <button className="p-2 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors" aria-label="Abrir menu de ações do cliente">
-                          <MoreHorizontal className="w-5 h-5" aria-hidden="true" />
-                        </button>
-                      </Link>
+                      <div className="flex items-center justify-end gap-1">
+                        <Link
+                          href={`/clients/list/${client.id}`}
+                          className="p-2 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
+                          aria-label={`Ver detalhes de ${client.name}`}
+                        >
+                          <FileText className="w-4 h-4" aria-hidden="true" />
+                        </Link>
+                        <ActionsDropdown
+                          ariaLabel={`Ações para ${client.name}`}
+                          actions={[
+                            {
+                              label: 'Editar cliente',
+                              onClick: () => handleEdit(client),
+                            },
+                            {
+                              label: 'Excluir cliente',
+                              onClick: () => {
+                                setDeletingClient(client)
+                                setShowDeleteModal(true)
+                              },
+                              variant: 'danger',
+                            },
+                          ]}
+                        />
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -235,6 +283,75 @@ export default function ClientsListPage() {
           </div>
         )}
       </div>
+
+      {/* Modal de Editar Cliente */}
+      <Modal open={showEditModal} onClose={() => { setShowEditModal(false); setEditingClient(null) }} title="Editar Cliente">
+        <form className="space-y-5">
+          <Input
+            label="Nome completo"
+            value={editingClient?.name ?? ''}
+            onChange={(e) => setEditingClient((prev) => prev ? { ...prev, name: e.target.value } : null)}
+          />
+          <div className="grid grid-cols-2 gap-4">
+            <Input
+              label="CPF"
+              value={editingClient?.cpf ?? ''}
+              disabled
+            />
+            <Input
+              label="Telefone"
+              value={editingClient?.phone ?? ''}
+              onChange={(e) => setEditingClient((prev) => prev ? { ...prev, phone: e.target.value } : null)}
+            />
+          </div>
+          <div className="flex gap-3">
+            <Button type="button" variant="outline" onClick={() => { setShowEditModal(false); setEditingClient(null) }} className="flex-1">
+              Cancelar
+            </Button>
+            <Button type="button" className="flex-1 bg-amber-600 text-white" onClick={async () => {
+              if (!editingClient) return
+              if (!editingClient.name.trim()) {
+                addToast({ type: 'error', title: 'Validação', message: 'O nome do cliente é obrigatório.' });
+                return
+              }
+              try {
+                await api.put(`/clients/${editingClient.id}`, { name: editingClient.name, phone: editingClient.phone })
+                addToast({ type: 'success', title: 'Cliente atualizado' })
+                setShowEditModal(false)
+                setEditingClient(null)
+                load()
+              } catch {
+                addToast({ type: 'error', title: 'Erro', message: 'Não foi possível atualizar o cliente.' })
+              }
+            }}>
+              Salvar Alterações
+            </Button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Modal de Excluir Cliente */}
+      <Modal open={showDeleteModal} onClose={() => { setShowDeleteModal(false); setDeletingClient(null) }} title="Excluir Cliente?">
+        <div className="space-y-4">
+          <div className="border border-red-200 bg-red-50 rounded-xl p-4 flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
+            <div>
+              <p className="font-sans text-sm font-bold text-red-800">Atenção: Esta ação é irreversível!</p>
+              <p className="font-sans text-sm text-red-700 mt-1">
+                Todos os dados de <strong>{deletingClient?.name}</strong>, incluindo casos, cálculos e documentos, serão excluídos permanentemente.
+              </p>
+            </div>
+          </div>
+          <div className="flex gap-3">
+            <Button onClick={handleDeleteConfirm} loading={deleting} variant="danger" className="flex-1">
+              Sim, Excluir Tudo
+            </Button>
+            <Button variant="outline" onClick={() => { setShowDeleteModal(false); setDeletingClient(null) }} className="flex-1">
+              Cancelar
+            </Button>
+          </div>
+        </div>
+      </Modal>
 
       <Modal open={showModal} onClose={() => setShowModal(false)} title="Novo Cliente">
         {error && (

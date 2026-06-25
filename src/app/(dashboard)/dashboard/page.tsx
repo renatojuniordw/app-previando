@@ -4,11 +4,27 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import api from '@/lib/api'
 import { Users, ChevronRight, Columns } from 'lucide-react'
-import { DashboardKpiGrid } from '@/components/dashboard/DashboardKpiGrid'
-import { DashboardCharts } from '@/components/dashboard/DashboardCharts'
-import { DashboardPipeline } from '@/components/dashboard/DashboardPipeline'
-import { DashboardDeadlines } from '@/components/dashboard/DashboardDeadlines'
-import { DashboardActivityFeed } from '@/components/dashboard/DashboardActivityFeed'
+import dynamic from 'next/dynamic'
+
+const DashboardKpiGrid = dynamic(() => import('@/components/dashboard/DashboardKpiGrid').then((m) => ({ default: m.DashboardKpiGrid })), {
+  loading: () => <div className="grid grid-cols-4 gap-4">{[...Array(4)].map((_, i) => <div key={i} className="h-24 bg-slate-100 rounded-xl animate-pulse" />)}</div>,
+})
+
+const DashboardCharts = dynamic(() => import('@/components/dashboard/DashboardCharts').then((m) => ({ default: m.DashboardCharts })), {
+  loading: () => <div className="h-64 bg-slate-100 rounded-xl animate-pulse" />,
+})
+
+const DashboardPipeline = dynamic(() => import('@/components/dashboard/DashboardPipeline').then((m) => ({ default: m.DashboardPipeline })), {
+  loading: () => <div className="h-48 bg-slate-100 rounded-xl animate-pulse" />,
+})
+
+const DashboardDeadlines = dynamic(() => import('@/components/dashboard/DashboardDeadlines').then((m) => ({ default: m.DashboardDeadlines })), {
+  loading: () => <div className="h-48 bg-slate-100 rounded-xl animate-pulse" />,
+})
+
+const DashboardActivityFeed = dynamic(() => import('@/components/dashboard/DashboardActivityFeed').then((m) => ({ default: m.DashboardActivityFeed })), {
+  loading: () => <div className="h-48 bg-slate-100 rounded-xl animate-pulse" />,
+})
 
 interface DashboardData {
   totalClients: number

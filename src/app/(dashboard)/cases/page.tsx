@@ -2,13 +2,25 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import Link from 'next/link'
-import { useSearchParams } from 'next/navigation'
+import { useSearchParams, useRouter } from 'next/navigation'
 import api from '@/lib/api'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
+import { Modal } from '@/components/ui/Modal'
+import { Button } from '@/components/ui/Button'
+import { ActionsDropdown } from '@/components/ui/ActionsDropdown'
+import { useToast } from '@/store/toast'
 import { Search, SlidersHorizontal, X, ChevronLeft, ChevronRight } from 'lucide-react'
 import { formatDate } from '@/lib/utils'
 import { BENEFIT_SHORT_LABELS, STATUS_LABELS } from '@/lib/constants'
+
+const STATUS_OPTIONS = [
+  { value: 'PROSPECCAO', label: 'Prospecção' },
+  { value: 'ANALISE', label: 'Análise' },
+  { value: 'PRONTO_PARA_REQUERER', label: 'Pronto p/ Requerer' },
+  { value: 'EM_PROCESSAMENTO', label: 'Em Processamento' },
+  { value: 'FINALIZADO', label: 'Finalizado' },
+]
 
 interface CaseItem {
   id: string
@@ -43,6 +55,10 @@ function formatCurrency(val: number | null) {
 
 export default function CasesPage() {
   const searchParams = useSearchParams()
+  const router = useRouter()
+  const { addToast } = useToast()
+  const [statusTarget, setStatusTarget] = useState<{ id: string; status: string } | null>(null)
+  const [updatingStatus, setUpdatingStatus] = useState(false)
   const [cases, setCases] = useState<CaseItem[]>([])
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
@@ -80,6 +96,21 @@ export default function CasesPage() {
   }, [search, priority, benefitType, rmiMin, rmiMax, createdFrom, createdTo, page])
 
   useEffect(() => { fetchCases() }, [fetchCases])
+
+  const handleStatusChange = async () => {
+    if (!statusTarget) return
+    setUpdatingStatus(true)
+    try {
+      await api.patch(`/cases/${statusTarget.id}/status`, { status: statusTarget.status })
+      addToast({ type: 'success', title: 'Status alterado', message: `Caso atualizado para ${STATUS_OPTIONS.find(s => s.value === statusTarget.status)?.label ?? statusTarget.status}.` })
+      setStatusTarget(null)
+      fetchCases()
+    } catch {
+      addToast({ type: 'error', title: 'Erro', message: 'Não foi possível alterar o status.' })
+    } finally {
+      setUpdatingStatus(false)
+    }
+  }
 
   function clearFilters() {
     setPriority('')
@@ -192,6 +223,7 @@ export default function CasesPage() {
                   <th className="px-5 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">RMI Calculada</th>
                   <th className="px-5 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">Prazo</th>
                   <th className="px-5 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">Criado em</th>
+                  <th className="px-5 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wider text-right">Ações</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -218,6 +250,25 @@ export default function CasesPage() {
                       {c.deadlineDate ? formatDate(c.deadlineDate) : '—'}
                     </td>
                     <td className="px-5 py-4 text-sm text-slate-500">{formatDate(c.createdAt)}</td>
+                    <td className="px-5 py-4 text-right">
+                      <ActionsDropdown
+                        ariaLabel={`Ações para caso de ${c.client.name}`}
+                        actions={[
+                          {
+                            label: 'Alterar Status',
+                            onClick: () => setStatusTarget({ id: c.id, status: c.status }),
+                          },
+                          {
+                            label: 'Exportar PDF',
+                            onClick: () => window.open(`/api/export/pdf/${c.id}`, '_blank'),
+                          },
+                          {
+                            label: 'Acessar Cálculo',
+                            onClick: () => router.push(`/cases/${c.id}/calculator`),
+                          },
+                        ]}
+                      />
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -225,6 +276,32 @@ export default function CasesPage() {
           </div>
         )}
       </Card>
+
+      {/* Modal Alterar Status */}
+      <Modal open={!!statusTarget} onClose={() => setStatusTarget(null)} title="Alterar Status do Caso">
+        <div className="space-y-4">
+          <div>
+            <label className="block font-sans font-medium text-sm text-slate-700 mb-1">Novo Status</label>
+            <select
+              value={statusTarget?.status ?? ''}
+              onChange={(e) => setStatusTarget((prev) => prev ? { ...prev, status: e.target.value } : null)}
+              className="w-full px-3 py-2 font-sans text-sm rounded-md bg-white text-slate-900 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-600 focus:border-transparent"
+            >
+              {STATUS_OPTIONS.map((s) => (
+                <option key={s.value} value={s.value}>{s.label}</option>
+              ))}
+            </select>
+          </div>
+          <div className="flex gap-3">
+            <Button onClick={handleStatusChange} loading={updatingStatus} className="flex-1">
+              SALVAR
+            </Button>
+            <Button variant="outline" onClick={() => setStatusTarget(null)} className="flex-1">
+              CANCELAR
+            </Button>
+          </div>
+        </div>
+      </Modal>
 
       {/* Paginação */}
       {totalPages > 1 && (

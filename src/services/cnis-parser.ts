@@ -1,9 +1,8 @@
 import { openai } from '../lib/openai'
 import { sanitizeForAI } from '../lib/sanitize'
 import { Logger } from '../lib/logger'
-import { AI_MODELS } from '../lib/ai-models'
+import { AI_MODELS, AI_MAX_TOKENS } from '../lib/ai-models'
 
-const isVerboo = (process.env.AI_PROVIDER ?? 'openai') === 'verboo'
 
 const logger = new Logger('CNISParser')
 
@@ -50,7 +49,8 @@ const SUMMARY_SYSTEM_PROMPT = `Você é um especialista em análise de CNIS (Cad
 Sua tarefa é analisar o texto do CNIS e extrair os dados estruturados de forma resumida.
 Retorne APENAS um JSON válido, sem markdown, sem explicações.`
 
-const SUMMARY_USER_PROMPT = `Analise o texto do CNIS e extraia as informações resumidas de todos os períodos e empresas.
+function buildSummaryUserPrompt(cnisText: string): string {
+  return `Analise o texto do CNIS abaixo e extraia as informações resumidas de todos os períodos e empresas.
 
 Informações a extrair:
 1. NIT (número de inscrição do trabalhador)
@@ -88,7 +88,11 @@ Retorne APENAS o JSON no seguinte formato:
       }
     }
   ]
-}`
+}
+
+Texto do CNIS:
+${cnisText}`
+}
 
 const SALARIOS_SYSTEM_PROMPT = `Você é um especialista em extração de dados de CNIS do INSS.
 Extraia TODOS os salários individuais do texto fornecido.
@@ -230,8 +234,8 @@ export async function parseCnisSummary(
 
   const { content, tokens, finishReason } = await callAI(
     SUMMARY_SYSTEM_PROMPT,
-    SUMMARY_USER_PROMPT,
-    isVerboo ? 2000 : 2000
+    buildSummaryUserPrompt(textTruncated),
+    AI_MAX_TOKENS ?? 4000
   )
 
   if (finishReason === 'length') {
@@ -273,7 +277,7 @@ export async function parseCnisSalarios(
       const { content, tokens } = await callAI(
         SALARIOS_SYSTEM_PROMPT,
         buildSalariosUserPrompt(sanitizeForAI(bloco, 15000)),
-        1500
+        AI_MAX_TOKENS ?? 4000
       )
       totalTokens += tokens
       return parseJson<SalarioBloco[]>(content) ?? []
