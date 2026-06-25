@@ -54,7 +54,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 
     const response = await openai.chat.completions.create({
       model: AI_MODELS.CRITICAL,
-      max_tokens: AI_MAX_TOKENS ?? 800,
+      max_tokens: AI_MAX_TOKENS,
       temperature: 0.2,
       messages: [
         {

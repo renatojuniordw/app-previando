@@ -43,7 +43,7 @@ export function sanitizeForAI(input: string, maxLength: number = 3000): string {
     .replace(/```/g, '')
     .replace(/ignore (previous|all) instructions/gi, '')
     .replace(/you are now|act as|pretend (you are|to be)|jailbreak/gi, '')
-    .replace(/[\x00-\x1F\x7F]/g, ' ')
+    .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, ' ')
     .slice(0, maxLength)
     .trim()
 }

@@ -39,6 +39,11 @@ export function createCnisWorker(redis: Redis): Worker {
           const parsed = await pdfParse.default(buffer, { max: 0 })
           pdfText = parsed.text
         } catch {
+          // pdf-parse falhou — tenta OCR
+        }
+
+        if (pdfText.trim().length < 100) {
+          logger.info('Texto extraído muito curto — usando Tesseract OCR', { cnisDocumentId })
           const Tesseract = await import('tesseract.js')
           const { data } = await Tesseract.recognize(buffer, 'por')
           pdfText = data.text

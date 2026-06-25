@@ -26,8 +26,9 @@ console.log(
   `[AI] Provider: ${provider} | CRITICAL: ${AI_MODELS.CRITICAL} | OPERATIONAL: ${AI_MODELS.OPERATIONAL}`
 )
 
-// Quando Verboo (ilimitado): usa 32768. Quando OpenAI: null → cada call site define seu próprio limite.
-export const AI_MAX_TOKENS: number | null = isVerboo ? 32768 : null
+// Verboo: 32768. OpenAI gpt-4.1-mini: máximo suportado = 16384.
+// export const AI_MAX_TOKENS: number = isVerboo ? 32768 : 16384
+export const AI_MAX_TOKENS: number = 32768
 
 export type AiModel =
   | (typeof MODELS_OPENAI)[keyof typeof MODELS_OPENAI]

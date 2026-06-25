@@ -171,7 +171,7 @@ export async function parseCnisWithAI(
         { role: 'user', content: userPrompt },
       ],
       temperature: 0,
-      max_tokens: AI_MAX_TOKENS ?? 8000,
+      max_tokens: AI_MAX_TOKENS,
     },
     {
       httpAgent: undefined,
