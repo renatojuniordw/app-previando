@@ -15,6 +15,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { BENEFIT_SHORT_LABELS, STATUS_LABELS } from '@/lib/constants'
+import { ErrorBoundary } from '@/components/ErrorBoundary'
 
 interface ClientDetail {
   id: string
@@ -87,7 +88,8 @@ export default function ClientDetailPage() {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <ErrorBoundary>
+    <div className="p-4 sm:p-6 space-y-6">
       <div className="flex items-start justify-between">
         <div>
           <div className="flex items-center gap-3 mb-1">
@@ -104,7 +106,7 @@ export default function ClientDetailPage() {
       {/* Dados do cliente */}
       <Card variant="dark">
         <CardHeader title="Dados do Segurado" />
-        <div className="grid grid-cols-2 gap-3 text-sm font-sans">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm font-sans">
           <div>
             <span className="text-slate-500 text-xs font-medium uppercase tracking-wide">Data de nascimento</span>
             <p className="text-slate-900 font-medium">{formatDate(client.birthDate)}</p>
@@ -213,5 +215,6 @@ export default function ClientDetailPage() {
         </form>
       </Modal>
     </div>
+    </ErrorBoundary>
   )
 }

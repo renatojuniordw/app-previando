@@ -7,6 +7,7 @@ import api from '@/lib/api'
 import { useToast } from '@/store/toast'
 import { Card, CardHeader } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
+import { ErrorBoundary } from '@/components/ErrorBoundary'
 
 interface PlanInfo {
   plan: string
@@ -83,7 +84,8 @@ export default function BillingPage() {
   }
 
   return (
-    <div className="space-y-6 max-w-2xl p-6">
+    <ErrorBoundary>
+    <div className="space-y-6 max-w-4xl p-4 sm:p-6">
       <h1 className="font-serif font-bold text-3xl text-slate-900 tracking-tight">Assinatura</h1>
 
       {successStatus === 'success' && (
@@ -110,7 +112,7 @@ export default function BillingPage() {
         </div>
       </Card>
 
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {PLANS.map((plan) => {
           const isCurrent = currentPlan === plan.id
           const canUpgrade = plan.id !== 'FREE' && !isCurrent
@@ -155,5 +157,6 @@ export default function BillingPage() {
         })}
       </div>
     </div>
+    </ErrorBoundary>
   )
 }

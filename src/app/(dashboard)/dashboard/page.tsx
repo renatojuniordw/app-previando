@@ -73,7 +73,7 @@ export default function DashboardPage() {
     : []
 
   return (
-    <div className="p-8 max-w-7xl mx-auto space-y-8">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6 lg:space-y-8">
       {/* Header */}
       <div className="flex items-end justify-between">
         <div>
@@ -84,14 +84,16 @@ export default function DashboardPage() {
           <Link
             href="/clients/list"
             className="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 shadow-sm transition-all flex items-center gap-2"
+            aria-label="Ver lista de clientes"
           >
-            <Users className="w-4 h-4" /> Clientes
+            <Users className="w-4 h-4" aria-hidden="true" /> <span className="hidden sm:inline">Clientes</span>
           </Link>
           <Link
             href="/clients/kanban"
             className="px-4 py-2 bg-amber-600 text-white rounded-lg text-sm font-medium hover:bg-amber-700 shadow-sm transition-all flex items-center gap-2"
+            aria-label="Kanban de casos"
           >
-            <Columns className="w-4 h-4" /> Kanban
+            <Columns className="w-4 h-4" aria-hidden="true" /> <span className="hidden sm:inline">Kanban</span>
           </Link>
         </div>
       </div>

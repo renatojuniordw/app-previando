@@ -15,6 +15,7 @@ import { z } from 'zod'
 import { Input } from '@/components/ui/Input'
 import { useToast } from '@/store/toast'
 import { Search, Plus, MoreHorizontal, User, FileText, Phone, Mail, AlertCircle } from 'lucide-react'
+import { ErrorBoundary } from '@/components/ErrorBoundary'
 
 interface Client {
   id: string
@@ -108,7 +109,8 @@ export default function ClientsListPage() {
   }
 
   return (
-    <div className="p-8 max-w-7xl mx-auto space-y-6">
+    <ErrorBoundary>
+    <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6">
       {/* Header */}
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
@@ -122,6 +124,7 @@ export default function ClientsListPage() {
               value={search}
               onChange={handleSearch}
               placeholder="Buscar por nome ou CPF..."
+              aria-label="Buscar clientes"
               className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-sans focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all placeholder:text-slate-400 text-slate-900 shadow-sm"
             />
           </div>
@@ -297,5 +300,6 @@ export default function ClientsListPage() {
         </form>
       </Modal>
     </div>
+    </ErrorBoundary>
   )
 }

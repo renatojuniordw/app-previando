@@ -328,7 +328,7 @@ export default function CalculatorPage() {
                 </div>
 
                 {/* Exibição Visual dos Ganhos Principais */}
-                <div className="p-6 grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-slate-100">
+                <div className="p-4 sm:p-6 grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 border-t border-slate-100">
                   <div className="bg-slate-50 border border-slate-100 rounded-xl p-4 flex flex-col justify-between">
                     <span className="font-sans text-[10px] uppercase font-bold tracking-wider text-slate-400 block mb-1">
                       RMI (Inicial)
@@ -386,7 +386,7 @@ export default function CalculatorPage() {
                     )}
 
                     {/* Resumo de Dados Previdenciários */}
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
                       <div className="bg-white border border-slate-200 rounded-xl p-4">
                         <span className="font-sans text-[10px] text-slate-400 font-bold block mb-1">Tempo Contribuição</span>
                         <span className="font-sans font-bold text-slate-800 text-sm">

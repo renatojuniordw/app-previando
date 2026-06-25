@@ -7,6 +7,7 @@ import api from '@/lib/api'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Card, CardHeader } from '@/components/ui/Card'
+import { ErrorBoundary } from '@/components/ErrorBoundary'
 
 export default function ProfilePage() {
   const { data: session } = useSession()
@@ -46,6 +47,7 @@ export default function ProfilePage() {
   }
 
   return (
+    <ErrorBoundary>
     <div className="space-y-6 max-w-lg">
       <h1 className="font-serif font-bold text-3xl text-slate-900 tracking-tight">Perfil</h1>
 
@@ -110,5 +112,6 @@ export default function ProfilePage() {
         </div>
       </Card>
     </div>
+    </ErrorBoundary>
   )
 }

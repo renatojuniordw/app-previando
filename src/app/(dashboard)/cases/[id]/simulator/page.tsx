@@ -255,7 +255,7 @@ export default function SimulatorPage() {
                 </div>
 
                 {/* Grid Visual de Comparação */}
-                <div className="p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="p-4 sm:p-6 grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
                   {/* Cenário Atual */}
                   <div className="bg-slate-50 border border-slate-200/60 rounded-xl p-5 relative overflow-hidden flex flex-col justify-between min-h-[120px]">
                     <div>

@@ -56,13 +56,12 @@ export function Header() {
     setUnreadCount((c) => Math.max(0, c - 1))
   }
 
-  return (
-    <header className="h-16 border-b border-slate-200 bg-white flex items-center justify-between px-6 shrink-0">
+  return (        <header className="h-16 border-b border-slate-200 bg-white flex items-center justify-between px-4 sm:px-6 shrink-0" role="banner">
       <div className="flex-1 flex items-center">
         <div className="relative w-full max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <input
-            type="text"
+            type="search"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyDown={(e) => {
@@ -71,6 +70,7 @@ export function Header() {
               }
             }}
             placeholder="Pesquisar casos, clientes..."
+            aria-label="Pesquisar casos por nome do cliente"
             className="w-full pl-9 pr-12 py-2 bg-slate-50 border border-slate-200 rounded-full text-sm font-sans focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all placeholder:text-slate-400 text-slate-900"
           />
           {searchQuery.trim() && (
@@ -79,9 +79,9 @@ export function Header() {
                 router.push(`/cases?search=${encodeURIComponent(searchQuery.trim())}`)
               }}
               className="absolute right-1.5 top-1/2 -translate-y-1/2 w-7 h-7 flex items-center justify-center bg-amber-600 hover:bg-amber-700 text-white rounded-full transition-colors"
-              aria-label="Pesquisar"
+              aria-label={`Pesquisar por "${searchQuery.trim()}"`}
             >
-              <ArrowRight className="w-3.5 h-3.5" />
+              <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
             </button>
           )}
         </div>
@@ -92,8 +92,9 @@ export function Header() {
           <button
             onClick={() => setOpen((o) => !o)}
             className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-slate-50 text-slate-500 transition-colors relative"
+            aria-label={`Notificações${unreadCount > 0 ? ` (${unreadCount} não lidas)` : ''}`}
           >
-            <Bell className="w-5 h-5" />
+            <Bell className="w-5 h-5" aria-hidden="true" />
             {unreadCount > 0 && (
               <span className="absolute top-2 right-2 min-w-[16px] h-4 px-0.5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white leading-none">
                 {unreadCount > 9 ? '9+' : unreadCount}
@@ -145,7 +146,7 @@ export function Header() {
         </div>
 
         <div className="h-8 w-px bg-slate-200"></div>
-        <button className="flex items-center gap-3 hover:bg-slate-50 py-1.5 px-3 rounded-full transition-colors">
+        <button className="flex items-center gap-3 hover:bg-slate-50 py-1.5 px-3 rounded-full transition-colors" aria-label="Perfil do usuário">
           <div className="flex flex-col items-end">
             <span className="font-sans font-semibold text-sm text-slate-900 leading-none">
               {session?.user?.name || 'Usuário'}
