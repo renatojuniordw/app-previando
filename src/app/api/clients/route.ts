@@ -112,9 +112,10 @@ export async function POST(req: NextRequest) {
     })
 
     // Incrementa contador
-    await prisma.usageRecord.update({
+    await prisma.usageRecord.upsert({
       where: { userId: session.user.id },
-      data: { totalClients: { increment: 1 } },
+      create: { userId: session.user.id, totalClients: 1 },
+      update: { totalClients: { increment: 1 } },
     })
 
     const safe = { ...client } as Record<string, unknown>

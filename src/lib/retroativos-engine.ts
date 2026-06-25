@@ -3,6 +3,8 @@
  * Atualização monetária de parcelas vencidas utilizando INPC histórico e fallbacks
  */
 
+import { FALLBACK_INPC_MENSAL } from '@/lib/previdenciario-constants'
+
 export interface RetroativoInput {
   dataInicioDireito: string // DIB: YYYY-MM-DD
   dataRequerimento: string  // DDB: YYYY-MM-DD
@@ -70,7 +72,7 @@ export function calculateRetroativos(input: RetroativoInput): RetroativoResult {
 
     while (tempDate < limit) {
       const stepKey = `${tempDate.getFullYear()}-${String(tempDate.getMonth() + 1).padStart(2, '0')}`
-      const indiceMes = indicesINPC[stepKey] ?? 0.0035 // 0.35% fallback
+      const indiceMes = indicesINPC[stepKey] ?? FALLBACK_INPC_MENSAL
       fatorCorrecao *= (1 + indiceMes)
       tempDate.setMonth(tempDate.getMonth() + 1)
     }

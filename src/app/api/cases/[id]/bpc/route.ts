@@ -32,7 +32,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     if (!analysis) return NextResponse.json({ error: 'Nenhuma análise BPC encontrada para este caso.' }, { status: 404 })
 
     return NextResponse.json(analysis)
-  } catch (err: any) {
+  } catch (err: unknown) {
     return handleApiError(err)
   }
 }
@@ -62,7 +62,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     })
 
     return NextResponse.json(analysis)
-  } catch (err: any) {
+  } catch (err: unknown) {
     return handleApiError(err)
   }
 }

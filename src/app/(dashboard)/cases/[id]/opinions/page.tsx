@@ -8,6 +8,7 @@ import { Modal } from '@/components/ui/Modal'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { formatDate } from '@/lib/utils'
+import { OPINION_STATUS_LABELS as STATUS_LABELS } from '@/lib/constants'
 
 interface Opinion {
   id: string
@@ -19,11 +20,7 @@ interface Opinion {
   updatedAt: string
 }
 
-const STATUS_LABELS: Record<string, string> = {
-  DRAFT: 'Rascunho',
-  REVIEWED: 'Revisado',
-  FINAL: 'Final',
-}
+
 
 export default function OpinionsPage() {
   const params = useParams()

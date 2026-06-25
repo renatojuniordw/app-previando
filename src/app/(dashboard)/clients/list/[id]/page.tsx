@@ -13,6 +13,7 @@ import { Modal } from '@/components/ui/Modal'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
+import { BENEFIT_SHORT_LABELS, STATUS_LABELS } from '@/lib/constants'
 
 interface ClientDetail {
   id: string
@@ -33,28 +34,7 @@ interface ClientDetail {
   }>
 }
 
-const STATUS_LABELS: Record<string, string> = {
-  PROSPECCAO: 'Prospecção',
-  ANALISE: 'Análise',
-  PRONTO_PARA_REQUERER: 'Pronto p/ Requerer',
-  EM_PROCESSAMENTO: 'Em Processamento',
-  FINALIZADO: 'Finalizado',
-}
 
-const BENEFIT_LABELS: Record<string, string> = {
-  APOSENTADORIA_IDADE: 'Apos. por Idade',
-  APOSENTADORIA_TEMPO_CONTRIBUICAO: 'Apos. por TC',
-  APOSENTADORIA_ESPECIAL: 'Apos. Especial',
-  APOSENTADORIA_HIBRIDA: 'Apos. Híbrida',
-  APOSENTADORIA_PONTOS: 'Apos. por Pontos',
-  AUXILIO_DOENCA: 'Auxílio-Doença',
-  AUXILIO_ACIDENTE: 'Auxílio-Acidente',
-  SALARIO_MATERNIDADE: 'Sal. Maternidade',
-  AUXILIO_RECLUSAO: 'Aux. Reclusão',
-  PENSAO_POR_MORTE: 'Pensão por Morte',
-  BPC_LOAS: 'BPC/LOAS',
-  REVISAO_BENEFICIO: 'Revisão Benefício',
-}
 
 const caseSchema = z.object({
   benefitType: z.string().min(1, 'Selecione o tipo de benefício'),
@@ -172,7 +152,7 @@ export default function ClientDetailPage() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="font-sans font-semibold text-sm text-slate-900">
-                        {BENEFIT_LABELS[caso.benefitType] ?? caso.benefitType}
+                        {BENEFIT_SHORT_LABELS[caso.benefitType] ?? caso.benefitType}
                       </p>
                       <p className="font-sans text-sm text-slate-500">
                         {formatDate(caso.createdAt)}
@@ -199,7 +179,7 @@ export default function ClientDetailPage() {
             <label className="neo-label">Tipo de Benefício</label>
             <select {...register('benefitType')} className="neo-input">
               <option value="">Selecione...</option>
-              {Object.entries(BENEFIT_LABELS).map(([value, label]) => (
+              {Object.entries(BENEFIT_SHORT_LABELS).map(([value, label]) => (
                 <option key={value} value={value}>{label}</option>
               ))}
             </select>

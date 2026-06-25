@@ -7,6 +7,7 @@ import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { Search, SlidersHorizontal, X } from 'lucide-react'
 import { formatDate } from '@/lib/utils'
+import { BENEFIT_SHORT_LABELS, STATUS_LABELS } from '@/lib/constants'
 
 interface CaseItem {
   id: string
@@ -19,28 +20,7 @@ interface CaseItem {
   client: { id: string; name: string }
 }
 
-const BENEFIT_LABELS: Record<string, string> = {
-  APOSENTADORIA_IDADE: 'Apos. por Idade',
-  APOSENTADORIA_TEMPO_CONTRIBUICAO: 'Apos. por TC',
-  APOSENTADORIA_ESPECIAL: 'Apos. Especial',
-  APOSENTADORIA_HIBRIDA: 'Apos. Híbrida',
-  APOSENTADORIA_PONTOS: 'Apos. por Pontos',
-  AUXILIO_DOENCA: 'Auxílio-Doença',
-  AUXILIO_ACIDENTE: 'Auxílio-Acidente',
-  SALARIO_MATERNIDADE: 'Sal. Maternidade',
-  AUXILIO_RECLUSAO: 'Aux. Reclusão',
-  PENSAO_POR_MORTE: 'Pensão por Morte',
-  BPC_LOAS: 'BPC/LOAS',
-  REVISAO_BENEFICIO: 'Revisão Benefício',
-}
-
-const STATUS_LABELS: Record<string, string> = {
-  PROSPECCAO: 'Prospecção',
-  ANALISE: 'Análise',
-  PRONTO_PARA_REQUERER: 'Pronto p/ Requerer',
-  EM_PROCESSAMENTO: 'Em Processamento',
-  FINALIZADO: 'Finalizado',
-}
+const ALL_BENEFIT_TYPES = Object.keys(BENEFIT_SHORT_LABELS)
 
 const PRIORITY_VARIANT: Record<string, 'red' | 'yellow' | 'slate'> = {
   CRITICAL: 'red',
@@ -54,7 +34,7 @@ const PRIORITY_LABEL: Record<string, string> = {
   NORMAL: 'Normal',
 }
 
-const ALL_BENEFIT_TYPES = Object.keys(BENEFIT_LABELS)
+
 
 function formatCurrency(val: number | null) {
   if (!val) return '—'
@@ -153,7 +133,7 @@ export default function CasesPage() {
               <select value={benefitType} onChange={(e) => setBenefitType(e.target.value)} className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500">
                 <option value="">Todos</option>
                 {ALL_BENEFIT_TYPES.map((t) => (
-                  <option key={t} value={t}>{BENEFIT_LABELS[t]}</option>
+                  <option key={t} value={t}>{BENEFIT_SHORT_LABELS[t]}</option>
                 ))}
               </select>
             </div>
@@ -218,7 +198,7 @@ export default function CasesPage() {
                         {c.client.name}
                       </Link>
                     </td>
-                    <td className="px-5 py-4 text-sm text-slate-700">{BENEFIT_LABELS[c.benefitType] ?? c.benefitType}</td>
+                    <td className="px-5 py-4 text-sm text-slate-700">                {BENEFIT_SHORT_LABELS[c.benefitType] ?? c.benefitType}</td>
                     <td className="px-5 py-4">
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700">
                         {STATUS_LABELS[c.status] ?? c.status}

@@ -87,9 +87,10 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
 
     await prisma.client.delete({ where: { id: params.id } })
 
-    await prisma.usageRecord.update({
+    await prisma.usageRecord.upsert({
       where: { userId: session.user.id },
-      data: { totalClients: { decrement: 1 } },
+      create: { userId: session.user.id },
+      update: { totalClients: { decrement: 1 } },
     })
 
     return NextResponse.json({ success: true })

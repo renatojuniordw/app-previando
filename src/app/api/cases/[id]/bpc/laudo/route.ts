@@ -50,7 +50,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     })
 
     return NextResponse.json({ result })
-  } catch (err: any) {
+  } catch (err: unknown) {
     return handleApiError(err)
   }
 }

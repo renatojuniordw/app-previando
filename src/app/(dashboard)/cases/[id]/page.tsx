@@ -7,6 +7,7 @@ import { Card, CardHeader } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { formatDate } from '@/lib/utils'
 import { Modal } from '@/components/ui/Modal'
+import { BENEFIT_LABELS } from '@/lib/constants'
 
 interface CaseDetail {
   id: string
@@ -30,20 +31,7 @@ const STATUS_OPTIONS = [
   { value: 'FINALIZADO', label: 'Finalizado' },
 ]
 
-const BENEFIT_LABELS: Record<string, string> = {
-  APOSENTADORIA_IDADE: 'Aposentadoria por Idade',
-  APOSENTADORIA_TEMPO_CONTRIBUICAO: 'Aposentadoria por Tempo de Contribuição',
-  APOSENTADORIA_ESPECIAL: 'Aposentadoria Especial',
-  APOSENTADORIA_HIBRIDA: 'Aposentadoria Híbrida',
-  APOSENTADORIA_PONTOS: 'Aposentadoria por Pontos',
-  AUXILIO_DOENCA: 'Auxílio-Doença',
-  AUXILIO_ACIDENTE: 'Auxílio-Acidente',
-  SALARIO_MATERNIDADE: 'Salário-Maternidade',
-  AUXILIO_RECLUSAO: 'Auxílio-Reclusão',
-  PENSAO_POR_MORTE: 'Pensão por Morte',
-  BPC_LOAS: 'BPC/LOAS',
-  REVISAO_BENEFICIO: 'Revisão de Benefício',
-}
+
 
 export default function CaseOverviewPage() {
   const params = useParams()

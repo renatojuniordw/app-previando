@@ -23,6 +23,7 @@ import api from '@/lib/api'
 import { Badge } from '@/components/ui/Badge'
 import { ClientSwitcher } from '@/components/ClientSwitcher'
 import { Clock, FileText, LayoutTemplate } from 'lucide-react'
+import { BENEFIT_SHORT_LABELS, PRIORITY_STYLES } from '@/lib/constants'
 
 interface KanbanCase {
   id: string
@@ -43,27 +44,6 @@ const COLUMNS: { id: string; label: string }[] = [
   { id: 'EM_PROCESSAMENTO', label: 'Em Processamento' },
   { id: 'FINALIZADO', label: 'Finalizado' },
 ]
-
-const BENEFIT_LABELS: Record<string, string> = {
-  APOSENTADORIA_IDADE: 'Apos. Idade',
-  APOSENTADORIA_TEMPO_CONTRIBUICAO: 'Apos. TC',
-  APOSENTADORIA_ESPECIAL: 'Apos. Especial',
-  APOSENTADORIA_HIBRIDA: 'Apos. Híbrida',
-  APOSENTADORIA_PONTOS: 'Apos. Pontos',
-  AUXILIO_DOENCA: 'Aux. Doença',
-  AUXILIO_ACIDENTE: 'Aux. Acidente',
-  SALARIO_MATERNIDADE: 'Sal. Maternidade',
-  AUXILIO_RECLUSAO: 'Aux. Reclusão',
-  PENSAO_POR_MORTE: 'Pensão por Morte',
-  BPC_LOAS: 'BPC/LOAS',
-  REVISAO_BENEFICIO: 'Revisão',
-}
-
-const PRIORITY_STYLES: Record<string, { label: string, color: 'lime' | 'red' | 'yellow' | 'slate' | 'blue' | 'green' }> = {
-  CRITICAL: { label: 'Crítico', color: 'red' },
-  ATTENTION: { label: 'Atenção', color: 'yellow' },
-  NORMAL: { label: 'Normal', color: 'slate' },
-}
 
 function getInitials(name: string) {
   return name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()
@@ -86,7 +66,7 @@ function CaseCard({ caso, isDragging }: { caso: KanbanCase; isDragging?: boolean
         <div className={`bg-white border border-slate-200 rounded-xl p-4 cursor-grab active:cursor-grabbing hover:border-amber-300 hover:shadow-md transition-all group ${isDragging ? 'shadow-lg ring-2 ring-amber-500 border-transparent' : 'shadow-sm'}`}>
           <div className="flex items-start justify-between mb-3">
             <h4 className="font-serif font-bold text-slate-900 text-[15px] leading-tight group-hover:text-amber-700 transition-colors">
-              {BENEFIT_LABELS[caso.benefitType] ?? caso.benefitType}
+              {BENEFIT_SHORT_LABELS[caso.benefitType] ?? caso.benefitType}
             </h4>
             <div className="shrink-0 ml-2">
               <Badge variant={badgeConfig.color}>{badgeConfig.label}</Badge>
@@ -125,7 +105,7 @@ function DragOverlayCard({ caso }: { caso: KanbanCase }) {
     <div className="bg-white border-2 border-amber-500 rounded-xl p-4 shadow-xl rotate-3 opacity-95 w-full cursor-grabbing">
       <div className="flex items-start justify-between mb-3">
         <h4 className="font-serif font-bold text-slate-900 text-[15px] leading-tight">
-          {BENEFIT_LABELS[caso.benefitType] ?? caso.benefitType}
+          {BENEFIT_SHORT_LABELS[caso.benefitType] ?? caso.benefitType}
         </h4>
         <div className="shrink-0 ml-2">
           <Badge variant={badgeConfig.color}>{badgeConfig.label}</Badge>

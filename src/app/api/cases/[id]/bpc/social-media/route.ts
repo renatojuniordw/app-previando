@@ -31,7 +31,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     const result = await gerarCarrossel(tema, contexto ?? '')
 
     // Increment usage counter
-    const limit = await prisma.planLimit.findUnique({ where: { plan: session.user.plan as any } })
+    const limit = await prisma.planLimit.findUnique({ where: { plan: session.user.plan as import('@prisma/client').Plan } })
     if (limit && limit.bpcSocialMediaPerMonth !== -1) {
       await prisma.usageRecord.upsert({
         where: { userId: session.user.id },
@@ -41,7 +41,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     }
 
     return NextResponse.json({ result })
-  } catch (err: any) {
+  } catch (err: unknown) {
     return handleApiError(err)
   }
 }

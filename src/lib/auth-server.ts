@@ -14,10 +14,10 @@ export async function authWithFreshPlan() {
     select: { plan: true, isAdmin: true },
   })
 
-  if (fresh) {
-    session.user.plan = fresh.plan
-    session.user.isAdmin = fresh.isAdmin
-  }
+  if (!fresh) return null
+
+  session.user.plan = fresh.plan
+  session.user.isAdmin = fresh.isAdmin
 
   return session
 }

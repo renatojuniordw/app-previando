@@ -93,9 +93,10 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     })
 
     // Incrementa contador
-    await prisma.usageRecord.update({
+    await prisma.usageRecord.upsert({
       where: { userId: session.user.id },
-      data: { opinionsThisMonth: { increment: 1 } },
+      create: { userId: session.user.id, opinionsThisMonth: 1 },
+      update: { opinionsThisMonth: { increment: 1 } },
     })
 
     return NextResponse.json({ opinion }, { status: 201 })

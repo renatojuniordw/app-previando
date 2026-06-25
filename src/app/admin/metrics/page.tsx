@@ -1,6 +1,8 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { Card } from '@/components/ui/Card'
+import { STATUS_LABELS } from '@/lib/constants'
+
 interface Metrics {
   users: { total: number; byPlan: Record<string, number>; newThisMonth: number }
   revenue: { mrr: number; totalThisMonth: number; totalAllTime: number }
@@ -10,13 +12,7 @@ interface Metrics {
 function formatBRL(value: number) {
   return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 }
-const STATUS_LABELS: Record<string, string> = {
-  PROSPECCAO: 'Prospecção',
-  ANALISE: 'Análise',
-  PRONTO_PARA_REQUERER: 'Pronto p/ Requerer',
-  EM_PROCESSAMENTO: 'Em Processamento',
-  FINALIZADO: 'Finalizado',
-}
+
 export default function AdminMetricsPage() {
   const [metrics, setMetrics] = useState<Metrics | null>(null)
   const [loading, setLoading] = useState(true)

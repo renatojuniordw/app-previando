@@ -41,7 +41,7 @@ async function validateInput(body: unknown): Promise<{ data: z.infer<typeof sche
   const parsed = schema.safeParse(body)
   if (!parsed.success) {
     return {
-      data: null as any,
+      data: null as unknown as z.infer<typeof schema>,
       error: NextResponse.json({ error: 'Dados inválidos.' }, { status: 400 }),
     }
   }
@@ -71,8 +71,8 @@ export async function POST(req: NextRequest) {
   let user: Awaited<ReturnType<typeof createUser>>
   try {
     user = await createUser(input)
-  } catch (e: any) {
-    if (e?.code === 'P2002') {
+  } catch (e: unknown) {
+    if (e && typeof e === 'object' && 'code' in e && (e as { code: string }).code === 'P2002') {
       return NextResponse.json({ error: 'Email já cadastrado.' }, { status: 409 })
     }
     throw e

@@ -40,5 +40,9 @@ export async function createUser(input: RegisterInput): Promise<{ id: string; em
     { maxWait: 5000, timeout: 10000 }
   )
 
-  return { id: result.id, email: result.email, plan: result.plan ?? 'FREE' } as { id: string; email: string; plan: string }
+  return {
+    id: result.id,
+    email: result.email!,
+    plan: result.plan ?? 'FREE',
+  } as { id: string; email: string; plan: string }
 }

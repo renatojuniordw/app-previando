@@ -53,9 +53,10 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     })
 
     // Incrementa contador mensal de uso do plano
-    await prisma.usageRecord.update({
+    await prisma.usageRecord.upsert({
       where: { userId: session.user.id },
-      data: { calculationsThisMonth: { increment: 1 } },
+      create: { userId: session.user.id, calculationsThisMonth: 1 },
+      update: { calculationsThisMonth: { increment: 1 } },
     })
 
     return NextResponse.json({ calculation: calc }, { status: 201 })

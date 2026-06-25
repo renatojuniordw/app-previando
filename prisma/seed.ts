@@ -56,11 +56,9 @@ async function main() {
 
   console.log('🌱 Seeding PlanLimits...')
 
-  await prisma.planLimit.upsert({
-    where: { plan: 'FREE' },
-    update: {},
-    create: {
-      plan: 'FREE',
+  const planLimits = [
+    {
+      plan: 'FREE' as const,
       maxClients: 3,
       maxCalculationsPerMonth: 5,
       maxOpinionsPerMonth: 1,
@@ -75,13 +73,8 @@ async function main() {
       bpcAnalysesPerMonth: 0,
       bpcSocialMediaPerMonth: 0,
     },
-  })
-
-  await prisma.planLimit.upsert({
-    where: { plan: 'SOLO' },
-    update: {},
-    create: {
-      plan: 'SOLO',
+    {
+      plan: 'SOLO' as const,
       maxClients: 30,
       maxCalculationsPerMonth: -1,
       maxOpinionsPerMonth: 20,
@@ -96,13 +89,8 @@ async function main() {
       bpcAnalysesPerMonth: 50,
       bpcSocialMediaPerMonth: 5,
     },
-  })
-
-  await prisma.planLimit.upsert({
-    where: { plan: 'PRO' },
-    update: {},
-    create: {
-      plan: 'PRO',
+    {
+      plan: 'PRO' as const,
       maxClients: -1,
       maxCalculationsPerMonth: -1,
       maxOpinionsPerMonth: -1,
@@ -117,7 +105,15 @@ async function main() {
       bpcAnalysesPerMonth: -1,
       bpcSocialMediaPerMonth: -1,
     },
-  })
+  ]
+
+  for (const { plan, ...limits } of planLimits) {
+    await prisma.planLimit.upsert({
+      where: { plan },
+      update: limits,
+      create: { plan, ...limits },
+    })
+  }
 
   console.log('✅ PlanLimits seeded successfully')
 
@@ -255,7 +251,18 @@ async function main() {
     })),
   ]
 
-  for (const r of rules as any[]) {
+  for (const r of rules as Array<{
+    modality: string
+    gender: string
+    vigencia: string
+    minimumAge?: number
+    contributionYears?: number
+    minimumPoints?: number
+    gracePeriodMonths?: number
+    description: string
+    legislation: string
+    notes?: string
+  }>) {
     const effectiveDateVal = new Date(r.vigencia + 'T00:00:00.000Z')
     await prisma.retirementRule.upsert({
       where: {

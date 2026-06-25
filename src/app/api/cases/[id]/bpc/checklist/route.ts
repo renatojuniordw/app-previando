@@ -6,7 +6,6 @@ import { rateLimit } from '@/lib/rate-limit'
 import { handleApiError } from '@/lib/api-error'
 import { gerarChecklist } from '@/services/bpc'
 import { prisma } from '@/lib/prisma'
-
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
   try {
     const session = await auth()
@@ -42,7 +41,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     })
 
     return NextResponse.json({ result })
-  } catch (err: any) {
+  } catch (err: unknown) {
     return handleApiError(err)
   }
 }

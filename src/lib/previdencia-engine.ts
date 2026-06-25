@@ -79,29 +79,24 @@ export interface CalculationResult {
   }
 }
 
-const SALARIO_MINIMO_FALLBACK = 1621.00
-const TETO_PREVIDENCIARIO_FALLBACK = 8157.41
-
-// Constantes previdenciárias EC 103/2019
-const CARENCIA_APOSENTADORIA_MESES = 180       // Art. 27 Lei 8.213/91
-const CARENCIA_AUXILIO_DOENCA_MESES = 12       // Art. 25, I
-const CARENCIA_PENSAO_MORTE_MESES = 18         // Afeta duração, não elegibilidade
-
-const COEFICIENTE_BASE = 0.60                  // Art. 26, EC 103/2019
-const ACRESCIMO_ANUAL = 0.02                   // 2% por ano excedente
-const ANOS_BASE_EXCEDENTE_M = 20               // Homens: acréscimo a partir de 20 anos
-const ANOS_BASE_EXCEDENTE_F = 15               // Mulheres: acréscimo a partir de 15 anos
-
-const MULTIPLICADOR_ESPECIAL_ACRESCIMO_M = 0.4 // Conversão tempo especial → comum (homem)
-const MULTIPLICADOR_ESPECIAL_ACRESCIMO_F = 0.2 // Conversão tempo especial → comum (mulher)
-
-const FATOR_PREVID_MIN = 0.4                   // Limite mínimo do fator previdenciário
-const FATOR_PREVID_MAX = 1.2                   // Limite máximo do fator previdenciário
-const DENOMINADOR_PEDAGIO_50 = 2200            // Denominador da fórmula do pedágio 50%
-
-const COEFICIENTE_AUXILIO_DOENCA = 0.91        // Art. 61 Lei 8.213/91
-
-const DATA_LIMITE_94 = new Date('1994-07-01')  // Início do Plano Real — base de cálculo pós-reforma
+import {
+  SALARIO_MINIMO_FALLBACK,
+  TETO_PREVIDENCIARIO_FALLBACK,
+  CARENCIA_APOSENTADORIA_MESES,
+  CARENCIA_AUXILIO_DOENCA_MESES,
+  CARENCIA_PENSAO_MORTE_MESES,
+  COEFICIENTE_BASE,
+  ACRESCIMO_ANUAL,
+  ANOS_BASE_EXCEDENTE_M,
+  ANOS_BASE_EXCEDENTE_F,
+  MULTIPLICADOR_ESPECIAL_ACRESCIMO_M,
+  MULTIPLICADOR_ESPECIAL_ACRESCIMO_F,
+  FATOR_PREVID_MIN,
+  FATOR_PREVID_MAX,
+  DENOMINADOR_PEDAGIO_50,
+  COEFICIENTE_AUXILIO_DOENCA,
+  DATA_LIMITE_94,
+} from '@/lib/previdenciario-constants'
 
 function diffInMonths(startStr: string, endStr: string): number {
   const start = new Date(startStr)

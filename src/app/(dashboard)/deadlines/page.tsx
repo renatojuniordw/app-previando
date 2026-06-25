@@ -5,6 +5,7 @@ import api from '@/lib/api'
 import { Card } from '@/components/ui/Card'
 import Link from 'next/link'
 import { Clock, AlertTriangle, CheckCircle2, Calendar } from 'lucide-react'
+import { BENEFIT_SHORT_LABELS } from '@/lib/constants'
 
 interface DeadlineCase {
   id: string
@@ -28,20 +29,7 @@ const PRIORITY_LABEL: Record<string, string> = {
   NORMAL: 'Normal',
 }
 
-const BENEFIT_LABELS: Record<string, string> = {
-  APOSENTADORIA_IDADE: 'Apos. por Idade',
-  APOSENTADORIA_TEMPO_CONTRIBUICAO: 'Apos. TC',
-  APOSENTADORIA_ESPECIAL: 'Especial',
-  APOSENTADORIA_HIBRIDA: 'Híbrida',
-  APOSENTADORIA_PONTOS: 'Pontos',
-  AUXILIO_DOENCA: 'Aux. Doença',
-  AUXILIO_ACIDENTE: 'Aux. Acidente',
-  SALARIO_MATERNIDADE: 'Maternidade',
-  AUXILIO_RECLUSAO: 'Aux. Reclusão',
-  PENSAO_POR_MORTE: 'Pensão Morte',
-  BPC_LOAS: 'BPC/LOAS',
-  REVISAO_BENEFICIO: 'Revisão',
-}
+
 
 function urgencyClass(daysLeft: number | null): string {
   if (daysLeft === null) return 'bg-slate-100 text-slate-500'
@@ -83,7 +71,7 @@ export default function DeadlinesPage() {
         <div className="flex-1 min-w-0">
           <p className="font-semibold text-sm text-slate-900 truncate">{d.client.name}</p>
           <p className="text-xs text-slate-500 truncate">
-            {BENEFIT_LABELS[d.benefitType] ?? d.benefitType} · {new Date(d.deadlineDate).toLocaleDateString('pt-BR')}
+            {BENEFIT_SHORT_LABELS[d.benefitType] ?? d.benefitType} · {new Date(d.deadlineDate).toLocaleDateString('pt-BR')}
           </p>
         </div>
         <span className={`shrink-0 text-xs font-semibold px-2 py-0.5 rounded-full ${PRIORITY_BADGE[d.priority] ?? ''}`}>

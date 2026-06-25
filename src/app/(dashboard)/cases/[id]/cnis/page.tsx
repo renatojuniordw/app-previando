@@ -89,8 +89,10 @@ export default function CnisCasePage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [deleteError, setDeleteError] = useState('')
   const [showSuccessBanner, setShowSuccessBanner] = useState(false)
+  const [stuckWarning, setStuckWarning] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
   const pollRef = useRef<NodeJS.Timeout | null>(null)
+  const stuckRef = useRef<NodeJS.Timeout | null>(null)
 
   const load = useCallback(async () => {
     try {
@@ -111,18 +113,26 @@ export default function CnisCasePage() {
 
   useEffect(() => {
     if (cnis && (cnis.processingStatus === 'PENDING' || cnis.processingStatus === 'PROCESSING')) {
+      setStuckWarning(false)
+      stuckRef.current = setTimeout(() => setStuckWarning(true), 90_000)
+
       pollRef.current = setInterval(async () => {
         const updated = await load()
         if (updated && updated.processingStatus === 'COMPLETED') {
           setShowSuccessBanner(true)
+          setStuckWarning(false)
           setTimeout(() => setShowSuccessBanner(false), 5000)
         }
         if (updated && updated.processingStatus !== 'PENDING' && updated.processingStatus !== 'PROCESSING') {
           if (pollRef.current) clearInterval(pollRef.current)
+          if (stuckRef.current) clearTimeout(stuckRef.current)
         }
       }, 3000)
     }
-    return () => { if (pollRef.current) clearInterval(pollRef.current) }
+    return () => {
+      if (pollRef.current) clearInterval(pollRef.current)
+      if (stuckRef.current) clearTimeout(stuckRef.current)
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cnis?.processingStatus])
 
@@ -236,7 +246,7 @@ export default function CnisCasePage() {
           {cnis && (
             <button
               onClick={() => setShowDeleteModal(true)}
-              disabled={uploading || isProcessing || deleting}
+              disabled={uploading || deleting}
               className="border border-red-200 text-red-600 hover:bg-red-50 font-sans font-semibold text-sm px-5 py-2.5 rounded-lg transition-colors disabled:opacity-50 shadow-sm flex items-center gap-2"
             >
               <Trash2 className="w-4 h-4" />
@@ -361,11 +371,24 @@ export default function CnisCasePage() {
             </div>
 
             {isProcessing && (
-              <div className="border border-amber-200 bg-amber-50 rounded-lg p-4 flex items-center gap-3">
-                <Loader2 className="w-5 h-5 animate-spin text-amber-600 shrink-0" />
-                <p className="font-sans text-sm font-medium text-amber-800">
-                  A inteligência artificial está lendo e processando os dados do CNIS. Isso pode levar alguns instantes.
-                </p>
+              <div className="space-y-3">
+                <div className="border border-amber-200 bg-amber-50 rounded-lg p-4 flex items-center gap-3">
+                  <Loader2 className="w-5 h-5 animate-spin text-amber-600 shrink-0" />
+                  <p className="font-sans text-sm font-medium text-amber-800">
+                    A inteligência artificial está lendo e processando os dados do CNIS. Isso pode levar alguns instantes.
+                  </p>
+                </div>
+                {stuckWarning && (
+                  <div className="border border-orange-200 bg-orange-50 rounded-lg p-4 flex items-start gap-3">
+                    <AlertCircle className="w-5 h-5 text-orange-500 shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-sans text-sm font-bold text-orange-800">Processamento mais lento que o esperado</p>
+                      <p className="font-sans text-sm text-orange-700 mt-1">
+                        O documento está aguardando processamento há mais de 90 segundos. Verifique se o servidor de processamento em background (<code className="font-mono text-xs bg-orange-100 px-1 rounded">npm run worker</code>) está em execução.
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
@@ -374,7 +397,14 @@ export default function CnisCasePage() {
                 <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
                 <div>
                   <p className="font-sans text-sm font-bold text-red-800">Falha no Processamento</p>
-                  <p className="font-sans text-sm text-red-700 mt-1">{cnis.processingError ?? 'Ocorreu um erro desconhecido ao processar o documento.'}</p>
+                  <p className="font-sans text-sm text-red-700 mt-1">
+                    {cnis.processingError
+                      ? cnis.processingError.replace(/^Error:\s*/i, '')
+                      : 'Ocorreu um erro ao processar o documento. Tente enviar o CNIS novamente.'}
+                  </p>
+                  <p className="font-sans text-xs text-red-500 mt-2">
+                    Exclua o documento e envie novamente para tentar outra vez.
+                  </p>
                 </div>
               </div>
             )}

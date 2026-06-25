@@ -6,6 +6,7 @@ import { useParams, usePathname } from 'next/navigation'
 import api from '@/lib/api'
 import { Badge } from '@/components/ui/Badge'
 import { ArrowLeft, LayoutDashboard, MessageSquare, FileText, Calculator, BarChart3, History, CheckSquare, Bot, Lock, Building2, GitCompareArrows } from 'lucide-react'
+import { BENEFIT_SHORT_LABELS, STATUS_LABELS, PRIORITY_STYLES } from '@/lib/constants'
 
 interface CaseHeader {
   id: string
@@ -20,34 +21,7 @@ interface CaseHeader {
   }
 }
 
-const BENEFIT_LABELS: Record<string, string> = {
-  APOSENTADORIA_IDADE: 'Apos. por Idade',
-  APOSENTADORIA_TEMPO_CONTRIBUICAO: 'Apos. por TC',
-  APOSENTADORIA_ESPECIAL: 'Apos. Especial',
-  APOSENTADORIA_HIBRIDA: 'Apos. Híbrida',
-  APOSENTADORIA_PONTOS: 'Apos. por Pontos',
-  AUXILIO_DOENCA: 'Auxílio-Doença',
-  AUXILIO_ACIDENTE: 'Auxílio-Acidente',
-  SALARIO_MATERNIDADE: 'Sal. Maternidade',
-  AUXILIO_RECLUSAO: 'Aux. Reclusão',
-  PENSAO_POR_MORTE: 'Pensão por Morte',
-  BPC_LOAS: 'BPC/LOAS',
-  REVISAO_BENEFICIO: 'Revisão Benefício',
-}
 
-const STATUS_LABELS: Record<string, string> = {
-  PROSPECCAO: 'Prospecção',
-  ANALISE: 'Análise',
-  PRONTO_PARA_REQUERER: 'Pronto p/ Requerer',
-  EM_PROCESSAMENTO: 'Em Processamento',
-  FINALIZADO: 'Finalizado',
-}
-
-const PRIORITY_STYLES: Record<string, { label: string, color: 'lime' | 'red' | 'yellow' | 'slate' | 'blue' | 'green' }> = {
-  CRITICAL: { label: 'Crítico', color: 'red' },
-  ATTENTION: { label: 'Atenção', color: 'yellow' },
-  NORMAL: { label: 'Normal', color: 'slate' },
-}
 
 export default function CaseLayout({ children }: { children: React.ReactNode }) {
   const params = useParams()
@@ -95,7 +69,7 @@ export default function CaseLayout({ children }: { children: React.ReactNode }) 
                   </Link>
                   <div className="flex flex-wrap items-center gap-3">
                     <h1 className="font-serif font-bold text-2xl md:text-3xl text-slate-900 tracking-tight">
-                      {BENEFIT_LABELS[caseData.benefitType] ?? caseData.benefitType}
+                      {BENEFIT_SHORT_LABELS[caseData.benefitType] ?? caseData.benefitType}
                     </h1>
                     <div className="flex items-center gap-2 mt-1 md:mt-0">
                       <Badge variant="slate" className="bg-slate-100 text-slate-700 border-slate-200">

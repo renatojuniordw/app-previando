@@ -4,21 +4,7 @@ import { z } from 'zod'
 import { rateLimit } from '@/lib/rate-limit'
 import { handleApiError } from '@/lib/api-error'
 import { gerarCarrossel } from '@/services/bpc'
-
-const BENEFIT_LABELS: Record<string, string> = {
-  APOSENTADORIA_IDADE: 'Aposentadoria por Idade',
-  APOSENTADORIA_TEMPO_CONTRIBUICAO: 'Aposentadoria por Tempo de Contribuição',
-  APOSENTADORIA_ESPECIAL: 'Aposentadoria Especial',
-  APOSENTADORIA_HIBRIDA: 'Aposentadoria Híbrida',
-  APOSENTADORIA_PONTOS: 'Aposentadoria por Pontos',
-  AUXILIO_DOENCA: 'Auxílio-Doença',
-  AUXILIO_ACIDENTE: 'Auxílio-Acidente',
-  SALARIO_MATERNIDADE: 'Salário-Maternidade',
-  AUXILIO_RECLUSAO: 'Auxílio-Reclusão',
-  PENSAO_POR_MORTE: 'Pensão por Morte',
-  BPC_LOAS: 'BPC/LOAS',
-  REVISAO_BENEFICIO: 'Revisão de Benefício',
-}
+import { BENEFIT_LABELS } from '@/lib/constants'
 
 const schema = z.object({
   benefitType: z.enum([
