@@ -148,6 +148,8 @@ export async function guardCalculationLimit(userId: string, plan: string): Promi
     throw new PlanLimitError('Simulação não está disponível no seu plano.', 'CALCULATIONS', plan === 'FREE' ? 'SOLO' : 'PRO')
   }
 
+  if (limit.maxCalculationsPerMonth === -1) return
+
   const record = await getOrResetUsageRecord(userId)
   const currentCount = record?.calculationsThisMonth ?? 0
 
@@ -175,6 +177,8 @@ export async function guardOpinionLimit(userId: string, plan: string): Promise<v
   if (!limit.diagnosisEnabled) {
     throw new PlanLimitError('Consulta de jurisprudência não está disponível no seu plano.', 'OPINIONS', plan === 'FREE' ? 'SOLO' : 'PRO')
   }
+
+  if (limit.maxOpinionsPerMonth === -1) return
 
   const record = await getOrResetUsageRecord(userId)
   const currentCount = record?.opinionsThisMonth ?? 0
