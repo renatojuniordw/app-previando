@@ -6,6 +6,9 @@ import { BPC_SOCIAL_QUESTIONS_SYSTEM_PROMPT, BPC_MEDICAL_QUESTIONS_SYSTEM_PROMPT
 import { BPC_CHECKLIST_SYSTEM_PROMPT, buildChecklistUserPrompt } from '@/lib/prompts/bpc/checklist'
 import { BPC_CAROUSEL_SYSTEM_PROMPT, buildCarouselUserPrompt } from '@/lib/prompts/bpc/carousel'
 
+// Atualizar anualmente conforme reajuste do salário mínimo
+const SALARIO_MINIMO_VIGENTE = 1518.00
+
 function s(input: string | undefined, maxLen: number = 3000): string {
   return sanitizeForAI(input ?? '', maxLen)
 }
@@ -20,12 +23,6 @@ export interface BpcAnalysisParams {
   rendaPerCapita: number
   barreirasRelatadas: string
   resumoLaudos?: string
-}
-
-function faixaLabel(faixa: 'MENOR_16' | 'MAIOR_16'): string {
-  return faixa === 'MENOR_16'
-    ? 'Menor de 16 anos — foco em casa, escola, apoio familiar, desenvolvimento'
-    : 'Maior de 16 anos — foco em trabalho, autonomia, vida comunitária, atividades diárias'
 }
 
 export async function gerarPreAnalise(params: BpcAnalysisParams): Promise<string> {
@@ -43,6 +40,7 @@ export async function gerarPreAnalise(params: BpcAnalysisParams): Promise<string
     rendaFamiliar,
     membrosGrupo,
     rendaPerCapita,
+    salarioMinimoVigente: SALARIO_MINIMO_VIGENTE,
     barreiras: b,
     resumoLaudos: r,
   })
