@@ -6,6 +6,7 @@ import api from '@/lib/api'
 import { formatDate } from '@/lib/utils'
 import { Badge } from '@/components/ui/Badge'
 import { Modal } from '@/components/ui/Modal'
+import { useToast } from '@/store/toast'
 import {
   Upload,
   FileText,
@@ -46,12 +47,17 @@ interface CnisExtractedData {
   periodos?: Periodo[]
 }
 
-const STATUS_CONFIG: Record<string, { label: string, color: 'slate' | 'yellow' | 'lime' | 'red' }> = {
+const STATUS_CONFIG: Record<string, { label: string; color: 'slate' | 'yellow' | 'lime' | 'red' | 'blue' }> = {
   PENDING: { label: 'Aguardando', color: 'slate' },
-  PROCESSING: { label: 'Processando', color: 'yellow' },
+  PROCESSING: { label: 'Processando resumo...', color: 'yellow' },
+  SUMMARY_READY: { label: 'Resumo pronto', color: 'blue' },
+  PROCESSING_DETAILS: { label: 'Processando salários...', color: 'yellow' },
   COMPLETED: { label: 'Concluído', color: 'lime' },
   FAILED: { label: 'Falhou', color: 'red' },
 }
+
+const PROCESSING_STATUSES = ['PENDING', 'PROCESSING', 'SUMMARY_READY', 'PROCESSING_DETAILS'] as const
+const isProcessingStatus = (status: string): boolean => PROCESSING_STATUSES.includes(status as typeof PROCESSING_STATUSES[number])
 
 const formatCurrency = (value: number) => {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value)
@@ -90,6 +96,7 @@ export default function CnisCasePage() {
   const [deleteError, setDeleteError] = useState('')
   const [showSuccessBanner, setShowSuccessBanner] = useState(false)
   const [stuckWarning, setStuckWarning] = useState(false)
+  const { addToast } = useToast()
   const fileRef = useRef<HTMLInputElement>(null)
   const pollRef = useRef<NodeJS.Timeout | null>(null)
   const stuckRef = useRef<NodeJS.Timeout | null>(null)
@@ -112,9 +119,9 @@ export default function CnisCasePage() {
   }, [load])
 
   useEffect(() => {
-    if (cnis && (cnis.processingStatus === 'PENDING' || cnis.processingStatus === 'PROCESSING')) {
+    if (cnis && isProcessingStatus(cnis.processingStatus)) {
       setStuckWarning(false)
-      stuckRef.current = setTimeout(() => setStuckWarning(true), 90_000)
+      stuckRef.current = setTimeout(() => setStuckWarning(true), 180_000)
 
       pollRef.current = setInterval(async () => {
         const updated = await load()
@@ -123,7 +130,7 @@ export default function CnisCasePage() {
           setStuckWarning(false)
           setTimeout(() => setShowSuccessBanner(false), 5000)
         }
-        if (updated && updated.processingStatus !== 'PENDING' && updated.processingStatus !== 'PROCESSING') {
+        if (updated && !isProcessingStatus(updated.processingStatus)) {
           if (pollRef.current) clearInterval(pollRef.current)
           if (stuckRef.current) clearTimeout(stuckRef.current)
         }
@@ -148,6 +155,7 @@ export default function CnisCasePage() {
       await api.post('/cnis/upload', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       })
+      addToast({ type: 'info', title: 'CNIS enviado', message: 'Processando extrato do segurado...' })
       await load()
     } catch (err: unknown) {
       setUploadError((err as { response?: { data?: { error?: string } } })?.response?.data?.error ?? 'Erro ao enviar CNIS.')
@@ -164,6 +172,7 @@ export default function CnisCasePage() {
       await api.delete(`/cnis/${params.id}`)
       setCnis(null)
       setShowDeleteModal(false)
+      addToast({ type: 'success', title: 'CNIS excluído' })
     } catch (err: unknown) {
       setDeleteError((err as { response?: { data?: { error?: string } } })?.response?.data?.error ?? 'Erro ao excluir extrato do CNIS.')
     } finally {
@@ -180,7 +189,7 @@ export default function CnisCasePage() {
     )
   }
 
-  const isProcessing = cnis ? (cnis.processingStatus === 'PENDING' || cnis.processingStatus === 'PROCESSING') : false
+  const isProcessing = cnis ? isProcessingStatus(cnis.processingStatus) : false
 
   const togglePeriod = (index: number) => {
     setExpandedPeriod(expandedPeriod === index ? null : index)
@@ -359,7 +368,7 @@ export default function CnisCasePage() {
                 <p className="font-sans font-semibold text-slate-900">{formatDate(cnis.createdAt)}</p>
               </div>
               
-              {cnis.processingStatus === 'COMPLETED' && (
+              {['COMPLETED', 'SUMMARY_READY', 'PROCESSING_DETAILS'].includes(cnis.processingStatus) && (
                 <div className="bg-slate-50 border border-slate-100 rounded-lg p-4 flex flex-col justify-center">
                   <div className="flex items-center gap-2 text-slate-500 mb-1">
                     <CheckCircle2 className="w-4 h-4" />
@@ -375,7 +384,11 @@ export default function CnisCasePage() {
                 <div className="border border-amber-200 bg-amber-50 rounded-lg p-4 flex items-center gap-3">
                   <Loader2 className="w-5 h-5 animate-spin text-amber-600 shrink-0" />
                   <p className="font-sans text-sm font-medium text-amber-800">
-                    A inteligência artificial está lendo e processando os dados do CNIS. Isso pode levar alguns instantes.
+                    {cnis.processingStatus === 'SUMMARY_READY'
+                      ? 'Resumo pronto! Processando salários detalhados em background...'
+                      : cnis.processingStatus === 'PROCESSING_DETAILS'
+                        ? 'Processando salários detalhados... Isso pode levar 1-2 minutos.'
+                        : 'A inteligência artificial está lendo e processando os dados do CNIS. Isso pode levar alguns instantes.'}
                   </p>
                 </div>
                 {stuckWarning && (
@@ -384,7 +397,7 @@ export default function CnisCasePage() {
                     <div>
                       <p className="font-sans text-sm font-bold text-orange-800">Processamento mais lento que o esperado</p>
                       <p className="font-sans text-sm text-orange-700 mt-1">
-                        O documento está aguardando processamento há mais de 90 segundos. Verifique se o servidor de processamento em background (<code className="font-mono text-xs bg-orange-100 px-1 rounded">npm run worker</code>) está em execução.
+                        O documento está sendo processado há mais de 3 minutos. Verifique se o servidor de processamento em background (<code className="font-mono text-xs bg-orange-100 px-1 rounded">npm run worker</code>) está em execução.
                       </p>
                     </div>
                   </div>
@@ -409,7 +422,7 @@ export default function CnisCasePage() {
               </div>
             )}
 
-            {cnis.processingStatus === 'COMPLETED' && cnis.extractedData && (() => {
+            {['COMPLETED', 'SUMMARY_READY'].includes(cnis.processingStatus) && cnis.extractedData && (() => {
               const data = cnis.extractedData as unknown as CnisExtractedData
               
               return (

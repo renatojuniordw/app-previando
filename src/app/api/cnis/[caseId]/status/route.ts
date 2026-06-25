@@ -30,7 +30,7 @@ export async function GET(req: NextRequest, { params }: { params: { caseId: stri
     return NextResponse.json({
       status: doc.processingStatus,
       error: doc.processingError,
-      summary: doc.processingStatus === 'COMPLETED'
+      summary: ['COMPLETED', 'SUMMARY_READY', 'PROCESSING_DETAILS'].includes(doc.processingStatus)
         ? {
             nit: doc.nit,
             totalContribuicoes: doc.totalContributions,

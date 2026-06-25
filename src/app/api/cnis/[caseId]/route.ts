@@ -19,7 +19,7 @@ export async function GET(req: NextRequest, { params }: { params: { caseId: stri
     if (!doc) return NextResponse.json({ cnisDocument: null })
 
     let downloadUrl: string | null = null
-    if (doc.processingStatus === 'COMPLETED') {
+    if (doc.processingStatus === 'COMPLETED' || doc.processingStatus === 'SUMMARY_READY') {
       downloadUrl = await getSignedDownloadUrl(doc.r2Key)
     }
 

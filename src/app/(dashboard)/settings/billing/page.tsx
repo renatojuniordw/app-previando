@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { useSearchParams } from 'next/navigation'
 import api from '@/lib/api'
+import { useToast } from '@/store/toast'
 import { Card, CardHeader } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 
@@ -41,6 +42,7 @@ export default function BillingPage() {
   const [loading, setLoading] = useState(true)
   const [subscribing, setSubscribing] = useState<string | null>(null)
   const [cancelling, setCancelling] = useState(false)
+  const { addToast } = useToast()
 
   const successStatus = searchParams.get('status')
 
@@ -66,9 +68,11 @@ export default function BillingPage() {
     setCancelling(true)
     try {
       await api.post('/billing/cancel')
+      addToast({ type: 'success', title: 'Assinatura cancelada', message: 'Seu plano permanece ativo até o fim do período.' })
       window.location.reload()
     } catch {
       setCancelling(false)
+      addToast({ type: 'error', title: 'Erro', message: 'Não foi possível cancelar a assinatura.' })
     }
   }
 

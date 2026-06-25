@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/Button'
 import { Modal } from '@/components/ui/Modal'
 import { formatDate } from '@/lib/utils'
 import { MODALIDADES_PADRAO } from '@/lib/modalidade-labels'
+import { useToast } from '@/store/toast'
 import { CnisInfoCard } from '@/components/cases/CnisInfoCard'
 import {
   Scale,
@@ -109,6 +110,7 @@ export default function CalculatorPage() {
   const [tempoEspecialAnos, setTempoEspecialAnos] = useState(0)
   const [dependentesPensao, setDependentesPensao] = useState(1)
   
+  const { addToast } = useToast()
   const [expandedCalc, setExpandedCalc] = useState<string | null>(null)
   const [errorMessage, setErrorMessage] = useState('')
 
@@ -122,7 +124,7 @@ export default function CalculatorPage() {
       setCalculations(rCalc.data.calculations ?? [])
       setModalidades(rModalidades.data.modalidades ?? [])
 
-      if (rCnis.data?.cnisDocument?.processingStatus === 'COMPLETED') {
+      if (rCnis.data?.cnisDocument?.processingStatus === 'COMPLETED' || rCnis.data?.cnisDocument?.processingStatus === 'SUMMARY_READY') {
         setCnisDocument(rCnis.data.cnisDocument)
       }
     } catch {
@@ -164,7 +166,8 @@ export default function CalculatorPage() {
       // Reseta formulários
       setTempoEspecialAnos(0)
       setDependentesPensao(1)
-      load() // Recarrega cálculos vindos seguros do backend
+      addToast({ type: 'success', title: 'Cálculo criado', message: 'O benefício foi calculado com sucesso.' })
+      load()
     } catch (err) {
       const apiError = err as { response?: { data?: { error?: string } } }
       setErrorMessage(apiError.response?.data?.error ?? 'Falha ao salvar o cálculo no servidor.')
@@ -176,18 +179,20 @@ export default function CalculatorPage() {
   const handleSelect = async (calcId: string) => {
     try {
       await api.patch(`/cases/${params.id}/calculations/${calcId}/select`)
+      addToast({ type: 'info', title: 'Cálculo selecionado', message: 'Usado como referência para relatórios.' })
       load()
     } catch {
-      // noop
+      addToast({ type: 'error', title: 'Erro', message: 'Não foi possível selecionar o cálculo.' })
     }
   }
 
   const handleDelete = async (calcId: string) => {
     try {
       await api.delete(`/cases/${params.id}/calculations/${calcId}`)
+      addToast({ type: 'success', title: 'Cálculo excluído' })
       load()
     } catch {
-      // noop
+      addToast({ type: 'error', title: 'Erro', message: 'Não foi possível excluir o cálculo.' })
     }
   }
 

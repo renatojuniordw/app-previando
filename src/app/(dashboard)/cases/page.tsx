@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import api from '@/lib/api'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
@@ -41,13 +42,14 @@ function formatCurrency(val: number | null) {
 }
 
 export default function CasesPage() {
+  const searchParams = useSearchParams()
   const [cases, setCases] = useState<CaseItem[]>([])
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
   const [showFilters, setShowFilters] = useState(false)
   const [page, setPage] = useState(1)
 
-  const [search, setSearch] = useState('')
+  const [search, setSearch] = useState(searchParams.get('search') ?? '')
   const [priority, setPriority] = useState('')
   const [benefitType, setBenefitType] = useState('')
   const [rmiMin, setRmiMin] = useState('')

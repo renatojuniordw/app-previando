@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/Button'
 import { Modal } from '@/components/ui/Modal'
 import { formatDate } from '@/lib/utils'
 import { MODALIDADES_PADRAO } from '@/lib/modalidade-labels'
+import { useToast } from '@/store/toast'
 import { CnisInfoCard } from '@/components/cases/CnisInfoCard'
 import {
   TrendingUp,
@@ -69,6 +70,7 @@ export default function SimulatorPage() {
   const [valorCustomContribuicao, setValorCustomContribuicao] = useState(1621.00)
   const [salarioVigente, setSalarioVigente] = useState({ valor: 1621.00, teto: 8157.41 })
   
+  const { addToast } = useToast()
   const [errorMessage, setErrorMessage] = useState('')
 
   const load = useCallback(async () => {
@@ -81,7 +83,7 @@ export default function SimulatorPage() {
       setSimulations(rSim.data.simulations ?? [])
       setModalidades(rModalidades.data.modalidades ?? [])
 
-      if (rCnis.data?.cnisDocument?.processingStatus === 'COMPLETED') {
+      if (rCnis.data?.cnisDocument?.processingStatus === 'COMPLETED' || rCnis.data?.cnisDocument?.processingStatus === 'SUMMARY_READY') {
         setCnisDocument(rCnis.data.cnisDocument)
       }
 
@@ -143,6 +145,7 @@ export default function SimulatorPage() {
       setScenarioName('')
       setTipoContribuicao('MINIMO')
       setValorCustomContribuicao(salarioVigente.valor)
+      addToast({ type: 'success', title: 'Simulação criada', message: 'Cenário de planejamento gerado com sucesso.' })
       load()
     } catch (err: unknown) {
       setErrorMessage((err as { response?: { data?: { error?: string } } })?.response?.data?.error ?? 'Falha ao salvar a simulação no servidor.')
@@ -154,9 +157,10 @@ export default function SimulatorPage() {
   const handleDelete = async (simId: string) => {
     try {
       await api.delete(`/cases/${params.id}/simulations/${simId}`)
+      addToast({ type: 'success', title: 'Simulação excluída' })
       load()
     } catch {
-      // noop
+      addToast({ type: 'error', title: 'Erro', message: 'Não foi possível excluir a simulação.' })
     }
   }
 

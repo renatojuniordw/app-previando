@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import api from '@/lib/api'
+import { useToast } from '@/store/toast'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { Card, CardHeader } from '@/components/ui/Card'
@@ -49,6 +50,7 @@ export default function ClientDetailPage() {
   const [loading, setLoading] = useState(true)
   const [showCaseModal, setShowCaseModal] = useState(false)
   const [creatingCase, setCreatingCase] = useState(false)
+  const { addToast } = useToast()
 
   const { register, handleSubmit, formState: { errors } } = useForm<CaseForm>({
     resolver: zodResolver(caseSchema),
@@ -66,10 +68,11 @@ export default function ClientDetailPage() {
     try {
       await api.post('/cases', { clientId: params.id, ...data })
       setShowCaseModal(false)
+      addToast({ type: 'success', title: 'Caso criado', message: 'Novo caso vinculado ao cliente.' })
       const r = await api.get(`/clients/${params.id}`)
       setClient(r.data.client)
     } catch {
-      // noop
+      addToast({ type: 'error', title: 'Erro', message: 'Não foi possível criar o caso.' })
     } finally {
       setCreatingCase(false)
     }

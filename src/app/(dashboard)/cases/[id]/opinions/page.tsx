@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useParams } from 'next/navigation'
 import api from '@/lib/api'
+import { useToast } from '@/store/toast'
 import { Button } from '@/components/ui/Button'
 import { Modal } from '@/components/ui/Modal'
 import { Card } from '@/components/ui/Card'
@@ -31,6 +32,7 @@ export default function OpinionsPage() {
   const [editContent, setEditContent] = useState('')
   const [saving, setSaving] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
+  const { addToast } = useToast()
 
   const load = useCallback(() => {
     api.get(`/cases/${params.id}/opinions`)
@@ -46,9 +48,10 @@ export default function OpinionsPage() {
     setShowConfirm(false)
     try {
       await api.post(`/cases/${params.id}/opinions`)
+      addToast({ type: 'success', title: 'Parecer gerado', message: 'O parecer com IA está pronto para revisão.' })
       load()
     } catch {
-      // noop
+      addToast({ type: 'error', title: 'Erro', message: 'Não foi possível gerar o parecer.' })
     } finally {
       setGenerating(false)
     }
@@ -68,9 +71,10 @@ export default function OpinionsPage() {
         status: 'REVIEWED',
       })
       setEditingId(null)
+      addToast({ type: 'success', title: 'Parecer salvo', message: 'Alterações registradas.' })
       load()
     } catch {
-      // noop
+      addToast({ type: 'error', title: 'Erro', message: 'Não foi possível salvar o parecer.' })
     } finally {
       setSaving(false)
     }

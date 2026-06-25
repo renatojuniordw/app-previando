@@ -1,5 +1,6 @@
 'use client'
 
+import { useToast } from '@/store/toast'
 import { useSession } from 'next-auth/react'
 import { useState } from 'react'
 import api from '@/lib/api'
@@ -13,36 +14,32 @@ export default function ProfilePage() {
   const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [saving, setSaving] = useState(false)
-  const [message, setMessage] = useState('')
-  const [error, setError] = useState('')
+
+  const { addToast } = useToast()
 
   const handleSaveName = async () => {
     setSaving(true)
-    setMessage('')
-    setError('')
     try {
       await api.put('/users/profile', { name })
-      setMessage('Nome atualizado com sucesso.')
+      addToast({ type: 'success', title: 'Nome atualizado' })
     } catch {
-      setError('Erro ao atualizar nome.')
+      addToast({ type: 'error', title: 'Erro', message: 'Não foi possível atualizar o nome.' })
     } finally {
       setSaving(false)
     }
   }
 
   const handleChangePassword = async () => {
-    if (!currentPassword || !newPassword) { setError('Preencha todos os campos.'); return }
-    if (newPassword.length < 8) { setError('Nova senha: mínimo 8 caracteres.'); return }
+    if (!currentPassword || !newPassword) { addToast({ type: 'error', title: 'Campos obrigatórios', message: 'Preencha a senha atual e a nova senha.' }); return }
+    if (newPassword.length < 8) { addToast({ type: 'error', title: 'Senha inválida', message: 'Mínimo de 8 caracteres.' }); return }
     setSaving(true)
-    setMessage('')
-    setError('')
     try {
       await api.put('/users/password', { currentPassword, newPassword })
-      setMessage('Senha alterada com sucesso.')
+      addToast({ type: 'success', title: 'Senha alterada' })
       setCurrentPassword('')
       setNewPassword('')
     } catch (err: unknown) {
-      setError((err as { response?: { data?: { error?: string } } })?.response?.data?.error ?? 'Erro ao alterar senha.')
+      addToast({ type: 'error', title: 'Erro', message: (err as { response?: { data?: { error?: string } } })?.response?.data?.error ?? 'Erro ao alterar senha.' })
     } finally {
       setSaving(false)
     }
@@ -51,17 +48,6 @@ export default function ProfilePage() {
   return (
     <div className="space-y-6 max-w-lg">
       <h1 className="font-serif font-bold text-3xl text-slate-900 tracking-tight">Perfil</h1>
-
-      {message && (
-        <div className="border border-green-200 bg-green-50 rounded-md p-3">
-          <p className="font-sans text-sm font-medium text-green-700">✓ {message}</p>
-        </div>
-      )}
-      {error && (
-        <div className="border border-red-200 bg-red-50 rounded-md p-3">
-          <p className="font-sans text-sm font-medium text-red-600">{error}</p>
-        </div>
-      )}
 
       <Card variant="dark">
         <CardHeader title="Dados da Conta" />

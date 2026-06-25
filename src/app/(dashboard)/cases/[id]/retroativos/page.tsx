@@ -6,6 +6,7 @@ import api from '@/lib/api'
 import { Button } from '@/components/ui/Button'
 import { Modal } from '@/components/ui/Modal'
 import { formatDate } from '@/lib/utils'
+import { useToast } from '@/store/toast'
 import {
   History,
   Calendar,
@@ -67,6 +68,7 @@ export default function RetroativosPage() {
   const [valorDescontos, setValorDescontos] = useState('0')
   const [descricaoDescontos, setDescricaoDescontos] = useState('')
 
+  const { addToast } = useToast()
   const [expandedRetro, setExpandedRetro] = useState<string | null>(null)
   const [errorMessage, setErrorMessage] = useState('')
 
@@ -123,6 +125,7 @@ export default function RetroativosPage() {
       setValorMensalBruto('')
       setValorDescontos('0')
       setDescricaoDescontos('')
+      addToast({ type: 'success', title: 'Retroativos calculados', message: 'Liquidação gerada com sucesso.' })
       load()
     } catch (err: unknown) {
       setErrorMessage((err as { response?: { data?: { error?: string } } })?.response?.data?.error ?? 'Falha ao rodar o cálculo de retroativos.')
@@ -135,9 +138,10 @@ export default function RetroativosPage() {
     if (!confirm('Deseja realmente excluir este cálculo de retroativos?')) return
     try {
       await api.delete(`/cases/${params.id}/retroativos/${retroId}`)
+      addToast({ type: 'success', title: 'Retroativos excluídos' })
       load()
     } catch {
-      // noop
+      addToast({ type: 'error', title: 'Erro', message: 'Não foi possível excluir o cálculo.' })
     }
   }
 

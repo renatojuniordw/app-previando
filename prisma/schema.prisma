@@ -314,6 +314,8 @@ model CnisDocument {
 enum ProcessingStatus {
   PENDING
   PROCESSING
+  SUMMARY_READY
+  PROCESSING_DETAILS
   COMPLETED
   FAILED
 }

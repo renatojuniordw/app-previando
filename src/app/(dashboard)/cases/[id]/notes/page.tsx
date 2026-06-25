@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useParams } from 'next/navigation'
 import api from '@/lib/api'
+import { useToast } from '@/store/toast'
 import { Button } from '@/components/ui/Button'
 import { Modal } from '@/components/ui/Modal'
 import { Card } from '@/components/ui/Card'
@@ -46,6 +47,7 @@ export default function CaseNotesPage() {
   const [type, setType] = useState('CONTATO')
   const [content, setContent] = useState('')
   const [error, setError] = useState('')
+  const { addToast } = useToast()
 
   const load = useCallback(() => {
     api.get(`/cases/${params.id}/notes`)
@@ -65,6 +67,7 @@ export default function CaseNotesPage() {
       setShowModal(false)
       setContent('')
       setType('CONTATO')
+      addToast({ type: 'success', title: 'Anotação salva', message: 'Registro adicionado ao prontuário.' })
       load()
     } catch (err: unknown) {
       setError((err as { response?: { data?: { error?: string } } })?.response?.data?.error ?? 'Erro ao criar anotação.')

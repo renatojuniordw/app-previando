@@ -13,6 +13,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Input } from '@/components/ui/Input'
+import { useToast } from '@/store/toast'
 import { Search, Plus, MoreHorizontal, User, FileText, Phone, Mail, AlertCircle } from 'lucide-react'
 
 interface Client {
@@ -57,6 +58,7 @@ export default function ClientsListPage() {
   const [showModal, setShowModal] = useState(false)
   const [creating, setCreating] = useState(false)
   const [error, setError] = useState('')
+  const { addToast } = useToast()
 
   const {
     register,
@@ -95,6 +97,7 @@ export default function ClientsListPage() {
       })
       setShowModal(false)
       reset()
+      addToast({ type: 'success', title: 'Cliente cadastrado', message: `${data.name} foi adicionado à sua base.` })
       load()
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error ?? 'Erro ao criar cliente.'

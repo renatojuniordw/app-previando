@@ -7,6 +7,7 @@ import { Card, CardHeader } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { formatDate } from '@/lib/utils'
 import { Modal } from '@/components/ui/Modal'
+import { useToast } from '@/store/toast'
 import { BENEFIT_LABELS } from '@/lib/constants'
 
 interface CaseDetail {
@@ -40,6 +41,7 @@ export default function CaseOverviewPage() {
   const [showStatusModal, setShowStatusModal] = useState(false)
   const [newStatus, setNewStatus] = useState('')
   const [updatingStatus, setUpdatingStatus] = useState(false)
+  const { addToast } = useToast()
 
   const load = useCallback(() => {
     api.get(`/cases/${params.id}`)
@@ -58,9 +60,10 @@ export default function CaseOverviewPage() {
     try {
       await api.patch(`/cases/${params.id}/status`, { status: newStatus })
       setShowStatusModal(false)
+      addToast({ type: 'success', title: 'Status alterado', message: `Caso atualizado para ${STATUS_OPTIONS.find(s => s.value === newStatus)?.label ?? newStatus}.` })
       load()
     } catch {
-      // noop
+      addToast({ type: 'error', title: 'Erro', message: 'Não foi possível alterar o status.' })
     } finally {
       setUpdatingStatus(false)
     }
