@@ -41,4 +41,5 @@ prisma/*.db
 prisma/migrations/
 
 .agent/
+.agents/
 .claude/
