@@ -4,6 +4,7 @@ import { useCallback, useState } from 'react'
 import { useParams } from 'next/navigation'
 import api from '@/lib/api'
 import { useToast } from '@/store/toast'
+import { downloadPdf } from '@/lib/download-pdf'
 import type { CaseDetail } from '../_types'
 import { STATUS_OPTIONS } from '../_constants'
 
@@ -67,7 +68,7 @@ export function useCaseOverview() {
   }
 
   const handleExportPDF = () => {
-    window.open(`/api/export/pdf/${params.id}`, '_blank')
+    downloadPdf(params.id)
   }
 
   return {

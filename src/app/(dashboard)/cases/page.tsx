@@ -10,6 +10,7 @@ import { Modal } from '@/components/ui/Modal'
 import { Button } from '@/components/ui/Button'
 import { ActionsDropdown } from '@/components/ui/ActionsDropdown'
 import { useToast } from '@/store/toast'
+import { downloadPdf } from '@/lib/download-pdf'
 import { Search, SlidersHorizontal, X, ChevronLeft, ChevronRight } from 'lucide-react'
 import { formatDate } from '@/lib/utils'
 import { BENEFIT_SHORT_LABELS, STATUS_LABELS } from '@/lib/constants'
@@ -272,7 +273,7 @@ export default function CasesPage() {
                           },
                           {
                             label: 'Exportar PDF',
-                            onClick: () => window.open(`/api/export/pdf/${c.id}`, '_blank'),
+                            onClick: () => downloadPdf(c.id),
                           },
                           {
                             label: 'Acessar Cálculo',

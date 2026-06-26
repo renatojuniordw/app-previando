@@ -1,10 +1,14 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import dynamic from 'next/dynamic'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import api from '@/lib/api'
+import { BpcPDFDocument } from '@/components/pdf/BpcPDFDocument'
+
+import { PDFDownloadLink } from '@react-pdf/renderer'
 
 type AnalysisType = 'preAnalise' | 'laudo' | 'social' | 'medical' | 'checklist' | null
 
@@ -13,7 +17,6 @@ interface BpcResultProps {
   result: string
   type: AnalysisType
   onCopy: () => void
-  onExportPdf: () => void
   onOpenChecklist?: () => void
   onRegenerate?: () => void
 }
@@ -69,9 +72,14 @@ function parseChecklistMarkdown(text: string): {
   return { items, pendencias }
 }
 
-export function BpcResult({ caseId, result, type, onCopy, onExportPdf, onOpenChecklist, onRegenerate }: BpcResultProps) {
+export function BpcResult({ caseId, result, type, onCopy, onOpenChecklist, onRegenerate }: BpcResultProps) {
   const [importing, setImporting] = useState(false)
   const [importDone, setImportDone] = useState(false)
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const handleImportChecklist = async () => {
     const { items, pendencias } = parseChecklistMarkdown(result)
@@ -116,9 +124,15 @@ export function BpcResult({ caseId, result, type, onCopy, onExportPdf, onOpenChe
         <Button variant="outline" onClick={onCopy} className="text-xs py-2">
           📋 Copiar
         </Button>
-        <Button variant="outline" onClick={onExportPdf} className="text-xs py-2">
-          📄 Exportar PDF
-        </Button>
+        {mounted && (
+          <PDFDownloadLink
+            document={<BpcPDFDocument result={result} type={type ? TYPE_LABELS[type] || 'BPC/LOAS' : 'BPC/LOAS'} />}
+            fileName={`previando-bpc-${caseId}.pdf`}
+            className="inline-flex items-center justify-center px-3 py-2 text-xs border border-slate-200 rounded-md hover:bg-slate-100 transition-colors"
+          >
+            📄 Exportar PDF
+          </PDFDownloadLink>
+        )}
         {onRegenerate && (
           <Button variant="outline" onClick={onRegenerate} className="text-xs py-2 border-slate-300 text-slate-600 hover:bg-slate-100">
             🔄 Regenerar

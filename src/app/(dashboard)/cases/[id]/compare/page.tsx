@@ -4,7 +4,14 @@ import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import api from '@/lib/api'
 import { Card } from '@/components/ui/Card'
-import { CheckCircle2, XCircle, TrendingUp, AlertTriangle, Printer } from 'lucide-react'
+import dynamic from 'next/dynamic'
+import { ComparePDFDocument } from '@/components/pdf/ComparePDFDocument'
+
+const PDFDownloadLink = dynamic(
+  () => import('@react-pdf/renderer').then(mod => mod.PDFDownloadLink),
+  { ssr: false, loading: () => <span>Carregando...</span> }
+)
+import { CheckCircle2, XCircle, TrendingUp, AlertTriangle, Download } from 'lucide-react'
 
 interface ModalidadeSugerida {
   modalidade: string
@@ -81,13 +88,16 @@ export default function ComparePage() {
           <h2 className="font-serif font-bold text-2xl text-slate-900">Comparativo de Modalidades</h2>
           <p className="text-sm text-slate-500 mt-1">Análise de elegibilidade para todas as modalidades com base no CNIS atual</p>
         </div>
-        <button
-          onClick={() => window.print()}
-          className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors print:hidden"
-        >
-          <Printer className="w-4 h-4" />
-          Exportar PDF
-        </button>
+        {data && (
+          <PDFDownloadLink
+            document={<ComparePDFDocument elegiveis={data.elegiveis} naoElegiveis={data.naoElegiveis} />}
+            fileName={`previando-comparativo-${id}.pdf`}
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
+          >
+            <Download className="w-4 h-4" />
+            Exportar PDF
+          </PDFDownloadLink>
+        )}
       </div>
 
       {/* Elegíveis */}

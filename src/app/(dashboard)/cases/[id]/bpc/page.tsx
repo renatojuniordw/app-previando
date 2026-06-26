@@ -5,7 +5,7 @@ import { useParams, useRouter, usePathname, useSearchParams } from 'next/navigat
 import api from '@/lib/api'
 import { Button } from '@/components/ui/Button'
 import { Modal } from '@/components/ui/Modal'
-import { Card } from '@/components/ui/Card'
+
 import { BpcForm } from '@/components/bpc/BpcForm'
 import { BpcResult } from '@/components/bpc/BpcResult'
 import { BpcSocialInterview } from '@/components/bpc/BpcSocialInterview'
@@ -57,8 +57,7 @@ export default function BpcPage() {
   const [generatingTab, setGeneratingTab] = useState<AnalysisTab | null>(null)
   const [tabResults, setTabResults] = useState<Partial<Record<AnalysisTab, string>>>({})
 
-  // Laudo modal
-  const [showLaudoModal, setShowLaudoModal] = useState(false)
+  // Laudo input
   const [laudoText, setLaudoText] = useState('')
   const [laudoAnalyzing, setLaudoAnalyzing] = useState(false)
 
@@ -108,7 +107,7 @@ export default function BpcPage() {
 
   const executeGenerate = async (tab: AnalysisTab) => {
     if (tab === 'laudo') {
-      setShowLaudoModal(true)
+      // O input do laudo agora fica integrado na tab, não precisa de modal
       return
     }
     const tabConfig = TABS.find((t) => t.id === tab)
@@ -151,7 +150,6 @@ export default function BpcPage() {
       setTabResults((prev) => ({ ...prev, laudo: r.data.result }))
       setActiveTab('laudo')
       if (r.data.bpcNotesCount !== undefined) setBpcNotesCount(r.data.bpcNotesCount)
-      setShowLaudoModal(false)
       setLaudoText('')
     } catch {
       // error handled by api interceptor
@@ -176,16 +174,6 @@ export default function BpcPage() {
   const activeTabConfig = TABS.find((t) => t.id === activeTab)!
 
   const handleCopy = () => { if (activeResult) navigator.clipboard.writeText(activeResult) }
-  const handleExportPdf = () => {
-    if (!activeResult) return
-    const win = window.open('', '_blank')
-    if (win) {
-      win.document.write(`<html><head><title>Análise BPC/LOAS</title>
-        <style>body{font-family:monospace;padding:20px;white-space:pre-wrap;line-height:1.6;font-size:13px;}</style>
-        </head><body>${activeResult.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</body></html>`)
-      win.document.close()
-    }
-  }
 
   if (loading) {
     return (
@@ -197,40 +185,31 @@ export default function BpcPage() {
   }
 
   return (
-    <div className="space-y-6 max-w-6xl font-sans">
-      <div className="flex items-center justify-between border-b border-slate-200 pb-4">
+    <div className="space-y-6 max-w-[1400px] mx-auto font-sans">
+      <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-200 pb-4 gap-4">
         <div>
-          <h2 className="font-serif font-semibold text-xl text-slate-900">BPC/LOAS</h2>
-          <p className="font-sans text-sm text-slate-500 mt-1">Análise técnica e documental com IA</p>
+          <h2 className="font-serif font-semibold text-2xl text-slate-900 tracking-tight">BPC/LOAS</h2>
+          <p className="font-sans text-sm text-slate-500 mt-1">Análise técnica e documental com Inteligência Artificial</p>
         </div>
+        
+        {/* AVISO: prontuário com análises BPC movido para o header */}
+        {bpcNotesCount > 0 && (
+          <div className="flex items-center gap-2 bg-slate-900 text-slate-200 px-3 py-1.5 rounded-full text-xs font-medium shrink-0">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            {bpcNotesCount} {bpcNotesCount === 1 ? 'registro no prontuário' : 'registros no prontuário'}
+            <button
+              onClick={openNotes}
+              className="ml-2 pl-2 border-l border-slate-700 text-amber-400 hover:text-amber-300 transition-colors"
+            >
+              Visualizar
+            </button>
+          </div>
+        )}
       </div>
 
-      {/* AVISO: prontuário com análises BPC */}
-      {bpcNotesCount > 0 && (
-        <div className="flex items-start gap-3 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-          <span className="text-blue-500 mt-0.5 shrink-0">ℹ️</span>
-          <div className="flex-1 min-w-0">
-            <p className="font-sans text-sm font-medium text-blue-800">
-              {bpcNotesCount === 1
-                ? '1 análise BPC salva no prontuário'
-                : `${bpcNotesCount} análises BPC salvas no prontuário`}
-            </p>
-            <p className="font-sans text-xs text-blue-600 mt-0.5">
-              Confira o histórico antes de gerar novamente para não consumir tokens desnecessariamente.
-            </p>
-          </div>
-          <button
-            onClick={openNotes}
-            className="shrink-0 text-xs font-sans font-semibold text-blue-700 underline underline-offset-2 hover:text-blue-900"
-          >
-            Ver prontuário
-          </button>
-        </div>
-      )}
-
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* COLUNA ESQUERDA: DADOS */}
-        <div className="lg:col-span-5 flex flex-col gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        {/* COLUNA ESQUERDA: DADOS (33%) */}
+        <div className="lg:col-span-4 flex flex-col gap-6">
           <BpcForm
             caseId={caseId}
             analysis={analysis}
@@ -240,109 +219,151 @@ export default function BpcPage() {
           />
         </div>
 
-        {/* COLUNA DIREITA: INTELIGÊNCIA ARTIFICIAL */}
-        <div className="lg:col-span-7">
-          <Card variant="light" className="p-0 overflow-hidden flex flex-col h-full min-h-[600px]">
-            {/* Cabecalho IA */}
-            <div className="bg-slate-900 px-5 py-4 border-b border-slate-800 flex items-center justify-between">
-              <h3 className="font-sans font-semibold text-sm text-white flex items-center gap-2">
-                <span className="text-amber-500">✦</span> Análises com IA
-              </h3>
-            </div>
-
-            {/* Tabs de opções */}
-            <div className="bg-slate-50 border-b border-slate-200">
-              <div className="flex overflow-x-auto no-scrollbar">
-                {TABS.map((tab) => {
-                  const hasSaved = tab.id === 'social'
-                    ? !!analysis?.relatoSocial
-                    : !!tabResults[tab.id]
-                  const isActive = activeTab === tab.id
-                  const isGenerating = generatingTab === tab.id
-                  return (
-                    <button
-                      key={tab.id}
-                      onClick={() => setActiveTab(tab.id)}
-                      className={`flex items-center gap-1.5 px-4 py-3 text-xs font-sans font-medium whitespace-nowrap border-b-2 transition-all ${
-                        isActive
-                          ? 'border-amber-500 text-amber-700 bg-white'
-                          : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-100'
-                      }`}
-                    >
-                      {isGenerating ? (
-                        <span className="w-2.5 h-2.5 border-2 border-amber-500 border-t-transparent rounded-full animate-spin inline-block" />
-                      ) : hasSaved ? (
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" />
-                      ) : (
-                        <span className="w-1.5 h-1.5 rounded-full bg-slate-300 inline-block" />
-                      )}
-                      {tab.label}
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
-
-            {/* Conteúdo da tab ativa */}
-            <div className="flex-1 flex flex-col bg-white">
-              {activeTab === 'social' ? (
-                <BpcSocialInterview
-                  caseId={caseId}
-                  analysisExists={!!analysis}
-                  relatoSocial={analysis?.relatoSocial ?? null}
-                  onRelatoChange={(relato) =>
-                    setAnalysis((prev) => prev ? { ...prev, relatoSocial: relato } : null)
-                  }
-                  onNoteSaved={setBpcNotesCount}
-                />
-              ) : !analysis ? (
-                <div className="flex-1 flex flex-col items-center justify-center py-16 text-center px-6">
-                  <span className="text-4xl mb-4 grayscale opacity-50">🔒</span>
-                  <h4 className="font-sans font-semibold text-slate-700 mb-1">Análises Bloqueadas</h4>
-                  <p className="font-sans text-sm text-slate-500 max-w-sm">
-                    Preencha e salve os dados do caso na aba ao lado para liberar as análises com Inteligência Artificial.
-                  </p>
+        {/* COLUNA DIREITA: COMMAND CENTER IA (66%) */}
+        <div className="lg:col-span-8">
+          <div className="bg-white rounded-2xl overflow-hidden flex flex-col h-full min-h-[650px] border border-slate-200 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
+            {/* Header IA Command Center */}
+            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+              <div className="flex items-center gap-3">
+                <div className="flex space-x-1.5">
+                  <div className="w-2.5 h-2.5 rounded-full bg-slate-200" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-slate-200" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-slate-200" />
                 </div>
-              ) : activeResult ? (
-                <BpcResult
-                  caseId={caseId}
-                  result={activeResult}
-                  type={activeTab}
-                  onCopy={handleCopy}
-                  onExportPdf={handleExportPdf}
-                  onOpenChecklist={activeTab === 'checklist' ? openChecklist : undefined}
-                  onRegenerate={() => handleRegenerateRequest(activeTab)}
-                />
-              ) : (
-                <div className="flex-1 flex flex-col items-center justify-center py-16 text-center px-6">
-                  <span className="text-3xl mb-3">
-                    {generatingTab === activeTab ? '⏳' : activeTab === 'laudo' ? '📋' : '✨'}
-                  </span>
-                  <h4 className="font-sans font-semibold text-slate-700 mb-1">
-                    {generatingTab === activeTab
-                      ? 'Processando com IA...'
-                      : `${activeTabConfig.label}`}
-                  </h4>
-                  <p className="font-sans text-sm text-slate-500 max-w-sm mb-6">
-                    {generatingTab === activeTab
-                      ? 'Isso pode levar alguns segundos dependendo da complexidade dos dados.'
-                      : `Clique abaixo para gerar a análise focada em ${activeTabConfig.label.toLowerCase()} com base nos dados informados.`}
-                  </p>
-
-                  {generatingTab !== activeTab && activeTab !== 'laudo' && (
-                    <Button onClick={() => handleGenerate(activeTab)} className="px-6">
-                      Gerar Análise Agora
-                    </Button>
-                  )}
-                  {generatingTab !== activeTab && activeTab === 'laudo' && (
-                    <Button onClick={() => setShowLaudoModal(true)} className="px-6">
-                      Analisar Laudo
-                    </Button>
-                  )}
+                <h3 className="font-sans text-sm font-semibold text-slate-700 ml-2">
+                  BPC Inteligência Artificial
+                </h3>
+              </div>
+              {generatingTab && (
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 bg-amber-500 rounded-full animate-ping" />
+                  <span className="text-xs font-mono text-amber-500/80">PROCESSANDO</span>
                 </div>
               )}
             </div>
-          </Card>
+
+            {/* Layout Interno do Command Center (Tabs na lateral vs Topo) */}
+            <div className="flex flex-col md:flex-row flex-1">
+              {/* Tabs / Menu Esquerdo do Command Center */}
+              <div className="w-full md:w-48 bg-slate-50/50 border-b md:border-b-0 md:border-r border-slate-100 p-3">
+                <div className="flex md:flex-col gap-1 overflow-x-auto no-scrollbar">
+                  {TABS.map((tab) => {
+                    const hasSaved = tab.id === 'social'
+                      ? !!analysis?.relatoSocial
+                      : !!tabResults[tab.id]
+                    const isActive = activeTab === tab.id
+                    const isGenerating = generatingTab === tab.id
+                    
+                    return (
+                      <button
+                        key={tab.id}
+                        onClick={() => setActiveTab(tab.id)}
+                        className={`flex items-center justify-between w-full px-3 py-2.5 rounded-md text-xs font-sans font-medium transition-all text-left whitespace-nowrap ${
+                          isActive
+                            ? 'bg-amber-50 text-amber-700 shadow-sm border border-amber-100'
+                            : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100/80 border border-transparent'
+                        }`}
+                      >
+                        <span className="truncate">{tab.label}</span>
+                        {isGenerating ? (
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse ml-2 shrink-0" />
+                        ) : hasSaved ? (
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 ml-2 shrink-0 opacity-80" />
+                        ) : (
+                          <span className="w-1.5 h-1.5 rounded-full bg-slate-300 ml-2 shrink-0" />
+                        )}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+
+              {/* Área Principal de Conteúdo IA */}
+              <div className="flex-1 flex flex-col bg-white relative">
+                {activeTab === 'social' ? (
+                  <div className="p-0 h-full [&>div]:h-full [&>div]:bg-transparent [&>div]:border-none [&>div]:shadow-none">
+                    <BpcSocialInterview
+                      caseId={caseId}
+                      analysisExists={!!analysis}
+                      relatoSocial={analysis?.relatoSocial ?? null}
+                      onRelatoChange={(relato) =>
+                        setAnalysis((prev) => prev ? { ...prev, relatoSocial: relato } : null)
+                      }
+                      onNoteSaved={setBpcNotesCount}
+                    />
+                  </div>
+                ) : !analysis ? (
+                  <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
+                    <div className="w-16 h-16 rounded-2xl bg-slate-50 flex items-center justify-center mb-4 border border-slate-100">
+                      <span className="text-2xl grayscale opacity-40">🔒</span>
+                    </div>
+                    <h4 className="font-sans font-semibold text-slate-800 mb-2">Sistema Bloqueado</h4>
+                    <p className="font-sans text-sm text-slate-500 max-w-sm">
+                      Preencha e salve os dados fundamentais na coluna lateral para iniciar as análises de inteligência artificial.
+                    </p>
+                  </div>
+                ) : generatingTab === activeTab ? (
+                  <div className="flex-1 flex flex-col p-8">
+                    <div className="flex items-center gap-3 mb-8">
+                      <span className="w-4 h-4 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
+                      <span className="text-sm font-mono text-amber-500">GERANDO ANÁLISE...</span>
+                    </div>
+                    <div className="space-y-4 max-w-2xl">
+                      <div className="h-4 bg-slate-100 rounded w-3/4 animate-pulse" />
+                      <div className="h-4 bg-slate-100 rounded w-full animate-pulse" style={{ animationDelay: '150ms' }} />
+                      <div className="h-4 bg-slate-100 rounded w-5/6 animate-pulse" style={{ animationDelay: '300ms' }} />
+                      <div className="h-4 bg-slate-100 rounded w-full animate-pulse" />
+                      <div className="h-4 bg-slate-100 rounded w-4/6 animate-pulse" style={{ animationDelay: '150ms' }} />
+                    </div>
+                  </div>
+                ) : activeResult ? (
+                  <div className="flex-1 p-0 overflow-hidden [&>div]:h-full [&>div]:bg-transparent [&>div]:border-none [&>div]:shadow-none">
+                    <BpcResult
+                      caseId={caseId}
+                      result={activeResult}
+                      type={activeTab}
+                      onCopy={handleCopy}
+                      onOpenChecklist={activeTab === 'checklist' ? openChecklist : undefined}
+                      onRegenerate={() => handleRegenerateRequest(activeTab)}
+                    />
+                  </div>
+                ) : activeTab === 'laudo' ? (
+                  <div className="flex-1 flex flex-col p-6">
+                    <div className="mb-6">
+                      <h4 className="font-sans font-semibold text-slate-800 mb-1">Análise de Laudo Médico</h4>
+                      <p className="font-sans text-sm text-slate-500">Cole o laudo abaixo para extração de patologias, limitações e enquadramento BPC.</p>
+                    </div>
+                    <div className="flex-1 flex flex-col gap-4">
+                      <textarea
+                        value={laudoText}
+                        onChange={(e) => setLaudoText(e.target.value)}
+                        className="flex-1 w-full neo-input bg-white border-slate-200 text-slate-800 min-h-[200px] resize-none font-sans text-sm focus:ring-amber-500/20 focus:border-amber-500 shadow-sm"
+                        placeholder="Cole o texto do laudo médico aqui..."
+                      />
+                      <Button onClick={handleLaudoAnalysis} loading={laudoAnalyzing} disabled={!laudoText.trim()} className="self-end bg-amber-600 hover:bg-amber-700 text-white border-0">
+                        Processar Laudo
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
+                    <div className="w-16 h-16 rounded-2xl bg-amber-50 flex items-center justify-center mb-4 border border-amber-100">
+                      <span className="text-2xl">✨</span>
+                    </div>
+                    <h4 className="font-sans font-semibold text-slate-800 mb-2">
+                      Pronto para Análise
+                    </h4>
+                    <p className="font-sans text-sm text-slate-500 max-w-sm mb-6">
+                      Os dados estão preenchidos. Inicie a análise de <strong>{activeTabConfig.label.toLowerCase()}</strong> para obter insights e o parecer prévio.
+                    </p>
+                    <Button onClick={() => handleGenerate(activeTab)} className="bg-amber-600 hover:bg-amber-700 text-white border-0">
+                      Gerar Análise
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -350,7 +371,7 @@ export default function BpcPage() {
       <Modal open={!!confirmingTab} onClose={() => setConfirmingTab(null)} title="Regenerar análise?">
         <div className="space-y-4 font-sans">
           <p className="text-sm text-slate-600">
-            Este conteúdo já foi gerado anteriormente. Ao regenerar, o resultado atual será substituído por uma nova análise com os dados mais recentes do caso.
+            Este conteúdo já foi gerado anteriormente. Ao regenerar, o resultado atual será substituído por uma nova análise com os dados mais recentes.
           </p>
           <p className="text-xs text-slate-500">
             O histórico de análises anteriores fica salvo no prontuário do caso.
@@ -365,29 +386,7 @@ export default function BpcPage() {
           </div>
         </div>
       </Modal>
-
-      {/* MODAL — ANÁLISE DE LAUDO */}
-      <Modal open={showLaudoModal} onClose={() => setShowLaudoModal(false)} title="Analisar Laudo Médico">
-        <div className="space-y-4 font-sans">
-          <div>
-            <label className="neo-label">Cole o texto do laudo aqui</label>
-            <textarea
-              value={laudoText}
-              onChange={(e) => setLaudoText(e.target.value)}
-              className="w-full neo-input min-h-[200px] resize-none font-sans text-sm focus:ring-amber-500/20 focus:border-amber-500"
-              placeholder="Cole o texto do laudo médico aqui (não precisa formatar)..."
-            />
-          </div>
-          <div className="flex gap-3">
-            <Button onClick={handleLaudoAnalysis} loading={laudoAnalyzing} disabled={!laudoText.trim()} className="flex-1">
-              Analisar
-            </Button>
-            <Button variant="outline" onClick={() => setShowLaudoModal(false)} className="flex-1">
-              Cancelar
-            </Button>
-          </div>
-        </div>
-      </Modal>
     </div>
   )
 }
+

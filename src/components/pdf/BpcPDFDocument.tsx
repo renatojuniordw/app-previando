@@ -4,7 +4,7 @@ import { styles, BRAND, LOGO_BASE64 } from './styles'
 
 interface BpcPDFDocumentProps {
   result: string
-  type: 'BPC' | 'LOAS' | 'BPC/LOAS'
+  type: string
   generatedAt?: string
 }
 
@@ -55,7 +55,7 @@ export function BpcPDFDocument({
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Resultado da Análise</Text>
           <View style={{ padding: 8, backgroundColor: BRAND.light, borderRadius: 4, border: `0.5px solid ${BRAND.border}` }}>
-            <Text style={[styles.text, { whiteSpace: 'pre-wrap' }]}>{result}</Text>
+            <Text style={styles.text}>{result}</Text>
           </View>
         </View>
 

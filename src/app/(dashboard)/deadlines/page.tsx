@@ -9,6 +9,7 @@ import { BENEFIT_SHORT_LABELS } from '@/lib/constants'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { ActionsDropdown } from '@/components/ui/ActionsDropdown'
 import { useRouter } from 'next/navigation'
+import { downloadPdf } from '@/lib/download-pdf'
 
 interface DeadlineCase {
   id: string
@@ -92,7 +93,7 @@ export default function DeadlinesPage() {
             },
             {
               label: 'Exportar PDF',
-              onClick: () => window.open(`/api/export/pdf/${d.id}`, '_blank'),
+              onClick: () => downloadPdf(d.id),
             },
             {
               label: 'Acessar Cálculo',
