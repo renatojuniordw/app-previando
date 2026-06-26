@@ -8,7 +8,7 @@ import { z } from 'zod'
 import { signIn } from 'next-auth/react'
 import Link from 'next/link'
 import { AlertCircle, ArrowRight, Loader2, Eye, EyeOff } from 'lucide-react'
-import Input from '@/components/ui/Input'
+import { Input } from '@/components/ui/Input'
 
 const schema = z.object({
   name: z.string().min(2, 'Mínimo 2 caracteres').max(100),
@@ -146,7 +146,7 @@ export default function RegisterPage() {
         />
 
         <Input
-          label="Número OAB <span className='text-slate-400 font-normal'>(opcional)</span>"}
+          label={<>Número OAB <span className="text-slate-400 font-normal">(opcional)</span></>}
           {...register('oabNumber')}
           placeholder="SP 123456"
           disabled={loading}

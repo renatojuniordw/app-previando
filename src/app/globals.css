@@ -19,14 +19,7 @@ body {
   @apply bg-slate-50 text-slate-900 antialiased;
 }
 
-/* Skip-to-content link (WCAG 2.4.1) */
-.skip-link {
-  @apply absolute bg-amber-600 text-white font-sans font-medium text-sm px-4 py-2 rounded-md shadow-lg z-[100]
-         left-4 top-4 transform -translate-y-[120%] transition-transform duration-200;
-}
-.skip-link:focus {
-  @apply translate-y-0;
-}
+
 
 /* Respect user motion preferences */
 @media (prefers-reduced-motion: reduce) {

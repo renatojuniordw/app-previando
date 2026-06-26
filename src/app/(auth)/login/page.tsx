@@ -8,7 +8,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import Link from 'next/link'
 import { AlertCircle, ArrowRight, Loader2, Eye, EyeOff } from 'lucide-react'
-import Input from '@/components/ui/Input'
+import { Input } from '@/components/ui/Input'
 
 const schema = z.object({
   email: z.string().email('Email inválido'),
@@ -118,7 +118,6 @@ export default function LoginPage() {
         <Input
           label="Email profissional"
           type="email"
-          name="email"
           {...register('email')}
           placeholder="advogado@escritorio.com.br"
           error={errors.email?.message}
@@ -129,7 +128,6 @@ export default function LoginPage() {
           <Input
             label="Senha"
             type={showPassword ? 'text' : 'password'}
-            name="password"
             {...register('password')}
             placeholder="••••••••"
             error={errors.password?.message}

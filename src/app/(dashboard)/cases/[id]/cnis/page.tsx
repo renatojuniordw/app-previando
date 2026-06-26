@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import { ExternalLink, FileText } from 'lucide-react'
 import { useCnis } from './_hooks/useCnis'
@@ -27,6 +27,22 @@ export default function CnisCasePage() {
   const editing = useCnisEditing(cnis, setCnis)
 
   const [showPdfViewer, setShowPdfViewer] = useState(false)
+  const [pdfBlobUrl, setPdfBlobUrl] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!cnis?.downloadUrl) return
+    let revoked = false
+    fetch(cnis.downloadUrl)
+      .then(r => r.blob())
+      .then(blob => {
+        if (!revoked) setPdfBlobUrl(URL.createObjectURL(blob))
+      })
+      .catch(err => { console.error('[PDF blob]', err); setPdfBlobUrl(null) })
+    return () => {
+      revoked = true
+      setPdfBlobUrl(prev => { if (prev) URL.revokeObjectURL(prev); return null })
+    }
+  }, [cnis?.downloadUrl])
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [deleteError, setDeleteError] = useState('')
@@ -98,7 +114,7 @@ export default function CnisCasePage() {
                 </button>
               </div>
             </div>
-            <iframe src={cnis.downloadUrl} className="w-full h-[600px] border-0 bg-slate-100" title="Extrato CNIS Original" />
+            <iframe src={pdfBlobUrl ?? ''} className="w-full h-[600px] border-0 bg-slate-100" title="Extrato CNIS Original" />
           </div>
         )}
 

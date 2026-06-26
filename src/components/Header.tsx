@@ -7,8 +7,6 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useSidebarStore } from '@/store/sidebar'
 
-import { useToast } from '@/store/toast'
-
 interface AppNotification {
   id: string
   type: string
@@ -22,7 +20,6 @@ export function Header() {
   const { data: session } = useSession()
   const router = useRouter()
   const { toggle: toggleSidebar } = useSidebarStore()
-  const { addToast } = useToast()
   const [notifications, setNotifications] = useState<AppNotification[]>([])
   const [unreadCount, setUnreadCount] = useState(0)
   const [open, setOpen] = useState(false)
@@ -91,9 +88,12 @@ export function Header() {
       {/* Hamburger + Search */}
       <div className="flex items-center gap-3 flex-1">
         <button
-          onClick={toggleSidebar}
-          className="lg:hidden w-10 h-10 flex items-center justify-center rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors -ml-1.5"
-          aria-label="Abrir menu de navegação"
+          onClick={() => {
+            if (window.innerWidth < 1024) toggleSidebar()
+            else useSidebarStore.getState().toggleDesktop()
+          }}
+          className="w-10 h-10 flex items-center justify-center rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors -ml-1.5"
+          aria-label="Alternar menu de navegação"
         >
           <Menu className="w-5 h-5" />
         </button>

@@ -62,7 +62,7 @@ export default function DashboardPage() {
         addToast({ type: 'error', title: 'Erro ao carregar dashboard' })
       })
       .finally(() => setLoading(false))
-  }, [])
+  }, [addToast])
 
   if (loading) {
     return (
