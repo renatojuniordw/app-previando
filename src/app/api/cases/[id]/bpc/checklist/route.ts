@@ -5,6 +5,7 @@ import { guardFeature, guardBpcAnalysisLimit } from '@/lib/plan-guard'
 import { rateLimit } from '@/lib/rate-limit'
 import { handleApiError } from '@/lib/api-error'
 import { gerarChecklist } from '@/services/bpc'
+import { saveBpcToNotes } from '@/lib/bpc-notes'
 import { prisma } from '@/lib/prisma'
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
   try {
@@ -39,6 +40,8 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       where: { id: analysis.id },
       data: { checklist: result },
     })
+
+    await saveBpcToNotes(params.id, session.user.id, 'checklist', result)
 
     return NextResponse.json({ result })
   } catch (err: unknown) {

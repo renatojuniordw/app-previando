@@ -280,6 +280,7 @@ enum NoteType {
   INTERNAL
   CALCULATION
   PENDING_ISSUE
+  BPC_ANALYSIS
 }
 
 // ─────────────────────────────────────────

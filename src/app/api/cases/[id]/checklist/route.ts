@@ -52,6 +52,40 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   }
 }
 
+export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+  try {
+    const session = await auth()
+    if (!session?.user?.id) return NextResponse.json({ error: 'Não autorizado.' }, { status: 401 })
+
+    await verifyCaseOwnership(params.id, session.user.id)
+
+    const body = await req.json()
+    const itemsSchema = z.array(z.object({
+      id: z.string(),
+      label: z.string(),
+      checked: z.boolean(),
+      required: z.boolean(),
+    }))
+    const parsed = itemsSchema.safeParse(body.items)
+    if (!parsed.success) return NextResponse.json({ error: 'Dados inválidos.' }, { status: 400 })
+
+    const checklist = await prisma.checklist.findFirst({
+      where: { caseId: params.id },
+      orderBy: { createdAt: 'desc' },
+    })
+    if (!checklist) return NextResponse.json({ error: 'Checklist não encontrado.' }, { status: 404 })
+
+    const updated = await prisma.checklist.update({
+      where: { id: checklist.id },
+      data: { items: parsed.data },
+    })
+
+    return NextResponse.json({ checklist: { id: updated.id, items: updated.items } })
+  } catch (err) {
+    return handleApiError(err)
+  }
+}
+
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
   try {
     const session = await auth()

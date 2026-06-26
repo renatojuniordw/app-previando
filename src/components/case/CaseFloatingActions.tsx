@@ -2,14 +2,15 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { cn } from '@/lib/utils'
-import { MessageSquare, CheckSquare, Bot, Briefcase, X } from 'lucide-react'
+import { MessageSquare, CheckSquare, Bot, Briefcase, X, Building2 } from 'lucide-react'
 
 interface CaseFloatingActionsProps {
   activeDrawer: string | null
   setDrawer: (drawerName: string | null) => void
+  benefitType?: string
 }
 
-export function CaseFloatingActions({ activeDrawer, setDrawer }: CaseFloatingActionsProps) {
+export function CaseFloatingActions({ activeDrawer, setDrawer, benefitType }: CaseFloatingActionsProps) {
   const [isOpen, setIsOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
 
@@ -52,6 +53,14 @@ export function CaseFloatingActions({ activeDrawer, setDrawer }: CaseFloatingAct
       icon: Bot,
       color: 'hover:text-amber-600 hover:border-amber-200 hover:bg-amber-50/50',
     },
+    ...(benefitType === 'BPC_LOAS'
+      ? [{
+          id: 'bpc',
+          label: 'Análises BPC',
+          icon: Building2,
+          color: 'hover:text-purple-600 hover:border-purple-200 hover:bg-purple-50/50',
+        }]
+      : []),
   ]
 
   return (

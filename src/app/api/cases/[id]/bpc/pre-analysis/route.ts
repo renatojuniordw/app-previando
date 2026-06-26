@@ -6,6 +6,7 @@ import { rateLimit } from '@/lib/rate-limit'
 import { handleApiError } from '@/lib/api-error'
 import { logAudit } from '@/lib/audit'
 import { gerarPreAnalise } from '@/services/bpc'
+import { saveBpcToNotes } from '@/lib/bpc-notes'
 import { prisma } from '@/lib/prisma'
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
   try {
@@ -41,7 +42,8 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       data: { preAnalise: result },
     })
 
-    // Registrar log de atividade
+    await saveBpcToNotes(params.id, session.user.id, 'pre-analysis', result)
+
     await logAudit({
       userId: session.user.id,
       action: 'bpc.pre-analysis',

@@ -9,7 +9,7 @@ import { logAudit } from '@/lib/audit'
 import { mapNoteTypeToDb, mapNoteToApi, ApiNoteType } from '@/lib/mappers'
 
 const createSchema = z.object({
-  type: z.enum(['CONTATO', 'DOCUMENTO', 'JURIDICO', 'INTERNO', 'CALCULO', 'PENDENCIA']),
+  type: z.enum(['CONTATO', 'DOCUMENTO', 'JURIDICO', 'INTERNO', 'CALCULO', 'PENDENCIA', 'BPC']),
   content: z.string().min(1).max(5000),
 })
 

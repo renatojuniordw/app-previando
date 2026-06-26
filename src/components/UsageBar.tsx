@@ -42,24 +42,43 @@ export function UsageBar() {
     api.get('/usage').then((r) => setUsage(r.data)).catch(() => null)
   }, [])
 
-  if (!usage || usage.plan !== 'FREE') return null
+  if (!usage) return null
 
-  return (
-    <div className="px-4 py-3 bg-white border-b border-slate-200 space-y-2">
-      <span className="font-sans text-xs text-slate-500 font-bold tracking-wide">USO FREE</span>
-      <UsageItem label="Clientes" used={usage.usage.totalClients} max={usage.limits.maxClients} />
-      <UsageItem
-        label="Cálculos"
-        used={usage.usage.calculationsThisMonth}
-        max={usage.limits.maxCalculationsPerMonth}
-      />
-      {usage.limits.bpcEnabled && usage.limits.bpcSocialMediaPerMonth > 0 && (
+  if (usage.plan === 'FREE') {
+    return (
+      <div className="px-4 py-3 bg-white border-b border-slate-200 space-y-2">
+        <span className="font-sans text-xs text-slate-500 font-bold tracking-wide">USO FREE</span>
+        <UsageItem label="Clientes" used={usage.usage.totalClients} max={usage.limits.maxClients} />
         <UsageItem
-          label="Carrosséis BPC"
-          used={usage.usage.bpcSocialMediaThisMonth}
-          max={usage.limits.bpcSocialMediaPerMonth}
+          label="Cálculos"
+          used={usage.usage.calculationsThisMonth}
+          max={usage.limits.maxCalculationsPerMonth}
         />
-      )}
-    </div>
-  )
+      </div>
+    )
+  }
+
+  if (usage.plan === 'SOLO' && usage.limits.bpcEnabled) {
+    return (
+      <div className="px-4 py-3 bg-white border-b border-slate-200 space-y-2">
+        <span className="font-sans text-xs text-slate-500 font-bold tracking-wide">USO BPC — SOLO</span>
+        {usage.limits.bpcAnalysesPerMonth !== -1 && (
+          <UsageItem
+            label="Análises BPC"
+            used={usage.usage.bpcAnalysesThisMonth}
+            max={usage.limits.bpcAnalysesPerMonth}
+          />
+        )}
+        {usage.limits.bpcSocialMediaPerMonth !== -1 && (
+          <UsageItem
+            label="Carrosséis"
+            used={usage.usage.bpcSocialMediaThisMonth}
+            max={usage.limits.bpcSocialMediaPerMonth}
+          />
+        )}
+      </div>
+    )
+  }
+
+  return null
 }

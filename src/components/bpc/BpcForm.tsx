@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
+import api from '@/lib/api'
 
 interface BpcAnalysis {
   patologia: string
@@ -30,7 +31,9 @@ interface BpcSavePayload {
 }
 
 interface BpcFormProps {
+  caseId: string
   analysis: BpcAnalysis | null
+  clientBirthDate: string | null
   onSave: (data: BpcSavePayload) => void
   saving: boolean
 }
@@ -38,14 +41,25 @@ interface BpcFormProps {
 const SM_2025 = 1518.00
 const LIMITE_PER_CAPITA = SM_2025 / 4
 
-export function BpcForm({ analysis, onSave, saving }: BpcFormProps) {
+function calcularIdade(birthDate: string): number {
+  const birth = new Date(birthDate)
+  const today = new Date()
+  const age = today.getFullYear() - birth.getFullYear()
+  const m = today.getMonth() - birth.getMonth()
+  return m < 0 || (m === 0 && today.getDate() < birth.getDate()) ? age - 1 : age
+}
+
+export function BpcForm({ caseId, analysis, clientBirthDate, onSave, saving }: BpcFormProps) {
+  const suggestedIdade = clientBirthDate && !analysis ? calcularIdade(clientBirthDate) : null
+
   const [patologia, setPatologia] = useState(analysis?.patologia ?? '')
   const [cid, setCid] = useState(analysis?.cid ?? '')
-  const [idade, setIdade] = useState(analysis?.idade?.toString() ?? '')
+  const [idade, setIdade] = useState(analysis?.idade?.toString() ?? (suggestedIdade?.toString() ?? ''))
   const [rendaFamiliar, setRendaFamiliar] = useState(analysis?.rendaFamiliar?.toString() ?? '')
   const [membrosGrupo, setMembrosGrupo] = useState(analysis?.membrosGrupo?.toString() ?? '')
   const [barreiras, setBarreiras] = useState(analysis?.barreiras ?? '')
   const [resumoLaudos, setResumoLaudos] = useState(analysis?.resumoLaudos ?? '')
+  const [importing, setImporting] = useState(false)
 
   const rendaPerCapita = membrosGrupo && parseFloat(membrosGrupo) > 0
     ? parseFloat(rendaFamiliar || '0') / parseFloat(membrosGrupo)
@@ -63,8 +77,28 @@ export function BpcForm({ analysis, onSave, saving }: BpcFormProps) {
       setMembrosGrupo(analysis.membrosGrupo.toString())
       setBarreiras(analysis.barreiras ?? '')
       setResumoLaudos(analysis.resumoLaudos ?? '')
+    } else if (suggestedIdade) {
+      setIdade(String(suggestedIdade))
     }
-  }, [analysis])
+  }, [analysis]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleImportarProntuario = async () => {
+    setImporting(true)
+    try {
+      const r = await api.get(`/cases/${caseId}/notes`)
+      const notes: Array<{ content: string; createdAt: string }> = r.data.notes ?? []
+      if (notes.length === 0) return
+      const texto = notes
+        .slice(0, 10)
+        .map((n) => n.content)
+        .join('\n\n---\n\n')
+      setBarreiras((prev) => prev ? `${prev}\n\n[Importado do Prontuário]\n${texto}` : texto)
+    } catch {
+      // noop
+    } finally {
+      setImporting(false)
+    }
+  }
 
   const handleSave = () => {
     if (!patologia || !idade || !rendaFamiliar || !membrosGrupo) return
@@ -109,7 +143,14 @@ export function BpcForm({ analysis, onSave, saving }: BpcFormProps) {
         </div>
 
         <div>
-          <label className="neo-label">Idade</label>
+          <label className="neo-label flex items-center gap-2">
+            Idade
+            {suggestedIdade && !analysis && (
+              <span className="text-[10px] font-mono font-bold text-amber-600 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded">
+                calculada do cadastro
+              </span>
+            )}
+          </label>
           <input
             type="number"
             value={idade}
@@ -166,7 +207,17 @@ export function BpcForm({ analysis, onSave, saving }: BpcFormProps) {
         )}
 
         <div className="md:col-span-2">
-          <label className="neo-label">Barreiras Relatadas</label>
+          <div className="flex items-center justify-between mb-1">
+            <label className="neo-label mb-0">Barreiras Relatadas</label>
+            <button
+              type="button"
+              onClick={handleImportarProntuario}
+              disabled={importing}
+              className="text-[11px] font-sans font-medium text-amber-600 hover:text-amber-700 underline underline-offset-2 disabled:opacity-50"
+            >
+              {importing ? 'Importando...' : 'Importar do Prontuário'}
+            </button>
+          </div>
           <textarea
             value={barreiras}
             onChange={(e) => setBarreiras(e.target.value)}

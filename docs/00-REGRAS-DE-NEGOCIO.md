@@ -90,32 +90,50 @@ Pessoa física atendida. Pode ter zero ou mais casos.
 ### 3.3 Caso (Processo Previdenciário)
 Atendimento específico para um benefício. Um cliente pode ter múltiplos casos.
 
+**Campos do processo:**
+- `processNumber`: Número do processo (administrativo ou judicial)
+- `processLastCheck`: Última data de consulta ao processo
+- `processLastMovDate`: Data do último movimento no processo
+- `processLastMovCount`: Contagem de movimentos desde a última consulta
+- `processLastSummary`: Resumo do último movimento
+
 **Tipos de benefício:**
 
-| Código | Nome |
+| Código (DB) | Nome |
 |---|---|
-| `APOSENTADORIA_IDADE` | Aposentadoria por Idade |
-| `APOSENTADORIA_TEMPO_CONTRIBUICAO` | Aposent. por Tempo de Contribuição |
-| `APOSENTADORIA_ESPECIAL` | Aposent. Especial |
-| `APOSENTADORIA_HIBRIDA` | Aposent. Híbrida |
-| `APOSENTADORIA_PONTOS` | Aposent. por Pontos |
-| `AUXILIO_DOENCA` | Auxílio-Doença (B31) |
-| `AUXILIO_ACIDENTE` | Auxílio-Acidente (B91) |
-| `SALARIO_MATERNIDADE` | Salário-Maternidade |
-| `AUXILIO_RECLUSAO` | Auxílio-Reclusão |
-| `PENSAO_POR_MORTE` | Pensão por Morte |
+| `RETIREMENT_BY_AGE` | Aposentadoria por Idade |
+| `RETIREMENT_BY_CONTRIBUTION_TIME` | Aposent. por Tempo de Contribuição |
+| `SPECIAL_RETIREMENT` | Aposent. Especial |
+| `HYBRID_RETIREMENT` | Aposent. Híbrida |
+| `POINTS_RETIREMENT` | Aposent. por Pontos |
+| `SICKNESS_BENEFIT` | Auxílio-Doença (B31) |
+| `ACCIDENT_BENEFIT` | Auxílio-Acidente (B91) |
+| `MATERNITY_PAY` | Salário-Maternidade |
+| `PRISONER_BENEFIT` | Auxílio-Reclusão |
+| `DEATH_PENSION` | Pensão por Morte |
 | `BPC_LOAS` | BPC/LOAS |
-| `REVISAO_BENEFICIO` | Revisão de Benefício |
+| `BENEFIT_REVIEW` | Revisão de Benefício |
 
 **Status do Pipeline (Kanban):**
 
 | Status | Significado |
 |---|---|
-| `PROSPECCAO` | Cliente novo, sem análise |
-| `ANALISE` | CNIS recebido, calculando |
-| `PRONTO_PARA_REQUERER` | Cálculo feito, parecer pronto |
-| `EM_PROCESSAMENTO` | Pedido protocolado, aguardando |
-| `FINALIZADO` | Encerrado |
+| `PROSPECTING` | Cliente novo, sem análise |
+| `ANALYSIS` | CNIS recebido, calculando |
+| `READY_TO_REQUEST` | Cálculo feito, parecer pronto |
+| `PROCESSING` | Pedido protocolado, aguardando |
+| `FINISHED` | Encerrado |
+
+**Status de processamento:**
+
+| Status | Significado |
+|---|---|
+| `PENDING` | Aguardando processamento |
+| `PROCESSING` | Em processamento |
+| `SUMMARY_READY` | Resumo pronto (validação rápida) |
+| `PROCESSING_DETAILS` | Detalhes em processamento |
+| `COMPLETED` | Processamento concluído |
+| `FAILED` | Falhou |
 
 **Prioridade automática (job diário):**
 - 🔴 CRITICAL: prazo ≤ 7 dias
@@ -131,12 +149,12 @@ Histórico versionado de anotações. Imutável — nunca edita, só cria novas 
 
 | Tipo | Ícone | Uso |
 |---|---|---|
-| `CONTATO` | 🗣 | Ligação, reunião, WhatsApp com cliente |
-| `DOCUMENTO` | 📄 | Recebimento/envio de documentos |
-| `JURIDICO` | ⚖️ | Decisões, despachos, prazos |
-| `INTERNO` | 📝 | Observação interna do advogado |
-| `CALCULO` | 🧮 | Estratégia de cálculo ou modalidade |
-| `PENDENCIA` | ⚠️ | Algo que está faltando ou precisa resolver |
+| `CONTACT` | 🗣 | Ligação, reunião, WhatsApp com cliente |
+| `DOCUMENT` | 📄 | Recebimento/envio de documentos |
+| `LEGAL` | ⚖️ | Decisões, despachos, prazos |
+| `INTERNAL` | 📝 | Observação interna do advogado |
+| `CALCULATION` | 🧮 | Estratégia de cálculo ou modalidade |
+| `PENDING_ISSUE` | ⚠️ | Algo que está faltando ou precisa resolver |
 
 **Regras:**
 - Imutável após criada
@@ -150,7 +168,11 @@ Histórico versionado de anotações. Imutável — nunca edita, só cria novas 
 ### 3.5 Documento CNIS
 PDF do CNIS. Cada caso tem no máximo um CNIS ativo.
 
-**Fluxo:** Upload → R2 → BullMQ → `pdf-parse` (se < 100 chars → Tesseract OCR) → `gpt-4.1-mini` → markdown → banco.
+**Fluxo híbrido:** Upload → R2 → BullMQ → Parser programático (primeira tentativa) → Validação IA → Se falhar, fallback para processamento IA completo (`gpt-4.1-mini`) → markdown → banco.
+
+- Quando o parser programático consegue extrair os dados com sucesso e a validação IA confirma: processamento instantâneo.
+- Quando o parser programático falha ou a validação IA rejeita: fallback para processamento completo com IA (~1-2 min).
+- Fallback OCR: `pdf-parse` → se < 100 chars → `Tesseract.js` (lang: 'por')
 
 ---
 
@@ -184,6 +206,23 @@ Rascunho gerado pela IA. Advogado sempre revisa. Não substitui análise jurídi
 
 ---
 
+### 3.12 Análise BPC/LOAS
+Módulo de pré-análise de viabilidade para benefícios BPC/LOAS.
+
+**Campos:**
+- Análise de viabilidade do caso
+- Análise do laudo médico
+- Questões de avaliação social (domínios CIF)
+- Questões de exame médico
+- Checklist de documentação
+
+**Regras:**
+- Disponível apenas quando `benefitType === BPC_LOAS`
+- Exclusivo dos planos SOLO/PRO
+- Modelo de dados: `BpcAnalysis`
+
+---
+
 ## 4. Fluxo Completo de Uso
 
 ```
@@ -195,7 +234,7 @@ PASSO 1 — CADASTRAR CLIENTE
 PASSO 2 — CRIAR CASO
     Perfil do cliente → "Novo Caso"
     Seleciona tipo de benefício + prazo
-    Status: PROSPECCAO → aparece no Kanban
+    Status: PROSPECTING → aparece no Kanban
 
 PASSO 3 — PRONTUÁRIO (durante todo o caso)
     Aba "Prontuário" → + Nova Anotação
@@ -203,12 +242,12 @@ PASSO 3 — PRONTUÁRIO (durante todo o caso)
 
 PASSO 4 — UPLOAD DO CNIS
     Aba CNIS → upload PDF
-    Processamento automático (~1-2 min)
+    Processamento automático (instantâneo com parser programático, ~1-2 min com IA)
 
 PASSO 5 — CALCULAR
     Aba Calculadora → seleciona modalidades → Calcular
     Marca modalidade escolhida
-    Caso → status ANALISE
+    Caso → status ANALYSIS
 
 PASSO 6 — AÇÕES OPCIONAIS
     → Simular cenários
@@ -216,13 +255,14 @@ PASSO 6 — AÇÕES OPCIONAIS
     → Checklist de elegibilidade
     → Gerar parecer com IA
     → Diagnóstico de caso (prontuário + IA)
+    → Análise BPC/LOAS (quando benefitType === BPC_LOAS)
 
 PASSO 7 — PROTOCOLAR
-    Caso → PRONTO_PARA_REQUERER → EM_PROCESSAMENTO
-    Anotação no prontuário: tipo JURIDICO com data de protocolo
+    Caso → READY_TO_REQUEST → PROCESSING
+    Anotação no prontuário: tipo LEGAL com data de protocolo
 
 PASSO 8 — FINALIZAR
-    Caso → FINALIZADO
+    Caso → FINISHED
     Anotação final no prontuário
     PDF CNIS deletado do R2 após 90 dias
 ```
@@ -250,6 +290,8 @@ PASSO 8 — FINALIZAR
 | Retroativos | ❌ | ✅ | ✅ |
 | Export PDF | ❌ | ✅ | ✅ |
 | WhatsApp share | ❌ | ✅ | ✅ |
+| BPC/LOAS module | ❌ | ✅ | ✅ |
+| BPC Social Media/mês | ❌ | 5 | Ilimitado |
 | Marca d'água | ✅ | ❌ | ❌ |
 
 Todo limite verificado no banco via API — retorna 402.
@@ -262,7 +304,7 @@ Todo limite verificado no banco via API — retorna 402.
 
 ### 5.4 CPF — Privacidade
 - Hash HMAC-SHA256 com salt fixo — nunca plain text
-- Sempre mascarado na UI: `***.***.**-**`
+- Sempre mascarado na UI: `XXX.***.YYY-**` (primeiros 3 e últimos 3 dígitos visíveis)
 
 ### 5.5 WhatsApp Share
 - Formato: `5511999999999`

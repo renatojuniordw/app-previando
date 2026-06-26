@@ -1,6 +1,6 @@
 import { cn } from '@/lib/utils'
 
-type BadgeVariant = 'lime' | 'red' | 'yellow' | 'slate' | 'blue' | 'green'
+type BadgeVariant = 'lime' | 'red' | 'yellow' | 'slate' | 'blue' | 'green' | 'purple'
 
 interface BadgeProps {
   children: React.ReactNode
@@ -15,6 +15,7 @@ const variants: Record<BadgeVariant, string> = {
   slate: 'bg-slate-100 text-slate-700 border-slate-200',
   blue: 'bg-blue-50 text-blue-700 border-blue-200',
   green: 'bg-green-50 text-green-700 border-green-200',
+  purple: 'bg-purple-50 text-purple-700 border-purple-200',
 }
 
 export function Badge({ children, variant = 'slate', className }: BadgeProps) {

@@ -1,12 +1,11 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter, usePathname, useSearchParams } from 'next/navigation'
 import api from '@/lib/api'
 import { Button } from '@/components/ui/Button'
 import { Modal } from '@/components/ui/Modal'
 import { Card } from '@/components/ui/Card'
-import { Badge } from '@/components/ui/Badge'
 import { BpcForm } from '@/components/bpc/BpcForm'
 import { BpcAnalysisButtons } from '@/components/bpc/BpcAnalysisButtons'
 import { BpcResult } from '@/components/bpc/BpcResult'
@@ -29,34 +28,68 @@ interface BpcAnalysis {
   checklist: string | null
 }
 
-type AnalysisType = 'preAnalise' | 'laudo' | 'social' | 'medical' | 'checklist' | null
+type AnalysisTab = 'preAnalise' | 'laudo' | 'social' | 'medical' | 'checklist'
+
+const TABS: { id: AnalysisTab; label: string; field: keyof BpcAnalysis; endpoint: string }[] = [
+  { id: 'preAnalise', label: 'Pré-Análise', field: 'preAnalise', endpoint: 'pre-analysis' },
+  { id: 'laudo', label: 'Laudo', field: 'analiseLaudo', endpoint: 'laudo' },
+  { id: 'social', label: 'Av. Social', field: 'perguntasSocial', endpoint: 'social' },
+  { id: 'medical', label: 'Perícia Médica', field: 'perguntasMedicas', endpoint: 'medical' },
+  { id: 'checklist', label: 'Checklist', field: 'checklist', endpoint: 'checklist' },
+]
 
 export default function BpcPage() {
   const params = useParams()
+  const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
   const caseId = params.id as string
 
   const [analysis, setAnalysis] = useState<BpcAnalysis | null>(null)
+  const [clientBirthDate, setClientBirthDate] = useState<string | null>(null)
+  const [bpcNotesCount, setBpcNotesCount] = useState(0)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-  const [activeAnalysis, setActiveAnalysis] = useState<AnalysisType>(null)
-  const [analysisResult, setAnalysisResult] = useState<string | null>(null)
-  const [analysisLoading, setAnalysisLoading] = useState(false)
 
-  // Laudo modal state
+  const [activeTab, setActiveTab] = useState<AnalysisTab>('preAnalise')
+  const [generatingTab, setGeneratingTab] = useState<AnalysisTab | null>(null)
+  const [tabResults, setTabResults] = useState<Partial<Record<AnalysisTab, string>>>({})
+
+  // Laudo modal
   const [showLaudoModal, setShowLaudoModal] = useState(false)
   const [laudoText, setLaudoText] = useState('')
   const [laudoAnalyzing, setLaudoAnalyzing] = useState(false)
 
   const load = useCallback(() => {
+    setLoading(true)
     api.get(`/cases/${caseId}/bpc`)
-      .then((r) => setAnalysis(r.data))
-      .catch(() => setAnalysis(null))
+      .then((r) => {
+        setAnalysis(r.data.analysis ?? null)
+        setClientBirthDate(r.data.clientBirthDate ?? null)
+        setBpcNotesCount(r.data.bpcNotesCount ?? 0)
+
+        // Pré-carrega os resultados salvos nas tabs
+        const saved = r.data.analysis
+        if (saved) {
+          setTabResults({
+            preAnalise: saved.preAnalise ?? undefined,
+            laudo: saved.analiseLaudo ?? undefined,
+            social: saved.perguntasSocial ?? undefined,
+            medical: saved.perguntasMedicas ?? undefined,
+            checklist: saved.checklist ?? undefined,
+          })
+          // Abre na primeira tab que já tem resultado
+          const first = TABS.find((t) => saved[t.field])
+          if (first) setActiveTab(first.id)
+        }
+      })
+      .catch(() => null)
       .finally(() => setLoading(false))
   }, [caseId])
 
   useEffect(() => { load() }, [load])
 
-  const handleSave = async (data: any) => {
+  const handleSave = async (data: object) => {
     setSaving(true)
     try {
       const r = await api.post(`/cases/${caseId}/bpc`, data)
@@ -68,38 +101,25 @@ export default function BpcPage() {
     }
   }
 
-  const handleAnalysis = async (type: AnalysisType) => {
-    if (!type) return
-    setAnalysisLoading(true)
-    setActiveAnalysis(type)
+  const handleGenerate = async (tab: AnalysisTab | null) => {
+    if (!tab) return
+    if (tab === 'laudo') {
+      setShowLaudoModal(true)
+      return
+    }
+    const tabConfig = TABS.find((t) => t.id === tab)
+    if (!tabConfig) return
 
+    setGeneratingTab(tab)
+    setActiveTab(tab)
     try {
-      let endpoint = ''
-      const body = {}
-
-      switch (type) {
-        case 'preAnalise':
-          endpoint = `/cases/${caseId}/bpc/pre-analysis`
-          break
-        case 'social':
-          endpoint = `/cases/${caseId}/bpc/social`
-          break
-        case 'medical':
-          endpoint = `/cases/${caseId}/bpc/medical`
-          break
-        case 'checklist':
-          endpoint = `/cases/${caseId}/bpc/checklist`
-          break
-        default:
-          return
-      }
-
-      const r = await api.post(endpoint, body)
-      setAnalysisResult(r.data.result)
+      const r = await api.post(`/cases/${caseId}/bpc/${tabConfig.endpoint}`, {})
+      setTabResults((prev) => ({ ...prev, [tab]: r.data.result }))
+      setBpcNotesCount((n) => n + 1)
     } catch {
       // error handled by api interceptor
     } finally {
-      setAnalysisLoading(false)
+      setGeneratingTab(null)
     }
   }
 
@@ -108,8 +128,9 @@ export default function BpcPage() {
     setLaudoAnalyzing(true)
     try {
       const r = await api.post(`/cases/${caseId}/bpc/laudo`, { texto: laudoText })
-      setAnalysisResult(r.data.result)
-      setActiveAnalysis('laudo')
+      setTabResults((prev) => ({ ...prev, laudo: r.data.result }))
+      setActiveTab('laudo')
+      setBpcNotesCount((n) => n + 1)
       setShowLaudoModal(false)
       setLaudoText('')
     } catch {
@@ -119,19 +140,29 @@ export default function BpcPage() {
     }
   }
 
-  const handleCopy = () => {
-    if (analysisResult) navigator.clipboard.writeText(analysisResult)
+  const openChecklist = () => {
+    const next = new URLSearchParams(searchParams.toString())
+    next.set('drawer', 'checklist')
+    router.replace(`${pathname}?${next.toString()}`)
   }
 
+  const openNotes = () => {
+    const next = new URLSearchParams(searchParams.toString())
+    next.set('drawer', 'notes')
+    router.replace(`${pathname}?${next.toString()}`)
+  }
+
+  const activeResult = tabResults[activeTab] ?? null
+  const activeTabConfig = TABS.find((t) => t.id === activeTab)!
+
+  const handleCopy = () => { if (activeResult) navigator.clipboard.writeText(activeResult) }
   const handleExportPdf = () => {
-    if (!analysisResult) return
+    if (!activeResult) return
     const win = window.open('', '_blank')
     if (win) {
-      win.document.write(`
-        <html><head><title>Análise BPC/LOAS</title>
+      win.document.write(`<html><head><title>Análise BPC/LOAS</title>
         <style>body{font-family:monospace;padding:20px;white-space:pre-wrap;line-height:1.6;font-size:13px;}</style>
-        </head><body>${analysisResult.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</body></html>
-      `)
+        </head><body>${activeResult.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</body></html>`)
       win.document.close()
     }
   }
@@ -154,25 +185,128 @@ export default function BpcPage() {
         </div>
       </div>
 
+      {/* AVISO: prontuário com análises BPC */}
+      {bpcNotesCount > 0 && (
+        <div className="flex items-start gap-3 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <span className="text-blue-500 mt-0.5 shrink-0">ℹ️</span>
+          <div className="flex-1 min-w-0">
+            <p className="font-sans text-sm font-medium text-blue-800">
+              {bpcNotesCount === 1
+                ? '1 análise BPC salva no prontuário'
+                : `${bpcNotesCount} análises BPC salvas no prontuário`}
+            </p>
+            <p className="font-sans text-xs text-blue-600 mt-0.5">
+              Confira o histórico antes de gerar novamente para não consumir tokens desnecessariamente.
+            </p>
+          </div>
+          <button
+            onClick={openNotes}
+            className="shrink-0 text-xs font-sans font-semibold text-blue-700 underline underline-offset-2 hover:text-blue-900"
+          >
+            Ver prontuário
+          </button>
+        </div>
+      )}
+
       {/* BLOCO 1 — DADOS DO CASO */}
-      <BpcForm analysis={analysis} onSave={handleSave} saving={saving} />
+      <BpcForm
+        caseId={caseId}
+        analysis={analysis}
+        clientBirthDate={clientBirthDate}
+        onSave={handleSave}
+        saving={saving}
+      />
 
       {/* BLOCO 2 — ANÁLISES COM IA */}
       <BpcAnalysisButtons
-        onAnalyze={handleAnalysis}
+        onAnalyze={handleGenerate}
         onOpenLaudo={() => setShowLaudoModal(true)}
-        loading={analysisLoading}
+        loading={generatingTab !== null}
         disabled={!analysis}
       />
 
-      {/* BLOCO 3 — RESULTADO */}
-      {analysisResult && (
-        <BpcResult
-          result={analysisResult}
-          type={activeAnalysis}
-          onCopy={handleCopy}
-          onExportPdf={handleExportPdf}
-        />
+      {/* BLOCO 3 — HISTÓRICO + RESULTADO */}
+      {analysis && (
+        <Card variant="light" className="p-0 overflow-hidden">
+          {/* Tabs de histórico */}
+          <div className="bg-slate-50 border-b border-slate-200">
+            <div className="flex overflow-x-auto no-scrollbar">
+              {TABS.map((tab) => {
+                const hasSaved = !!tabResults[tab.id]
+                const isActive = activeTab === tab.id
+                const isGenerating = generatingTab === tab.id
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`flex items-center gap-1.5 px-4 py-2.5 text-xs font-sans font-medium whitespace-nowrap border-b-2 transition-all ${
+                      isActive
+                        ? 'border-amber-500 text-amber-700 bg-white'
+                        : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-100'
+                    }`}
+                  >
+                    {isGenerating ? (
+                      <span className="w-3 h-3 border-2 border-amber-500 border-t-transparent rounded-full animate-spin inline-block" />
+                    ) : hasSaved ? (
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" />
+                    ) : (
+                      <span className="w-1.5 h-1.5 rounded-full bg-slate-300 inline-block" />
+                    )}
+                    {tab.label}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
+          {/* Conteúdo da tab ativa */}
+          {activeResult ? (
+            <BpcResult
+              caseId={caseId}
+              result={activeResult}
+              type={activeTab}
+              onCopy={handleCopy}
+              onExportPdf={handleExportPdf}
+              onOpenChecklist={activeTab === 'checklist' ? openChecklist : undefined}
+            />
+          ) : (
+            <div className="flex flex-col items-center justify-center py-10 text-center px-6">
+              <span className="text-2xl mb-3">
+                {generatingTab === activeTab ? '⏳' : '📭'}
+              </span>
+              <p className="font-sans text-sm font-medium text-slate-700 mb-1">
+                {generatingTab === activeTab
+                  ? 'Gerando análise...'
+                  : `Nenhuma ${activeTabConfig.label.toLowerCase()} gerada ainda`}
+              </p>
+              {generatingTab !== activeTab && (
+                <p className="font-sans text-xs text-slate-400 mb-4">
+                  Use o botão correspondente acima para gerar com IA.
+                </p>
+              )}
+              {generatingTab !== activeTab && activeTab !== 'laudo' && (
+                <Button
+                  variant="outline"
+                  onClick={() => handleGenerate(activeTab)}
+                  disabled={!analysis}
+                  className="text-xs"
+                >
+                  Gerar agora
+                </Button>
+              )}
+              {generatingTab !== activeTab && activeTab === 'laudo' && (
+                <Button
+                  variant="outline"
+                  onClick={() => setShowLaudoModal(true)}
+                  disabled={!analysis}
+                  className="text-xs"
+                >
+                  Analisar laudo
+                </Button>
+              )}
+            </div>
+          )}
+        </Card>
       )}
 
       {/* MODAL — ANÁLISE DE LAUDO */}
@@ -188,12 +322,7 @@ export default function BpcPage() {
             />
           </div>
           <div className="flex gap-3">
-            <Button
-              onClick={handleLaudoAnalysis}
-              loading={laudoAnalyzing}
-              disabled={!laudoText.trim()}
-              className="flex-1"
-            >
+            <Button onClick={handleLaudoAnalysis} loading={laudoAnalyzing} disabled={!laudoText.trim()} className="flex-1">
               Analisar
             </Button>
             <Button variant="outline" onClick={() => setShowLaudoModal(false)} className="flex-1">

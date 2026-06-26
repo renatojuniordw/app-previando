@@ -10,6 +10,7 @@ import { BENEFIT_SHORT_LABELS, STATUS_LABELS, PRIORITY_STYLES } from '@/lib/cons
 import { CaseNotesDrawer } from '@/components/case/CaseNotesDrawer'
 import { CaseChecklistDrawer } from '@/components/case/CaseChecklistDrawer'
 import { CaseOpinionsDrawer } from '@/components/case/CaseOpinionsDrawer'
+import { CaseBpcDrawer } from '@/components/case/CaseBpcDrawer'
 import { CaseFloatingActions } from '@/components/case/CaseFloatingActions'
 
 interface CaseHeader {
@@ -162,11 +163,19 @@ export default function CaseLayout({ children }: { children: React.ReactNode }) 
         onClose={() => setDrawer(null)}
         caseId={params.id as string}
       />
+      {caseData?.benefitType === 'BPC_LOAS' && (
+        <CaseBpcDrawer
+          open={activeDrawer === 'bpc'}
+          onClose={() => setDrawer(null)}
+          caseId={params.id as string}
+        />
+      )}
 
       {/* Floating Action Button (FAB) Speed Dial */}
       <CaseFloatingActions
         activeDrawer={activeDrawer}
         setDrawer={setDrawer}
+        benefitType={caseData?.benefitType}
       />
     </div>
   )

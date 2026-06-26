@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { verifyCaseOwnership } from '@/lib/ownership'
 import { guardFeature, guardBpcAnalysisLimit } from '@/lib/plan-guard'
 import { handleApiError } from '@/lib/api-error'
+import { NoteType } from '@prisma/client'
 import { z } from 'zod'
 
 const BpcSchema = z.object({
@@ -25,13 +26,22 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 
     await verifyCaseOwnership(params.id, session.user.id)
 
-    const analysis = await prisma.bpcAnalysis.findUnique({
-      where: { caseId: params.id },
+    const [analysis, caseData, bpcNotesCount] = await prisma.$transaction([
+      prisma.bpcAnalysis.findUnique({ where: { caseId: params.id } }),
+      prisma.case.findUnique({
+        where: { id: params.id },
+        include: { client: { select: { birthDate: true } } },
+      }),
+      prisma.caseNote.count({
+        where: { caseId: params.id, type: NoteType.BPC_ANALYSIS },
+      }),
+    ])
+
+    return NextResponse.json({
+      analysis: analysis ?? null,
+      clientBirthDate: caseData?.client?.birthDate ?? null,
+      bpcNotesCount,
     })
-
-    if (!analysis) return NextResponse.json({ error: 'Nenhuma análise BPC encontrada para este caso.' }, { status: 404 })
-
-    return NextResponse.json(analysis)
   } catch (err: unknown) {
     return handleApiError(err)
   }

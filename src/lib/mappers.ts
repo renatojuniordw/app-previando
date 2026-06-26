@@ -58,7 +58,7 @@ export function mapModalidadeToApi(modality: CalculationModality): string {
   return modalityToApiMap[modality] || 'APOSENTADORIA_IDADE'
 }
 
-export type ApiNoteType = 'CONTATO' | 'DOCUMENTO' | 'JURIDICO' | 'INTERNO' | 'CALCULO' | 'PENDENCIA'
+export type ApiNoteType = 'CONTATO' | 'DOCUMENTO' | 'JURIDICO' | 'INTERNO' | 'CALCULO' | 'PENDENCIA' | 'BPC'
 
 const statusToDbMap: Record<ApiCaseStatus, DbCaseStatus> = {
   PROSPECCAO: DbCaseStatus.PROSPECTING,
@@ -113,6 +113,7 @@ const noteToDbMap: Record<ApiNoteType, DbNoteType> = {
   INTERNO: DbNoteType.INTERNAL,
   CALCULO: DbNoteType.CALCULATION,
   PENDENCIA: DbNoteType.PENDING_ISSUE,
+  BPC: DbNoteType.BPC_ANALYSIS,
 }
 
 const noteToApiMap: Record<DbNoteType, ApiNoteType> = {
@@ -122,6 +123,7 @@ const noteToApiMap: Record<DbNoteType, ApiNoteType> = {
   [DbNoteType.INTERNAL]: 'INTERNO',
   [DbNoteType.CALCULATION]: 'CALCULO',
   [DbNoteType.PENDING_ISSUE]: 'PENDENCIA',
+  [DbNoteType.BPC_ANALYSIS]: 'BPC',
 }
 
 export function mapCaseStatusToDb(status: ApiCaseStatus): DbCaseStatus {

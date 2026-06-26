@@ -5,6 +5,8 @@ import { BpcForm } from '@/components/bpc/BpcForm'
 import { Card } from '@/components/ui/Card'
 
 interface BpcFormSectionProps {
+  caseId: string
+  clientBirthDate?: string | null
   analysis: {
     id: string
     patologia: string
@@ -25,7 +27,7 @@ interface BpcFormSectionProps {
   onSave: (data: any) => Promise<void>
 }
 
-export function BpcFormSection({ analysis, onSave }: BpcFormSectionProps) {
+export function BpcFormSection({ caseId, clientBirthDate, analysis, onSave }: BpcFormSectionProps) {
   const [saving, setSaving] = useState(false)
   const [showForm, setShowForm] = useState(false)
 
@@ -56,7 +58,7 @@ export function BpcFormSection({ analysis, onSave }: BpcFormSectionProps) {
       </div>
 
       {showForm && (
-        <BpcForm analysis={analysis} onSave={handleSave} saving={saving} />
+        <BpcForm caseId={caseId} clientBirthDate={clientBirthDate ?? null} analysis={analysis} onSave={handleSave} saving={saving} />
       )}
     </Card>
   )

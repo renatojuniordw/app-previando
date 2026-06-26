@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { signOut } from 'next-auth/react'
 import { cn } from '@/lib/utils'
-import { LayoutDashboard, Users, Columns, CreditCard, Settings, LogOut, Activity, Calendar, FolderOpen, X } from 'lucide-react'
+import { LayoutDashboard, Users, Columns, CreditCard, Settings, LogOut, Activity, Calendar, FolderOpen, X, Instagram } from 'lucide-react'
 import { UsageBar } from '@/components/UsageBar'
 import { useSidebarStore } from '@/store/sidebar'
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock'
@@ -17,6 +17,7 @@ const NAV_ITEMS = [
   { href: '/cases', label: 'Casos', icon: FolderOpen },
   { href: '/deadlines', label: 'Prazos', icon: Calendar },
   { href: '/activity', label: 'Atividade', icon: Activity },
+  { href: '/tools/social-media', label: 'Carrossel BPC', icon: Instagram },
   { href: '/settings/billing', label: 'Plano', icon: CreditCard },
   { href: '/settings/profile', label: 'Perfil', icon: Settings },
 ]

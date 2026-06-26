@@ -8,7 +8,7 @@ import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { formatDate } from '@/lib/utils'
 import { Drawer } from '@/components/ui/Drawer'
-import { MessageSquare, FileText, Scale, StickyNote, Calculator, AlertCircle, Plus, History } from 'lucide-react'
+import { MessageSquare, FileText, Scale, StickyNote, Calculator, AlertCircle, Plus, History, Building2 } from 'lucide-react'
 
 interface CaseNotesDrawerProps {
   open: boolean
@@ -34,13 +34,20 @@ const NOTE_TYPES = [
   { value: 'PENDENCIA', label: 'Pendência', icon: AlertCircle },
 ]
 
-const NOTE_TYPE_VARIANTS: Record<string, 'blue' | 'green' | 'lime' | 'slate' | 'yellow' | 'red'> = {
+// BPC_ANALYSIS não aparece no formulário de criação — é gerado automaticamente
+const NOTE_TYPES_DISPLAY = [
+  ...NOTE_TYPES,
+  { value: 'BPC', label: 'Análise BPC', icon: Building2 },
+]
+
+const NOTE_TYPE_VARIANTS: Record<string, 'blue' | 'green' | 'lime' | 'slate' | 'yellow' | 'red' | 'purple'> = {
   CONTATO: 'blue',
   DOCUMENTO: 'green',
   JURIDICO: 'lime',
   INTERNO: 'slate',
   CALCULO: 'yellow',
   PENDENCIA: 'red',
+  BPC: 'purple',
 }
 
 export function CaseNotesDrawer({ open, onClose, caseId }: CaseNotesDrawerProps) {
@@ -212,7 +219,7 @@ export function CaseNotesDrawer({ open, onClose, caseId }: CaseNotesDrawerProps)
         ) : (
           <div className="space-y-4">
             {notes.map((note) => {
-              const noteType = NOTE_TYPES.find((t) => t.value === note.type)
+              const noteType = NOTE_TYPES_DISPLAY.find((t) => t.value === note.type)
               const Icon = noteType?.icon ?? FileText
               const variant = NOTE_TYPE_VARIANTS[note.type] ?? 'slate'
               return (

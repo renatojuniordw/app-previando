@@ -6,6 +6,7 @@ import { rateLimit } from '@/lib/rate-limit'
 import { handleApiError } from '@/lib/api-error'
 import { logAudit } from '@/lib/audit'
 import { analisarLaudo } from '@/services/bpc'
+import { saveBpcToNotes } from '@/lib/bpc-notes'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
 
@@ -50,7 +51,8 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       data: { analiseLaudo: result },
     })
 
-    // Registrar log de atividade
+    await saveBpcToNotes(params.id, session.user.id, 'laudo', result)
+
     await logAudit({
       userId: session.user.id,
       action: 'bpc.laudo',
