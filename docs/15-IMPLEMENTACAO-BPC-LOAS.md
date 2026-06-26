@@ -26,7 +26,13 @@ Adicionar model `BpcAnalysis` ao `schema.prisma` (ver `14-MODULO-BPC-LOAS.md`).
 Adicionar campos ao `PlanLimit`:
 ```prisma
 bpcEnabled              Boolean @default(false)
+bpcAnalysesPerMonth     Int     @default(0)  // -1 = ilimitado
 bpcSocialMediaPerMonth  Int     @default(0)  // -1 = ilimitado
+```
+Adicionar campos ao `UsageRecord`:
+```prisma
+bpcAnalysesThisMonth    Int     @default(0)
+bpcSocialMediaThisMonth Int     @default(0)
 ```
 Atualizar seed: SOLO e PRO recebem `bpcEnabled: true`.
 
@@ -63,12 +69,16 @@ export type PlanFeature =
   | 'USE_BPC_MODULE'       // acesso ao módulo
   | 'BPC_SOCIAL_MEDIA'     // gerador de carrossel
 
-// No switch:
-case 'USE_BPC_MODULE':
-  if (!limits.bpcEnabled) {
-    throw new PlanLimitError(
-      feature,
-      'Módulo BPC/LOAS disponível a partir do plano SOLO.',
+// FEATURE_MAP:
+USE_BPC_MODULE: 'bpcEnabled',
+BPC_SOCIAL_MEDIA: 'bpcEnabled',
+
+// Funções de guarda:
+guardBpcAnalysisLimit(userId, plan)  // verifica bpcAnalysesPerMonth
+guardBpcSocialMediaLimit(userId, plan)  // verifica bpcSocialMediaPerMonth
+```
+
+**Implementação real:** O `plan-guard.ts` usa `FEATURE_MAP` (Record) para mapear features para campos do `PlanLimit`, e `FEATURE_LABELS` para mensagens de erro. As funções `guardBpcAnalysisLimit` e `guardBpcSocialMediaLimit` verificam o contador mensal via `UsageRecord` e incrementam após uso bem-sucedido.ulo BPC/LOAS disponível a partir do plano SOLO.',
       'SOLO'
     )
   }
@@ -81,21 +91,32 @@ case 'USE_BPC_MODULE':
 Todas sob `/api/cases/[id]/bpc/`:
 
 ```
-POST   /api/cases/:id/bpc              Cria ou atualiza dados do formulário
-GET    /api/cases/:id/bpc              Retorna análise salva
+GET    /api/cases/:id/bpc              Retorna análise salva + clientBirthDate + bpcNotesCount
+POST   /api/cases/:id/bpc              Cria ou atualiza dados do formulário (upsert)
 POST   /api/cases/:id/bpc/pre-analysis Gera pré-análise de viabilidade
 POST   /api/cases/:id/bpc/laudo        Analisa laudo médico
-POST   /api/cases/:id/bpc/social       Gera perguntas avaliação social
+POST   /api/cases/:id/bpc/social       Gera relato social (IA retorna JSON estruturado)
+PATCH  /api/cases/:id/bpc/social       Salva relato social editado pelo advogado
 POST   /api/cases/:id/bpc/medical      Gera perguntas perícia médica
 POST   /api/cases/:id/bpc/checklist    Gera checklist de documentação
 POST   /api/cases/:id/bpc/social-media Gera carrossel para Instagram
+
+── Ferramenta avulsa (não vinculada a caso) ─────────────────
+POST   /api/tools/social-media         Gera carrossel BPC (rota independente)
 ```
 
 Todas verificam:
 1. Auth (sessão válida)
-2. Ownership (caso pertence ao usuário)
-3. Plano (`USE_BPC_MODULE`)
-4. Rate limit: 15 gerações BPC/hora por usuário
+2. Ownership (caso pertence ao usuário) — exceto `/api/tools/social-media`
+3. Plano (`USE_BPC_MODULE` ou `BPC_SOCIAL_MEDIA` para carrossel)
+4. Rate limit: 15 gerações BPC/hora por usuário (`bpc:${userId}`, 15/3600s)
+5. `guardBpcAnalysisLimit` ou `guardBpcSocialMediaLimit` conforme a operação
+
+**Comportamento adicional:**
+- Cada geração (exceto carrossel) salva automaticamente no `BpcAnalysis` e cria registro no prontuário (`CaseNote` com `type: BPC_ANALYSIS`)
+- `logAudit` é chamado nas rotas de `pre-analysis` e `laudo`
+- A rota `PATCH /social` valida o JSON do relato social com Zod schemas (`RelatoSocialSchema`)
+- A rota `GET /bpc` retorna também `clientBirthDate` (para cálculo de idade) e `bpcNotesCount` (número de notas BPC no prontuário)
 
 ---
 
@@ -105,14 +126,15 @@ Criar `services/bpc/index.ts` com as funções:
 ```typescript
 export async function gerarPreAnalise(params: BpcAnalysisParams): Promise<string>
 export async function analisarLaudo(laudo: string, params: BpcAnalysisParams): Promise<string>
-export async function gerarPerguntasSocial(params: BpcAnalysisParams): Promise<string>
+export async function gerarPerguntasSocial(params: BpcAnalysisParams): Promise<RelatoSocialFromAI>
 export async function gerarPerguntasMedicas(params: BpcAnalysisParams): Promise<string>
 export async function gerarChecklist(params: BpcAnalysisParams): Promise<string>
 export async function gerarCarrossel(tema: string, contexto: string): Promise<string>
 ```
 
 Cada função usa o cliente OpenAI já existente (`lib/openai.ts`).
-Os prompts completos estão em `14-MODULO-BPC-LOAS.md`.
+Os prompts completos estão em `lib/prompts/bpc/` (arquivos separados).
+**Modelo:** Todas usam `gpt-4o-mini` (hardcoded no serviço).
 
 Parâmetros compartilhados:
 ```typescript
@@ -126,61 +148,67 @@ interface BpcAnalysisParams {
   rendaPerCapita: number  // calculado: rendaFamiliar / membrosGrupo
   barreirasRelatadas: string
   resumoLaudos?: string
+  // Contexto cascateado de etapas anteriores
+  relatoSocial?: string
+  preAnalise?: string
+  analiseLaudo?: string
+  perguntasMedicas?: string
 }
 ```
+
+**Detalhes de implementação:**
+- `gerarPerguntasSocial` retorna `RelatoSocialFromAI` (JSON estruturado com domínios CIF e perguntas), não texto plano
+- Todos os inputs passam por `sanitizeForAI()` com limites de caracteres
+- Constante `SALARIO_MINIMO_VIGENTE = 1518.00` (atualizar anualmente)
+- **Contexto cascateado:** cada função recebe resultados de etapas anteriores como contexto adicional, permitindo que a IA refine suas análises
+- `formatRelatoSocialText` (em `lib/bpc-notes.ts`) converte o JSON estruturado para texto legível
+- Tipos em `types/bpc-social.ts`: `RelatoSocial`, `RelatoSocialFromAI`, `SocialDominio`, `SocialDominioFromAI`
 
 ---
 
 ## Como fica a tela /cases/[id]/bpc
 
-### Estrutura visual (3 blocos)
+### Estrutura visual (implementada)
 
-```
-┌─────────────────────────────────────────────────────────┐
-│ BLOCO 1 — DADOS DO CASO BPC/LOAS                        │
-│                                                         │
-│ Patologia + CID | Idade | Faixa etária (auto)           │
-│ Renda familiar | Nº membros | Renda per capita (auto)   │
-│ ⚠️ Aviso se acima do limite legal                        │
-│ Barreiras (textarea)                                    │
-│ Resumo dos laudos (textarea)                            │
-│                                     [SALVAR DADOS]      │
-└─────────────────────────────────────────────────────────┘
+A página `/cases/[id]/bpc` é uma `use client` page com 3 seções principais:
 
-┌─────────────────────────────────────────────────────────┐
-│ BLOCO 2 — ANÁLISES COM IA                               │
-│                                                         │
-│ [🔍 PRÉ-ANÁLISE DE VIABILIDADE]                         │
-│ [📋 ANALISAR LAUDO]  ← abre textarea para colar laudo   │
-│ [🗣 PERGUNTAS: AVALIAÇÃO SOCIAL]                         │
-│ [⚕️ PERGUNTAS: PERÍCIA MÉDICA]                           │
-│ [✅ CHECKLIST DE DOCUMENTAÇÃO]                           │
-│ [📱 GERAR CARROSSEL INSTAGRAM]  ← plano PRO             │
-└─────────────────────────────────────────────────────────┘
+**Bloco 1 — Formulário (`BpcForm`):**
+- Patologia + CID
+- Idade (calculada automaticamente a partir de `clientBirthDate` ou manual)
+- Faixa etária (auto: MENOR_16 / MAIOR_16)
+- Renda familiar + Nº membros → Renda per capita (calculada automaticamente)
+- Badge de alerta se acima do limite legal (1/4 do salário mínimo)
+- Barreiras (textarea, opcional)
+- Resumo dos laudos (textarea, opcional)
+- Botão "Salvar dados"
 
-┌─────────────────────────────────────────────────────────┐
-│ BLOCO 3 — RESULTADO                                     │
-│                                                         │
-│ [Conteúdo gerado pela IA aparece aqui]                  │
-│                                                         │
-│ [📋 COPIAR]  [📄 EXPORTAR PDF]  [💾 SALVAR NO CASO]     │
-│                                                         │
-│ ⚠️ Aviso legal obrigatório                              │
-└─────────────────────────────────────────────────────────┘
-```
+**Bloco 2 — Entrevistador Social (`BpcSocialInterview`):**
+- Interface de entrevista interativa por domínios CIF
+- Permite coletar respostas do relato social antes das análises
+- Domínios: S1 (Sustento), S2 (Moradia), S3 (Saúde), S4 (Educação), S5 (Transporte), S6 (Comunidade), S7 (Proteção Legal)
+- Cada domínio tem perguntas pré-definidas com campos de resposta
+- Botão "Salvar relato social"
+
+**Bloco 3 — Abas de análise (`BpcResult`):**
+- Tabs: Pré-Análise | Laudo | Av. Social | Perícia Médica | Checklist
+- Cada tab tem botão de geração com loading state individual
+- Resultado renderizado em markdown
+- Botões: Copiar, Exportar PDF (consolidado com todas as análises)
+- Modal de laudo para colar texto do laudo médico
+- Modal de carrossel para redes sociais
 
 ### Comportamento dos botões de análise
-- Cada botão dispara uma chamada separada à API
+- Cada tab dispara uma chamada separada à API
 - Loading state individual por botão
-- Resultado aparece sempre no Bloco 3
+- Resultado aparece na tab correspondente
 - Último resultado gerado fica salvo no banco automaticamente
-- Botão "Salvar no caso" persiste manualmente se quiser guardar versão específica
+- O serviço salva também no `BpcAnalysis` e cria registro no prontuário (`CaseNote`)
 
 ### Cálculo automático da renda per capita
 ```typescript
 // Atualiza em tempo real conforme o advogado digita
 const rendaPerCapita = rendaFamiliar / membrosGrupo
-const limiteAtual = 1518.00 / 4  // 2025: R$ 379,50
+const limiteAtual = SALARIO_MINIMO_VIGENTE / 4  // 1518.00 / 4 = R$ 379,50
 
 // Exibe badge de alerta se acima do limite
 if (rendaPerCapita > limiteAtual) {
@@ -192,6 +220,12 @@ if (rendaPerCapita > limiteAtual) {
 }
 ```
 
+### Componentes utilizados
+- `BpcForm` — formulário de dados do caso
+- `BpcResult` — renderização de resultados com tabs
+- `BpcSocialInterview` — entrevistador social interativo
+- `BpcConsolidatedPDFDocument` — PDF consolidado com todas as análises
+
 ---
 
 ## Análise de Laudo — Fluxo Específico
@@ -200,7 +234,7 @@ O laudo não fica salvo no banco (privacidade + tamanho variável).
 O advogado cola o texto, a IA analisa, o resultado fica salvo.
 
 ```
-Advogado clica [ANALISAR LAUDO]
+Advogado clica [ANALISAR LAUDO] (na tab "Laudo")
     │
     ▼
 Modal abre com textarea
@@ -213,25 +247,33 @@ Advogado cola → clica [ANALISAR]
 API recebe: texto do laudo + params do BpcAnalysis
     │
     ▼
-GPT-4o mini analisa conforme prompt do 14-MODULO-BPC-LOAS.md
+gpt-4o-mini analisa conforme prompt em lib/prompts/bpc/laudo-analysis.ts
     │
     ▼
-Resultado exibido no Bloco 3:
+Resultado exibido na tab "Laudo":
   - APTO | PARCIALMENTE APTO | INAPTO (badge colorido)
   - Pontos positivos
   - Pontos negativos
   - Como seria o laudo ideal
     │
     ▼
-[COPIAR] [EXPORTAR PDF] [SALVAR]
+Resultado salvo automaticamente no BpcAnalysis + CaseNote
+[COPIAR] [EXPORTAR PDF]
 ```
+
+**Detalhes técnicos:**
+- Validação Zod: `texto` mínimo 10 caracteres, máximo 10000
+- `logAudit` registra a ação no sistema de auditoria
+- `saveBpcToNotes` salva no prontuário com `type: BPC_ANALYSIS`
 
 ---
 
 ## Gerador de Carrossel — Fluxo Específico
 
-Feature PRO. Não está vinculada obrigatoriamente a um caso.
-Pode ser acessada também em `/tools/social-media` (rota avulsa para PRO).
+Feature SOLO/PRO. Pode ser acessada de duas formas:
+
+1. **Dentro de um caso:** `/api/cases/[id]/bpc/social-media` — vinculado ao caso, com verificação de ownership
+2. **Ferramenta avulsa:** `/api/tools/social-media` — sem vínculo a caso, acessível via `/tools/social-media`
 
 ```
 Advogado informa:
@@ -245,11 +287,15 @@ IA gera 10 slides estruturados
 Resultado exibido slide a slide
     │
     ▼
-[COPIAR TUDO] [COPIAR SLIDE X] [SALVAR]
+[COPIAR TUDO] [COPIAR SLIDE X]
 ```
 
-Limite SOLO: 5 carrosséis/mês
-Limite PRO: ilimitado
+**Detalhes técnicos:**
+- Validação Zod: `tema` mínimo 1, máximo 500 caracteres; `contexto` máximo 3000
+- `guardBpcSocialMediaLimit` verifica `bpcSocialMediaPerMonth` do plano
+- Contador incrementado via `UsageRecord.bpcSocialMediaThisMonth` (se limite não for -1)
+- `logAudit` registra a ação na rota avulsa
+- Rate limit: `bpc-social:${userId}`, 15/3600s
 
 ---
 
@@ -274,6 +320,8 @@ deve exibir o aviso abaixo, sem exceção:
 </div>
 ```
 
+**Nota:** Na implementação atual, o aviso legal é renderizado como componente inline dentro de cada tab do `BpcResult`, usando classes Tailwind com `bg-amber-50` e bordas `amber-600`.
+
 ---
 
 ## Resumo do que criar/modificar
@@ -281,16 +329,22 @@ deve exibir o aviso abaixo, sem exceção:
 | O que | Arquivo | Ação |
 |---|---|---|
 | Model BpcAnalysis | `prisma/schema.prisma` | Adicionar |
-| Campos PlanLimit | `prisma/schema.prisma` | Adicionar |
+| Campos PlanLimit | `prisma/schema.prisma` | Adicionar (`bpcEnabled`, `bpcAnalysesPerMonth`, `bpcSocialMediaPerMonth`) |
+| Campos UsageRecord | `prisma/schema.prisma` | Adicionar (`bpcAnalysesThisMonth`, `bpcSocialMediaThisMonth`) |
 | Seed atualizado | `prisma/seed.ts` | Atualizar |
 | Migration | terminal | `prisma migrate dev` |
-| PlanFeature | `services/billing/plan-guard.ts` | Adicionar |
+| PlanFeature | `lib/plan-guard.ts` | Adicionar (`USE_BPC_MODULE`, `BPC_SOCIAL_MEDIA`) |
+| Funções de guarda | `lib/plan-guard.ts` | `guardBpcAnalysisLimit`, `guardBpcSocialMediaLimit` |
 | Service BPC | `services/bpc/index.ts` | Criar |
-| API Routes | `app/api/cases/[id]/bpc/` | Criar (7 rotas) |
-| Aba condicional | `app/(dashboard)/cases/[id]/` | Atualizar tabs |
+| Prompts BPC | `lib/prompts/bpc/` | Criar pasta (pre-analysis, laudo-analysis, questions, checklist, carousel) |
+| Tipos BPC | `types/bpc-social.ts` | Criar (`RelatoSocial`, `RelatoSocialFromAI`, etc.) |
+| Helper de notas | `lib/bpc-notes.ts` | Criar (`saveBpcToNotes`, `formatRelatoSocialText`) |
+| API Routes | `app/api/cases/[id]/bpc/` | Criar (8 rotas: GET, POST, pre-analysis, laudo, social, social PATCH, medical, checklist, social-media) |
+| Rota carrossel avulsa | `app/api/tools/social-media/` | Criar |
 | Página BPC | `app/(dashboard)/cases/[id]/bpc/page.tsx` | Criar |
-| Componentes | `components/bpc/` | Criar pasta |
-| Rota carrossel avulsa | `app/(dashboard)/tools/social-media/` | Criar (PRO) |
+| Componentes | `components/bpc/` | Criar (`BpcForm`, `BpcResult`, `BpcSocialInterview`) |
+| PDF BPC | `components/pdf/BpcConsolidatedPDFDocument.tsx` | Criar |
+| Rota avulsa social-media | `app/(dashboard)/tools/social-media/` | Criar página |
 | UsageBar | `components/billing/UsageBar.tsx` | Adicionar linha BPC |
 
 ---
@@ -305,7 +359,28 @@ deve exibir o aviso abaixo, sem exceção:
 5. Página /bpc com formulário e Bloco 1
 6. Integrar Bloco 2 (botões) + Bloco 3 (resultado)
 7. Análise de laudo (modal + fluxo)
-8. Carrossel (deixar por último — é PRO)
+8. Carrossel (deixar por último — é SOLO/PRO)
 9. Aviso legal em todos os outputs
-10. Testes com casos reais da sua namorada
+10. Testes com casos reais
 ```
+
+## Checklist de implementação
+
+- [x] Schema atualizado (BpcAnalysis + PlanLimit + UsageRecord)
+- [x] Migration criada e aplicada
+- [x] Seed atualizado (SOLO/PRO com bpcEnabled)
+- [x] plan-guard.ts atualizado (FEATURE_MAP, guardBpcAnalysisLimit, guardBpcSocialMediaLimit)
+- [x] services/bpc/index.ts criado com todas as funções
+- [x] Prompts em lib/prompts/bpc/ (pre-analysis, laudo-analysis, questions, checklist, carousel)
+- [x] Tipos em types/bpc-social.ts
+- [x] Helper lib/bpc-notes.ts (saveBpcToNotes, formatRelatoSocialText)
+- [x] Rotas de API criadas (8 rotas sob /api/cases/[id]/bpc/ + 1 rota avulsa)
+- [x] Tabs do caso atualizadas (condicional BPC_LOAS)
+- [x] Página /cases/[id]/bpc criada (use client, com BpcForm, BpcResult, BpcSocialInterview)
+- [x] Componentes BpcForm, BpcResult, BpcSocialInterview criados
+- [x] PDF BpcConsolidatedPDFDocument criado
+- [x] Rota /tools/social-media criada (SOLO/PRO)
+- [x] UsageBar atualizado
+- [ ] Testes de integração
+- [ ] Testes de limite de plano
+- [ ] Testes de rate limit

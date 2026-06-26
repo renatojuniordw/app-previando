@@ -11,7 +11,7 @@ O Previando adota uma estética **Premium, Acessível e Clean**, focada em trans
 - **Autoridade & Confiança:** Cores sóbrias e tipografia clássica (Serifada) combinada com Sans-Serif moderna.
 - **Acessibilidade:** Alto contraste para facilitar a leitura diária exaustiva de dados e processos.
 - **Minimalismo Focado:** Remoção de ruídos visuais. Menos bordas pesadas e mais espaços em branco (white space).
-- **Interações Fluidas:** Microinterações suaves (glassmorphism sutil, sombras de elevação e transições de hover).
+- **Interações Fluidas:** Microinterações suaves (sombras de elevação, transições de hover e animações discretas).
 
 ---
 
@@ -44,15 +44,22 @@ As cores do sistema foram escolhidas para garantir acessibilidade e transmitir o
 ## 4. Estruturas e Componentes Base
 
 ### 4.1 Elevação e Sombras (Shadows)
-Os componentes flutuam suavemente ao invés de usar sombras sólidas brutalistas:
-- `shadow-sm`: Para pequenos elementos interativos (botões menores).
-- `shadow-md` (Elevation 1): Para Cards de dados e Painéis secundários.
-- `shadow-lg` (Elevation 2): Para Modais, Popovers e Dropdowns.
+Os componentes flutuam suavemente ao invés de usar sombras sólidas brutalistas. O sistema define tokens customizados em `tailwind.config.ts`:
+
+| Token | Classe | Uso |
+|---|---|---|
+| `elevation-sm` | `shadow-elevation-sm` | Elementos interativos pequenos (botões, tags) |
+| `elevation-md` | `shadow-elevation-md` | Cards de dados, painéis secundários |
+| `elevation-lg` | `shadow-elevation-lg` | Modais, popovers, dropdowns |
+
+Os valores seguem a paleta de sombras do Tailwind padrão (`shadow-sm`, `shadow-md`, `shadow-lg`) como fallback, mas os tokens customizados são preferidos para consistência.
 
 ### 4.2 Bordas (Border Radius)
 Componentes possuem curvas amigáveis e modernas:
 - `rounded-md`: Botões, inputs, tags pequenas.
-- `rounded-lg` / `rounded-xl`: Cards maiores, modais, painéis estruturais.
+- `rounded-lg`: Cards maiores, modais, painéis estruturais.
+- `rounded-xl`: Containers amplos, seções de admin.
+- `rounded-full`: Badges, pills, avatares.
 
 ### 4.3 Formulários e Inputs
 - **Fundo:** Branco (`bg-white`)
@@ -60,9 +67,19 @@ Componentes possuem curvas amigáveis e modernas:
 - **Foco (Active):** Anel de foco claro para acessibilidade (`focus:ring-2 focus:ring-amber-600 focus:border-transparent`).
 
 ### 4.4 Botões
-- **Primário:** `bg-slate-900 text-white hover:bg-slate-800 rounded-md px-4 py-2 font-medium transition-colors`
-- **Secundário (Acento):** `bg-amber-600 text-white hover:bg-amber-700 rounded-md px-4 py-2 font-medium transition-colors`
-- **Terciário (Outline):** `border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 rounded-md px-4 py-2 font-medium transition-colors`
+O componente `Button` (`src/components/ui/Button.tsx`) suporta os seguintes variantes:
+
+| Variante | Estilo | Uso |
+|---|---|---|
+| `primary` | `bg-slate-900 text-white border-slate-900 hover:bg-slate-800 shadow-sm` | Ações principais, submit de formulários |
+| `dark` | Idêntico ao primary | Compatibilidade com variantes antigas |
+| `outline` | `bg-white text-slate-900 border-slate-300 hover:bg-slate-50` | Ações secundárias, filtros |
+| `danger` | `bg-red-600 text-white border-red-600 hover:bg-red-700 shadow-sm` | Exclusão, ações destrutivas |
+| `ghost` | `bg-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-100` | Links em botões, ações discretas |
+
+Tamanhos: `sm` (px-3 py-1.5 text-xs), `md` (px-4 py-2 text-sm), `lg` (px-6 py-3 text-base).
+
+Foco acessível: `focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2`.
 
 ---
 

@@ -2,6 +2,7 @@
 > previando.com.br — Estrutura, Conteúdo e Layout adaptado para advogados
 > Stack: React (Vite) + Tailwind CSS — repo: previando-web — porta 60001
 > Design System: ver 12-DESIGN-SYSTEM-LP.md
+> Status: Especificação para implementação — repo separado do app principal
 
 ---
 
@@ -534,7 +535,7 @@ Col 4 — Contato:
   app.previando.com.br
 
 Copyright:
-  "© 2025 Previando. Todos os direitos reservados.
+  "© 2026 Previando. Todos os direitos reservados.
    Previando é um produto Unificando | unificando.com.br"
 ```
 

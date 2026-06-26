@@ -1,7 +1,7 @@
 # 12 — DESIGN SYSTEM — Landing Page (previando.com.br)
 > Extraído da referência visual Syntra — adaptado para o Previando
 > Este design system é exclusivo da LP (previando.com.br)
-> O app (app.previando.com.br) usa o Neo-Brutalismo da Unificando (ver 11-DESIGN-SYSTEM.md)
+> O app (app.previando.com.br) usa o Premium Legal Design (ver 11-DESIGN-SYSTEM.md)
 
 ---
 
@@ -13,7 +13,7 @@ Contraste entre seções claras e seções escuras (azul royal).
 Isometria como linguagem visual principal — ilustrações 3D flat.
 
 **Diferença do Design System do App:**
-- App (Neo-Brutalismo): preto + neon, sem bordas arredondadas, tipografia pesada
+- App (Premium Legal Design): slate + amber, bordas arredondadas, tipografia serif/sans
 - LP (Professional SaaS): azul + laranja, bordas arredondadas, tipografia clean
 
 ---

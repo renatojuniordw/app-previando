@@ -457,9 +457,63 @@ Funções de guarda em `plan-guard.ts`:
 
 ---
 
+## Funções do Serviço (services/bpc)
+
+```typescript
+// Pré-análise de viabilidade
+async function gerarPreAnalise(params: BpcAnalysisParams): Promise<string>
+
+// Análise de laudo médico (recebe texto do laudo + contexto do caso)
+async function analisarLaudo(texto: string, params: BpcAnalysisParams): Promise<string>
+
+// Perguntas por domínio — Avaliação Social
+// Retorna JSON estruturado (RelatoSocialFromAI), não texto plano
+async function gerarPerguntasSocial(params: BpcAnalysisParams): Promise<RelatoSocialFromAI>
+
+// Perguntas por domínio — Perícia Médica
+async function gerarPerguntasMedicas(params: BpcAnalysisParams): Promise<string>
+
+// Checklist de documentação
+async function gerarChecklist(params: BpcAnalysisParams): Promise<string>
+
+// Carrossel para redes sociais
+async function gerarCarrossel(tema: string, contexto: string): Promise<string>
+```
+
+**Interface `BpcAnalysisParams`:**
+```typescript
+interface BpcAnalysisParams {
+  patologia: string
+  cid?: string
+  idade: number
+  faixaEtaria: 'MENOR_16' | 'MAIOR_16'
+  rendaFamiliar: number
+  membrosGrupo: number
+  rendaPerCapita: number
+  barreirasRelatadas: string
+  resumoLaudos?: string
+  // Contexto cascateado de etapas anteriores
+  relatoSocial?: string
+  preAnalise?: string
+  analiseLaudo?: string
+  perguntasMedicas?: string
+}
+```
+
+**Detalhes de implementação:**
+- **Modelo de IA:** Todas as funções usam `gpt-4o-mini` (hardcoded no serviço)
+- **Sanitização:** Todos os inputs passam por `sanitizeForAI()` com limites de caracteres
+- **Salário mínimo:** Constante `SALARIO_MINIMO_VIGENTE = 1518.00` (atualizar anualmente)
+- **Contexto cascateado:** Cada função recebe resultados de etapas anteriores como contexto adicional, permitindo que a IA refine suas análises com base no que já foi gerado
+- **`gerarPerguntasSocial`** retorna `RelatoSocialFromAI` (JSON com domínios CIF e perguntas), que é convertido para `RelatoSocial` (com itens/respostas) antes de salvar no DB
+- **`formatRelatoSocialText`** converte o JSON estruturado para texto legível, salvo em `perguntasSocial`
+
+---
+
 ## Aviso Legal (obrigatório em todo output)
 
-Todo conteúdo gerado pelo módulo BPC/LOAS deve incluir:
+Todo conteúdo gerado pelo módulo BPC/LOAS deve incluir o aviso abaixo,
+renderizado na interface (não no prompt da IA):
 
 ```
 "Este conteúdo é gerado por inteligência artificial com base nas informações
@@ -467,6 +521,8 @@ fornecidas pelo advogado. Não substitui análise jurídica profissional.
 A responsabilidade pela estratégia processual é exclusivamente do advogado
 responsável pelo caso. Previando é um produto Unificando."
 ```
+
+**Implementação:** O aviso é renderizado como componente inline em cada tab do `BpcResult`, com estilo `bg-amber-50` e bordas `amber-600`.
 
 ---
 

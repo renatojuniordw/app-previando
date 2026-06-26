@@ -393,21 +393,114 @@ ufw status
 
 ---
 
-## Variáveis de Ambiente Locais (dev)
+## Docker Compose — Desenvolvimento
+
+O arquivo `docker-compose.yml` no repositório é **apenas para desenvolvimento local**. Inclui só PostgreSQL e Redis:
+
+```yaml
+# docker-compose.yml (dev)
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: previando-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: previando
+      POSTGRES_PASSWORD: previando_local
+      POSTGRES_DB: previando_db
+    ports:
+      - "60003:5432"
+    volumes:
+      - previando_postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U previando -d previando_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: previando-redis
+    restart: unless-stopped
+    ports:
+      - "60004:6379"
+    volumes:
+      - previando_redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  previando_postgres:
+  previando_redis:
+```
+
+> **Atenção:** O compose de produção para Contabo é um arquivo separado, não versionado no repositório. Veja a seção "Docker Compose — previando-app (Sistema)" acima para a referência de produção.
+
+## Variáveis de Ambiente (.env.example)
+
+O arquivo `.env.example` contém todas as variáveis necessárias:
+
+```env
+# Banco de Dados
+DATABASE_URL="postgresql://previando:senha@localhost:60003/previando_db"
+
+# NextAuth v5
+NEXTAUTH_URL="https://app.previando.com.br"
+NEXTAUTH_SECRET=""
+
+# Google OAuth
+GOOGLE_CLIENT_ID=""
+GOOGLE_CLIENT_SECRET=""
+
+# Redis
+REDIS_URL="redis://localhost:60004"
+
+# Cloudflare R2 (armazenamento de documentos)
+R2_ACCOUNT_ID=""
+R2_ACCESS_KEY_ID=""
+R2_SECRET_ACCESS_KEY=""
+R2_BUCKET_NAME="previando-docs"
+
+# OpenAI (IA)
+OPENAI_API_KEY=""
+
+# Mercado Pago (pagamentos)
+MERCADOPAGO_ACCESS_TOKEN=""
+MERCADOPAGO_WEBHOOK_SECRET=""
+MP_PLAN_ID_SOLO=""
+MP_PLAN_ID_PRO=""
+
+# Admin padrão (seed)
+ADMIN_EMAIL=""
+ADMIN_PASSWORD=""
+ADMIN_NAME="Administrador"
+
+# Segurança
+CPF_HASH_SALT=""
+
+# Datajud (API pública CNJ)
+DATAJUD_BASE_URL="https://api-publica.datajud.cnj.jus.br"
+DATAJUD_API_KEY=""
+```
+
+## Rodar Localmente (dev)
 
 ```bash
-# previando-app/.env.local (desenvolvimento)
+# 1. Subir infraestrutura (postgres + redis)
+docker compose up -d postgres redis
 
-DATABASE_URL="postgresql://previando:senha@localhost:60003/previando_db"
-REDIS_URL="redis://localhost:60004"
-NEXTAUTH_URL="http://localhost:60002"
-NEXTAUTH_SECRET="dev-secret-qualquer"
-# ... demais vars
+# 2. Rodar migrations
+npx prisma migrate dev
 
-# Para rodar localmente:
-docker compose up -d previando-db previando-redis  # só infra
-npm run dev                                          # Next.js na 60002
-node jobs/worker.js                                  # Worker em outro terminal
+# 3. Rodar seed (admin, PlanLimits, etc.)
+npx prisma db seed
+
+# 4. Iniciar dev server
+npm run dev   # Next.js em http://localhost:60002
 ```
 
 ---
