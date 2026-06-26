@@ -48,41 +48,37 @@ Adicionar ao schema Prisma (model separado, vinculado ao Case):
 
 ```prisma
 model BpcAnalysis {
-  id     String @id @default(cuid())
-  caseId String @unique
-  case   Case   @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  id               String         @id @default(cuid())
+  caseId           String         @unique
+  case             Case           @relation(fields: [caseId], references: [id], onDelete: Cascade)
 
   // Dados do caso
-  patologia        String              // Texto livre: "TDAH", "Esquizofrenia", etc.
-  cid              String?             // CID-10: F84.0, F20.0, etc.
-  idade            Int                 // Idade do cliente em anos
-  faixaEtaria      BpcFaixaEtaria      // MENOR_16 | MAIOR_16
+  patologia        String         // Texto livre: "TDAH", "Esquizofrenia", etc.
+  cid              String?        // CID-10: F84.0, F20.0, etc.
+  idade            Int            // Idade do cliente em anos
+  faixaEtaria      BpcFaixaEtaria // MENOR_16 | MAIOR_16
 
   // Dados socioeconômicos
-  rendaFamiliar    Decimal @db.Decimal(10, 2)
+  rendaFamiliar    Float          // Armazenado como Float (não Decimal)
   membrosGrupo     Int
-  rendaPerCapita   Decimal @db.Decimal(10, 2) // Calculado automaticamente
+  rendaPerCapita   Float          // Calculado automaticamente
 
-  // Barreiras informadas pelo advogado (texto livre)
-  barreirasRelatadas String @db.Text
+  // Barreiras informadas pelo advogado (texto livre, opcional)
+  barreiras        String?        @db.Text
 
   // Laudos e documentos (resumo textual fornecido pelo advogado)
-  resumoLaudos     String? @db.Text
+  resumoLaudos     String?        @db.Text
 
   // Resultados da IA
-  preAnalise       String? @db.Text   // Pré-análise de viabilidade
-  analiseDocumental String? @db.Text  // Análise dos laudos
-  perguntasAvSocial String? @db.Text  // Perguntas por domínio — Avaliação Social
-  perguntasPericiaM String? @db.Text  // Perguntas por domínio — Perícia Médica
-  lacunasDocumentais String? @db.Text // O que falta para robustecer o processo
-  checklistDocs    Json?               // Checklist de documentação
+  preAnalise       String?        @db.Text // Pré-análise de viabilidade
+  analiseLaudo     String?        @db.Text // Análise dos laudos
+  perguntasSocial  String?        @db.Text // Perguntas por domínio — Avaliação Social (texto formatado)
+  perguntasMedicas String?        @db.Text // Perguntas por domínio — Perícia Médica
+  checklist        String?        @db.Text // Checklist de documentação
+  relatoSocial     Json?          // Relato social estruturado (domínios CIF com itens/respostas)
 
-  // Metadados de geração
-  tokensUsed        Int?
-  generationCostUsd Decimal? @db.Decimal(8, 6)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
 
   @@map("bpc_analyses")
 }
@@ -92,6 +88,14 @@ enum BpcFaixaEtaria {
   MAIOR_16
 }
 ```
+
+**Notas sobre o schema implementado:**
+- `rendaFamiliar` e `rendaPerCapita` usam `Float` (não `Decimal`)
+- `barreiras` é opcional (`String?`), não obrigatório
+- Não há campos `tokensUsed` nem `generationCostUsd` — o tracking de custos não foi implementado
+- `checklist` é `String? @db.Text` (não `Json?`)
+- `relatoSocial` é `Json?` — armazena o relato social estruturado por domínios CIF
+- `perguntasSocial` armazena o texto formatado do relato social (versão legível), enquanto `relatoSocial` guarda a estrutura JSON editável
 
 ---
 
@@ -397,17 +401,29 @@ Regras:
 
 ```
 ── BPC/LOAS ──────────────────────────────────────────────────
-POST  /api/cases/:id/bpc                Cria análise BPC/LOAS
-GET   /api/cases/:id/bpc                Retorna análise salva
-PUT   /api/cases/:id/bpc                Atualiza dados do formulário
+GET   /api/cases/:id/bpc                Retorna análise salva + clientBirthDate + bpcNotesCount
+POST  /api/cases/:id/bpc                Cria ou atualiza dados do formulário (upsert)
 
 POST  /api/cases/:id/bpc/pre-analysis   Gera pré-análise de viabilidade
 POST  /api/cases/:id/bpc/laudo          Analisa laudo médico fornecido
-POST  /api/cases/:id/bpc/social         Gera perguntas avaliação social
+POST  /api/cases/:id/bpc/social         Gera relato social (IA retorna JSON estruturado)
+PATCH /api/cases/:id/bpc/social         Salva relato social editado pelo advogado
 POST  /api/cases/:id/bpc/medical        Gera perguntas perícia médica
 POST  /api/cases/:id/bpc/checklist      Gera checklist de documentação
 POST  /api/cases/:id/bpc/social-media   Gera carrossel para redes sociais
+
+── Ferramenta avulsa (não vinculada a caso) ─────────────────
+POST  /api/tools/social-media           Gera carrossel BPC (rota independente)
 ```
+
+**Observações:**
+- Todas as rotas verificam: auth, ownership, `USE_BPC_MODULE` (ou `BPC_SOCIAL_MEDIA` para carrossel)
+- Rate limit: 15 requisições BPC/hora por usuário (`bpc:${userId}`, 15/3600s)
+- Rate limit separado para carrossel: `bpc-social:${userId}`, 15/3600s
+- `guardBpcAnalysisLimit` verifica `bpcAnalysesPerMonth` do plano
+- `guardBpcSocialMediaLimit` verifica `bpcSocialMediaPerMonth` do plano
+- Cada geração salva automaticamente no `BpcAnalysis` e cria registro no prontuário (`CaseNote` com `type: BPC_ANALYSIS`)
+- `logAudit` é chamado nas rotas de `pre-analysis` e `laudo`
 
 ---
 
@@ -418,13 +434,26 @@ POST  /api/cases/:id/bpc/social-media   Gera carrossel para redes sociais
 | Módulo BPC/LOAS | ❌ | ✅ | ✅ |
 | Análise de laudo | ❌ | ✅ | ✅ |
 | Geração de perguntas | ❌ | ✅ | ✅ |
-| Carrossel para redes | ❌ | 5/mês | Ilimitado |
+| Carrossel para redes | ❌ | Limitado/mês | Ilimitado (-1) |
 
-Adicionar ao `PlanLimit`:
+Campos no `PlanLimit`:
 ```prisma
-bpcEnabled         Boolean @default(false) // SOLO/PRO
-bpcSocialMediaMonth Int    @default(0)     // 0 = bloqueado, -1 = ilimitado
+bpcEnabled             Boolean @default(false) // SOLO/PRO habilitam o módulo
+bpcAnalysesPerMonth    Int     @default(0)     // -1 = ilimitado
+bpcSocialMediaPerMonth Int     @default(0)     // -1 = ilimitado
 ```
+
+Campos no `UsageRecord`:
+```prisma
+bpcAnalysesThisMonth   Int     @default(0)     // Contador mensal de análises
+bpcSocialMediaThisMonth Int    @default(0)     // Contador mensal de carrosséis
+```
+
+Funções de guarda em `plan-guard.ts`:
+- `guardFeature(plan, 'USE_BPC_MODULE')` — verifica `bpcEnabled`
+- `guardFeature(plan, 'BPC_SOCIAL_MEDIA')` — verifica `bpcEnabled`
+- `guardBpcAnalysisLimit(userId, plan)` — verifica `bpcAnalysesPerMonth`
+- `guardBpcSocialMediaLimit(userId, plan)` — verifica `bpcSocialMediaPerMonth`
 
 ---
 

@@ -77,7 +77,7 @@ previando.com.br · contato@previando.com.br · @previando
 ### Criativo 1 — Dor direta
 **Headline:** Ainda calcula aposentadoria no Excel?
 **Texto:**
-Em 2025, advogados previdenciários perdem horas por semana em cálculos que um sistema resolve em minutos.
+Advogados previdenciários perdem horas por semana em cálculos que um sistema resolve em minutos.
 
 O Previando lê o CNIS automaticamente, calcula RMI/RMA com todas as regras da EC 103/2019 e gera o parecer com IA.
 
