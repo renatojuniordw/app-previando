@@ -52,10 +52,12 @@ const Header: React.FC = () => (
   </View>
 )
 
-const Footer: React.FC<{ pageNumber: number; totalPages: number }> = ({ pageNumber, totalPages }) => (
+const Footer: React.FC = () => (
   <View style={styles.footer} fixed>
     <Text>Gerado por Previando</Text>
-    <Text>Página {pageNumber} de {totalPages}</Text>
+    <Text
+      render={({ pageNumber, totalPages }) => `Página ${pageNumber} de ${totalPages}`}
+    />
   </View>
 )
 

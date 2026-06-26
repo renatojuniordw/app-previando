@@ -8,6 +8,7 @@ import { LayoutDashboard, Users, Columns, CreditCard, Settings, LogOut, Activity
 import { UsageBar } from '@/components/UsageBar'
 import { useSidebarStore } from '@/store/sidebar'
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock'
+import { useUrgentDeadlines } from '@/hooks/useUrgentDeadlines'
 import { useEffect, useCallback } from 'react'
 
 const NAV_ITEMS = [
@@ -27,6 +28,7 @@ export function Sidebar() {
   const { isOpen, close, isDesktopOpen } = useSidebarStore()
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 1024
   useBodyScrollLock(isOpen && isMobile)
+  const urgentDeadlines = useUrgentDeadlines()
 
   // Close sidebar on route change (mobile only)
   useEffect(() => {
@@ -105,7 +107,12 @@ export function Sidebar() {
                     )}
                   >
                     <Icon className={cn('w-5 h-5 shrink-0', active ? 'text-amber-600' : 'text-slate-400')} aria-hidden="true" />
-                    <span>{item.label}</span>
+                    <span className="flex-1">{item.label}</span>
+                    {item.href === '/deadlines' && urgentDeadlines > 0 && (
+                      <span className="ml-auto min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-red-500 text-white text-[10px] font-bold px-1">
+                        {urgentDeadlines > 9 ? '9+' : urgentDeadlines}
+                      </span>
+                    )}
                   </Link>
                 </li>
               )

@@ -68,7 +68,9 @@ export function useCaseOverview() {
   }
 
   const handleExportPDF = () => {
-    downloadPdf(params.id)
+    downloadPdf(params.id as string).then((ok) => {
+      if (!ok) addToast({ type: 'error', title: 'Erro', message: 'Não foi possível gerar o PDF.' })
+    })
   }
 
   return {

@@ -1,5 +1,5 @@
 import React from 'react'
-import { Document, Page, View, Text, Image, StyleSheet } from '@react-pdf/renderer'
+import { Document, Page, View, Text, Image } from '@react-pdf/renderer'
 import { styles, BRAND, LOGO_BASE64 } from './styles'
 
 interface CasePDFDocumentProps {
@@ -35,10 +35,12 @@ const Header: React.FC = () => (
   </View>
 )
 
-const Footer: React.FC<{ pageNumber: number; totalPages: number }> = ({ pageNumber, totalPages }) => (
+const Footer: React.FC = () => (
   <View style={styles.footer} fixed>
     <Text>Gerado por Previando</Text>
-    <Text>Página {pageNumber} de {totalPages}</Text>
+    <Text
+      render={({ pageNumber, totalPages }) => `Página ${pageNumber} de ${totalPages}`}
+    />
   </View>
 )
 

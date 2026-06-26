@@ -26,6 +26,7 @@ export function BpcSocialInterview({
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set())
   const [dirty, setDirty] = useState(false)
   const [confirmingRegenerate, setConfirmingRegenerate] = useState(false)
+  const [fullscreen, setFullscreen] = useState(false)
 
   const handleGenerate = async () => {
     setGenerating(true)
@@ -127,7 +128,7 @@ export function BpcSocialInterview({
   const categorias = Array.from(new Set(localRelato.dominios.map((d) => d.categoria)))
 
   return (
-    <div className="flex flex-col h-full">
+    <div className={`flex flex-col ${fullscreen ? 'fixed inset-0 z-50 bg-white' : 'h-full'}`}>
       {/* Barra superior com progresso e ações */}
       <div className="px-5 py-3 border-b border-slate-200 bg-slate-50 flex items-center justify-between gap-3 flex-wrap shrink-0">
         <div className="flex items-center gap-3">
@@ -142,14 +143,33 @@ export function BpcSocialInterview({
           )}
         </div>
         <div className="flex gap-2 shrink-0 items-center">
+          <button
+            onClick={() => setFullscreen((f) => !f)}
+            className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-md transition-colors"
+            title={fullscreen ? 'Sair do modo entrevista' : 'Modo entrevista (tela cheia)'}
+          >
+            {fullscreen ? (
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 9V4.5M9 9H4.5M9 9L3.75 3.75M9 15v4.5M9 15H4.5M9 15l-5.25 5.25M15 9h4.5M15 9V4.5M15 9l5.25-5.25M15 15h4.5M15 15v4.5m0-4.5l5.25 5.25" />
+              </svg>
+            ) : (
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" />
+              </svg>
+            )}
+          </button>
           {confirmingRegenerate ? (
             <div className="flex items-center gap-2 bg-amber-50 border border-amber-300 rounded-md px-3 py-1.5">
-              <span className="font-sans text-xs text-amber-800">Substituir roteiro atual?</span>
+              <span className="font-sans text-xs text-amber-800">
+                {dirty
+                  ? 'Há respostas não salvas. Regenerar irá descartá-las. Confirmar?'
+                  : 'Substituir roteiro atual?'}
+              </span>
               <button
                 onClick={() => { setConfirmingRegenerate(false); handleGenerate() }}
-                className="text-xs font-semibold text-red-600 hover:text-red-800"
+                className="text-xs font-semibold text-red-600 hover:text-red-800 whitespace-nowrap"
               >
-                Sim
+                Sim, substituir
               </button>
               <button
                 onClick={() => setConfirmingRegenerate(false)}
@@ -180,7 +200,7 @@ export function BpcSocialInterview({
       </div>
 
       {/* Lista de domínios agrupados por categoria */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto relative">
         {categorias.map((categoria) => {
           const dominiosDaCategoria = localRelato.dominios.filter((d) => d.categoria === categoria)
           return (
@@ -272,9 +292,10 @@ export function BpcSocialInterview({
       </div>
 
       {/* Footer de aviso */}
-      <div className="border-t border-amber-200 bg-amber-50 px-5 py-3 shrink-0">
-        <p className="text-[10px] font-mono font-bold uppercase text-amber-600 tracking-widest leading-relaxed">
-          As respostas registradas são de responsabilidade do advogado responsável pelo caso. Previando é um produto Unificando.
+      <div className="border-t border-slate-100 px-5 py-2.5 shrink-0 flex items-center gap-1.5">
+        <span className="text-amber-500 text-xs">⚠</span>
+        <p className="text-[11px] text-slate-400 leading-relaxed">
+          As respostas são de responsabilidade do advogado responsável pelo caso.
         </p>
       </div>
     </div>

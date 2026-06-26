@@ -19,7 +19,7 @@ const csp = [
 
 const nextConfig = {
   experimental: {
-    serverComponentsExternalPackages: ['@prisma/client', 'prisma', 'pdf-parse', 'tesseract.js'],
+    serverComponentsExternalPackages: ['@prisma/client', 'prisma', 'pdf-parse', 'tesseract.js', '@react-pdf/renderer'],
   },
   images: {
     remotePatterns: [

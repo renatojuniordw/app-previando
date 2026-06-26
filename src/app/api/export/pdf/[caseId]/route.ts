@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { auth } from '@/auth'
 import prisma from '@/lib/prisma'
 import { guardFeature } from '@/lib/plan-guard'
 import { generateCasePDF } from '@/lib/pdf-generator'
-import { logAuditEvent } from '@/lib/audit'
+import { logAudit } from '@/lib/audit'
 
 // Gera um PDF binário real para o caso usando pdfkit
 // Retorna application/pdf com branding Previando
@@ -12,17 +11,12 @@ export async function GET(
   request: NextRequest,
   { params }: { params: { caseId: string } }
 ) {
-  const session = await getServerSession(authOptions)
-  if (!session) {
+  const session = await auth()
+  if (!session?.user?.id) {
     return new NextResponse('Não autorizado', { status: 401 })
   }
 
-  // Rate limiting simples
-  const ip = request.headers.get('x-forwarded-for') || 'unknown'
-  const key = `pdf-export-${ip}`
-  // Em produção usar Redis ou similar
-
-  const { caseId } = params
+  const { caseId } = await params
 
   // Buscar dados do caso
   const caso = await prisma.caso.findFirst({
@@ -48,11 +42,11 @@ export async function GET(
   }
 
   // Audit log
-  await logAuditEvent({
+  await logAudit({
     userId: session.user.id,
     action: 'export.pdf',
-    entity: 'case',
-    entityId: caseId,
+    resource: `case:${caseId}`,
+    req: request,
     metadata: { watermark },
   })
 

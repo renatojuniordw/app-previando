@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import dynamic from 'next/dynamic'
+import ReactMarkdown from 'react-markdown'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
@@ -19,6 +19,8 @@ interface BpcResultProps {
   onCopy: () => void
   onOpenChecklist?: () => void
   onRegenerate?: () => void
+  checklistImported?: boolean
+  onChecklistImported?: () => void
 }
 
 const TYPE_LABELS: Record<string, string> = {
@@ -61,7 +63,7 @@ function parseChecklistMarkdown(text: string): {
       pendencias.push(label)
     } else {
       items.push({
-        id: `bpc-${Date.now()}-${items.length}`,
+        id: `bpc-${items.length}-${Math.random().toString(36).slice(2, 9)}`,
         label,
         checked: false,
         required: currentSection === 'required',
@@ -72,9 +74,8 @@ function parseChecklistMarkdown(text: string): {
   return { items, pendencias }
 }
 
-export function BpcResult({ caseId, result, type, onCopy, onOpenChecklist, onRegenerate }: BpcResultProps) {
+export function BpcResult({ caseId, result, type, onCopy, onOpenChecklist, onRegenerate, checklistImported, onChecklistImported }: BpcResultProps) {
   const [importing, setImporting] = useState(false)
-  const [importDone, setImportDone] = useState(false)
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
@@ -92,7 +93,7 @@ export function BpcResult({ caseId, result, type, onCopy, onOpenChecklist, onReg
         eligible: true,
         pendencias,
       })
-      setImportDone(true)
+      onChecklistImported?.()
       onOpenChecklist?.()
     } catch {
       // noop
@@ -114,10 +115,15 @@ export function BpcResult({ caseId, result, type, onCopy, onOpenChecklist, onReg
         </div>
       </div>
 
-      <div className="p-6">
-        <p className="font-sans text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">
-          {result}
-        </p>
+      <div className="p-6 prose prose-sm prose-slate max-w-none
+        prose-headings:font-sans prose-headings:font-semibold prose-headings:text-slate-800 prose-headings:mt-4 prose-headings:mb-2
+        prose-h1:text-base prose-h2:text-sm prose-h3:text-sm
+        prose-p:text-slate-700 prose-p:leading-relaxed prose-p:my-1.5
+        prose-li:text-slate-700 prose-li:my-0.5
+        prose-strong:text-slate-800 prose-strong:font-semibold
+        prose-ul:my-2 prose-ol:my-2
+        prose-hr:border-slate-200">
+        <ReactMarkdown>{result}</ReactMarkdown>
       </div>
 
       <div className="border-t border-slate-100 bg-slate-50/50 px-6 py-4 flex flex-wrap gap-3">
@@ -143,23 +149,18 @@ export function BpcResult({ caseId, result, type, onCopy, onOpenChecklist, onReg
             variant="outline"
             onClick={handleImportChecklist}
             loading={importing}
-            disabled={importDone}
+            disabled={!!checklistImported}
             className="text-xs py-2 border-emerald-300 text-emerald-700 hover:bg-emerald-50"
           >
-            {importDone ? '✅ Importado' : '✅ Importar para Checklist'}
+            {checklistImported ? '✅ Importado' : '✅ Importar para Checklist'}
           </Button>
         )}
       </div>
 
-      <div className="border-t border-amber-200 bg-amber-50 px-6 py-4">
-        <p className="text-[10px] font-black uppercase tracking-widest text-amber-700 mb-1">
-          ⚠️ AVISO IMPORTANTE
-        </p>
-        <p className="text-xs font-mono font-bold uppercase text-amber-600 tracking-widest leading-relaxed">
-          Este conteúdo é gerado por inteligência artificial com base nas informações fornecidas.
-          Não substitui análise jurídica profissional. A responsabilidade pela estratégia
-          processual é exclusivamente do advogado responsável pelo caso.
-          Previando é um produto Unificando.
+      <div className="border-t border-slate-100 px-6 py-2.5 flex items-center gap-1.5">
+        <span className="text-amber-500 text-xs">⚠</span>
+        <p className="text-[11px] text-slate-400 leading-relaxed">
+          Gerado por IA — não substitui análise jurídica profissional. Responsabilidade exclusiva do advogado.
         </p>
       </div>
     </Card>

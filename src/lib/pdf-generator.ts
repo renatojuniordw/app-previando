@@ -1,3 +1,4 @@
+/// <reference types="pdfkit" />
 import PDFDocument from 'pdfkit'
 
 const BRAND = {
@@ -55,7 +56,7 @@ function drawTableHeader(doc: PDFDocument, columns: { label: string; width: numb
   return y + 14
 }
 
-interface CasePDFData {
+export interface CasePDFData {
   clientName?: string
   clientCpf?: string
   clientBirthDate?: string

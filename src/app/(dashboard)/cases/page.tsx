@@ -65,8 +65,11 @@ export default function CasesPage() {
   const [loading, setLoading] = useState(true)
   const [showFilters, setShowFilters] = useState(false)
   const [page, setPage] = useState(1)
+  const [sortField, setSortField] = useState<'client' | 'status' | 'priority' | 'deadlineDate' | 'createdAt'>('createdAt')
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc')
 
   const [search, setSearch] = useState(searchParams.get('search') ?? '')
+  const [debouncedSearch, setDebouncedSearch] = useState(search)
   const [statusFilter, setStatusFilter] = useState('')
   const [priority, setPriority] = useState('')
   const [benefitType, setBenefitType] = useState('')
@@ -75,6 +78,12 @@ export default function CasesPage() {
   const [createdFrom, setCreatedFrom] = useState('')
   const [createdTo, setCreatedTo] = useState('')
 
+  // Debounce search: aguarda 350ms após o usuário parar de digitar
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(search), 350)
+    return () => clearTimeout(t)
+  }, [search])
+
   const hasActiveFilters = statusFilter || priority || benefitType || rmiMin || rmiMax || createdFrom || createdTo
   const totalPages = Math.ceil(total / PAGE_SIZE)
 
@@ -82,7 +91,7 @@ export default function CasesPage() {
     setLoading(true)
     try {
       const params: Record<string, string> = { limit: String(PAGE_SIZE), page: String(page) }
-      if (search) params.search = search
+      if (debouncedSearch) params.search = debouncedSearch
       if (statusFilter) params.status = statusFilter
       if (priority) params.priority = priority
       if (benefitType) params.benefitType = benefitType
@@ -96,7 +105,7 @@ export default function CasesPage() {
       setTotal(res.data.total ?? 0)
     } catch { /* noop */ }
     setLoading(false)
-  }, [search, statusFilter, priority, benefitType, rmiMin, rmiMax, createdFrom, createdTo, page])
+  }, [debouncedSearch, statusFilter, priority, benefitType, rmiMin, rmiMax, createdFrom, createdTo, page])
 
   useEffect(() => { fetchCases() }, [fetchCases])
 
@@ -125,6 +134,28 @@ export default function CasesPage() {
     setCreatedTo('')
     setPage(1)
   }
+
+  const handleSort = (field: typeof sortField) => {
+    if (sortField === field) setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'))
+    else { setSortField(field); setSortDir('asc') }
+  }
+
+  const sortedCases = [...cases].sort((a, b) => {
+    let cmp = 0
+    if (sortField === 'client') cmp = a.client.name.localeCompare(b.client.name, 'pt-BR')
+    else if (sortField === 'status') cmp = a.status.localeCompare(b.status)
+    else if (sortField === 'priority') {
+      const order = { CRITICAL: 0, ATTENTION: 1, NORMAL: 2 }
+      cmp = (order[a.priority as keyof typeof order] ?? 3) - (order[b.priority as keyof typeof order] ?? 3)
+    }
+    else if (sortField === 'deadlineDate') {
+      const da = a.deadlineDate ? new Date(a.deadlineDate).getTime() : Infinity
+      const db = b.deadlineDate ? new Date(b.deadlineDate).getTime() : Infinity
+      cmp = da - db
+    }
+    else if (sortField === 'createdAt') cmp = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+    return sortDir === 'asc' ? cmp : -cmp
+  })
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6">
@@ -229,18 +260,34 @@ export default function CasesPage() {
             <table className="w-full text-left">
               <thead>
                 <tr className="bg-slate-50 border-b border-slate-200">
-                  <th className="px-5 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">Cliente</th>
-                  <th className="px-5 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">Benefício</th>
-                  <th className="px-5 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">Status</th>
-                  <th className="px-5 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">Prioridade</th>
-                  <th className="px-5 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">RMI Calculada</th>
-                  <th className="px-5 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">Prazo</th>
-                  <th className="px-5 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">Criado em</th>
+                  {([
+                    { label: 'Cliente', field: 'client' },
+                    { label: 'Benefício', field: null },
+                    { label: 'Status', field: 'status' },
+                    { label: 'Prioridade', field: 'priority' },
+                    { label: 'RMI Calculada', field: null },
+                    { label: 'Prazo', field: 'deadlineDate' },
+                    { label: 'Criado em', field: 'createdAt' },
+                  ] as { label: string; field: typeof sortField | null }[]).map(({ label, field }) => (
+                    <th
+                      key={label}
+                      className={`px-5 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wider ${field ? 'cursor-pointer select-none hover:text-slate-700' : ''}`}
+                      onClick={field ? () => handleSort(field) : undefined}
+                    >
+                      <span className="inline-flex items-center gap-1">
+                        {label}
+                        {field && sortField === field && (
+                          <span className="text-amber-500">{sortDir === 'asc' ? '↑' : '↓'}</span>
+                        )}
+                        {field && sortField !== field && <span className="text-slate-300">↕</span>}
+                      </span>
+                    </th>
+                  ))}
                   <th className="px-5 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wider text-right">Ações</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {cases.map((c) => (
+                {sortedCases.map((c) => (
                   <tr key={c.id} className="hover:bg-slate-50 transition-colors">
                     <td className="px-5 py-4">
                       <Link href={`/cases/${c.id}`} className="font-semibold text-sm text-slate-900 hover:text-amber-600 transition-colors">
@@ -273,7 +320,9 @@ export default function CasesPage() {
                           },
                           {
                             label: 'Exportar PDF',
-                            onClick: () => downloadPdf(c.id),
+                            onClick: () => downloadPdf(c.id).then((ok) => {
+                              if (!ok) addToast({ type: 'error', title: 'Erro', message: 'Não foi possível gerar o PDF.' })
+                            }),
                           },
                           {
                             label: 'Acessar Cálculo',
