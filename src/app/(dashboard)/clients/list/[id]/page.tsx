@@ -17,6 +17,7 @@ import { z } from 'zod'
 import { BENEFIT_SHORT_LABELS, STATUS_LABELS, PRIORITY_LABELS, BENEFIT_DB_LABELS } from '@/lib/constants'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { ClientFloatingActions } from '@/components/client/ClientFloatingActions'
+import { Briefcase, Clock, CheckCircle } from 'lucide-react'
 
 const getCaseStatusLabel = (status: string) => {
   const dbToLabel: Record<string, string> = {
@@ -177,17 +178,32 @@ export default function ClientDetailPage() {
 
       {/* Resumo de Casos */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <Card className="p-4 bg-slate-50 border-slate-200 shadow-sm flex flex-col justify-center">
-          <p className="text-xs font-sans uppercase tracking-wide text-slate-500 font-semibold">Total de Casos</p>
-          <p className="text-3xl font-serif font-bold text-slate-900 mt-1">{totalCases}</p>
+        <Card variant="light" className="p-6 flex items-center gap-4">
+          <div className="w-12 h-12 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-600 shrink-0">
+            <Briefcase className="w-5 h-5" />
+          </div>
+          <div>
+            <p className="font-sans text-xs text-slate-500 uppercase font-bold tracking-wider">Total de Casos</p>
+            <p className="font-sans font-bold text-2xl text-slate-900 mt-0.5">{totalCases}</p>
+          </div>
         </Card>
-        <Card className="p-4 bg-blue-50 border-blue-200 shadow-sm flex flex-col justify-center">
-          <p className="text-xs font-sans uppercase tracking-wide text-blue-700 font-semibold">Em Andamento</p>
-          <p className="text-3xl font-serif font-bold text-blue-900 mt-1">{activeCases}</p>
+        <Card variant="light" className="p-6 flex items-center gap-4">
+          <div className="w-12 h-12 rounded-full bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-600 shrink-0">
+            <Clock className="w-5 h-5" />
+          </div>
+          <div>
+            <p className="font-sans text-xs text-slate-500 uppercase font-bold tracking-wider">Em Andamento</p>
+            <p className="font-sans font-bold text-2xl text-slate-900 mt-0.5">{activeCases}</p>
+          </div>
         </Card>
-        <Card className="p-4 bg-emerald-50 border-emerald-200 shadow-sm flex flex-col justify-center">
-          <p className="text-xs font-sans uppercase tracking-wide text-emerald-700 font-semibold">Finalizados</p>
-          <p className="text-3xl font-serif font-bold text-emerald-900 mt-1">{finishedCases}</p>
+        <Card variant="light" className="p-6 flex items-center gap-4">
+          <div className="w-12 h-12 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 shrink-0">
+            <CheckCircle className="w-5 h-5" />
+          </div>
+          <div>
+            <p className="font-sans text-xs text-slate-500 uppercase font-bold tracking-wider">Finalizados</p>
+            <p className="font-sans font-bold text-2xl text-slate-900 mt-0.5">{finishedCases}</p>
+          </div>
         </Card>
       </div>
 
