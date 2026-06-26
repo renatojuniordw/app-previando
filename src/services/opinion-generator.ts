@@ -37,6 +37,16 @@ REGRAS ABSOLUTAS:
 6. Termine sempre com o rodapé: "Calculado via Previando (app.previando.com.br)"`
 
 export async function generateOpinion(input: OpinionInput): Promise<OpinionOutput> {
+  console.log('[opinion-generator] INPUT:', {
+    clientName: input.clientName,
+    benefitType: input.benefitType,
+    caseStatus: input.caseStatus,
+    hasCnis: Boolean(input.cnisSummary),
+    cnisLength: input.cnisSummary?.length ?? 0,
+    calculationsCount: input.calculations?.length ?? 0,
+    notesCount: input.notes?.length ?? 0,
+  })
+
   const calcsText =
     input.calculations
       ?.map(
@@ -79,6 +89,8 @@ Sempre encerre com: "Este parecer é preliminar e não substitui análise juríd
 
   const model = AI_MODELS.CRITICAL
 
+  console.log('[opinion-generator] Chamando OpenAI model=%s promptLength=%d', model, userPrompt.length)
+
   const response = await openai.chat.completions.create({
     model,
     max_tokens: AI_MAX_TOKENS,
@@ -89,7 +101,20 @@ Sempre encerre com: "Este parecer é preliminar e não substitui análise juríd
     ],
   })
 
+  console.log('[opinion-generator] Resposta OpenAI:', {
+    finishReason: response.choices[0]?.finish_reason,
+    contentLength: response.choices[0]?.message?.content?.length ?? 0,
+    tokensUsed: response.usage?.total_tokens,
+    promptTokens: response.usage?.prompt_tokens,
+    completionTokens: response.usage?.completion_tokens,
+  })
+
   const content = response.choices[0]?.message?.content ?? ''
+
+  if (!content) {
+    console.warn('[opinion-generator] AVISO: content vazio! finish_reason=%s', response.choices[0]?.finish_reason)
+  }
+
   const tokensUsed = response.usage?.total_tokens ?? 0
   const costUsd = tokensUsed * AI_COST_PER_TOKEN[model]
 
