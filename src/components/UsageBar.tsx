@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react'
 import api from '@/lib/api'
-import { cn } from '@/lib/utils'
 
 interface Usage {
   plan: string
@@ -17,18 +16,18 @@ function UsageItem({ label, used, max }: { label: string; used: number; max: num
   const warning = pct >= 80
 
   return (
-    <div className="flex items-center gap-2 text-xs font-sans">
-      <span className="text-slate-600 w-20 shrink-0 font-medium">{label}</span>
-      <div className="flex-1 h-2 bg-slate-100 border border-slate-200 rounded-full overflow-hidden">
+    <div className="flex align-items-center gap-2 text-xs" style={{ fontFamily: 'system-ui, sans-serif' }}>
+      <span className="w-20 shrink-0 font-medium" style={{ color: 'var(--color-text-secondary)' }}>{label}</span>
+      <div className="neo-progress-track flex-1">
         <div
-          className={cn(
-            'h-full transition-all',
-            critical ? 'bg-red-500' : warning ? 'bg-yellow-400' : 'bg-amber-600'
-          )}
-          style={{ width: `${pct}%` }}
+          className="neo-progress-fill"
+          style={{
+            width: `${pct}%`,
+            background: critical ? '#DC2626' : warning ? '#EAB308' : 'var(--color-primary)',
+          }}
         />
       </div>
-      <span className={cn('w-12 text-right font-medium', critical ? 'text-red-600' : 'text-slate-500')}>
+      <span className="w-12 text-right font-medium" style={{ color: critical ? '#DC2626' : 'var(--color-text-muted)' }}>
         {used}/{max}
       </span>
     </div>
@@ -46,8 +45,8 @@ export function UsageBar() {
 
   if (usage.plan === 'FREE') {
     return (
-      <div className="px-4 py-3 bg-white border-b border-slate-200 space-y-2">
-        <span className="font-sans text-xs text-slate-500 font-bold tracking-wide">USO FREE</span>
+      <div className="px-4 py-3 space-y-2" style={{ borderBottom: '1px solid var(--color-border)' }}>
+        <span className="font-sans text-xs font-bold tracking-wide" style={{ color: 'var(--color-text-muted)' }}>USO FREE</span>
         <UsageItem label="Clientes" used={usage.usage.totalClients} max={usage.limits.maxClients} />
         <UsageItem
           label="Cálculos"
@@ -60,8 +59,8 @@ export function UsageBar() {
 
   if (usage.plan === 'SOLO' && usage.limits.bpcEnabled) {
     return (
-      <div className="px-4 py-3 bg-white border-b border-slate-200 space-y-2">
-        <span className="font-sans text-xs text-slate-500 font-bold tracking-wide">USO BPC — SOLO</span>
+      <div className="px-4 py-3 space-y-2" style={{ borderBottom: '1px solid var(--color-border)' }}>
+        <span className="font-sans text-xs font-bold tracking-wide" style={{ color: 'var(--color-text-muted)' }}>USO BPC — SOLO</span>
         {usage.limits.bpcAnalysesPerMonth !== -1 && (
           <UsageItem
             label="Análises BPC"

@@ -13,11 +13,11 @@ export function SaveConfirmModal({ open, saving, saveError, onClose, onConfirm }
   return (
     <Modal open={open} onClose={onClose} title="SALVAR ALTERAÇÕES NO CNIS?">
       <div className="space-y-4 font-sans text-sm text-slate-600 leading-relaxed">
-        <div className="border border-amber-200 bg-amber-50 rounded-xl p-4 flex items-start gap-3 text-amber-850">
-          <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+        <div className="border border-[#F0B09A] bg-[var(--color-primary-tint)] rounded-xl p-4 flex align-items-start gap-3 text-amber-850">
+          <AlertCircle className="w-5 h-5 text-[var(--color-primary)] shrink-0 mt-0.5" />
           <div>
             <p className="font-bold text-sm">Persistência Definitiva</p>
-            <p className="text-xs text-amber-700 mt-1">
+            <p className="text-xs text-[var(--color-primary-dark)] mt-1">
               Essas alterações serão salvas diretamente no banco de dados e afetarão os cálculos, simulações, pareceres e checklists vinculados a este CNIS para este caso.
             </p>
           </div>
@@ -27,10 +27,10 @@ export function SaveConfirmModal({ open, saving, saveError, onClose, onConfirm }
           <div className="text-xs font-semibold text-red-600 bg-red-50 border border-red-200 p-2.5 rounded-lg">{saveError}</div>
         )}
         <div className="flex gap-3 pt-2">
-          <button onClick={onConfirm} disabled={saving} className="flex-1 bg-amber-600 hover:bg-amber-700 disabled:opacity-50 text-white font-semibold py-2.5 px-4 rounded-lg text-center transition-colors font-sans text-sm flex items-center justify-center gap-2 focus-visible:ring-2 focus-visible:ring-amber-500">
+          <button onClick={onConfirm} disabled={saving} className="flex-1 neo-btn neo-btn-primary flex-1 text-center transition-colors font-sans text-sm flex align-items-center justify-content-center gap-2 focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]">
             {saving ? <><Loader2 className="w-4 h-4 animate-spin" />Salvando…</> : 'SIM, SALVAR'}
           </button>
-          <button onClick={onClose} disabled={saving} className="flex-1 border border-slate-200 hover:bg-slate-50 disabled:opacity-50 text-slate-700 font-semibold py-2.5 px-4 rounded-lg text-center transition-colors font-sans text-sm">
+          <button onClick={onClose} disabled={saving} className="flex-1 neo-btn-outline flex-1 text-center transition-colors font-sans text-sm">
             CANCELAR
           </button>
         </div>

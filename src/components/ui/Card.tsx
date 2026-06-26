@@ -10,10 +10,10 @@ export function Card({ children, className, variant = 'dark' }: CardProps) {
   return (
     <div
       className={cn(
-        'border rounded-lg p-5',
+        'rounded-lg p-5 transition-shadow',
         variant === 'light'
-          ? 'bg-white text-slate-900 border-slate-200 shadow-sm'
-          : 'bg-slate-50 text-slate-900 border-slate-200 shadow-sm',
+          ? 'neo-card-flat'
+          : 'neo-card',
         className
       )}
     >
@@ -30,10 +30,10 @@ interface CardHeaderProps {
 
 export function CardHeader({ title, subtitle, action }: CardHeaderProps) {
   return (
-    <div className="flex items-start justify-between mb-4">
+    <div className="flex align-items-start justify-content-between mb-4">
       <div>
-        <h3 className="font-sans font-semibold text-base text-slate-900">{title}</h3>
-        {subtitle && <p className="font-sans text-sm text-slate-600 mt-1">{subtitle}</p>}
+        <h3 className="font-sans font-semibold text-base" style={{ color: 'var(--color-text-primary)' }}>{title}</h3>
+        {subtitle && <p className="font-sans text-sm mt-1" style={{ color: 'var(--color-text-secondary)' }}>{subtitle}</p>}
       </div>
       {action}
     </div>

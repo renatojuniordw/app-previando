@@ -51,7 +51,7 @@ export function CaseFloatingActions({ activeDrawer, setDrawer, benefitType }: Ca
       id: 'opinions',
       label: 'Parecer IA',
       icon: Bot,
-      color: 'hover:text-amber-600 hover:border-amber-200 hover:bg-amber-50/50',
+      color: 'hover:text-[var(--color-primary)] hover:border-[#F0B09A] hover:bg-[rgba(242,232,228,0.5)]',
     },
     ...(benefitType === 'BPC_LOAS'
       ? [{
@@ -64,11 +64,11 @@ export function CaseFloatingActions({ activeDrawer, setDrawer, benefitType }: Ca
   ]
 
   return (
-    <div ref={menuRef} className="fixed bottom-6 right-6 z-40 flex flex-col items-end gap-3">
+    <div ref={menuRef} className="fixed bottom-6 right-6 z-40 flex flex-column align-items-end gap-3">
       {/* Sub-buttons list */}
       <div
         className={cn(
-          'flex flex-col items-end gap-3 transition-all duration-300 ease-out origin-bottom transform',
+          'flex flex-column align-items-end gap-3 transition-all duration-300 ease-out origin-bottom transform',
           isOpen
             ? 'opacity-100 translate-y-0 scale-100 pointer-events-auto'
             : 'opacity-0 translate-y-4 scale-75 pointer-events-none'
@@ -79,7 +79,7 @@ export function CaseFloatingActions({ activeDrawer, setDrawer, benefitType }: Ca
           const isDrawerActive = activeDrawer === action.id
 
           return (
-            <div key={action.id} className="flex items-center gap-2 group">
+            <div key={action.id} className="flex align-items-center gap-2 group">
               {/* Text tooltip/label */}
               <span
                 className={cn(
@@ -94,10 +94,10 @@ export function CaseFloatingActions({ activeDrawer, setDrawer, benefitType }: Ca
               <button
                 onClick={() => handleAction(action.id)}
                 className={cn(
-                  'w-12 h-12 rounded-full bg-white border border-slate-200 shadow-lg flex items-center justify-center transition-all duration-200',
+                  'w-12 h-12 rounded-full bg-white border border-[var(--color-border)] neo-btn flex align-items-center justify-content-center transition-all duration-200',
                   action.color,
                   isDrawerActive
-                    ? 'border-amber-500 text-amber-600 bg-amber-50/30'
+                    ? 'border-[var(--color-primary)] text-[var(--color-primary)] bg-[var(--color-primary-tint)]/30'
                     : 'text-slate-600'
                 )}
                 aria-label={`Abrir ${action.label}`}
@@ -116,10 +116,10 @@ export function CaseFloatingActions({ activeDrawer, setDrawer, benefitType }: Ca
       <button
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
-          'w-14 h-14 rounded-full flex items-center justify-center shadow-xl text-white transition-all duration-300 transform active:scale-95',
+          'w-14 h-14 rounded-full flex align-items-center justify-content-center shadow-xl text-white transition-all duration-300 transform active:scale-95',
           isOpen
             ? 'bg-slate-800 hover:bg-slate-700 rotate-90 scale-95'
-            : 'bg-amber-600 hover:bg-amber-500 hover:shadow-amber-500/20 hover:scale-105'
+            : 'bg-[var(--color-primary)] hover:brightness-[1.1] hover:scale-105'
         )}
         aria-expanded={isOpen}
         aria-haspopup="true"

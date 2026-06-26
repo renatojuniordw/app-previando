@@ -68,26 +68,26 @@ export default function CaseLayout({ children }: { children: React.ReactNode }) 
   ]
 
   return (
-    <div className="flex flex-col min-h-full">
+    <div className="flex flex-column min-h-full">
       {/* Header */}
       <div className="bg-white border-b border-slate-200 shrink-0">
         <div className="max-w-7xl mx-auto px-6 md:px-8">
-          <div className="py-6 flex flex-col md:flex-row md:items-start justify-between gap-4">
+          <div className="py-6 flex flex-column md:flex-row md:align-items-start justify-content-between gap-4">
             <div>
               {caseData ? (
                 <>
                   <Link
                     href={`/clients/list/${caseData.client.id}`}
-                    className="inline-flex items-center gap-1.5 font-sans text-sm font-medium text-slate-500 hover:text-amber-600 transition-colors mb-3"
+                    className="inline-flex align-items-center gap-1.5 font-sans text-sm font-medium text-slate-500 hover:text-[var(--color-primary)] transition-colors mb-3"
                   >
                     <ArrowLeft className="w-4 h-4" />
                     Voltar para {caseData.client.name}
                   </Link>
-                  <div className="flex flex-wrap items-center gap-3">
+                  <div className="flex flex-wrap align-items-center gap-3">
                     <h1 className="font-serif font-bold text-2xl md:text-3xl text-slate-900 tracking-tight">
                       {BENEFIT_SHORT_LABELS[caseData.benefitType] ?? caseData.benefitType}
                     </h1>
-                    <div className="flex items-center gap-2 mt-1 md:mt-0">
+                    <div className="flex align-items-center gap-2 mt-1 md:mt-0">
                       <Badge variant="slate" className="bg-slate-100 text-slate-700 border-slate-200">
                         {STATUS_LABELS[caseData.status] ?? caseData.status}
                       </Badge>
@@ -121,9 +121,9 @@ export default function CaseLayout({ children }: { children: React.ReactNode }) 
                     key={tab.id}
                     href={tab.locked ? '#' : fullPath}
                     className={`
-                      flex items-center gap-2 px-4 py-3 font-sans font-medium text-sm whitespace-nowrap border-b-2 transition-all
+                      flex align-items-center gap-2 px-4 py-3 font-sans font-medium text-sm whitespace-nowrap border-b-2 transition-all
                       ${isActive
-                        ? 'border-amber-500 text-amber-700 bg-amber-50/50'
+                        ? 'border-[var(--color-primary)] text-[var(--color-primary-dark)] bg-[rgba(242,232,228,0.5)]'
                         : tab.locked
                           ? 'border-transparent text-slate-400 cursor-not-allowed opacity-60'
                           : 'border-transparent text-slate-500 hover:text-slate-800 hover:border-slate-300 hover:bg-slate-50'
@@ -131,7 +131,7 @@ export default function CaseLayout({ children }: { children: React.ReactNode }) 
                     `}
                     title={tab.locked ? 'Recurso bloqueado no seu plano' : ''}
                   >
-                    <Icon className={`w-4 h-4 ${isActive ? 'text-amber-600' : 'text-slate-400'}`} />
+                    <Icon className={`w-4 h-4 ${isActive ? 'text-[var(--color-primary)]' : 'text-slate-400'}`} />
                     {tab.label}
                     {tab.locked && <Lock className="w-3 h-3 ml-1 text-slate-400" />}
                   </Link>

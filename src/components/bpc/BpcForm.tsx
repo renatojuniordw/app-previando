@@ -119,7 +119,7 @@ export function BpcForm({ caseId, analysis, clientBirthDate, onSave, saving }: B
 
   return (
     <Card variant="light" className="p-0 overflow-hidden">
-      <div className="bg-slate-50 px-5 py-4 border-b border-slate-200 flex items-center justify-between">
+      <div className="px-5 py-4 border-b border-[var(--color-border)] flex align-items-center justify-content-between">
         <h3 className="font-sans font-semibold text-sm text-slate-900">Dados do Caso BPC/LOAS</h3>
         {analysis && (
           <Badge variant="green" className="text-[10px] uppercase tracking-wider">Dados Salvos</Badge>
@@ -134,7 +134,7 @@ export function BpcForm({ caseId, analysis, clientBirthDate, onSave, saving }: B
               type="text"
               value={patologia}
               onChange={(e) => setPatologia(e.target.value)}
-              className="w-full neo-input font-sans text-sm"
+              className="w-full neo-input-neo font-sans text-sm"
               placeholder="Ex: Autismo, TDAH, Esquizofrenia..."
             />
           </div>
@@ -145,16 +145,16 @@ export function BpcForm({ caseId, analysis, clientBirthDate, onSave, saving }: B
               type="text"
               value={cid}
               onChange={(e) => setCid(e.target.value)}
-              className="w-full neo-input font-sans text-sm"
+              className="w-full neo-input-neo font-sans text-sm"
               placeholder="Ex: F84.0"
             />
           </div>
 
           <div>
-            <label className="neo-label flex items-center gap-2">
+            <label className="neo-label flex align-items-center gap-2">
               Idade
               {suggestedIdade && !analysis && (
-                <span className="text-[10px] font-mono font-bold text-amber-600 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded">
+                <span className="text-[10px] font-mono font-bold text-[var(--color-primary)] bg-[var(--color-primary-tint)] border border-[#F0B09A] px-1.5 py-0.5 rounded">
                   calculada do cadastro
                 </span>
               )}
@@ -163,7 +163,7 @@ export function BpcForm({ caseId, analysis, clientBirthDate, onSave, saving }: B
               type="number"
               value={idade}
               onChange={(e) => setIdade(e.target.value)}
-              className="w-full neo-input font-sans text-sm"
+              className="w-full neo-input-neo font-sans text-sm"
               placeholder="Idade do segurado"
             />
             {faixaEtaria && (
@@ -182,7 +182,7 @@ export function BpcForm({ caseId, analysis, clientBirthDate, onSave, saving }: B
               step="0.01"
               value={rendaFamiliar}
               onChange={(e) => setRendaFamiliar(e.target.value)}
-              className="w-full neo-input font-sans text-sm"
+              className="w-full neo-input-neo font-sans text-sm"
               placeholder="Renda total da família"
             />
           </div>
@@ -193,21 +193,21 @@ export function BpcForm({ caseId, analysis, clientBirthDate, onSave, saving }: B
               type="number"
               value={membrosGrupo}
               onChange={(e) => setMembrosGrupo(e.target.value)}
-              className="w-full neo-input font-sans text-sm"
+              className="w-full neo-input-neo font-sans text-sm"
               placeholder="Quantidade de membros"
             />
           </div>
 
           {membrosGrupo && parseFloat(membrosGrupo) > 0 && (
-            <div className="md:col-span-2 p-3 bg-slate-50 rounded-md border border-slate-200">
-              <div className="flex items-center gap-2">
+            <div className="md:col-span-2 p-3 bg-[var(--color-surface)] rounded-md border border-[var(--color-border)]">
+              <div className="flex align-items-center gap-2">
                 <span className="font-sans text-xs font-medium text-slate-600">Renda per capita:</span>
                 <Badge variant={acimaDoLimite ? 'red' : 'green'} className="font-mono">
                   R$ {rendaPerCapita.toFixed(2)} — {acimaDoLimite ? 'ACIMA DO LIMITE LEGAL' : 'DENTRO DO LIMITE'}
                 </Badge>
               </div>
               {acimaDoLimite && (
-                <p className="font-sans text-xs text-red-600 mt-1.5 flex items-start gap-1">
+                <p className="font-sans text-xs text-red-600 mt-1.5 flex align-items-start gap-1">
                   <span className="mt-0.5">⚠️</span> 
                   <span>
                     Limite legal: R$ {LIMITE_PER_CAPITA.toFixed(2)} (1/4 SM). Verifique possibilidade de exclusão de membros ou critérios de miserabilidade no laudo social.
@@ -218,13 +218,13 @@ export function BpcForm({ caseId, analysis, clientBirthDate, onSave, saving }: B
           )}
 
           <div className="md:col-span-2 mt-2">
-            <div className="flex items-center justify-between mb-1.5">
+            <div className="flex align-items-center justify-content-between mb-1.5">
               <label className="neo-label mb-0">Barreiras Relatadas</label>
               <button
                 type="button"
                 onClick={handleImportarProntuario}
                 disabled={importing}
-                className="text-xs font-sans font-semibold text-amber-600 hover:text-amber-700 underline underline-offset-2 disabled:opacity-50 flex items-center gap-1"
+                className="text-xs font-sans font-semibold text-[var(--color-primary)] hover:text-[var(--color-primary-dark)] underline underline-offset-2 disabled:opacity-50 flex align-items-center gap-1"
               >
                 {importing ? '⏳ Importando...' : '📥 Importar do Prontuário'}
               </button>
@@ -232,7 +232,7 @@ export function BpcForm({ caseId, analysis, clientBirthDate, onSave, saving }: B
             <textarea
               value={barreiras}
               onChange={(e) => setBarreiras(e.target.value)}
-              className="w-full neo-input min-h-[100px] resize-none font-sans text-sm"
+              className="w-full neo-input-neo min-h-[100px] resize-none font-sans text-sm"
               placeholder="Descreva as barreiras enfrentadas: mobilidade, comunicação, acesso a serviços, preconceito..."
             />
           </div>
@@ -242,14 +242,14 @@ export function BpcForm({ caseId, analysis, clientBirthDate, onSave, saving }: B
             <textarea
               value={resumoLaudos}
               onChange={(e) => setResumoLaudos(e.target.value)}
-              className="w-full neo-input min-h-[100px] resize-none font-sans text-sm"
+              className="w-full neo-input-neo min-h-[100px] resize-none font-sans text-sm"
               placeholder="Resumo dos laudos médicos disponíveis, limitações e diagnósticos secundários..."
             />
           </div>
         </div>
       </div>
 
-      <div className="bg-slate-50 border-t border-slate-200 px-6 py-4 flex items-center justify-between">
+      <div className="border-t border-[var(--color-border)] px-6 py-4 flex align-items-center justify-content-between">
         <p className="text-xs text-slate-500 font-medium">
           {!isFormValid ? 'Preencha os campos obrigatórios para salvar.' : 'Os dados salvos serão utilizados na análise da IA.'}
         </p>

@@ -1,8 +1,8 @@
 import { clsx, type ClassValue } from 'clsx'
-import { twMerge } from 'tailwind-merge'
+// tailwind-merge removed — using PrimeFlex
 
 export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs))
+  return clsx(inputs)
 }
 
 export function formatCurrency(value: number | string): string {

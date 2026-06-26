@@ -179,8 +179,8 @@ export default function RetroativosPage() {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center py-20">
-        <Loader2 className="w-8 h-8 text-amber-500 animate-spin" />
+      <div className="flex flex-column align-items-center justify-content-center py-20">
+        <Loader2 className="w-8 h-8 text-[var(--color-primary)] animate-spin" />
         <p className="font-sans font-medium text-slate-500 mt-4">Carregando painel de retroativos...</p>
       </div>
     )
@@ -188,7 +188,7 @@ export default function RetroativosPage() {
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
-      <div className="flex items-center justify-between">
+      <div className="flex align-items-center justify-content-between">
         <div>
           <h2 className="font-serif font-bold text-2xl text-slate-900 tracking-tight">Liquidação de Retroativos</h2>
           <p className="font-sans text-sm text-slate-500 mt-1">
@@ -198,7 +198,7 @@ export default function RetroativosPage() {
         {retroativos.length > 0 && (
           <Button
             onClick={() => setShowModal(true)}
-            className="bg-amber-600 hover:bg-amber-700 text-white flex items-center gap-2 shadow-sm font-semibold"
+            className="bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] text-white flex align-items-center gap-2 shadow-sm font-semibold"
           >
             <Plus className="w-4 h-4" />
             Nova Liquidação
@@ -207,8 +207,8 @@ export default function RetroativosPage() {
       </div>
 
       {retroativos.length === 0 ? (
-        <div className="py-20 flex flex-col items-center justify-center border border-dashed border-slate-300 bg-slate-50 rounded-2xl text-center">
-          <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center mb-4 border border-slate-200 shadow-sm">
+        <div className="py-20 flex flex-column align-items-center justify-content-center border border-dashed border-slate-300 bg-slate-50 rounded-2xl text-center">
+          <div className="w-16 h-16 rounded-full bg-white flex align-items-center justify-content-center mb-4 border border-slate-200 shadow-sm">
             <History className="w-8 h-8 text-slate-400" />
           </div>
           <h3 className="font-serif font-bold text-lg text-slate-900 mb-2">Nenhuma Liquidação de Retroativos</h3>
@@ -217,7 +217,7 @@ export default function RetroativosPage() {
           </p>
           <Button
             onClick={() => setShowModal(true)}
-            className="bg-amber-600 hover:bg-amber-700 text-white flex items-center gap-2 shadow-sm"
+            className="bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] text-white flex align-items-center gap-2 shadow-sm"
           >
             <Plus className="w-4 h-4" />
             Iniciar Liquidação
@@ -232,27 +232,27 @@ export default function RetroativosPage() {
             return (
               <div
                 key={retro.id}
-                className="border border-slate-200 rounded-xl shadow-sm overflow-hidden bg-white hover:border-slate-300 transition-colors"
+                className="border border-slate-200 rounded-xl neo-card-flat overflow-hidden bg-white hover:border-slate-300 transition-colors"
               >
                 {/* Header do Card */}
-                <div className="px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-50/50">
+                <div className="px-6 py-4 flex flex-column sm:flex-row sm:align-items-center justify-content-between gap-4 bg-slate-50/50">
                   <div className="space-y-1">
                     <h3 className="font-sans font-bold text-slate-800 text-base sm:text-lg">
                       Parcelas Vencidas ({retro.mesesAtraso} meses)
                     </h3>
-                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500 font-medium">
-                      <span className="flex items-center gap-1">
+                    <div className="flex flex-wrap align-items-center gap-x-3 gap-y-1 text-xs text-slate-500 font-medium">
+                      <span className="flex align-items-center gap-1">
                         <Calendar className="w-3.5 h-3.5 text-slate-400" />
                         Período: {formatDate(retro.dataInicioDireito)} a {formatDate(retro.dataRequerimento)}
                       </span>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2 shrink-0">
+                  <div className="flex align-items-center gap-2 shrink-0">
                     <button
                       type="button"
                       onClick={() => setExpandedRetro(isExpanded ? null : retro.id)}
-                      className="font-sans font-semibold text-xs text-slate-600 bg-white border border-slate-200 px-3 py-2 rounded-lg hover:bg-slate-50 transition-colors flex items-center gap-1.5"
+                      className="font-sans font-semibold text-xs text-slate-600 bg-white border border-slate-200 px-3 py-2 rounded-lg hover:bg-slate-50 transition-colors neo-btn flex align-items-center gap-1.5"
                     >
                       {isExpanded ? (
                         <>
@@ -269,7 +269,7 @@ export default function RetroativosPage() {
 
                     <button
                       onClick={() => handleDelete(retro.id)}
-                      className="p-2 border border-red-200 text-red-600 rounded-lg hover:bg-red-50 hover:text-red-700 transition-colors"
+                      className="p-2 border border-red-200 text-red-600 rounded-lg hover:bg-red-50 hover:text-red-700 transition-colors neo-btn"
                       aria-label="Excluir este cálculo de retroativos"
                     >
                       <Trash2 className="w-4 h-4" aria-hidden="true" />
@@ -279,7 +279,7 @@ export default function RetroativosPage() {
 
                 {/* Resumo Financeiro */}
                 <div className="p-6 grid grid-cols-1 sm:grid-cols-4 gap-4 border-t border-slate-100">
-                  <div className="bg-slate-50 border border-slate-100 rounded-xl p-4 flex flex-col justify-between">
+                  <div className="bg-slate-50 border border-slate-100 rounded-xl p-4 flex flex-column justify-content-between">
                     <span className="font-sans text-[10px] uppercase font-bold tracking-wider text-slate-400 block mb-1">
                       Valor Mensal Original
                     </span>
@@ -288,7 +288,7 @@ export default function RetroativosPage() {
                     </span>
                   </div>
 
-                  <div className="bg-slate-50 border border-slate-100 rounded-xl p-4 flex flex-col justify-between">
+                  <div className="bg-slate-50 border border-slate-100 rounded-xl p-4 flex flex-column justify-content-between">
                     <span className="font-sans text-[10px] uppercase font-bold tracking-wider text-slate-400 block mb-1">
                       Total Bruto Original
                     </span>
@@ -297,7 +297,7 @@ export default function RetroativosPage() {
                     </span>
                   </div>
 
-                  <div className="bg-emerald-50/20 border border-emerald-100/50 rounded-xl p-4 flex flex-col justify-between">
+                  <div className="bg-emerald-50/20 border border-emerald-100/50 rounded-xl p-4 flex flex-column justify-content-between">
                     <span className="font-sans text-[10px] uppercase font-bold tracking-wider text-emerald-700 block mb-1">
                       Total Corrigido (INPC)
                     </span>
@@ -309,11 +309,11 @@ export default function RetroativosPage() {
                     </span>
                   </div>
 
-                  <div className="bg-amber-50/30 border border-amber-200/50 rounded-xl p-4 flex flex-col justify-between">
-                    <span className="font-sans text-[10px] uppercase font-bold tracking-wider text-amber-700 block mb-1">
+                  <div className="bg-[var(--color-primary-tint)]/30 border border-[#F0B09A]/50 rounded-xl p-4 flex flex-column justify-content-between">
+                    <span className="font-sans text-[10px] uppercase font-bold tracking-wider text-[var(--color-primary-dark)] block mb-1">
                       Valor Líquido a Receber
                     </span>
-                    <span className="font-sans font-black text-amber-600 text-xl tracking-tight">
+                    <span className="font-sans font-black text-[var(--color-primary)] text-xl tracking-tight">
                       {formatCurrency(retro.valorLiquidoFinal)}
                     </span>
                   </div>
@@ -322,12 +322,12 @@ export default function RetroativosPage() {
                 {/* Seção Expansível da Memória de Cálculo */}
                 {isExpanded && retro.memoriaCalculo?.parcelas && (
                   <div className="p-6 border-t border-slate-150 bg-slate-50/20 space-y-4 animate-slide-down">
-                    <div className="flex items-center gap-2 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                    <div className="flex align-items-center gap-2 text-xs font-bold text-slate-500 uppercase tracking-wider">
                       <FileSpreadsheet className="w-4.5 h-4.5 text-slate-400" />
                       Memória de Cálculo Discriminada Mês a Mês
                     </div>
 
-                    <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+                    <div className="bg-white border border-slate-200 rounded-xl overflow-hidden neo-card-flat">
                       <table className="w-full text-left font-sans text-xs">
                         <thead>
                           <tr className="bg-slate-50 border-b border-slate-200 font-bold text-slate-500 text-[10px] uppercase tracking-wider">
@@ -355,7 +355,7 @@ export default function RetroativosPage() {
                     </div>
 
                     {Number(retro.valorDescontos) > 0 && (
-                      <div className="flex items-start gap-2 bg-rose-50/40 border border-rose-100 rounded-xl p-4 text-xs font-sans text-rose-700">
+                      <div className="flex align-items-start gap-2 bg-rose-50/40 border border-rose-100 rounded-xl p-4 text-xs font-sans text-rose-700">
                         <ShieldAlert className="w-4 h-4 shrink-0 mt-0.5" />
                         <div>
                           <p className="font-bold">Descontos Aplicados na Liquidação</p>
@@ -378,7 +378,7 @@ export default function RetroativosPage() {
       <Modal open={showModal} onClose={() => setShowModal(false)} title="NOVA LIQUIDAÇÃO DE RETROATIVOS" size="lg">
         <div className="space-y-5">
           {errorMessage && (
-            <div className="border border-red-200 bg-red-50 rounded-xl p-4 flex items-start gap-3">
+            <div className="border border-red-200 bg-red-50 rounded-xl p-4 flex align-items-start gap-3">
               <ShieldAlert className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
               <p className="font-sans text-sm font-medium text-red-700">{errorMessage}</p>
             </div>
@@ -392,7 +392,7 @@ export default function RetroativosPage() {
                   type="date"
                   value={dataInicioDireito}
                   onChange={(e) => setDataInicioDireito(e.target.value)}
-                  className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm font-sans focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 outline-none"
+                  className="w-full bg-white rounded-md px-3 py-2 text-sm font-sans focus:border-[var(--color-primary)] focus:ring-1 focus:ring-1 focus:ring-[var(--color-primary)]/30 neo-input-neo outline-none"
                 />
               </div>
 
@@ -402,7 +402,7 @@ export default function RetroativosPage() {
                   type="date"
                   value={dataRequerimento}
                   onChange={(e) => setDataRequerimento(e.target.value)}
-                  className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm font-sans focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 outline-none"
+                  className="w-full bg-white rounded-md px-3 py-2 text-sm font-sans focus:border-[var(--color-primary)] focus:ring-1 focus:ring-1 focus:ring-[var(--color-primary)]/30 neo-input-neo outline-none"
                 />
               </div>
             </div>
@@ -410,14 +410,14 @@ export default function RetroativosPage() {
             <div>
               <label className="font-sans font-bold text-xs text-slate-600 block mb-1">Valor Mensal Devido (R$)</label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 text-sm">
+                <div className="absolute inset-y-0 left-0 pl-3 flex align-items-center pointer-events-none text-slate-400 text-sm">
                   R$
                 </div>
                 <input
                   type="text"
                   value={valorMensalBruto}
                   onChange={(e) => setValorMensalBruto(e.target.value)}
-                  className="w-full bg-white border border-slate-300 rounded-lg pl-9 pr-3 py-2 text-sm font-sans focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 outline-none"
+                  className="w-full bg-white border border-slate-300 rounded-lg pl-9 pr-3 py-2 text-sm font-sans focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)]/30 outline-none"
                   placeholder="Ex: 3500,00"
                 />
               </div>
@@ -428,14 +428,14 @@ export default function RetroativosPage() {
               <div>
                 <label className="font-sans font-bold text-xs text-slate-600 block mb-1">Descontos Opcionais (R$)</label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 text-sm">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex align-items-center pointer-events-none text-slate-400 text-sm">
                     R$
                   </div>
                   <input
                     type="text"
                     value={valorDescontos}
                     onChange={(e) => setValorDescontos(e.target.value)}
-                    className="w-full bg-white border border-slate-300 rounded-lg pl-9 pr-3 py-2 text-sm font-sans focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 outline-none"
+                    className="w-full bg-white border border-slate-300 rounded-lg pl-9 pr-3 py-2 text-sm font-sans focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)]/30 outline-none"
                     placeholder="Ex: 500,00"
                   />
                 </div>
@@ -447,7 +447,7 @@ export default function RetroativosPage() {
                   type="text"
                   value={descricaoDescontos}
                   onChange={(e) => setDescricaoDescontos(e.target.value)}
-                  className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm font-sans focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 outline-none"
+                  className="w-full bg-white rounded-md px-3 py-2 text-sm font-sans focus:border-[var(--color-primary)] focus:ring-1 focus:ring-1 focus:ring-[var(--color-primary)]/30 neo-input-neo outline-none"
                   placeholder="Ex: Honorários já pagos"
                 />
               </div>
@@ -458,7 +458,7 @@ export default function RetroativosPage() {
             <Button
               onClick={handleCreate}
               loading={creating}
-              className="flex-1 bg-amber-600 hover:bg-amber-700 text-white font-semibold"
+              className="flex-1 bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] text-white font-semibold"
             >
               Liquidar Retroativos
             </Button>

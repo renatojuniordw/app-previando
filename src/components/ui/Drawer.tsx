@@ -34,10 +34,11 @@ export function Drawer({ open, onClose, title, description, children, className 
   if (!open) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end" role="dialog" aria-modal="true">
+    <div className="fixed inset-0 z-50 flex justify-content-end" role="dialog" aria-modal="true">
       {/* Backdrop with fade-in and blur */}
       <div
-        className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs transition-opacity duration-300 ease-out animate-fade-in"
+        className="fixed inset-0 backdrop-blur-xs transition-opacity duration-300 ease-out animate-fade-in"
+        style={{ background: 'rgba(0,0,0,0.4)' }}
         onClick={onClose}
         aria-hidden="true"
       />
@@ -46,26 +47,33 @@ export function Drawer({ open, onClose, title, description, children, className 
       <div
         ref={drawerRef}
         className={cn(
-          'relative w-full max-w-md md:max-w-xl bg-white h-full shadow-2xl flex flex-col z-10 border-l border-slate-200 animate-slide-in',
+          'relative w-full max-w-md md:max-w-xl h-full flex flex-column z-10 animate-slide-in neo-card',
           className
         )}
+        
       >
         {/* Header */}
-        <div className="px-6 py-5 border-b border-slate-200 bg-slate-50 flex items-start justify-between gap-4">
+        <div
+          className="px-6 py-5 flex align-items-start justify-content-between gap-4"
+          style={{ background: 'var(--color-surface)', borderBottom: '1px solid var(--color-border)' }}
+        >
           <div className="space-y-1">
-            <h2 className="font-serif font-bold text-lg text-slate-900 tracking-tight leading-none">
+            <h2 className="font-serif font-bold text-lg tracking-tight leading-none" style={{ color: 'var(--color-text-primary)' }}>
               {title}
             </h2>
             {description && (
-              <p className="font-sans text-xs text-slate-500 leading-normal">
+              <p className="font-sans text-xs leading-normal" style={{ color: 'var(--color-text-muted)' }}>
                 {description}
               </p>
             )}
           </div>
           <button
             onClick={onClose}
-            className="p-1 rounded-lg text-slate-400 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+            className="p-1 rounded-lg transition-colors"
+            style={{ color: 'var(--color-text-muted)' }}
             aria-label="Fechar gaveta"
+            onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--color-text-primary)'; e.currentTarget.style.background = 'var(--color-card-inner)' }}
+            onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--color-text-muted)'; e.currentTarget.style.background = 'transparent' }}
           >
             <X className="w-5 h-5" />
           </button>

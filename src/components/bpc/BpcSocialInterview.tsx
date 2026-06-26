@@ -99,7 +99,7 @@ export function BpcSocialInterview({
 
   if (!analysisExists) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center py-16 text-center px-6">
+      <div className="flex-1 flex flex-column align-items-center justify-content-center py-16 text-center px-6">
         <span className="text-4xl mb-4 grayscale opacity-50">🔒</span>
         <h4 className="font-sans font-semibold text-slate-700 mb-1">Análises Bloqueadas</h4>
         <p className="font-sans text-sm text-slate-500 max-w-sm">
@@ -111,7 +111,7 @@ export function BpcSocialInterview({
 
   if (!localRelato) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center py-16 text-center px-6">
+      <div className="flex-1 flex flex-column align-items-center justify-content-center py-16 text-center px-6">
         <span className="text-3xl mb-3">📋</span>
         <h4 className="font-sans font-semibold text-slate-700 mb-1">Roteiro de Entrevista Social</h4>
         <p className="font-sans text-sm text-slate-500 max-w-sm mb-6">
@@ -128,24 +128,24 @@ export function BpcSocialInterview({
   const categorias = Array.from(new Set(localRelato.dominios.map((d) => d.categoria)))
 
   return (
-    <div className={`flex flex-col ${fullscreen ? 'fixed inset-0 z-50 bg-white' : 'h-full'}`}>
+    <div className={`flex flex-column ${fullscreen ? 'fixed inset-0 z-50 bg-white' : 'h-full'}`}>
       {/* Barra superior com progresso e ações */}
-      <div className="px-5 py-3 border-b border-slate-200 bg-slate-50 flex items-center justify-between gap-3 flex-wrap shrink-0">
-        <div className="flex items-center gap-3">
+      <div className="px-5 py-3 border-b border-[var(--color-border)] bg-[var(--color-surface)] flex align-items-center justify-content-between gap-3 flex-wrap shrink-0">
+        <div className="flex align-items-center gap-3">
           <span className="font-sans text-xs text-slate-500">
             <span className="font-semibold text-emerald-600">{respondidas}</span>
             {' / '}{totalPerguntas} respondidas
           </span>
           {dirty && (
-            <span className="text-[10px] font-mono uppercase tracking-wider text-amber-600">
+            <span className="text-[10px] font-mono uppercase tracking-wider text-[var(--color-primary)]">
               • não salvo
             </span>
           )}
         </div>
-        <div className="flex gap-2 shrink-0 items-center">
+        <div className="flex gap-2 shrink-0 align-items-center">
           <button
             onClick={() => setFullscreen((f) => !f)}
-            className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-md transition-colors"
+            className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-[var(--color-surface)] rounded-md transition-colors"
             title={fullscreen ? 'Sair do modo entrevista' : 'Modo entrevista (tela cheia)'}
           >
             {fullscreen ? (
@@ -159,8 +159,8 @@ export function BpcSocialInterview({
             )}
           </button>
           {confirmingRegenerate ? (
-            <div className="flex items-center gap-2 bg-amber-50 border border-amber-300 rounded-md px-3 py-1.5">
-              <span className="font-sans text-xs text-amber-800">
+            <div className="flex align-items-center gap-2 bg-[var(--color-primary-tint)] border border-[var(--color-primary)]/40 rounded-md px-3 py-1.5">
+              <span className="font-sans text-xs text-[var(--color-primary-dark)]">
                 {dirty
                   ? 'Há respostas não salvas. Regenerar irá descartá-las. Confirmar?'
                   : 'Substituir roteiro atual?'}
@@ -206,7 +206,7 @@ export function BpcSocialInterview({
           return (
             <div key={categoria}>
               {/* Header da categoria */}
-              <div className="px-5 py-2 bg-slate-100 border-b border-slate-200 sticky top-0 z-10">
+              <div className="px-5 py-2 border-b border-[var(--color-border)] bg-[var(--color-surface)] sticky top-0 z-10">
                 <p className="font-sans text-[10px] font-bold uppercase tracking-widest text-slate-500">
                   {categoria}
                 </p>
@@ -219,16 +219,16 @@ export function BpcSocialInterview({
                 const totalNoDominio = dominio.itens.length
 
                 return (
-                  <div key={dominio.id} className="border-b border-slate-100 last:border-b-0">
+                  <div key={dominio.id} className="border-b border-[var(--color-border)] last:border-b-0">
                     {/* Header do domínio */}
                     <button
                       onClick={() => toggleDomain(dominio.id)}
-                      className="w-full flex items-center justify-between px-5 py-3.5 text-left hover:bg-slate-50 transition-colors"
+                      className="w-full flex align-items-center justify-content-between px-5 py-3.5 text-left hover:bg-[var(--color-surface)] transition-colors"
                     >
                       <span className="font-sans text-sm font-medium text-slate-800">
                         {dominio.titulo}
                       </span>
-                      <div className="flex items-center gap-3 shrink-0 ml-3">
+                      <div className="flex align-items-center gap-3 shrink-0 ml-3">
                         {respostasNoDominio > 0 ? (
                           <span className="text-[10px] font-sans font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
                             {respostasNoDominio}/{totalNoDominio}
@@ -249,10 +249,10 @@ export function BpcSocialInterview({
 
                     {/* Conteúdo expandido */}
                     {isExpanded && (
-                      <div className="px-5 pb-6 bg-white space-y-5">
+                      <div className="px-5 pb-6 space-y-5">
                         {/* Aspecto relevante */}
                         {dominio.aspectosRelevantes && (
-                          <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded px-3 py-2 leading-relaxed">
+                          <p className="text-xs text-[var(--color-primary-dark)] bg-[var(--color-primary-tint)] border border-[var(--color-primary)]/30 rounded px-3 py-2 leading-relaxed">
                             <span className="font-semibold">Foco: </span>
                             {dominio.aspectosRelevantes}
                           </p>
@@ -269,14 +269,14 @@ export function BpcSocialInterview({
                               onChange={(e) => handleAnswerChange(dominio.id, idx, e.target.value)}
                               placeholder="Registre o que o cliente relatou..."
                               rows={2}
-                              className="w-full neo-input resize-none font-sans text-sm text-slate-700 placeholder:text-slate-400 focus:ring-amber-500/20 focus:border-amber-500"
+                              className="w-full neo-input-neo resize-none font-sans text-sm text-slate-700 placeholder:text-slate-400 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)]"
                             />
                           </div>
                         ))}
 
                         {/* Lacunas */}
                         {dominio.lacunas && (
-                          <p className="text-[11px] text-slate-400 border-t border-slate-100 pt-3 leading-relaxed">
+                          <p className="text-[11px] text-slate-400 border-t border-[var(--color-border)] pt-3 leading-relaxed">
                             <span className="font-semibold text-slate-500">Lacunas a investigar: </span>
                             {dominio.lacunas}
                           </p>
@@ -292,8 +292,8 @@ export function BpcSocialInterview({
       </div>
 
       {/* Footer de aviso */}
-      <div className="border-t border-slate-100 px-5 py-2.5 shrink-0 flex items-center gap-1.5">
-        <span className="text-amber-500 text-xs">⚠</span>
+      <div className="border-t border-[var(--color-border)] px-5 py-2.5 shrink-0 flex align-items-center gap-1.5">
+        <span className="text-[var(--color-primary)] text-xs">⚠</span>
         <p className="text-[11px] text-slate-400 leading-relaxed">
           As respostas são de responsabilidade do advogado responsável pelo caso.
         </p>

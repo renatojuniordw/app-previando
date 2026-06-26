@@ -14,7 +14,7 @@ export default function DashboardError({
   }, [error])
 
   return (
-    <div className="flex flex-col items-center justify-center h-full min-h-[400px] p-8 text-center">
+    <div className="flex flex-column align-items-center justify-content-center h-full min-h-[400px] p-8 text-center">
       <div className="max-w-md">
         <h2 className="font-sans text-lg font-semibold text-slate-900 mb-2">
           Ocorreu um erro inesperado
@@ -24,7 +24,7 @@ export default function DashboardError({
         </p>
         <button
           onClick={reset}
-          className="inline-flex items-center px-4 py-2 rounded-lg bg-slate-900 text-white font-sans text-sm font-medium hover:bg-slate-700 transition-colors"
+          className="inline-flex align-items-center px-4 py-2 rounded-lg bg-slate-900 text-white font-sans text-sm font-medium hover:bg-slate-700 transition-colors"
         >
           Tentar novamente
         </button>

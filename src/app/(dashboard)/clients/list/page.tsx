@@ -139,12 +139,12 @@ export default function ClientsListPage() {
     <ErrorBoundary>
     <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6">
       {/* Header */}
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+      <div className="flex flex-column md:flex-row align-items-start md:align-items-center justify-content-between gap-4">
         <div>
           <h1 className="font-serif font-bold text-3xl text-slate-900 tracking-tight">Clientes</h1>
           <p className="font-sans text-sm text-slate-500 mt-1 font-medium">{total} clientes cadastrados na sua base</p>
         </div>
-        <div className="flex items-center gap-3 w-full md:w-auto">
+        <div className="flex align-items-center gap-3 w-full md:w-auto">
           <div className="relative w-full md:w-64">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <input
@@ -152,37 +152,37 @@ export default function ClientsListPage() {
               onChange={handleSearch}
               placeholder="Buscar por nome ou CPF..."
               aria-label="Buscar clientes"
-              className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-sans focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all placeholder:text-slate-400 text-slate-900 shadow-sm"
+              className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-sans focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] transition-all placeholder:text-slate-400 text-slate-900 shadow-sm"
             />
           </div>
-          <Button onClick={() => setShowModal(true)} className="shrink-0 flex items-center gap-2 bg-amber-600 hover:bg-amber-700 text-white border-amber-600">
+          <Button onClick={() => setShowModal(true)} className="shrink-0 flex align-items-center gap-2 bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] text-white border-[var(--color-primary-dark)]">
             <Plus className="w-4 h-4" />
             Novo Cliente
           </Button>
         </div>
       </div>
 
-      <div className="flex justify-between items-center bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+      <div className="flex justify-content-between align-items-center bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
         <ClientSwitcher />
       </div>
 
       {/* Data Table */}
       <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
         {loading ? (
-          <div className="flex flex-col items-center justify-center py-20">
-            <div className="w-8 h-8 border-4 border-amber-500 border-t-transparent animate-spin rounded-full"></div>
+          <div className="flex flex-column align-items-center justify-content-center py-20">
+            <div className="w-8 h-8 border-4 border-[var(--color-primary)] border-t-transparent animate-spin rounded-full"></div>
             <p className="font-sans font-medium text-slate-500 animate-pulse mt-4">Carregando clientes...</p>
           </div>
         ) : clients.length === 0 ? (
-          <div className="py-20 text-center flex flex-col items-center justify-center">
-            <div className="w-16 h-16 rounded-full bg-slate-50 flex items-center justify-center mb-4 border border-slate-100">
+          <div className="py-20 text-center flex flex-column align-items-center justify-content-center">
+            <div className="w-16 h-16 rounded-full bg-slate-50 flex align-items-center justify-content-center mb-4 border border-slate-100">
               <User className="w-8 h-8 text-slate-300" />
             </div>
             <p className="font-sans text-slate-900 font-semibold text-lg">Nenhum cliente encontrado</p>
             <p className="font-sans text-slate-500 text-sm mt-1 max-w-sm">
               Comece adicionando seu primeiro cliente para gerenciar casos e documentos.
             </p>
-            <Button onClick={() => setShowModal(true)} className="mt-6 flex items-center gap-2 bg-amber-600 hover:bg-amber-700 text-white border-amber-600">
+            <Button onClick={() => setShowModal(true)} className="mt-6 flex align-items-center gap-2 bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] text-white border-[var(--color-primary-dark)]">
               <Plus className="w-4 h-4" />
               Cadastrar Primeiro Cliente
             </Button>
@@ -204,12 +204,12 @@ export default function ClientsListPage() {
                 {clients.map((client) => (
                   <tr key={client.id} className="hover:bg-slate-50/80 transition-colors group">
                     <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center border border-amber-200 text-amber-700 font-serif font-bold text-sm shrink-0">
+                      <div className="flex align-items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-[#F5D0C3] flex align-items-center justify-content-center border border-[#F0B09A] text-[var(--color-primary-dark)] font-serif font-bold text-sm shrink-0">
                           {client.name.charAt(0).toUpperCase()}
                         </div>
                         <div>
-                          <Link href={`/clients/list/${client.id}`} className="font-sans font-semibold text-sm text-slate-900 hover:text-amber-600 transition-colors">
+                          <Link href={`/clients/list/${client.id}`} className="font-sans font-semibold text-sm text-slate-900 hover:text-[var(--color-primary)] transition-colors">
                             {client.name}
                           </Link>
                           <p className="font-sans text-xs text-slate-500 mt-0.5 font-medium">CPF: {maskCPF(client.cpf)}</p>
@@ -217,9 +217,9 @@ export default function ClientsListPage() {
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <div className="flex flex-col gap-1">
+                      <div className="flex flex-column gap-1">
                         {client.phone ? (
-                          <div className="flex items-center gap-1.5 font-sans text-xs text-slate-600 font-medium">
+                          <div className="flex align-items-center gap-1.5 font-sans text-xs text-slate-600 font-medium">
                             <Phone className="w-3 h-3 text-slate-400" />
                             {client.phone}
                           </div>
@@ -227,7 +227,7 @@ export default function ClientsListPage() {
                           <span className="font-sans text-xs text-slate-400">Sem telefone</span>
                         )}
                         {client.email && (
-                          <div className="flex items-center gap-1.5 font-sans text-xs text-slate-500">
+                          <div className="flex align-items-center gap-1.5 font-sans text-xs text-slate-500">
                             <Mail className="w-3 h-3 text-slate-400" />
                             <span className="truncate max-w-[120px]">{client.email}</span>
                           </div>
@@ -240,7 +240,7 @@ export default function ClientsListPage() {
                       </Badge>
                     </td>
                     <td className="px-6 py-4">
-                      <div className="flex items-center gap-2">
+                      <div className="flex align-items-center gap-2">
                         <FileText className="w-4 h-4 text-slate-400" />
                         <span className="font-sans text-sm font-medium text-slate-700">{client.cases.length}</span>
                       </div>
@@ -249,10 +249,10 @@ export default function ClientsListPage() {
                       {formatDate(client.createdAt)}
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <div className="flex items-center justify-end gap-1">
+                      <div className="flex align-items-center justify-content-end gap-1">
                         <Link
                           href={`/clients/list/${client.id}`}
-                          className="p-2 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
+                          className="p-2 text-slate-400 hover:text-[var(--color-primary)] hover:bg-[var(--color-primary-tint)] rounded-lg transition-colors"
                           aria-label={`Ver detalhes de ${client.name}`}
                         >
                           <FileText className="w-4 h-4" aria-hidden="true" />
@@ -308,7 +308,7 @@ export default function ClientsListPage() {
             <Button type="button" variant="outline" onClick={() => { setShowEditModal(false); setEditingClient(null) }} className="flex-1">
               Cancelar
             </Button>
-            <Button type="button" className="flex-1 bg-amber-600 text-white" onClick={async () => {
+            <Button type="button" className="flex-1 bg-[var(--color-primary)] text-white" onClick={async () => {
               if (!editingClient) return
               if (!editingClient.name.trim()) {
                 addToast({ type: 'error', title: 'Validação', message: 'O nome do cliente é obrigatório.' });
@@ -333,7 +333,7 @@ export default function ClientsListPage() {
       {/* Modal de Excluir Cliente */}
       <Modal open={showDeleteModal} onClose={() => { setShowDeleteModal(false); setDeletingClient(null) }} title="Excluir Cliente?">
         <div className="space-y-4">
-          <div className="border border-red-200 bg-red-50 rounded-xl p-4 flex items-start gap-3">
+          <div className="border border-red-200 bg-red-50 rounded-xl p-4 flex align-items-start gap-3">
             <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
             <div>
               <p className="font-sans text-sm font-bold text-red-800">Atenção: Esta ação é irreversível!</p>
@@ -355,7 +355,7 @@ export default function ClientsListPage() {
 
       <Modal open={showModal} onClose={() => setShowModal(false)} title="Novo Cliente">
         {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg font-sans font-medium text-sm text-red-600 flex items-start gap-2">
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg font-sans font-medium text-sm text-red-600 flex align-items-start gap-2">
             <AlertCircle className="w-5 h-5 shrink-0" />
             <p>{error}</p>
           </div>
@@ -410,7 +410,7 @@ export default function ClientsListPage() {
             <Button type="button" variant="outline" onClick={() => setShowModal(false)} className="flex-1 border-slate-300 text-slate-700">
               Cancelar
             </Button>
-            <Button type="submit" loading={creating} className="flex-1 bg-amber-600 hover:bg-amber-700 border-amber-600 text-white">
+            <Button type="submit" loading={creating} className="flex-1 bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] border-[var(--color-primary-dark)] text-white">
               Cadastrar Cliente
             </Button>
           </div>

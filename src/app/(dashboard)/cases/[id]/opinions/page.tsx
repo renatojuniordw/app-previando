@@ -12,8 +12,8 @@ export default function OpinionsRedirectPage() {
   }, [router, params.id])
 
   return (
-    <div className="flex items-center justify-center py-12">
-      <span className="w-5 h-5 border-2 border-amber-600 border-t-transparent rounded-full animate-spin mr-2" />
+    <div className="flex align-items-center justify-content-center py-12">
+      <span className="w-5 h-5 border-2 border-[var(--color-primary-dark)] border-t-transparent rounded-full animate-spin mr-2" />
       <span className="font-sans text-sm text-slate-500">Carregando pareceres...</span>
     </div>
   )

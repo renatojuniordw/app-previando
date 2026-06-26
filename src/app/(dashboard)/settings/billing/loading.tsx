@@ -6,7 +6,7 @@ export default function BillingLoading() {
 
       {/* Current Plan card */}
       <div className="bg-white border border-slate-200 rounded-xl p-6">
-        <div className="flex items-center justify-between">
+        <div className="flex align-items-center justify-content-between">
           <div className="space-y-2">
             <div className="h-3 w-16 bg-slate-200 rounded" />
             <div className="h-7 w-24 bg-slate-200 rounded" />
@@ -25,7 +25,7 @@ export default function BillingLoading() {
             </div>
             <div className="space-y-3">
               {[...Array(4)].map((_, j) => (
-                <div key={j} className="flex items-center gap-2">
+                <div key={j} className="flex align-items-center gap-2">
                   <div className="w-4 h-4 bg-slate-200 rounded" />
                   <div className="h-3 flex-1 bg-slate-100 rounded" />
                 </div>

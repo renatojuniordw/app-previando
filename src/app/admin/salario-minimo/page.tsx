@@ -97,7 +97,7 @@ export default function SalarioMinimoPage() {
   }
   return (
     <div className="p-8 space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex align-items-center justify-content-between">
         <div>
           <h1 className="font-serif font-bold text-2xl text-slate-900">Salário Mínimo</h1>
           <p className="font-sans text-sm text-slate-500 mt-1">
@@ -107,7 +107,7 @@ export default function SalarioMinimoPage() {
         {!showForm && (
           <button
             onClick={() => { setShowForm(true); setEditingId(null); setForm(EMPTY_FORM); setError('') }}
-            className="flex items-center gap-2 bg-amber-600 hover:bg-amber-700 text-white font-sans font-semibold text-sm px-4 py-2.5 rounded-lg transition-colors"
+            className="flex align-items-center gap-2 bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] text-white font-sans font-semibold text-sm px-4 py-2.5 rounded-lg neo-btn transition-colors"
           >
             <Plus className="w-4 h-4" />
             Novo Registro
@@ -115,7 +115,7 @@ export default function SalarioMinimoPage() {
         )}
       </div>
       {showForm && (
-        <div className="bg-white border border-slate-200 rounded-xl p-6 space-y-4 shadow-sm">
+        <div className="bg-white border border-slate-200 rounded-xl p-6 space-y-4 neo-card-flat">
           <h2 className="font-serif font-bold text-lg text-slate-900">
             {editingId ? 'Editar Registro' : 'Novo Registro'}
           </h2>
@@ -127,7 +127,7 @@ export default function SalarioMinimoPage() {
                 value={form.vigencia}
                 onChange={e => setForm(f => ({ ...f, vigencia: e.target.value }))}
                 disabled={!!editingId}
-                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm font-sans focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 outline-none disabled:bg-slate-50 disabled:text-slate-400"
+                className="w-full neo-input-neo rounded-md px-3 py-2 text-sm font-sans focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)]/30 outline-none disabled:bg-slate-50 disabled:text-slate-400"
               />
             </div>
             <div>
@@ -138,7 +138,7 @@ export default function SalarioMinimoPage() {
                 value={form.valor}
                 onChange={e => setForm(f => ({ ...f, valor: e.target.value }))}
                 placeholder="Ex: 1621.00"
-                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm font-sans focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 outline-none"
+                className="w-full neo-input-neo rounded-md px-3 py-2 text-sm font-sans focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)]/30 outline-none"
               />
             </div>
             <div>
@@ -149,7 +149,7 @@ export default function SalarioMinimoPage() {
                 value={form.teto}
                 onChange={e => setForm(f => ({ ...f, teto: e.target.value }))}
                 placeholder="Ex: 8157.41"
-                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm font-sans focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 outline-none"
+                className="w-full neo-input-neo rounded-md px-3 py-2 text-sm font-sans focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)]/30 outline-none"
               />
             </div>
             <div className="sm:col-span-2">
@@ -159,7 +159,7 @@ export default function SalarioMinimoPage() {
                 value={form.legislacao}
                 onChange={e => setForm(f => ({ ...f, legislacao: e.target.value }))}
                 placeholder="Ex: Decreto 12.797/2025"
-                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm font-sans focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 outline-none"
+                className="w-full neo-input-neo rounded-md px-3 py-2 text-sm font-sans focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)]/30 outline-none"
               />
             </div>
             <div>
@@ -170,7 +170,7 @@ export default function SalarioMinimoPage() {
                 value={form.reajuste}
                 onChange={e => setForm(f => ({ ...f, reajuste: e.target.value }))}
                 placeholder="Ex: 6.79"
-                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm font-sans focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 outline-none"
+                className="w-full neo-input-neo rounded-md px-3 py-2 text-sm font-sans focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)]/30 outline-none"
               />
             </div>
           </div>
@@ -179,14 +179,14 @@ export default function SalarioMinimoPage() {
             <button
               onClick={handleSubmit}
               disabled={saving}
-              className="flex items-center gap-2 bg-amber-600 hover:bg-amber-700 disabled:opacity-60 text-white font-sans font-semibold text-sm px-4 py-2.5 rounded-lg transition-colors"
+              className="flex align-items-center gap-2 bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] disabled:opacity-60 text-white font-sans font-semibold text-sm px-4 py-2.5 rounded-lg neo-btn transition-colors"
             >
               <Check className="w-4 h-4" />
               {saving ? 'Salvando...' : 'Salvar'}
             </button>
             <button
               onClick={handleCancel}
-              className="flex items-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-sans font-semibold text-sm px-4 py-2.5 rounded-lg transition-colors"
+              className="flex align-items-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-sans font-semibold text-sm px-4 py-2.5 rounded-lg neo-btn transition-colors"
             >
               <X className="w-4 h-4" />
               Cancelar
@@ -194,7 +194,7 @@ export default function SalarioMinimoPage() {
           </div>
         </div>
       )}
-      <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+      <div className="bg-white border border-slate-200 rounded-xl overflow-hidden neo-card-flat">
         <div className="grid grid-cols-[1fr_1fr_1fr_1.5fr_0.8fr_auto] px-5 py-3 bg-slate-50 border-b border-slate-200 text-xs font-bold text-slate-500 uppercase tracking-wider">
           <span>Vigência</span>
           <span>Salário Mínimo</span>
@@ -211,11 +211,11 @@ export default function SalarioMinimoPage() {
           registros.map((r, i) => (
             <div
               key={r.id}
-              className={`grid grid-cols-[1fr_1fr_1fr_1.5fr_0.8fr_auto] px-5 py-4 items-center text-sm font-sans ${i === 0 ? 'bg-amber-50 border-b border-amber-100' : 'border-b border-slate-100 last:border-0'}`}
+              className={`grid grid-cols-[1fr_1fr_1fr_1.5fr_0.8fr_auto] px-5 py-4 align-items-center text-sm font-sans ${i === 0 ? 'bg-[var(--color-primary-tint)] border-b border-[#F5D0C3]' : 'border-b border-slate-100 last:border-0'}`}
             >
-              <span className={`font-semibold ${i === 0 ? 'text-amber-700' : 'text-slate-800'}`}>
+              <span className={`font-semibold ${i === 0 ? 'text-[var(--color-primary-dark)]' : 'text-slate-800'}`}>
                 {fmtDate(r.vigencia)}
-                {i === 0 && <span className="ml-2 text-[10px] bg-amber-500 text-white px-1.5 py-0.5 rounded font-bold uppercase">Vigente</span>}
+                {i === 0 && <span className="ml-2 text-[10px] bg-[var(--color-primary)] text-white px-1.5 py-0.5 rounded font-bold uppercase">Vigente</span>}
               </span>
               <span className="font-bold text-slate-900">{fmt(r.valor)}</span>
               <span className="text-slate-600">{fmt(r.teto)}</span>
@@ -226,7 +226,7 @@ export default function SalarioMinimoPage() {
               <div className="flex gap-1">
                 <button
                   onClick={() => handleEdit(r)}
-                  className="p-1.5 rounded-lg text-slate-400 hover:text-amber-600 hover:bg-amber-50 transition-colors"
+                  className="p-1.5 rounded-lg text-slate-400 hover:text-[var(--color-primary)] hover:bg-[var(--color-primary-tint)] transition-colors"
                   title="Editar"
                 >
                   <Pencil className="w-3.5 h-3.5" />

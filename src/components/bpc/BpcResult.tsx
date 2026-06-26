@@ -104,8 +104,8 @@ export function BpcResult({ caseId, result, type, onCopy, onOpenChecklist, onReg
 
   return (
     <Card variant="light" className="p-0 overflow-hidden">
-      <div className="bg-slate-50 px-5 py-3 border-b border-slate-200 flex items-center justify-between">
-        <div className="flex items-center gap-3">
+      <div className="px-5 py-3 border-b border-[var(--color-border)] flex align-items-center justify-content-between">
+        <div className="flex align-items-center gap-3">
           <span className="font-mono font-bold text-[10px] uppercase tracking-wider text-slate-400">
             RESULTADO
           </span>
@@ -122,11 +122,11 @@ export function BpcResult({ caseId, result, type, onCopy, onOpenChecklist, onReg
         prose-li:text-slate-700 prose-li:my-0.5
         prose-strong:text-slate-800 prose-strong:font-semibold
         prose-ul:my-2 prose-ol:my-2
-        prose-hr:border-slate-200">
+        prose-hr:border-[var(--color-border)]">
         <ReactMarkdown>{result}</ReactMarkdown>
       </div>
 
-      <div className="border-t border-slate-100 bg-slate-50/50 px-6 py-4 flex flex-wrap gap-3">
+      <div className="border-t border-[var(--color-border)] bg-transparent px-6 py-4 flex flex-wrap gap-3">
         <Button variant="outline" onClick={onCopy} className="text-xs py-2">
           📋 Copiar
         </Button>
@@ -134,7 +134,7 @@ export function BpcResult({ caseId, result, type, onCopy, onOpenChecklist, onReg
           <PDFDownloadLink
             document={<BpcPDFDocument result={result} type={type ? TYPE_LABELS[type] || 'BPC/LOAS' : 'BPC/LOAS'} />}
             fileName={`previando-bpc-${caseId}.pdf`}
-            className="inline-flex items-center justify-center px-3 py-2 text-xs border border-slate-200 rounded-md hover:bg-slate-100 transition-colors"
+            className="inline-flex align-items-center justify-content-center px-3 py-2 text-xs border border-[var(--color-border)] rounded-md hover:bg-slate-100 transition-colors"
           >
             📄 Exportar PDF
           </PDFDownloadLink>
@@ -157,8 +157,8 @@ export function BpcResult({ caseId, result, type, onCopy, onOpenChecklist, onReg
         )}
       </div>
 
-      <div className="border-t border-slate-100 px-6 py-2.5 flex items-center gap-1.5">
-        <span className="text-amber-500 text-xs">⚠</span>
+      <div className="border-t border-[var(--color-border)] px-6 py-2.5 flex align-items-center gap-1.5">
+        <span className="text-[var(--color-primary)] text-xs">⚠</span>
         <p className="text-[11px] text-slate-400 leading-relaxed">
           Gerado por IA — não substitui análise jurídica profissional. Responsabilidade exclusiva do advogado.
         </p>

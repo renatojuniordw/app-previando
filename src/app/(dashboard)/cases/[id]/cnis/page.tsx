@@ -52,8 +52,8 @@ export default function CnisCasePage() {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center py-20">
-        <div className="w-8 h-8 border-4 border-amber-500 border-t-transparent animate-spin rounded-full" />
+      <div className="flex flex-column align-items-center justify-content-center py-20">
+        <div className="w-8 h-8 border-4 border-[var(--color-primary)] border-t-transparent animate-spin rounded-full" />
         <p className="font-sans font-medium text-slate-500 animate-pulse mt-4">Carregando CNIS…</p>
       </div>
     )
@@ -96,16 +96,16 @@ export default function CnisCasePage() {
         onCloseSucess={() => setShowSuccessBanner(false)}
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 align-items-start">
         {showPdfViewer && cnis?.downloadUrl && (
-          <div className="lg:col-span-5 bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden sticky top-6 z-10 hidden lg:flex flex-col h-[calc(100vh-6rem)]">
-            <div className="px-4 py-3 bg-slate-50 border-b border-slate-150 flex items-center justify-between shrink-0">
-              <span className="font-sans font-bold text-xs text-slate-700 flex items-center gap-1.5">
+          <div className="lg:col-span-5 bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden sticky top-6 z-10 hidden lg:flex flex-column h-[calc(100vh-6rem)]">
+            <div className="px-4 py-3 bg-slate-50 border-b border-slate-150 flex align-items-center justify-content-between shrink-0">
+              <span className="font-sans font-bold text-xs text-slate-700 flex align-items-center gap-1.5">
                 <FileText className="w-4 h-4 text-slate-400" />
                 Documento CNIS Original
               </span>
-              <div className="flex items-center gap-2">
-                <a href={cnis.downloadUrl} target="_blank" rel="noopener noreferrer" className="text-[11px] font-bold text-amber-700 hover:text-amber-800 bg-amber-50 border border-amber-100 px-2.5 py-1 rounded transition-colors flex items-center gap-1 focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:outline-none">
+              <div className="flex align-items-center gap-2">
+                <a href={cnis.downloadUrl} target="_blank" rel="noopener noreferrer" className="text-[11px] font-bold text-[var(--color-primary-dark)] hover:text-[#A03A15] bg-[var(--color-primary-tint)] border border-[#F5D0C3] px-2.5 py-1 rounded transition-colors flex align-items-center gap-1 focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:outline-none">
                   <ExternalLink className="w-3 h-3" />
                   Nova Aba
                 </a>

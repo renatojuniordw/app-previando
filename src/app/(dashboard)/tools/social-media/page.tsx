@@ -81,7 +81,7 @@ export default function SocialMediaPage() {
             type="text"
             value={tema}
             onChange={(e) => setTema(e.target.value)}
-            className="w-full neo-input font-sans text-sm"
+            className="w-full neo-input-neo px-3 py-2 font-sans text-sm rounded-md"
             placeholder="Ex: BPC/LOAS para crianças com autismo"
             maxLength={500}
           />
@@ -92,7 +92,7 @@ export default function SocialMediaPage() {
           <textarea
             value={contexto}
             onChange={(e) => setContexto(e.target.value)}
-            className="w-full neo-input min-h-[100px] resize-none font-sans text-sm"
+            className="w-full neo-input-neo px-3 py-2 font-sans text-sm rounded-md min-h-[100px] resize-none"
             placeholder="Informações adicionais, tom desejado, público-alvo específico..."
             maxLength={3000}
           />
@@ -111,7 +111,7 @@ export default function SocialMediaPage() {
       {/* RESULTADO */}
       {slides.length > 0 && (
         <Card variant="light" className="p-0 overflow-hidden">
-          <div className="bg-slate-50 px-5 py-3 border-b border-slate-200 flex items-center justify-between">
+          <div className="bg-slate-50 px-5 py-3 border-b border-slate-200 flex align-items-center justify-content-between">
             <span className="font-mono font-bold text-[10px] uppercase tracking-wider text-slate-400">
               CARROSSEL — {slides.length} SLIDES
             </span>
@@ -133,7 +133,7 @@ export default function SocialMediaPage() {
                 onClick={() => setActiveSlide(i)}
                 className={`shrink-0 w-8 h-8 rounded-lg text-xs font-mono font-bold transition-colors ${
                   activeSlide === i
-                    ? 'bg-amber-600 text-white'
+                    ? 'bg-[var(--color-primary)] text-white'
                     : 'bg-white border border-slate-200 text-slate-500 hover:border-amber-400'
                 }`}
               >
@@ -145,7 +145,7 @@ export default function SocialMediaPage() {
           {/* SLIDE ATIVO */}
           {slides[activeSlide] && (
             <div className="p-6 space-y-3">
-              <div className="flex items-start justify-between gap-4">
+              <div className="flex align-items-start justify-content-between gap-4">
                 <p className="font-sans font-semibold text-sm text-slate-900">
                   {slides[activeSlide].titulo}
                 </p>
@@ -164,11 +164,11 @@ export default function SocialMediaPage() {
           )}
 
           {/* AVISO LEGAL */}
-          <div className="border-t border-amber-200 bg-amber-50 px-6 py-4">
-            <p className="text-[10px] font-black uppercase tracking-widest text-amber-700 mb-1">
+          <div className="border-t border-[#F0B09A] bg-[var(--color-primary-tint)] px-6 py-4">
+            <p className="text-[10px] font-black uppercase tracking-widest text-[var(--color-primary-dark)] mb-1">
               ⚠️ AVISO IMPORTANTE
             </p>
-            <p className="text-xs font-mono font-bold uppercase text-amber-600 tracking-widest leading-relaxed">
+            <p className="text-xs font-mono font-bold uppercase text-[var(--color-primary)] tracking-widest leading-relaxed">
               Este conteúdo é gerado por inteligência artificial com base nas informações fornecidas.
               Não substitui análise jurídica profissional. A responsabilidade pela estratégia
               processual é exclusivamente do advogado responsável pelo caso.

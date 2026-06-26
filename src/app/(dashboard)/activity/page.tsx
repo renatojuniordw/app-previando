@@ -22,14 +22,14 @@ const ACTION_COLOR: Record<string, string> = {
   'cnis.upload': 'bg-cyan-50 text-cyan-700 border border-cyan-100',
   'cnis.processed': 'bg-green-50 text-green-700 border border-green-100',
   'cnis.failed': 'bg-orange-50 text-orange-700 border border-orange-100',
-  'calculation.created': 'bg-amber-50 text-amber-700 border border-amber-100',
+  'calculation.created': 'bg-[var(--color-primary-tint)] text-[var(--color-primary-dark)] border border-[#F5D0C3]',
   'calculation.selected': 'bg-yellow-50 text-yellow-700 border border-yellow-100',
   'simulation.created': 'bg-lime-50 text-lime-700 border border-lime-100',
   'retroative.created': 'bg-emerald-50 text-emerald-700 border border-emerald-100',
   'opinion.created': 'bg-rose-50 text-rose-700 border border-rose-100',
   'note.created': 'bg-zinc-50 text-zinc-700 border border-zinc-100',
   'bpc.laudo': 'bg-orange-50 text-orange-700 border border-orange-100',
-  'bpc.pre-analysis': 'bg-amber-50 text-amber-700 border border-amber-100',
+  'bpc.pre-analysis': 'bg-[var(--color-primary-tint)] text-[var(--color-primary-dark)] border border-[#F5D0C3]',
   'client.created': 'bg-teal-50 text-teal-700 border border-teal-100',
   'client.updated': 'bg-cyan-50 text-cyan-700 border border-cyan-100',
   'client.deleted': 'bg-red-50 text-red-700 border border-red-100',
@@ -122,15 +122,15 @@ export default function ActivityPage() {
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-4xl mx-auto space-y-6">
-      <div className="flex items-center gap-3">
-        <Activity className="w-6 h-6 text-amber-600" />
+      <div className="flex align-items-center gap-3">
+        <Activity className="w-6 h-6 text-[var(--color-primary)]" />
         <h1 className="font-serif font-bold text-2xl text-slate-900">Log de Atividades</h1>
       </div>
 
       <Card variant="light" className="p-0 overflow-hidden">
         {loading ? (
-          <div className="py-16 flex items-center justify-center">
-            <div className="w-6 h-6 border-4 border-amber-500 border-t-transparent animate-spin rounded-full" />
+          <div className="py-16 flex align-items-center justify-content-center">
+            <div className="w-6 h-6 border-4 border-[var(--color-primary)] border-t-transparent animate-spin rounded-full" />
           </div>
         ) : logs.length === 0 ? (
           <div className="py-16 text-center text-slate-500">
@@ -142,7 +142,7 @@ export default function ActivityPage() {
             {logs.map((log) => {
               const metaStr = formatMetadata(log.action, log.metadata as Record<string, unknown>)
               return (
-                <div key={log.id} className="flex items-start gap-4 px-6 py-4 hover:bg-slate-50 transition-colors">
+                <div key={log.id} className="flex align-items-start gap-4 px-6 py-4 hover:bg-slate-50 transition-colors">
                   <div className={`shrink-0 mt-0.5 px-2 py-0.5 rounded text-xs font-semibold ${ACTION_COLOR[log.action] ?? 'bg-slate-100 text-slate-700 border border-slate-200'}`}>
                     {log.label}
                   </div>
@@ -164,13 +164,13 @@ export default function ActivityPage() {
         )}
 
         {totalPages > 1 && (
-          <div className="px-6 py-4 border-t border-slate-100 flex items-center justify-between bg-white">
+          <div className="px-6 py-4 border-t border-slate-100 flex align-items-center justify-content-between bg-white">
             <span className="text-sm text-slate-500">{total} registros</span>
-            <div className="flex items-center gap-2">
+            <div className="flex align-items-center gap-2">
               <button
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page === 1}
-                className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed neo-btn"
                 aria-label="Página anterior"
               >
                 <ChevronLeft className="w-4 h-4" aria-hidden="true" />
@@ -181,7 +181,7 @@ export default function ActivityPage() {
               <button
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                 disabled={page === totalPages}
-                className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed neo-btn"
                 aria-label="Próxima página"
               >
                 <ChevronRight className="w-4 h-4" aria-hidden="true" />

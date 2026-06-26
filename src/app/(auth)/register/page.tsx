@@ -80,7 +80,7 @@ export default function RegisterPage() {
       </div>
 
       {error && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg font-sans font-medium text-sm text-red-600 flex items-start gap-2">
+        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg font-sans font-medium text-sm text-red-600 flex align-items-start gap-2">
           <AlertCircle className="w-5 h-5 shrink-0" />
           <p>{error}</p>
         </div>
@@ -89,15 +89,15 @@ export default function RegisterPage() {
       <button
         onClick={handleGoogle}
         disabled={googleLoading}
-        className="w-full flex items-center justify-center gap-3 px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-slate-700 font-sans font-medium hover:bg-slate-50 hover:text-slate-900 shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-slate-200 mb-6"
+        className="w-full flex align-items-center justify-content-center gap-3 px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-slate-700 font-sans font-medium hover:bg-slate-50 hover:text-slate-900 neo-btn transition-colors focus:outline-none focus:ring-2 focus:ring-slate-200 mb-6"
       >
         {googleLoading ? (
-          <span className="flex items-center gap-2">
+          <span className="flex align-items-center gap-2">
             <Loader2 className="w-5 h-5 animate-spin text-slate-400" />
             Conectando...
           </span>
         ) : (
-          <span className="flex items-center gap-2">
+          <span className="flex align-items-center gap-2">
             <svg className="w-5 h-5" viewBox="0 0 24 24">
               <path
                 d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -121,7 +121,7 @@ export default function RegisterPage() {
         )}
       </button>
 
-      <div className="mb-6 flex items-center gap-3">
+      <div className="mb-6 flex align-items-center gap-3">
         <div className="flex-1 border-t border-slate-100" />
         <span className="font-sans text-xs font-semibold text-slate-400 uppercase tracking-widest">Ou use seu email</span>
         <div className="flex-1 border-t border-slate-100" />
@@ -177,7 +177,7 @@ export default function RegisterPage() {
 
         <button
           type="submit"
-          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-sm font-semibold shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-amber-500/20 mt-4"
+          className="w-full flex align-items-center justify-content-center gap-2 px-4 py-2.5 bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] text-white rounded-lg text-sm font-semibold neo-btn transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20 mt-4"
           disabled={loading}
         >
           {loading ? (
@@ -196,7 +196,7 @@ export default function RegisterPage() {
 
       <p className="text-center font-sans text-sm text-slate-600 mt-8">
         Já tem uma conta?{' '}
-        <Link href="/login" className="text-amber-600 font-semibold hover:text-amber-700 transition-colors">
+        <Link href="/login" className="text-[var(--color-primary)] font-semibold hover:text-[var(--color-primary-dark)] transition-colors">
           Entrar na Plataforma
         </Link>
       </p>

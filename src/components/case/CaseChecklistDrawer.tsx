@@ -108,15 +108,15 @@ export function CaseChecklistDrawer({ open, onClose, caseId }: CaseChecklistDraw
       <div className="space-y-6">
         {items.length > 0 && (
           <div className="space-y-1.5">
-            <div className="flex justify-between items-center text-xs font-sans font-semibold text-slate-700">
+            <div className="flex justify-content-between align-items-center text-xs font-sans font-semibold text-slate-700">
               <span>Progresso</span>
               <span>
                 {completedCount}/{items.length} concluídos ({progress}%)
               </span>
             </div>
-            <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden border border-slate-200">
+            <div className="h-2 w-full bg-[var(--color-card-inner)] rounded-full overflow-hidden border border-[var(--color-border)]">
               <div
-                className="h-full bg-amber-500 rounded-full transition-all duration-300"
+                className="h-full bg-[var(--color-primary)] rounded-full transition-all duration-300"
                 style={{ width: `${progress}%` }}
               />
             </div>
@@ -124,15 +124,15 @@ export function CaseChecklistDrawer({ open, onClose, caseId }: CaseChecklistDraw
         )}
 
         {!showAddForm && (
-          <Button onClick={() => setShowAddForm(true)} className="w-full flex items-center justify-center gap-2">
+          <Button onClick={() => setShowAddForm(true)} className="w-full flex align-items-center justify-content-center gap-2">
             <Plus className="w-4 h-4" />
             Adicionar Item
           </Button>
         )}
 
         {showAddForm && (
-          <Card variant="light" className="p-4 border-slate-200 bg-slate-50/50 space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-200 pb-2">
+          <Card variant="light" className="p-4 border-[var(--color-border)] bg-transparent space-y-4">
+            <div className="flex align-items-center justify-content-between border-b border-[var(--color-border)] pb-2">
               <span className="font-sans font-bold text-xs text-slate-800">Novo Item</span>
               <button
                 onClick={() => setShowAddForm(false)}
@@ -147,7 +147,7 @@ export function CaseChecklistDrawer({ open, onClose, caseId }: CaseChecklistDraw
                 <input
                   value={newItem}
                   onChange={(e) => setNewItem(e.target.value)}
-                  className="w-full px-3 py-1.5 font-sans text-sm rounded-md bg-white text-slate-900 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-600 focus:border-transparent"
+                  className="w-full px-3 py-1.5 font-sans text-sm rounded-md neo-input-neo"
                   placeholder="Ex: Solicitar extrato do CNIS"
                   onKeyDown={(e) => e.key === 'Enter' && handleCreate()}
                 />
@@ -169,11 +169,11 @@ export function CaseChecklistDrawer({ open, onClose, caseId }: CaseChecklistDraw
         )}
 
         {loading ? (
-          <div className="flex justify-center items-center py-12">
-            <Loader2 className="w-6 h-6 text-amber-600 animate-spin" />
+          <div className="flex justify-content-center align-items-center py-12">
+            <Loader2 className="w-6 h-6 text-[var(--color-primary)] animate-spin" />
           </div>
         ) : items.length === 0 ? (
-          <div className="text-center py-12 border border-dashed border-slate-200 bg-slate-50/50 rounded-xl">
+          <div className="text-center py-12 border border-dashed border-[var(--color-border)] bg-transparent rounded-xl">
             <CheckSquare className="w-10 h-10 text-slate-300 mx-auto mb-3" />
             <h3 className="font-serif font-bold text-sm text-slate-900 mb-1">Sem tarefas no checklist</h3>
             <p className="font-sans text-xs text-slate-500 max-w-[240px] mx-auto mb-4">
@@ -186,15 +186,15 @@ export function CaseChecklistDrawer({ open, onClose, caseId }: CaseChecklistDraw
               <div
                 key={item.id}
                 onClick={() => handleToggle(item.id)}
-                className={`border p-3 rounded-lg flex items-start gap-3 cursor-pointer transition-all ${
+                className={`border p-3 rounded-lg flex align-items-start gap-3 cursor-pointer transition-all ${
                   item.checked
-                    ? 'border-slate-200 bg-slate-50/70 opacity-60'
-                    : 'border-slate-200 hover:border-amber-400 bg-white shadow-xs'
+                    ? 'border-[var(--color-border)] bg-[var(--color-surface)]/70 opacity-60'
+                    : 'border-[var(--color-border)] hover:border-[var(--color-primary)] bg-[var(--color-card-bg)] shadow-xs'
                 }`}
               >
                 <div
-                  className={`mt-0.5 w-4 h-4 flex-shrink-0 rounded border flex items-center justify-center transition-colors ${
-                    item.checked ? 'bg-amber-500 border-amber-500' : 'border-slate-300 bg-white'
+                  className={`mt-0.5 w-4 h-4 flex-shrink-0 rounded border flex align-items-center justify-content-center transition-colors ${
+                    item.checked ? 'bg-[var(--color-primary)] border-[var(--color-primary)]' : 'border-[var(--color-border)] bg-[var(--color-card-bg)]'
                   }`}
                 >
                   {item.checked && <span className="text-white text-[10px] font-bold">✓</span>}
@@ -208,7 +208,7 @@ export function CaseChecklistDrawer({ open, onClose, caseId }: CaseChecklistDraw
                     {item.label}
                   </p>
                   {item.required && (
-                    <span className="inline-block bg-amber-50 text-amber-600 text-[9px] px-1.5 py-0.5 rounded font-mono uppercase mt-1">
+                    <span className="inline-block bg-[var(--color-primary-tint)] text-[var(--color-primary)] text-[9px] px-1.5 py-0.5 rounded font-mono uppercase mt-1">
                       Obrigatório
                     </span>
                   )}

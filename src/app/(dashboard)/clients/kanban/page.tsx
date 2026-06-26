@@ -63,9 +63,9 @@ function CaseCard({ caso, isDragging }: { caso: KanbanCase; isDragging?: boolean
   return (
     <div ref={setNodeRef} style={style} {...attributes} {...listeners} className="touch-manipulation">
       <Link href={`/cases/${caso.id}`} onClick={(e) => e.stopPropagation()} className="block outline-none">
-        <div className={`bg-white border border-slate-200 rounded-xl p-4 cursor-grab active:cursor-grabbing hover:border-amber-300 hover:shadow-md transition-all group ${isDragging ? 'shadow-lg ring-2 ring-amber-500 border-transparent' : 'shadow-sm'}`}>
-          <div className="flex items-start justify-between mb-3">
-            <h4 className="font-serif font-bold text-slate-900 text-[15px] leading-tight group-hover:text-amber-700 transition-colors">
+        <div className={`bg-white border border-slate-200 rounded-xl p-4 cursor-grab active:cursor-grabbing hover:border-[#EB8B6A] hover:shadow-md transition-all group ${isDragging ? 'shadow-lg ring-2 ring-[var(--color-primary)] border-transparent' : 'shadow-sm'}`}>
+          <div className="flex align-items-start justify-content-between mb-3">
+            <h4 className="font-serif font-bold text-slate-900 text-[15px] leading-tight group-hover:text-[var(--color-primary-dark)] transition-colors">
               {BENEFIT_SHORT_LABELS[caso.benefitType] ?? caso.benefitType}
             </h4>
             <div className="shrink-0 ml-2">
@@ -73,19 +73,19 @@ function CaseCard({ caso, isDragging }: { caso: KanbanCase; isDragging?: boolean
             </div>
           </div>
           
-          <div className="flex items-center gap-2 mb-4">
-            <div className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 font-sans font-semibold text-[10px] shrink-0 border border-slate-200">
+          <div className="flex align-items-center gap-2 mb-4">
+            <div className="w-6 h-6 rounded-full bg-slate-100 flex align-items-center justify-content-center text-slate-600 font-sans font-semibold text-[10px] shrink-0 border border-slate-200">
               {getInitials(caso.client.name)}
             </div>
             <p className="font-sans text-sm text-slate-600 truncate font-medium">{caso.client.name}</p>
           </div>
 
-          <div className="flex items-center justify-between pt-3 border-t border-slate-50">
-            <div className="flex items-center gap-1.5 text-slate-400">
+          <div className="flex align-items-center justify-content-between pt-3 border-t border-slate-50">
+            <div className="flex align-items-center gap-1.5 text-slate-400">
               <FileText className="w-3.5 h-3.5" />
               <span className="font-sans text-xs font-medium">Docs</span>
             </div>
-            <div className="flex items-center gap-1.5 text-slate-400">
+            <div className="flex align-items-center gap-1.5 text-slate-400">
               <Clock className="w-3.5 h-3.5" />
               <span className="font-sans text-[10px] uppercase font-semibold tracking-wider">
                 {new Date(caso.createdAt).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}
@@ -102,8 +102,8 @@ function DragOverlayCard({ caso }: { caso: KanbanCase }) {
   const badgeConfig = PRIORITY_STYLES[caso.priority] || PRIORITY_STYLES.NORMAL
 
   return (
-    <div className="bg-white border-2 border-amber-500 rounded-xl p-4 shadow-xl rotate-3 opacity-95 w-full cursor-grabbing">
-      <div className="flex items-start justify-between mb-3">
+    <div className="bg-white border-2 border-[var(--color-primary)] rounded-xl p-4 shadow-xl rotate-3 opacity-95 w-full cursor-grabbing">
+      <div className="flex align-items-start justify-content-between mb-3">
         <h4 className="font-serif font-bold text-slate-900 text-[15px] leading-tight">
           {BENEFIT_SHORT_LABELS[caso.benefitType] ?? caso.benefitType}
         </h4>
@@ -112,18 +112,18 @@ function DragOverlayCard({ caso }: { caso: KanbanCase }) {
         </div>
       </div>
       
-      <div className="flex items-center gap-2 mb-4">
-        <div className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 font-sans font-semibold text-[10px] shrink-0 border border-slate-200">
+      <div className="flex align-items-center gap-2 mb-4">
+        <div className="w-6 h-6 rounded-full bg-slate-100 flex align-items-center justify-content-center text-slate-600 font-sans font-semibold text-[10px] shrink-0 border border-slate-200">
           {getInitials(caso.client.name)}
         </div>
         <p className="font-sans text-sm text-slate-600 truncate font-medium">{caso.client.name}</p>
       </div>
 
-      <div className="flex items-center justify-between pt-3 border-t border-slate-50">
-        <div className="flex items-center gap-1.5 text-slate-400">
+      <div className="flex align-items-center justify-content-between pt-3 border-t border-slate-50">
+        <div className="flex align-items-center gap-1.5 text-slate-400">
           <FileText className="w-3.5 h-3.5" />
         </div>
-        <div className="flex items-center gap-1.5 text-slate-400">
+        <div className="flex align-items-center gap-1.5 text-slate-400">
           <Clock className="w-3.5 h-3.5" />
         </div>
       </div>
@@ -222,11 +222,11 @@ export default function ClientsKanbanPage() {
 
   if (loading) {
     return (
-      <div className="p-8 max-w-7xl mx-auto h-[calc(100vh-4rem)] flex flex-col">
+      <div className="p-8 max-w-7xl mx-auto h-[calc(100vh-4rem)] flex flex-column">
         <ClientSwitcher />
-        <div className="flex-1 flex items-center justify-center">
-          <div className="flex flex-col items-center gap-4">
-            <div className="w-8 h-8 border-4 border-amber-500 border-t-transparent animate-spin rounded-full"></div>
+        <div className="flex-1 flex align-items-center justify-content-center">
+          <div className="flex flex-column align-items-center gap-4">
+            <div className="w-8 h-8 border-4 border-[var(--color-primary)] border-t-transparent animate-spin rounded-full"></div>
             <p className="font-sans font-medium text-slate-500 animate-pulse">Carregando quadro...</p>
           </div>
         </div>
@@ -235,11 +235,11 @@ export default function ClientsKanbanPage() {
   }
 
   return (
-    <div className="p-8 h-[calc(100vh-4rem)] flex flex-col">
+    <div className="p-8 h-[calc(100vh-4rem)] flex flex-column">
       {/* Header */}
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-6 shrink-0">
+      <div className="flex flex-column md:flex-row align-items-start md:align-items-center justify-content-between gap-4 mb-6 shrink-0">
         <div>
-          <h1 className="font-serif font-bold text-3xl text-slate-900 tracking-tight flex items-center gap-3">
+          <h1 className="font-serif font-bold text-3xl text-slate-900 tracking-tight flex align-items-center gap-3">
             Quadro de Casos
           </h1>
           <p className="font-sans text-sm text-slate-500 mt-1 font-medium">{totalActive} casos em andamento</p>
@@ -262,13 +262,13 @@ export default function ClientsKanbanPage() {
             {COLUMNS.map((col) => {
               const cases = casesByStatus[col.id] ?? []
               return (
-                <div key={col.id} className="w-[320px] flex flex-col h-full bg-slate-100/80 rounded-2xl border border-slate-200/60 shadow-sm overflow-hidden shrink-0">
+                <div key={col.id} className="w-[320px] flex flex-column h-full bg-slate-100/80 rounded-2xl border border-slate-200/60 shadow-sm overflow-hidden shrink-0">
                   {/* Column Header */}
-                  <div className="px-5 py-4 border-b border-slate-200/80 bg-slate-100 flex items-center justify-between shrink-0">
+                  <div className="px-5 py-4 border-b border-slate-200/80 bg-slate-100 flex align-items-center justify-content-between shrink-0">
                     <span className="font-sans font-bold text-[15px] text-slate-800 tracking-wide">
                       {col.label}
                     </span>
-                    <span className="w-6 h-6 flex items-center justify-center font-sans text-[11px] font-bold text-slate-500 bg-white border border-slate-200 rounded-full shadow-sm">
+                    <span className="w-6 h-6 flex align-items-center justify-content-center font-sans text-[11px] font-bold text-slate-500 bg-white border border-slate-200 rounded-full shadow-sm">
                       {cases.length}
                     </span>
                   </div>
@@ -282,7 +282,7 @@ export default function ClientsKanbanPage() {
                     >
                       <div data-column-id={col.id} className="min-h-full space-y-4">
                         {cases.length === 0 ? (
-                          <div className="h-full flex flex-col items-center justify-center text-center opacity-50 py-10">
+                          <div className="h-full flex flex-column align-items-center justify-content-center text-center opacity-50 py-10">
                             <LayoutTemplate className="w-8 h-8 text-slate-400 mb-2" />
                             <span className="font-sans font-medium text-sm text-slate-500">Arraste casos para cá</span>
                           </div>

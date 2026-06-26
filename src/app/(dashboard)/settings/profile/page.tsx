@@ -59,7 +59,7 @@ export default function ProfilePage() {
             <input
               value={session?.user?.email ?? ''}
               disabled
-              className="neo-input opacity-50 cursor-not-allowed"
+              className="neo-input-neo w-full px-3 py-2 font-sans text-sm rounded-md opacity-50 cursor-not-allowed"
             />
           </div>
           <div>
@@ -67,7 +67,7 @@ export default function ProfilePage() {
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="neo-input"
+              className="neo-input-neo w-full px-3 py-2 font-sans text-sm rounded-md"
               placeholder="Seu nome"
             />
           </div>
@@ -104,7 +104,7 @@ export default function ProfilePage() {
           <p className="text-slate-900 text-xl font-bold mt-1">{session?.user?.plan ?? 'FREE'}</p>
           <p className="text-slate-500 text-sm mt-2">
             Para alterar o plano, acesse{' '}
-            <a href="/settings/billing" className="text-amber-600 font-semibold hover:underline">
+            <a href="/settings/billing" className="text-[var(--color-primary)] font-semibold hover:underline">
               Assinatura
             </a>
             .

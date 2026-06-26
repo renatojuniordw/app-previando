@@ -1,6 +1,4 @@
-/// <reference types="pdfkit" />
 import PDFDocument from 'pdfkit'
-
 const BRAND = {
   accent: '#d97706',
   dark: '#0f172a',
@@ -9,7 +7,7 @@ const BRAND = {
   border: '#e2e8f0',
 }
 
-function drawHeader(doc: PDFDocument, title: string) {
+function drawHeader(doc: typeof PDFDocument, title: string) {
   // Logo text
   doc.font('Helvetica-Bold').fontSize(16).fill(BRAND.accent).text('PREVIANDO', 40, 30, {
     continued: true,
@@ -20,39 +18,39 @@ function drawHeader(doc: PDFDocument, title: string) {
   doc.font('Helvetica').fontSize(7).fill(BRAND.slate).text('app.previando.com.br', 40, 50)
 
   // Accent line
-  doc.stroke(BRAND.accent).lineWidth(2).line(40, 58, 550, 58)
+  doc.moveTo(40, 58).lineTo(550, 58).lineWidth(2).stroke(BRAND.accent)
 }
 
-function drawFooter(doc: PDFDocument, page: number, totalPages: number) {
+function drawFooter(doc: typeof PDFDocument, page: number, totalPages: number) {
   // Border line
-  doc.stroke(BRAND.border).lineWidth(0.5).line(40, 260, 550, 260)
+  doc.moveTo(40, 260).lineTo(550, 260).lineWidth(0.5).stroke(BRAND.border)
 
   doc.fontSize(7).fill(BRAND.slate)
   doc.text('Gerado por Previando', 40, 265)
   doc.text(`Página ${page} de ${totalPages}`, 400, 265)
 }
 
-function drawSectionHeader(doc: PDFDocument, title: string, y: number) {
+function drawSectionHeader(doc: typeof PDFDocument, title: string, y: number) {
   doc.font('Helvetica-Bold').fontSize(11).fill(BRAND.accent).text(title, 40, y)
-  doc.stroke(BRAND.border).lineWidth(0.5).line(40, y + 6, 550, y + 6)
+  doc.moveTo(40, y + 6).lineTo(550, y + 6).lineWidth(0.5).stroke(BRAND.border)
   return y + 14
 }
 
-function drawDataRow(doc: PDFDocument, label: string, value: string, y: number) {
+function drawDataRow(doc: typeof PDFDocument, label: string, value: string, y: number) {
   doc.font('Helvetica-Bold').fontSize(9).fill(BRAND.dark).text(label, 40, y, { width: 120 })
   doc.font('Helvetica').fontSize(9).fill(BRAND.dark).text(value || '—', 170, y, { width: 340 })
-  doc.stroke(BRAND.border).lineWidth(0.3).line(40, y + 10, 550, y + 10)
+  doc.moveTo(40, y + 10).lineTo(550, y + 10).lineWidth(0.3).stroke(BRAND.border)
   return y + 16
 }
 
-function drawTableHeader(doc: PDFDocument, columns: { label: string; width: number }[], y: number) {
+function drawTableHeader(doc: typeof PDFDocument, columns: { label: string; width: number }[], y: number) {
   let x = 40
   doc.font('Helvetica-Bold').fontSize(8).fill(BRAND.dark)
   for (const col of columns) {
     doc.text(col.label, x, y, { width: col.width })
     x += col.width
   }
-  doc.stroke(BRAND.border).lineWidth(0.5).line(40, y + 10, 550, y + 10)
+  doc.moveTo(40, y + 10).lineTo(550, y + 10).lineWidth(0.5).stroke(BRAND.border)
   return y + 14
 }
 
@@ -77,7 +75,7 @@ export interface CasePDFData {
 export async function generateCasePDF(data: CasePDFData): Promise<Buffer> {
   const doc = new PDFDocument({ size: 'A4', margins: { top: 20, bottom: 30, left: 40, right: 40 } })
   const buffers: Buffer[] = []
-  doc.pipe(buffers as unknown as NodeJS.WritableStream)
+  doc.on('data', buffers.push.bind(buffers))
 
   drawHeader(doc, 'Relatório do Caso')
 
@@ -121,16 +119,7 @@ export async function generateCasePDF(data: CasePDFData): Promise<Buffer> {
   if (data.opinion) {
     y = drawSectionHeader(doc, 'Parecer Jurídico', y)
     doc.font('Helvetica').fontSize(9).fill(BRAND.dark)
-    const lines = doc.splitText(data.opinion, 510)
-    for (const line of lines) {
-      if (y > 240) {
-        doc.addPage()
-        y = 40
-        drawFooter(doc, doc.pages.length, doc.pages.length)
-      }
-      doc.text(line, 40, y)
-      y += 12
-    }
+    doc.text(data.opinion, 40, y, { width: 510 })
   }
 
   // Watermark
@@ -161,7 +150,7 @@ interface BpcPDFData {
 export async function generateBpcPDF(data: BpcPDFData): Promise<Buffer> {
   const doc = new PDFDocument({ size: 'A4', margins: { top: 20, bottom: 30, left: 40, right: 40 } })
   const buffers: Buffer[] = []
-  doc.pipe(buffers as unknown as NodeJS.WritableStream)
+  doc.on('data', buffers.push.bind(buffers))
 
   drawHeader(doc, 'Análise BPC/LOAS')
 
@@ -179,16 +168,7 @@ export async function generateBpcPDF(data: BpcPDFData): Promise<Buffer> {
 
   y = drawSectionHeader(doc, 'Resultado da Análise', y)
   doc.font('Helvetica').fontSize(9).fill(BRAND.dark)
-  const lines = doc.splitText(data.result, 510)
-  for (const line of lines) {
-    if (y > 240) {
-      doc.addPage()
-      y = 40
-      drawFooter(doc, doc.pages.length, doc.pages.length)
-    }
-    doc.text(line, 40, y)
-    y += 12
-  }
+  doc.text(data.result, 40, y, { width: 510 })
 
   drawFooter(doc, 1, 1)
   doc.end()

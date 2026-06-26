@@ -117,7 +117,7 @@ export function CaseNotesDrawer({ open, onClose, caseId }: CaseNotesDrawerProps)
       <div className="space-y-6">
         {/* Header Action / Add Toggle */}
         {!showAddForm && (
-          <Button onClick={() => setShowAddForm(true)} className="w-full flex items-center justify-center gap-2">
+          <Button onClick={() => setShowAddForm(true)} className="w-full flex align-items-center justify-content-center gap-2">
             <Plus className="w-4 h-4" />
             Nova Anotação
           </Button>
@@ -125,8 +125,8 @@ export function CaseNotesDrawer({ open, onClose, caseId }: CaseNotesDrawerProps)
 
         {/* Inline Add Form */}
         {showAddForm && (
-          <Card variant="light" className="p-4 border-amber-200 bg-amber-50/20 space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+          <Card variant="light" className="p-4 border-[#F0B09A] bg-[rgba(242,232,228,0.2)] space-y-4">
+            <div className="flex align-items-center justify-content-between border-b border-[var(--color-border)] pb-2">
               <span className="font-sans font-bold text-sm text-slate-800">Nova Anotação</span>
               <button
                 onClick={() => {
@@ -139,8 +139,8 @@ export function CaseNotesDrawer({ open, onClose, caseId }: CaseNotesDrawerProps)
               </button>
             </div>
 
-            <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
-              <p className="font-sans text-[11px] font-medium text-amber-800 flex items-start gap-1.5">
+            <div className="p-3 bg-[var(--color-primary-tint)] border border-[#F0B09A] rounded-lg">
+              <p className="font-sans text-[11px] font-medium text-[#A03A15] flex align-items-start gap-1.5">
                 <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
                 As anotações são <strong>imutáveis</strong>. Uma vez salvas, não podem ser editadas ou excluídas.
               </p>
@@ -158,7 +158,7 @@ export function CaseNotesDrawer({ open, onClose, caseId }: CaseNotesDrawerProps)
                 <select
                   value={type}
                   onChange={(e) => setType(e.target.value)}
-                  className="w-full px-3 py-1.5 font-sans text-sm rounded-md bg-white text-slate-900 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-600 focus:border-transparent"
+                  className="w-full px-3 py-1.5 font-sans text-sm rounded-md neo-input-neo"
                 >
                   {NOTE_TYPES.map((t) => (
                     <option key={t.value} value={t.value}>
@@ -172,7 +172,7 @@ export function CaseNotesDrawer({ open, onClose, caseId }: CaseNotesDrawerProps)
                 <textarea
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
-                  className="w-full px-3 py-2 font-sans text-sm rounded-md bg-white text-slate-900 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-600 focus:border-transparent min-h-[100px] resize-none"
+                  className="w-full px-3 py-2 font-sans text-sm rounded-md neo-input-neo min-h-[100px] resize-none"
                   placeholder="Descreva o contato, documento ou informação relevante..."
                 />
               </div>
@@ -199,17 +199,17 @@ export function CaseNotesDrawer({ open, onClose, caseId }: CaseNotesDrawerProps)
         {loading ? (
           <div className="space-y-3">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="bg-white border border-slate-200 rounded-xl p-4 animate-pulse">
-                <div className="flex items-center gap-2 mb-2">
+              <div key={i} className="bg-[var(--color-card-bg)] border border-[var(--color-border)] rounded-xl p-4 animate-pulse">
+                <div className="flex align-items-center gap-2 mb-2">
                   <div className="h-4 w-4 bg-slate-100 rounded-full" />
                   <div className="h-3 w-16 bg-slate-100 rounded" />
                 </div>
-                <div className="h-8 bg-slate-50 rounded" />
+                <div className="h-8 bg-[var(--color-surface)] rounded" />
               </div>
             ))}
           </div>
         ) : notes.length === 0 ? (
-          <div className="text-center py-12 border border-dashed border-slate-200 bg-slate-50/50 rounded-xl">
+          <div className="text-center py-12 border border-dashed border-[var(--color-border)] bg-transparent rounded-xl">
             <History className="w-10 h-10 text-slate-300 mx-auto mb-3" />
             <h3 className="font-serif font-bold text-sm text-slate-900 mb-1">Sem registros no prontuário</h3>
             <p className="font-sans text-xs text-slate-500 max-w-[240px] mx-auto mb-4">
@@ -223,10 +223,10 @@ export function CaseNotesDrawer({ open, onClose, caseId }: CaseNotesDrawerProps)
               const Icon = noteType?.icon ?? FileText
               const variant = NOTE_TYPE_VARIANTS[note.type] ?? 'slate'
               return (
-                <Card key={note.id} variant="light" className="p-0 overflow-hidden border-slate-200/80 shadow-xs">
-                  <div className="px-4 py-2.5 bg-slate-50/80 border-b border-slate-100 flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-2">
-                      <div className="w-6 h-6 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-500">
+                <Card key={note.id} variant="light" className="p-0 overflow-hidden border-[var(--color-border)]/80 shadow-xs">
+                  <div className="px-4 py-2.5 bg-[var(--color-surface)]/80 border-b border-[var(--color-border)] flex align-items-center justify-content-between gap-2">
+                    <div className="flex align-items-center gap-2">
+                      <div className="w-6 h-6 rounded-full bg-white border border-[var(--color-border)] flex align-items-center justify-content-center text-slate-500">
                         <Icon className="w-3 h-3" />
                       </div>
                       <Badge variant={variant} className="text-[10px] px-1.5 py-0">

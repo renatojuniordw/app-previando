@@ -21,11 +21,11 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   return (
     <div className="flex min-h-screen bg-slate-50 font-sans text-slate-900">
-      <aside className="w-64 shrink-0 h-screen sticky top-0 bg-slate-900 border-r border-slate-800 flex flex-col z-20">
-        <div className="h-16 flex items-center px-6 border-b border-slate-800">
-          <div className="flex flex-col">
+      <aside className="w-64 shrink-0 h-screen sticky top-0 bg-slate-900 border-r border-slate-800 flex flex-column z-20">
+        <div className="h-16 flex align-items-center px-6 border-b border-slate-800">
+          <div className="flex flex-column">
             <span className="font-serif font-bold text-2xl text-white tracking-tight leading-none">
-              PREVI<span className="text-amber-500">ANDO</span>
+              PREVI<span className="text-[var(--color-primary)]">ANDO</span>
             </span>
             <span className="font-sans text-[10px] uppercase tracking-widest text-slate-400 mt-1 font-semibold">Admin Panel</span>
           </div>
@@ -39,7 +39,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
               <Link
                 key={item.href}
                 href={item.href}
-                className="flex items-center gap-3 px-3 py-2.5 font-sans font-medium text-sm text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors"
+                className="flex align-items-center gap-3 px-3 py-2.5 font-sans font-medium text-sm text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors"
               >
                 <Icon className="w-5 h-5 opacity-70" />
                 {item.label}
@@ -51,7 +51,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         <div className="p-4 border-t border-slate-800">
           <Link
             href="/dashboard"
-            className="w-full flex items-center gap-3 px-3 py-2.5 font-sans font-medium text-sm text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors"
+            className="w-full flex align-items-center gap-3 px-3 py-2.5 font-sans font-medium text-sm text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors"
           >
             <ArrowLeft className="w-5 h-5 opacity-70" />
             Voltar ao App
@@ -59,14 +59,14 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         </div>
       </aside>
       
-      <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
-        <header className="h-16 border-b border-slate-200 bg-white flex items-center justify-between px-8 shrink-0">
+      <div className="flex flex-column flex-1 min-w-0 overflow-hidden">
+        <header className="h-16 border-b border-slate-200 bg-white flex align-items-center justify-content-between px-8 shrink-0">
           <h2 className="font-serif font-bold text-xl text-slate-900">Administração</h2>
-          <div className="flex items-center gap-3">
-            <div className="flex flex-col items-end">
+          <div className="flex align-items-center gap-3">
+            <div className="flex flex-column align-items-end">
               <span className="font-sans font-semibold text-sm text-slate-900 leading-none">Super Admin</span>
             </div>
-            <div className="w-9 h-9 rounded-full bg-slate-900 flex items-center justify-center text-white font-serif font-bold text-sm">
+            <div className="w-9 h-9 rounded-full bg-slate-900 flex align-items-center justify-content-center text-white font-serif font-bold text-sm">
               AD
             </div>
           </div>

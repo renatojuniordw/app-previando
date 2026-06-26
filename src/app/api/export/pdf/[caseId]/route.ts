@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/auth'
-import prisma from '@/lib/prisma'
+import { prisma } from '@/lib/prisma'
 import { guardFeature } from '@/lib/plan-guard'
 import { generateCasePDF } from '@/lib/pdf-generator'
 import { logAudit } from '@/lib/audit'
@@ -19,15 +19,21 @@ export async function GET(
   const { caseId } = await params
 
   // Buscar dados do caso
-  const caso = await prisma.caso.findFirst({
+  const caso = await prisma.case.findFirst({
     where: {
       id: caseId,
       userId: session.user.id,
     },
     include: {
       client: true,
-      selectedCalculation: true,
-      opinion: true,
+      calculations: {
+        where: { isSelected: true },
+        take: 1
+      },
+      opinions: {
+        orderBy: { createdAt: 'desc' },
+        take: 1
+      },
     },
   })
 
@@ -50,26 +56,29 @@ export async function GET(
     metadata: { watermark },
   })
 
+  const selectedCalculation = caso.calculations[0]
+  const opinion = caso.opinions[0]
+
   // Gerar PDF binário
   const pdfBuffer = await generateCasePDF({
-    clientName: caso.client?.nome || '',
-    clientCpf: caso.client?.cpf || '',
-    clientBirthDate: caso.client?.dataNascimento || '',
-    clientDeathDate: caso.client?.dataObito || '',
-    clientMaritalStatus: caso.client?.estadoCivil || '',
-    clientSurvivors: caso.client?.dependentes || '',
-    selectedCalculation: caso.selectedCalculation ? {
-      type: caso.selectedCalculation.tipo || '',
-      value: caso.selectedCalculation.valor || '',
-      details: caso.selectedCalculation.detalhes || {},
+    clientName: caso.client?.name || '',
+    clientCpf: caso.client?.cpfHash || '',
+    clientBirthDate: caso.client?.birthDate ? caso.client.birthDate.toISOString().split('T')[0] : '',
+    clientDeathDate: '',
+    clientMaritalStatus: '',
+    clientSurvivors: '',
+    selectedCalculation: selectedCalculation ? {
+      type: selectedCalculation.modality || '',
+      value: selectedCalculation.rmi?.toString() || '',
+      details: (selectedCalculation.inputParams as any) || {},
     } : undefined,
-    opinion: caso.opinion?.texto,
+    opinion: opinion?.customizedContent || opinion?.generatedContent || '',
     caseStatus: caso.status,
     createdAt: caso.createdAt?.toISOString().split('T')[0],
     watermark,
   })
 
-  return new NextResponse(pdfBuffer, {
+  return new NextResponse(pdfBuffer as any, {
     headers: {
       'Content-Type': 'application/pdf',
       'Content-Disposition': `attachment; filename="previando-caso-${caseId}.pdf"`,

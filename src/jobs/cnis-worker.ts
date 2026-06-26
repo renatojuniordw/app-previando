@@ -187,7 +187,7 @@ export function createCnisWorker(redis: Redis): Worker {
       }
     },
     {
-      connection: redis,
+      connection: redis as any,
       concurrency: 2,
       limiter: { max: 5, duration: 60_000 },
       // attempt: 2, // Note: BullMQ v4 uses 'attempts' instead

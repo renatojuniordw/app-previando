@@ -262,8 +262,8 @@ export default function CalculatorPage() {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center py-20">
-        <Loader2 className="w-8 h-8 text-amber-500 animate-spin" />
+      <div className="flex flex-column align-items-center justify-content-center py-20">
+        <Loader2 className="w-8 h-8 text-[var(--color-primary)] animate-spin" />
         <p className="font-sans font-medium text-slate-500 mt-4">Carregando painel de cálculos...</p>
       </div>
     )
@@ -271,7 +271,7 @@ export default function CalculatorPage() {
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
-      <div className="flex items-center justify-between">
+      <div className="flex align-items-center justify-content-between">
         <div>
           <h2 className="font-serif font-bold text-2xl text-slate-900 tracking-tight">Painel de Cálculos</h2>
           <p className="font-sans text-sm text-slate-500 mt-1">Realize cálculos de benefícios com base no CNIS.</p>
@@ -284,7 +284,7 @@ export default function CalculatorPage() {
             }
             setShowModal(true)
           }}
-          className="bg-amber-600 hover:bg-amber-700 text-white flex items-center gap-2 shadow-sm font-semibold"
+          className="bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] text-white flex align-items-center gap-2 shadow-sm font-semibold"
         >
           <Scale className="w-4 h-4" />
           Novo Cálculo
@@ -292,8 +292,8 @@ export default function CalculatorPage() {
       </div>
 
       {calculations.length === 0 ? (
-        <div className="py-20 flex flex-col items-center justify-center border border-dashed border-slate-300 bg-slate-50 rounded-2xl text-center">
-          <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center mb-4 border border-slate-200 shadow-sm">
+        <div className="py-20 flex flex-column align-items-center justify-content-center border border-dashed border-slate-300 bg-slate-50 rounded-2xl text-center">
+          <div className="w-16 h-16 rounded-full bg-white flex align-items-center justify-content-center mb-4 border border-slate-200 shadow-sm">
             <Scale className="w-8 h-8 text-slate-400" />
           </div>
           <h3 className="font-serif font-bold text-lg text-slate-900 mb-2">Nenhum Cálculo Realizado</h3>
@@ -308,7 +308,7 @@ export default function CalculatorPage() {
               }
               setShowModal(true)
             }}
-            className="bg-amber-600 hover:bg-amber-700 text-white flex items-center gap-2 shadow-sm"
+            className="bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] text-white flex align-items-center gap-2 shadow-sm"
           >
             <Scale className="w-4 h-4" />
             Iniciar Primeiro Cálculo
@@ -325,39 +325,39 @@ export default function CalculatorPage() {
               <div
                 key={calc.id}
                 className={`border rounded-xl shadow-sm overflow-hidden transition-all bg-white ${
-                  calc.isSelected ? 'border-amber-500 ring-1 ring-amber-500/30' : 'border-slate-200'
+                  calc.isSelected ? 'border-[var(--color-primary)] ring-1 ring-[var(--color-primary)]/30' : 'border-slate-200'
                 }`}
               >
                 {/* Cabeçalho do Card */}
-                <div className="px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-50/50">
+                <div className="px-6 py-4 flex flex-column sm:flex-row sm:align-items-center justify-content-between gap-4 bg-slate-50/50">
                   <div className="space-y-1">
-                    <div className="flex items-center gap-2">
+                    <div className="flex align-items-center gap-2">
                       <span className="font-sans font-bold text-slate-800 text-base sm:text-lg">
                         {getModalityLabel(calc.modality)}
                       </span>
                       {calc.isSelected && (
-                        <span className="bg-amber-50 text-amber-700 border border-amber-200 text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full shrink-0">
+                        <span className="bg-[var(--color-primary-tint)] text-[var(--color-primary-dark)] border border-[#F0B09A] text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full shrink-0">
                           Selecionado p/ Relatório
                         </span>
                       )}
                     </div>
-                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500 font-medium">
-                      <span className="flex items-center gap-1">
+                    <div className="flex flex-wrap align-items-center gap-x-3 gap-y-1 text-xs text-slate-500 font-medium">
+                      <span className="flex align-items-center gap-1">
                         <Calendar className="w-3.5 h-3.5 text-slate-400" />
                         DIB: {formatDate(calc.expectedDib || calc.createdAt)}
                       </span>
-                      <span className="flex items-center gap-1">
+                      <span className="flex align-items-center gap-1">
                         <User className="w-3.5 h-3.5 text-slate-400" />
                         Gênero: {parsedInput?.gender === 'M' ? 'Masculino' : 'Feminino'}
                       </span>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2 shrink-0">
+                  <div className="flex align-items-center gap-2 shrink-0">
                     <button
                       type="button"
                       onClick={() => setExpandedCalc(isExpanded ? null : calc.id)}
-                      className="font-sans font-semibold text-xs text-slate-600 bg-white border border-slate-200 px-3 py-2 rounded-lg hover:bg-slate-50 transition-colors flex items-center gap-1.5"
+                      className="font-sans font-semibold text-xs text-slate-600 bg-white border border-slate-200 px-3 py-2 rounded-lg hover:bg-slate-50 transition-colors neo-btn flex align-items-center gap-1.5"
                     >
                       {isExpanded ? (
                         <>
@@ -375,7 +375,7 @@ export default function CalculatorPage() {
                     {!calc.isSelected && (
                       <button
                         onClick={() => handleSelect(calc.id)}
-                        className="font-sans font-semibold text-xs text-amber-700 bg-amber-50 border border-amber-200 px-3 py-2 rounded-lg hover:bg-amber-100 transition-colors"
+                        className="font-sans font-semibold text-xs text-[var(--color-primary-dark)] bg-[var(--color-primary-tint)] border border-[#F0B09A] px-3 py-2 rounded-lg hover:bg-[#F5D0C3] transition-colors neo-btn"
                         aria-label="Selecionar este cálculo como referência"
                       >
                         Selecionar
@@ -384,7 +384,7 @@ export default function CalculatorPage() {
 
                     <button
                       onClick={() => handleDelete(calc.id)}
-                      className="p-2 border border-red-200 text-red-600 rounded-lg hover:bg-red-50 hover:text-red-700 transition-colors"
+                      className="p-2 border border-red-200 text-red-600 rounded-lg hover:bg-red-50 hover:text-red-700 transition-colors neo-btn"
                       aria-label="Excluir este cálculo"
                     >
                       <Trash2 className="w-4 h-4" aria-hidden="true" />
@@ -394,7 +394,7 @@ export default function CalculatorPage() {
 
                 {/* Exibição Visual dos Ganhos Principais */}
                 <div className="p-4 sm:p-6 grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 border-t border-slate-100">
-                  <div className="bg-slate-50 border border-slate-100 rounded-xl p-4 flex flex-col justify-between">
+                  <div className="bg-slate-50 border border-slate-100 rounded-xl p-4 flex flex-column justify-content-between">
                     <span className="font-sans text-[10px] uppercase font-bold tracking-wider text-slate-400 block mb-1">
                       RMI (Inicial)
                     </span>
@@ -403,7 +403,7 @@ export default function CalculatorPage() {
                     </span>
                   </div>
 
-                  <div className="bg-slate-50 border border-slate-100 rounded-xl p-4 flex flex-col justify-between">
+                  <div className="bg-slate-50 border border-slate-100 rounded-xl p-4 flex flex-column justify-content-between">
                     <span className="font-sans text-[10px] uppercase font-bold tracking-wider text-slate-400 block mb-1">
                       Salário de Benefício (Média)
                     </span>
@@ -412,18 +412,18 @@ export default function CalculatorPage() {
                     </span>
                   </div>
 
-                  <div className="bg-slate-50 border border-slate-100 rounded-xl p-4 flex flex-col justify-between">
+                  <div className="bg-slate-50 border border-slate-100 rounded-xl p-4 flex flex-column justify-content-between">
                     <span className="font-sans text-[10px] uppercase font-bold tracking-wider text-slate-400 block mb-1">
                       Elegibilidade Previdenciária
                     </span>
-                    <div className="flex items-center gap-2 mt-1">
+                    <div className="flex align-items-center gap-2 mt-1">
                       {isCalcElegivel ? (
-                        <div className="bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5">
+                        <div className="bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-bold px-3 py-1.5 rounded-lg flex align-items-center gap-1.5">
                           <ShieldCheck className="w-4 h-4" />
                           Elegível
                         </div>
                       ) : (
-                        <div className="bg-rose-50 text-rose-700 border border-rose-200 text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5">
+                        <div className="bg-rose-50 text-rose-700 border border-rose-200 text-xs font-bold px-3 py-1.5 rounded-lg flex align-items-center gap-1.5">
                           <ShieldAlert className="w-4 h-4" />
                           Requisitos Pendentes
                         </div>
@@ -438,7 +438,7 @@ export default function CalculatorPage() {
                     {/* Exibição de Pendências */}
                     {!isCalcElegivel && calc.pendingIssues && calc.pendingIssues.length > 0 && (
                       <div className="border border-rose-200 bg-rose-50/50 rounded-xl p-5 space-y-2">
-                        <span className="font-sans text-xs uppercase font-bold tracking-wider text-rose-700 flex items-center gap-1.5">
+                        <span className="font-sans text-xs uppercase font-bold tracking-wider text-rose-700 flex align-items-center gap-1.5">
                           <ShieldAlert className="w-4.5 h-4.5" />
                           O que falta para conceder o benefício?
                         </span>
@@ -481,19 +481,19 @@ export default function CalculatorPage() {
                     {/* Memória de Cálculo Expansível */}
                     {calc.calculationMemory && (
                       <div className="space-y-3">
-                        <span className="font-sans text-xs uppercase font-bold tracking-wider text-slate-500 flex items-center gap-1.5">
+                        <span className="font-sans text-xs uppercase font-bold tracking-wider text-slate-500 flex align-items-center gap-1.5">
                           <FileSpreadsheet className="w-4 h-4 text-slate-400" />
                           Memória de Cálculo (Detalhamento da Média)
                         </span>
 
-                        <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
-                          <div className="px-4 py-3 border-b border-slate-200 bg-slate-50 flex items-center justify-between text-xs font-bold text-slate-500">
+                        <div className="bg-white border border-slate-200 rounded-xl overflow-hidden neo-card-flat">
+                          <div className="px-4 py-3 border-b border-slate-200 bg-slate-50 flex align-items-center justify-content-between text-xs font-bold text-slate-500">
                             <span>FÓRMULA PREVIDENCIÁRIA</span>
                             <span>MÉDIA POŚ-1994 (100% DAS CONTRIBUIÇÕES)</span>
                           </div>
                           
                           <div className="p-4 space-y-4">
-                            <div className="flex flex-col sm:flex-row justify-between gap-4 font-sans text-sm pb-4 border-b border-slate-100">
+                            <div className="flex flex-column sm:flex-row justify-content-between gap-4 font-sans text-sm pb-4 border-b border-slate-100">
                               <div>
                                 <p className="text-slate-500">Contribuições computadas:</p>
                                 <p className="font-bold text-slate-800">{calc.calculationMemory.contribuicoesConsideradas ?? 'N/A'} competências</p>
@@ -521,7 +521,7 @@ export default function CalculatorPage() {
                                     const parts = sal.competencia.split('-')
                                     const compFormat = parts.length === 2 ? `${parts[1]}/${parts[0]}` : sal.competencia
                                     return (
-                                      <div key={sIdx} className="bg-slate-50 border border-slate-200 rounded-lg p-2.5 flex flex-col justify-between">
+                                      <div key={sIdx} className="bg-slate-50 border border-slate-200 rounded-lg p-2.5 flex flex-column justify-content-between">
                                         <span className="font-sans text-[10px] text-slate-400 font-bold">{compFormat}</span>
                                         <span className="font-sans font-bold text-slate-800 text-xs mt-0.5">{formatCurrency(sal.valorAjustado)}</span>
                                       </div>
@@ -547,7 +547,7 @@ export default function CalculatorPage() {
       <Modal open={showModal} onClose={() => setShowModal(false)} title="CONFIGURAR NOVO CÁLCULO" size="lg">
         <div className="space-y-5">
           {errorMessage && (
-            <div className="border border-red-200 bg-red-50 rounded-xl p-4 flex items-start gap-3">
+            <div className="border border-red-200 bg-red-50 rounded-xl p-4 flex align-items-start gap-3">
               <ShieldAlert className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
               <p className="font-sans text-sm font-medium text-red-700">{errorMessage}</p>
             </div>
@@ -561,7 +561,7 @@ export default function CalculatorPage() {
               <select
                 value={gender}
                 onChange={(e) => setGender(e.target.value as 'M' | 'F')}
-                className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm font-sans focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 outline-none"
+                className="w-full bg-white rounded-md px-3 py-2 text-sm font-sans focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)]/30 neo-input-neo outline-none"
               >
                 <option value="F">Feminino (Regra Geral 62 Anos / 15 TC)</option>
                 <option value="M">Masculino (Regra Geral 65 Anos / 20 TC)</option>
@@ -574,7 +574,7 @@ export default function CalculatorPage() {
                 type="date"
                 value={dib}
                 onChange={(e) => setDib(e.target.value)}
-                className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm font-sans focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 outline-none"
+                className="w-full bg-white rounded-md px-3 py-2 text-sm font-sans focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)]/30 neo-input-neo outline-none"
               />
             </div>
 
@@ -583,7 +583,7 @@ export default function CalculatorPage() {
               <select
                 value={modalidade}
                 onChange={(e) => setModalidade(e.target.value)}
-                className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm font-sans focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 outline-none"
+                className="w-full bg-white rounded-md px-3 py-2 text-sm font-sans focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)]/30 neo-input-neo outline-none"
               >
                 {uniqueModalidades.map((item) => (
                   <option key={item.codigo} value={item.codigo}>{item.label}</option>
@@ -601,7 +601,7 @@ export default function CalculatorPage() {
                   max="40"
                   value={tempoEspecialAnos}
                   onChange={(e) => setTempoEspecialAnos(Number(e.target.value))}
-                  className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm font-sans focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 outline-none"
+                  className="w-full bg-white rounded-md px-3 py-2 text-sm font-sans focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)]/30 neo-input-neo outline-none"
                   placeholder="Ex: 5"
                 />
                 <span className="font-sans text-[10px] text-slate-400 mt-1 block">Será adicionado o multiplicador de atividade insalubre correspondente ao gênero.</span>
@@ -617,7 +617,7 @@ export default function CalculatorPage() {
                   max="10"
                   value={dependentesPensao}
                   onChange={(e) => setDependentesPensao(Number(e.target.value))}
-                  className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm font-sans focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 outline-none"
+                  className="w-full bg-white rounded-md px-3 py-2 text-sm font-sans focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)]/30 neo-input-neo outline-none"
                 />
                 <span className="font-sans text-[10px] text-slate-400 mt-1 block">A cota é acrescida de 10% por dependente (partindo de 50% base até 100%).</span>
               </div>
@@ -628,7 +628,7 @@ export default function CalculatorPage() {
             <Button
               onClick={handleCreate}
               loading={creating}
-              className="flex-1 bg-amber-600 hover:bg-amber-700 text-white font-semibold"
+              className="flex-1 bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] text-white font-semibold"
             >
               Calcular Benefício
             </Button>

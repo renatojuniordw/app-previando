@@ -7,7 +7,7 @@ import { redis } from '@/lib/redis'
 import { handleApiError } from '@/lib/api-error'
 import { logAudit } from '@/lib/audit'
 
-const cnisQueue = new Queue('cnis-processing', { connection: redis })
+const cnisQueue = new Queue('cnis-processing', { connection: redis as any })
 
 export async function POST(req: NextRequest, { params }: { params: { caseId: string } }) {
   try {

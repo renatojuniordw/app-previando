@@ -58,7 +58,7 @@ export function createDeadlineWorker(redis: Redis): Worker {
 
       logger.info('Deadline notification job completed')
     },
-    { connection: redis, concurrency: 1 }
+    { connection: redis as any, concurrency: 1 }
   )
 
   worker.on('failed', (job, err) => {
@@ -69,7 +69,7 @@ export function createDeadlineWorker(redis: Redis): Worker {
 }
 
 export async function scheduleDeadlineJob(redis: Redis): Promise<void> {
-  const deadlineQueue = new Queue('deadline-notifications', { connection: redis })
+  const deadlineQueue = new Queue('deadline-notifications', { connection: redis as any })
 
   const repeatableJobs = await deadlineQueue.getRepeatableJobs()
   const alreadyScheduled = repeatableJobs.some((j) => j.name === 'daily-deadline-check')

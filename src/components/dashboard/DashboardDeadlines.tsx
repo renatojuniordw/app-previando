@@ -18,8 +18,8 @@ export const DashboardDeadlines = memo(function DashboardDeadlines({ deadlines }
 
   return (
     <Card variant="light" className="p-0 overflow-hidden">
-      <div className="p-4 border-b border-slate-100 flex items-center gap-2">
-        <Clock className="w-4 h-4 text-amber-500" />
+      <div className="p-4 border-b border-[var(--color-border)] flex align-items-center gap-2">
+        <Clock className="w-4 h-4 text-[var(--color-primary)]" />
         <h3 className="font-serif font-bold text-base text-slate-900">Prazos Próximos</h3>
       </div>
       <div className="divide-y divide-slate-50">
@@ -29,14 +29,14 @@ export const DashboardDeadlines = memo(function DashboardDeadlines({ deadlines }
             <Link
               key={d.id}
               href={`/cases/${d.id}`}
-              className="flex items-center gap-3 px-4 py-3 hover:bg-slate-50 transition-colors"
+              className="flex align-items-center gap-3 px-4 py-3 hover:bg-[var(--color-surface)] transition-colors"
             >
               <div
-                className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
+                className={`w-8 h-8 rounded-full flex align-items-center justify-content-center text-xs font-bold shrink-0 ${
                   days <= 1
                     ? 'bg-red-100 text-red-600'
                     : days <= 3
-                      ? 'bg-amber-100 text-amber-700'
+                      ? 'bg-[#F5D0C3] text-[var(--color-primary-dark)]'
                       : 'bg-slate-100 text-slate-600'
                 }`}
               >

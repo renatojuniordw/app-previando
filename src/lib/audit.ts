@@ -28,7 +28,7 @@ let auditQueue: Queue | null = null
 
 function getAuditQueue(): Queue {
   if (!auditQueue) {
-    auditQueue = new Queue('audit-log', { connection: redis })
+    auditQueue = new Queue('audit-log', { connection: redis as any })
   }
   return auditQueue
 }

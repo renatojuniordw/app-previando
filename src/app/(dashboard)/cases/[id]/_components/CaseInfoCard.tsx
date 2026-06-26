@@ -25,7 +25,7 @@ export function CaseInfoCard({ caseData, onStatusChangeClick, onExportPDF, onEdi
       <CardHeader
         title="Informações do Caso"
         action={
-          <div className="flex items-center gap-2">
+          <div className="flex align-items-center gap-2">
             <ActionsDropdown 
               actions={[
                 { label: 'Alterar Status', icon: <RefreshCw className="w-4 h-4" />, onClick: onStatusChangeClick },
@@ -68,19 +68,19 @@ export function CaseInfoCard({ caseData, onStatusChangeClick, onExportPDF, onEdi
               caseData.cnisDocument.processingStatus === 'COMPLETED' ? (
                 <Link 
                   href={`/cases/${caseData.id}/cnis`}
-                  className="font-sans font-semibold text-amber-600 hover:text-amber-700 flex items-center gap-1 group"
+                  className="font-sans font-semibold text-[var(--color-primary)] hover:text-[var(--color-primary-dark)] flex align-items-center gap-1 group"
                 >
                   Ver Extrato <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
                 </Link>
               ) : (
-                <span className="font-sans font-semibold text-slate-500 flex items-center gap-2">
+                <span className="font-sans font-semibold text-slate-500 flex align-items-center gap-2">
                   <RefreshCw className="w-3 h-3 animate-spin" /> {caseData.cnisDocument.processingStatus}
                 </span>
               )
             ) : (
               <Link 
                 href={`/cases/${caseData.id}/cnis`}
-                className="font-sans font-semibold text-slate-500 hover:text-slate-700 flex items-center gap-1"
+                className="font-sans font-semibold text-slate-500 hover:text-slate-700 flex align-items-center gap-1"
               >
                 Fazer Upload
               </Link>
@@ -89,10 +89,10 @@ export function CaseInfoCard({ caseData, onStatusChangeClick, onExportPDF, onEdi
         </div>
       </div>
       {caseData.notes && (
-        <div className="mx-6 mb-6 p-4 bg-amber-50 border border-amber-100 rounded-lg relative group">
-          <p className="font-sans text-sm text-amber-800 whitespace-pre-wrap">{caseData.notes}</p>
+        <div className="mx-6 mb-6 p-4 bg-[var(--color-primary-tint)] border border-[#F5D0C3] rounded-lg relative group">
+          <p className="font-sans text-sm text-[#A03A15] whitespace-pre-wrap">{caseData.notes}</p>
           <button 
-            className="absolute top-2 right-2 p-1.5 bg-white/50 hover:bg-white rounded text-amber-700 opacity-0 group-hover:opacity-100 transition-opacity"
+            className="absolute top-2 right-2 p-1.5 bg-white/50 hover:bg-white rounded text-[var(--color-primary-dark)] opacity-0 group-hover:opacity-100 transition-opacity"
             onClick={() => onEditClick?.()}
             title="Editar notas"
           >
@@ -107,7 +107,7 @@ export function CaseInfoCard({ caseData, onStatusChangeClick, onExportPDF, onEdi
 function InfoField({ label, icon, children }: { label: string; icon?: React.ReactNode; children: React.ReactNode }) {
   return (
     <div>
-      <div className="flex items-center gap-1.5 mb-1.5 text-slate-400">
+      <div className="flex align-items-center gap-1.5 mb-1.5 text-slate-400">
         {icon}
         <span className="font-sans text-[10px] uppercase font-bold tracking-wider">
           {label}

@@ -62,26 +62,32 @@ export function Sidebar() {
 
       <aside
         className={cn(
-          'shrink-0 h-screen sticky top-0 bg-white border-r border-slate-200 z-20 transition-all duration-300 overflow-hidden',
+          'shrink-0 h-screen sticky top-0 z-20 transition-all duration-300 overflow-hidden',
           'fixed inset-y-0 left-0 z-40 transform lg:static lg:translate-x-0',
           isOpen ? 'translate-x-0' : '-translate-x-full',
-          isDesktopOpen ? 'lg:w-64' : 'lg:w-0 lg:border-none'
+          isDesktopOpen ? 'lg:w-[190px]' : 'lg:w-0'
         )}
+        style={{
+          background: 'var(--color-sidebar-bg)',
+        }}
         role="navigation"
         aria-label="Navegação principal"
       >
-        <div className="w-64 h-full flex flex-col">
+        <div className="w-[190px] h-full flex flex-column">
         {/* Logo + Close button */}
-        <div className="h-16 flex items-center justify-between px-6 border-b border-slate-200">
-          <Link href="/dashboard" className="flex flex-col">
-            <span className="font-serif font-bold text-2xl text-slate-900 tracking-tight leading-none">
-              PREVI<span className="text-amber-600">ANDO</span>
+        <div className="h-16 flex align-items-center justify-content-between px-6" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+          <Link href="/dashboard" className="flex flex-column">
+            <span className="font-serif font-bold text-2xl tracking-tight leading-none" style={{ color: '#FFFFFF' }}>
+              PREVI<span style={{ color: 'var(--color-primary)' }}>ANDO</span>
             </span>
-            <span className="font-sans text-[10px] uppercase tracking-widest text-slate-400 mt-1 font-semibold">Previdência</span>
+            <span className="font-sans text-[10px] uppercase tracking-widest mt-1 font-semibold" style={{ color: 'var(--color-sidebar-text)' }}>
+              Previdência
+            </span>
           </Link>
           <button
             onClick={close}
-            className="lg:hidden w-8 h-8 flex items-center justify-center rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+            className="lg:hidden w-8 h-8 flex align-items-center justify-content-center rounded-lg transition-colors"
+            style={{ color: 'var(--color-sidebar-text)' }}
             aria-label="Fechar menu"
           >
             <X className="w-5 h-5" />
@@ -99,17 +105,17 @@ export function Sidebar() {
                     href={item.href}
                     aria-label={item.label}
                     aria-current={active ? 'page' : undefined}
-                    className={cn(
-                      'flex items-center gap-3 px-3 py-2.5 font-sans font-medium text-sm transition-all rounded-lg',
-                      active
-                        ? 'bg-amber-50 text-amber-700'
-                        : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-                    )}
+                    className="neo-nav-item"
+                    style={active ? {
+                      background: 'var(--color-sidebar-active)',
+                      color: 'var(--color-sidebar-text-active)',
+                      fontWeight: 500,
+                    } : {}}
                   >
-                    <Icon className={cn('w-5 h-5 shrink-0', active ? 'text-amber-600' : 'text-slate-400')} aria-hidden="true" />
+                    <Icon className="w-5 h-5 shrink-0" style={{ color: active ? 'var(--color-primary)' : 'var(--color-sidebar-text)' }} aria-hidden="true" />
                     <span className="flex-1">{item.label}</span>
                     {item.href === '/deadlines' && urgentDeadlines > 0 && (
-                      <span className="ml-auto min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-red-500 text-white text-[10px] font-bold px-1">
+                      <span className="ml-auto min-w-[18px] h-[18px] flex align-items-center justify-content-center rounded-full text-white text-[10px] font-bold px-1" style={{ background: '#DC2626' }}>
                         {urgentDeadlines > 9 ? '9+' : urgentDeadlines}
                       </span>
                     )}
@@ -122,11 +128,20 @@ export function Sidebar() {
 
         <div className="mt-auto">
           <UsageBar />
-          <div className="p-4 border-t border-slate-200">
+          <div className="p-4" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
             <button
               onClick={() => signOut({ callbackUrl: '/login' })}
-              className="w-full flex items-center justify-center gap-2 px-3 py-2.5 font-sans font-medium text-sm text-slate-500 hover:text-slate-900 hover:bg-slate-50 rounded-lg transition-all"
+              className="w-full flex align-items-center justify-content-center gap-2 px-3 py-2.5 font-sans font-medium text-sm rounded-lg transition-all"
+              style={{ color: 'var(--color-sidebar-text)' }}
               aria-label="Sair da conta"
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'var(--color-sidebar-active)'
+                e.currentTarget.style.color = 'var(--color-sidebar-text-active)'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'transparent'
+                e.currentTarget.style.color = 'var(--color-sidebar-text)'
+              }}
             >
               <LogOut className="w-4 h-4" aria-hidden="true" />
               <span>Sair da Conta</span>

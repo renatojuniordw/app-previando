@@ -14,7 +14,7 @@ export function ClientSwitcher() {
         className={cn(
           'px-6 py-2 text-sm font-medium rounded-md transition-all',
           pathname.startsWith('/clients/list')
-            ? 'bg-white text-slate-900 shadow-sm'
+            ? 'bg-white text-slate-900 neo-btn'
             : 'text-slate-500 hover:text-slate-700'
         )}
       >
@@ -25,7 +25,7 @@ export function ClientSwitcher() {
         className={cn(
           'px-6 py-2 text-sm font-medium rounded-md transition-all',
           pathname.startsWith('/clients/kanban')
-            ? 'bg-white text-slate-900 shadow-sm'
+            ? 'bg-white text-slate-900 neo-btn'
             : 'text-slate-500 hover:text-slate-700'
         )}
       >

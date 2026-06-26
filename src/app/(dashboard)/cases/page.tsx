@@ -159,28 +159,28 @@ export default function CasesPage() {
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6">
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+      <div className="flex flex-column md:flex-row align-items-start md:align-items-center justify-content-between gap-4">
         <div>
           <h1 className="font-serif font-bold text-3xl text-slate-900 tracking-tight">Todos os Casos</h1>
           <p className="font-sans text-sm text-slate-500 mt-1">{total} caso{total !== 1 ? 's' : ''} encontrado{total !== 1 ? 's' : ''}</p>
         </div>
-        <div className="flex items-center gap-3 w-full md:w-auto">
+        <div className="flex align-items-center gap-3 w-full md:w-auto">
           <div className="relative w-full md:w-64">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <input
               value={search}
               onChange={(e) => { setSearch(e.target.value); setPage(1) }}
               placeholder="Buscar por cliente..."
-              className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-sans focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all placeholder:text-slate-400 text-slate-900 shadow-sm"
+              className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-sans focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] transition-all placeholder:text-slate-400 text-slate-900 shadow-sm"
             />
           </div>
           <button
             onClick={() => setShowFilters(!showFilters)}
-            className={`flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg border transition-colors shrink-0 ${hasActiveFilters ? 'bg-amber-50 border-amber-300 text-amber-700' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'}`}
+            className={`flex align-items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg border transition-colors shrink-0 ${hasActiveFilters ? 'bg-[var(--color-primary-tint)] border-[#EB8B6A] text-[var(--color-primary-dark)]' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'}`}
           >
             <SlidersHorizontal className="w-4 h-4" />
             Filtros
-            {hasActiveFilters && <span className="w-2 h-2 rounded-full bg-amber-500" />}
+            {hasActiveFilters && <span className="w-2 h-2 rounded-full bg-[var(--color-primary)]" />}
           </button>
         </div>
       </div>
@@ -191,7 +191,7 @@ export default function CasesPage() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div>
               <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Status</label>
-              <select value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setPage(1) }} className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500">
+              <select value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setPage(1) }} className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)]">
                 <option value="">Todos</option>
                 {STATUS_OPTIONS.map((s) => (
                   <option key={s.value} value={s.value}>{s.label}</option>
@@ -200,7 +200,7 @@ export default function CasesPage() {
             </div>
             <div>
               <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Prioridade</label>
-              <select value={priority} onChange={(e) => { setPriority(e.target.value); setPage(1) }} className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500">
+              <select value={priority} onChange={(e) => { setPriority(e.target.value); setPage(1) }} className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)]">
                 <option value="">Todas</option>
                 <option value="CRITICAL">Crítico</option>
                 <option value="ATTENTION">Atenção</option>
@@ -209,7 +209,7 @@ export default function CasesPage() {
             </div>
             <div>
               <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Tipo de Benefício</label>
-              <select value={benefitType} onChange={(e) => { setBenefitType(e.target.value); setPage(1) }} className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500">
+              <select value={benefitType} onChange={(e) => { setBenefitType(e.target.value); setPage(1) }} className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)]">
                 <option value="">Todos</option>
                 {ALL_BENEFIT_TYPES.map((t) => (
                   <option key={t} value={t}>{BENEFIT_SHORT_LABELS[t]}</option>
@@ -218,23 +218,23 @@ export default function CasesPage() {
             </div>
             <div>
               <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">RMI mínima (R$)</label>
-              <input type="number" value={rmiMin} onChange={(e) => { setRmiMin(e.target.value); setPage(1) }} placeholder="0,00" className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500" />
+              <input type="number" value={rmiMin} onChange={(e) => { setRmiMin(e.target.value); setPage(1) }} placeholder="0,00" className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)]" />
             </div>
             <div>
               <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">RMI máxima (R$)</label>
-              <input type="number" value={rmiMax} onChange={(e) => { setRmiMax(e.target.value); setPage(1) }} placeholder="99999,00" className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500" />
+              <input type="number" value={rmiMax} onChange={(e) => { setRmiMax(e.target.value); setPage(1) }} placeholder="99999,00" className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)]" />
             </div>
             <div>
               <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Criado a partir de</label>
-              <input type="date" value={createdFrom} onChange={(e) => { setCreatedFrom(e.target.value); setPage(1) }} className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500" />
+              <input type="date" value={createdFrom} onChange={(e) => { setCreatedFrom(e.target.value); setPage(1) }} className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)]" />
             </div>
             <div>
               <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Criado até</label>
-              <input type="date" value={createdTo} onChange={(e) => { setCreatedTo(e.target.value); setPage(1) }} className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500" />
+              <input type="date" value={createdTo} onChange={(e) => { setCreatedTo(e.target.value); setPage(1) }} className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)]" />
             </div>
-            <div className="col-span-2 flex items-end">
+            <div className="col-span-2 flex align-items-end">
               {hasActiveFilters && (
-                <button onClick={clearFilters} className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-700 transition-colors">
+                <button onClick={clearFilters} className="flex align-items-center gap-1.5 text-sm text-slate-500 hover:text-slate-700 transition-colors">
                   <X className="w-4 h-4" />
                   Limpar filtros
                 </button>
@@ -247,8 +247,8 @@ export default function CasesPage() {
       {/* Tabela */}
       <Card variant="light" className="p-0 overflow-hidden">
         {loading ? (
-          <div className="py-16 flex items-center justify-center">
-            <div className="w-6 h-6 border-4 border-amber-500 border-t-transparent animate-spin rounded-full" />
+          <div className="py-16 flex align-items-center justify-content-center">
+            <div className="w-6 h-6 border-4 border-[var(--color-primary)] border-t-transparent animate-spin rounded-full" />
           </div>
         ) : cases.length === 0 ? (
           <div className="py-16 text-center">
@@ -274,10 +274,10 @@ export default function CasesPage() {
                       className={`px-5 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wider ${field ? 'cursor-pointer select-none hover:text-slate-700' : ''}`}
                       onClick={field ? () => handleSort(field) : undefined}
                     >
-                      <span className="inline-flex items-center gap-1">
+                      <span className="inline-flex align-items-center gap-1">
                         {label}
                         {field && sortField === field && (
-                          <span className="text-amber-500">{sortDir === 'asc' ? '↑' : '↓'}</span>
+                          <span className="text-[var(--color-primary)]">{sortDir === 'asc' ? '↑' : '↓'}</span>
                         )}
                         {field && sortField !== field && <span className="text-slate-300">↕</span>}
                       </span>
@@ -290,13 +290,13 @@ export default function CasesPage() {
                 {sortedCases.map((c) => (
                   <tr key={c.id} className="hover:bg-slate-50 transition-colors">
                     <td className="px-5 py-4">
-                      <Link href={`/cases/${c.id}`} className="font-semibold text-sm text-slate-900 hover:text-amber-600 transition-colors">
+                      <Link href={`/cases/${c.id}`} className="font-semibold text-sm text-slate-900 hover:text-[var(--color-primary)] transition-colors">
                         {c.client.name}
                       </Link>
                     </td>
                     <td className="px-5 py-4 text-sm text-slate-700">{BENEFIT_SHORT_LABELS[c.benefitType] ?? c.benefitType}</td>
                     <td className="px-5 py-4">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700">
+                      <span className="inline-flex align-items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700">
                         {STATUS_LABELS[c.status] ?? c.status}
                       </span>
                     </td>
@@ -347,7 +347,7 @@ export default function CasesPage() {
             <select
               value={statusTarget?.status ?? ''}
               onChange={(e) => setStatusTarget((prev) => prev ? { ...prev, status: e.target.value } : null)}
-              className="w-full px-3 py-2 font-sans text-sm rounded-md bg-white text-slate-900 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-600 focus:border-transparent"
+              className="w-full px-3 py-2 font-sans text-sm rounded-md bg-white text-slate-900 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-dark)] focus:border-transparent"
             >
               {STATUS_OPTIONS.map((s) => (
                 <option key={s.value} value={s.value}>{s.label}</option>
@@ -367,9 +367,9 @@ export default function CasesPage() {
 
       {/* Paginação */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-between">
+        <div className="flex align-items-center justify-content-between">
           <span className="text-sm text-slate-500">{total} casos no total</span>
-          <div className="flex items-center gap-2">
+          <div className="flex align-items-center gap-2">
             <button
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page === 1}

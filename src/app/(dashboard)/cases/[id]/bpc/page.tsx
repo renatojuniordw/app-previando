@@ -185,8 +185,8 @@ export default function BpcPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <span className="neo-spinner text-amber-600 mr-2" />
+      <div className="flex align-items-center justify-content-center py-12">
+        <span className="neo-spinner text-[var(--color-primary)] mr-2" />
         <span className="font-sans text-sm text-slate-500">Carregando...</span>
       </div>
     )
@@ -194,13 +194,13 @@ export default function BpcPage() {
 
   return (
     <div className="space-y-6 max-w-[1400px] mx-auto font-sans">
-      <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-200 pb-4 gap-4">
+      <div className="flex flex-column md:flex-row md:align-items-center justify-content-between border-b border-slate-200 pb-4 gap-4">
         <div>
           <h2 className="font-serif font-semibold text-2xl text-slate-900 tracking-tight">BPC/LOAS</h2>
           <p className="font-sans text-sm text-slate-500 mt-1">Análise técnica e documental com Inteligência Artificial</p>
         </div>
         
-        <div className="flex items-center gap-3 flex-wrap shrink-0">
+        <div className="flex align-items-center gap-3 flex-wrap shrink-0">
           {/* PDF consolidado — aparece quando há ao menos 1 análise concluída */}
           {completedCount > 0 && (
             <PDFDownloadLink
@@ -216,19 +216,19 @@ export default function BpcPage() {
                 />
               }
               fileName={`previando-bpc-completo-${caseId}.pdf`}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border border-slate-200 rounded-full bg-white text-slate-600 hover:bg-slate-50 transition-colors"
+              className="inline-flex align-items-center gap-1.5 px-3 py-1.5 text-xs font-medium border border-slate-200 rounded-full bg-white text-slate-600 hover:bg-slate-50 transition-colors"
             >
               📄 Relatório Completo
             </PDFDownloadLink>
           )}
 
           {bpcNotesCount > 0 && (
-            <div className="flex items-center gap-2 bg-slate-900 text-slate-200 px-3 py-1.5 rounded-full text-xs font-medium">
+            <div className="flex align-items-center gap-2 bg-slate-900 text-slate-200 px-3 py-1.5 rounded-full text-xs font-medium">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
               {bpcNotesCount} {bpcNotesCount === 1 ? 'registro no prontuário' : 'registros no prontuário'}
               <button
                 onClick={openNotes}
-                className="ml-2 pl-2 border-l border-slate-700 text-amber-400 hover:text-amber-300 transition-colors"
+                className="ml-2 pl-2 border-l border-slate-700 text-[var(--color-primary-hover)] hover:text-[#EB8B6A] transition-colors"
               >
                 Visualizar
               </button>
@@ -237,9 +237,9 @@ export default function BpcPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 align-items-start">
         {/* COLUNA ESQUERDA: DADOS (33%) */}
-        <div className="lg:col-span-4 flex flex-col gap-6">
+        <div className="lg:col-span-4 flex flex-column gap-6">
           <BpcForm
             caseId={caseId}
             analysis={analysis}
@@ -251,10 +251,10 @@ export default function BpcPage() {
 
         {/* COLUNA DIREITA: COMMAND CENTER IA (66%) */}
         <div className="lg:col-span-8">
-          <div className="bg-white rounded-2xl overflow-hidden flex flex-col h-full min-h-[650px] border border-slate-200 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
+          <div className="bg-white rounded-2xl overflow-hidden flex flex-column h-full min-h-[650px] border border-slate-200 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
             {/* Header IA Command Center */}
-            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
-              <div className="flex items-center gap-3">
+            <div className="px-6 py-4 border-b border-slate-100 flex align-items-center justify-content-between bg-slate-50/50">
+              <div className="flex align-items-center gap-3">
                 <div className="flex space-x-1.5">
                   <div className="w-2.5 h-2.5 rounded-full bg-slate-200" />
                   <div className="w-2.5 h-2.5 rounded-full bg-slate-200" />
@@ -264,9 +264,9 @@ export default function BpcPage() {
                   BPC Inteligência Artificial
                 </h3>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex align-items-center gap-3">
                 {analysis && (
-                  <div className="flex items-center gap-2">
+                  <div className="flex align-items-center gap-2">
                     <div className="flex gap-0.5">
                       {TABS.map((t) => {
                         const done = t.id === 'social' ? !!analysis?.relatoSocial : !!tabResults[t.id]
@@ -284,19 +284,19 @@ export default function BpcPage() {
                   </div>
                 )}
                 {generatingTab && (
-                  <div className="flex items-center gap-2">
-                    <span className="w-2 h-2 bg-amber-500 rounded-full animate-ping" />
-                    <span className="text-xs font-mono text-amber-500/80">PROCESSANDO</span>
+                  <div className="flex align-items-center gap-2">
+                    <span className="w-2 h-2 bg-[var(--color-primary)] rounded-full animate-ping" />
+                    <span className="text-xs font-mono text-[var(--color-primary)]/80">PROCESSANDO</span>
                   </div>
                 )}
               </div>
             </div>
 
             {/* Layout Interno do Command Center (Tabs na lateral vs Topo) */}
-            <div className="flex flex-col md:flex-row flex-1">
+            <div className="flex flex-column md:flex-row flex-1">
               {/* Tabs / Menu Esquerdo do Command Center */}
               <div className="w-full md:w-48 bg-slate-50/50 border-b md:border-b-0 md:border-r border-slate-100 p-3">
-                <div className="flex md:flex-col gap-1 overflow-x-auto no-scrollbar">
+                <div className="flex md:flex-column gap-1 overflow-x-auto no-scrollbar">
                   {TABS.map((tab) => {
                     const hasSaved = tab.id === 'social'
                       ? !!analysis?.relatoSocial
@@ -308,15 +308,15 @@ export default function BpcPage() {
                       <button
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id)}
-                        className={`flex items-center justify-between w-full px-3 py-2.5 rounded-md text-xs font-sans font-medium transition-all text-left whitespace-nowrap ${
+                        className={`flex align-items-center justify-content-between w-full px-3 py-2.5 rounded-md text-xs font-sans font-medium transition-all text-left whitespace-nowrap ${
                           isActive
-                            ? 'bg-amber-50 text-amber-700 shadow-sm border border-amber-100'
+                            ? 'bg-[var(--color-primary-tint)] text-[var(--color-primary-dark)] shadow-sm border border-[#F5D0C3]'
                             : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100/80 border border-transparent'
                         }`}
                       >
                         <span className="truncate">{tab.label}</span>
                         {isGenerating ? (
-                          <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse ml-2 shrink-0" />
+                          <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-primary)] animate-pulse ml-2 shrink-0" />
                         ) : hasSaved ? (
                           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 ml-2 shrink-0 opacity-80" />
                         ) : (
@@ -329,7 +329,7 @@ export default function BpcPage() {
               </div>
 
               {/* Área Principal de Conteúdo IA */}
-              <div className="flex-1 flex flex-col bg-white relative">
+              <div className="flex-1 flex flex-column bg-white relative">
                 {activeTab === 'social' ? (
                   <div className="p-0 h-full [&>div]:h-full [&>div]:bg-transparent [&>div]:border-none [&>div]:shadow-none">
                     <BpcSocialInterview
@@ -343,8 +343,8 @@ export default function BpcPage() {
                     />
                   </div>
                 ) : !analysis ? (
-                  <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
-                    <div className="w-16 h-16 rounded-2xl bg-slate-50 flex items-center justify-center mb-4 border border-slate-100">
+                  <div className="flex-1 flex flex-column align-items-center justify-content-center p-8 text-center">
+                    <div className="w-16 h-16 rounded-2xl bg-slate-50 flex align-items-center justify-content-center mb-4 border border-slate-100">
                       <svg className="w-7 h-7 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25z" />
                       </svg>
@@ -355,10 +355,10 @@ export default function BpcPage() {
                     </p>
                   </div>
                 ) : generatingTab === activeTab ? (
-                  <div className="flex-1 flex flex-col p-8">
-                    <div className="flex items-center gap-3 mb-8">
-                      <span className="w-4 h-4 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
-                      <span className="text-sm font-mono text-amber-500">GERANDO ANÁLISE...</span>
+                  <div className="flex-1 flex flex-column p-8">
+                    <div className="flex align-items-center gap-3 mb-8">
+                      <span className="w-4 h-4 border-2 border-[var(--color-primary)] border-t-transparent rounded-full animate-spin" />
+                      <span className="text-sm font-mono text-[var(--color-primary)]">GERANDO ANÁLISE...</span>
                     </div>
                     <div className="space-y-4 max-w-2xl">
                       <div className="h-4 bg-slate-100 rounded w-3/4 animate-pulse" />
@@ -382,26 +382,26 @@ export default function BpcPage() {
                     />
                   </div>
                 ) : activeTab === 'laudo' ? (
-                  <div className="flex-1 flex flex-col p-6">
+                  <div className="flex-1 flex flex-column p-6">
                     <div className="mb-6">
                       <h4 className="font-sans font-semibold text-slate-800 mb-1">Análise de Laudo Médico</h4>
                       <p className="font-sans text-sm text-slate-500">Cole o laudo abaixo para extração de patologias, limitações e enquadramento BPC.</p>
                     </div>
-                    <div className="flex-1 flex flex-col gap-4">
+                    <div className="flex-1 flex flex-column gap-4">
                       <textarea
                         value={laudoText}
                         onChange={(e) => setLaudoText(e.target.value)}
-                        className="flex-1 w-full neo-input bg-white border-slate-200 text-slate-800 min-h-[200px] resize-none font-sans text-sm focus:ring-amber-500/20 focus:border-amber-500 shadow-sm"
+                        className="flex-1 w-full neo-input bg-white border-slate-200 text-slate-800 min-h-[200px] resize-none font-sans text-sm focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] shadow-sm"
                         placeholder="Cole o texto do laudo médico aqui..."
                       />
-                      <Button onClick={handleLaudoAnalysis} loading={laudoAnalyzing} disabled={!laudoText.trim()} className="self-end bg-amber-600 hover:bg-amber-700 text-white border-0">
+                      <Button onClick={handleLaudoAnalysis} loading={laudoAnalyzing} disabled={!laudoText.trim()} className="self-end bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] text-white border-0">
                         Processar Laudo
                       </Button>
                     </div>
                   </div>
                 ) : (
-                  <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
-                    <div className="w-16 h-16 rounded-2xl bg-amber-50 flex items-center justify-center mb-4 border border-amber-100">
+                  <div className="flex-1 flex flex-column align-items-center justify-content-center p-8 text-center">
+                    <div className="w-16 h-16 rounded-2xl bg-[var(--color-primary-tint)] flex align-items-center justify-content-center mb-4 border border-[#F5D0C3]">
                       <span className="text-2xl">✨</span>
                     </div>
                     <h4 className="font-sans font-semibold text-slate-800 mb-2">
@@ -410,7 +410,7 @@ export default function BpcPage() {
                     <p className="font-sans text-sm text-slate-500 max-w-sm mb-6">
                       Os dados estão preenchidos. Inicie a análise de <strong>{activeTabConfig.label.toLowerCase()}</strong> para obter insights e o parecer prévio.
                     </p>
-                    <Button onClick={() => handleGenerate(activeTab)} className="bg-amber-600 hover:bg-amber-700 text-white border-0">
+                    <Button onClick={() => handleGenerate(activeTab)} className="bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] text-white border-0">
                       Gerar Análise
                     </Button>
                   </div>

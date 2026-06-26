@@ -34,7 +34,7 @@ export function BpcLaudoModal({ open, onClose, onAnalyze }: BpcLaudoModalProps) 
           <textarea
             value={laudoText}
             onChange={(e) => setLaudoText(e.target.value)}
-            className="w-full neo-input min-h-[200px] resize-none font-sans text-sm focus:ring-amber-500/20 focus:border-amber-500"
+            className="w-full neo-input-neo min-h-[200px] resize-none font-sans text-sm focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)]"
             placeholder="Cole o texto do laudo médico aqui (não precisa formatar)..."
           />
         </div>

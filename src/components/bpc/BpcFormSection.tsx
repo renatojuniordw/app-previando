@@ -42,7 +42,7 @@ export function BpcFormSection({ caseId, clientBirthDate, analysis, onSave }: Bp
 
   return (
     <Card variant="light" className="p-6">
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex align-items-center justify-content-between mb-4">
         <div>
           <h3 className="font-serif font-semibold text-lg text-slate-900">Dados do Caso</h3>
           <p className="font-sans text-sm text-slate-500 mt-0.5">
@@ -51,7 +51,7 @@ export function BpcFormSection({ caseId, clientBirthDate, analysis, onSave }: Bp
         </div>
         <button
           onClick={() => setShowForm(!showForm)}
-          className="px-4 py-2 text-sm font-medium text-amber-700 bg-amber-50 border border-amber-200 rounded-lg hover:bg-amber-100 transition-colors"
+          className="px-4 py-2 text-sm font-medium text-[var(--color-primary-dark)] bg-[var(--color-primary-tint)] border border-[var(--color-primary)]/30 rounded-lg hover:bg-[rgba(232,93,48,0.12)] transition-colors"
         >
           {showForm ? 'Fechar' : analysis ? 'Editar' : 'Preencher'}
         </button>

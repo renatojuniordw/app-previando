@@ -97,11 +97,11 @@ export default function BillingPage() {
 
       <Card variant="dark">
         <CardHeader title="Plano Atual" />
-        <div className="flex items-center justify-between">
+        <div className="flex align-items-center justify-content-between">
           <div>
             <p className="font-serif font-bold text-3xl text-slate-900">{currentPlan}</p>
             {planInfo?.planStatus && planInfo.planStatus !== 'ACTIVE' && (
-              <p className="font-sans font-medium text-xs text-amber-600 mt-1 uppercase tracking-wide">{planInfo.planStatus}</p>
+              <p className="font-sans font-medium text-xs text-[var(--color-primary)] mt-1 uppercase tracking-wide">{planInfo.planStatus}</p>
             )}
           </div>
           {currentPlan !== 'FREE' && (
@@ -120,24 +120,24 @@ export default function BillingPage() {
           return (
             <div
               key={plan.id}
-              className={`border rounded-xl p-6 transition-all ${isCurrent ? 'border-amber-500 bg-amber-50/30 shadow-md ring-1 ring-amber-500' : 'border-slate-200 bg-white hover:border-amber-300'}`}
+              className={`border rounded-xl p-6 transition-all ${isCurrent ? 'border-[var(--color-primary)] bg-[var(--color-primary-tint)]/30 shadow-md ring-1 ring-[var(--color-primary)]' : 'border-slate-200 bg-white hover:border-[#EB8B6A]'}`}
             >
               <div className="mb-4">
-                <div className="flex items-center justify-between mb-2">
+                <div className="flex align-items-center justify-content-between mb-2">
                   <p className="font-sans font-bold text-slate-900 text-lg uppercase tracking-wide">{plan.name}</p>
                   {isCurrent && (
-                    <span className="font-sans font-bold text-[10px] uppercase bg-amber-500 text-white px-2 py-0.5 rounded-full">
+                    <span className="font-sans font-bold text-[10px] uppercase bg-[var(--color-primary)] text-white px-2 py-0.5 rounded-full">
                       ATUAL
                     </span>
                   )}
                 </div>
-                <p className="font-serif text-amber-700 font-bold text-xl">{plan.price}</p>
+                <p className="font-serif text-[var(--color-primary-dark)] font-bold text-xl">{plan.price}</p>
               </div>
 
               <ul className="space-y-2 mb-6">
                 {plan.features.map((f) => (
-                  <li key={f} className="font-sans text-sm text-slate-600 flex items-start gap-2">
-                    <span className="text-amber-500 flex-shrink-0">✓</span>
+                  <li key={f} className="font-sans text-sm text-slate-600 flex align-items-start gap-2">
+                    <span className="text-[var(--color-primary)] flex-shrink-0">✓</span>
                     {f}
                   </li>
                 ))}
@@ -147,7 +147,7 @@ export default function BillingPage() {
                 <button
                   onClick={() => handleSubscribe(plan.id as 'SOLO' | 'PRO')}
                   disabled={!!subscribing}
-                  className="inline-flex items-center justify-center gap-2 px-4 py-2.5 font-sans font-medium text-sm rounded-md bg-slate-900 text-white hover:bg-slate-800 transition-colors duration-200 cursor-pointer select-none shadow-sm w-full mt-2"
+                  className="inline-flex align-items-center justify-content-center gap-2 px-4 py-2.5 font-sans font-medium text-sm rounded-md bg-slate-900 text-white hover:bg-slate-800 transition-colors duration-200 cursor-pointer select-none neo-btn w-full mt-2"
                 >
                   {subscribing === plan.id ? 'Aguarde...' : `Assinar ${plan.name}`}
                 </button>

@@ -12,7 +12,7 @@ import { handleApiError } from '@/lib/api-error'
 import { Queue } from 'bullmq'
 import { redis } from '@/lib/redis'
 
-const cnisQueue = new Queue('cnis-processing', { connection: redis })
+const cnisQueue = new Queue('cnis-processing', { connection: redis as any })
 
 export async function POST(req: NextRequest) {
   try {

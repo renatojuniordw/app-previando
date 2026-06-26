@@ -53,7 +53,6 @@ export function Header() {
       if (!res.ok) return
       const data = await res.json()
 
-      // Disparar notificações do navegador apenas para as novas não lidas
       setNotifications((prev) => {
         if (prev.length > 0 && typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
           const newUnread = (data.notifications as AppNotification[]).filter(
@@ -74,7 +73,7 @@ export function Header() {
 
       setUnreadCount(data.unreadCount)
     } catch {
-      // Silenciar erros de polling — o usuário não precisa ser incomodado por falhas temporárias
+      // Silenciar erros de polling
     }
   }
 
@@ -84,21 +83,32 @@ export function Header() {
     setUnreadCount((c) => Math.max(0, c - 1))
   }
 
-  return (        <header className="h-16 border-b border-slate-200 bg-white flex items-center justify-between px-4 sm:px-6 shrink-0" role="banner">
+  return (
+    <header
+      className="h-16 flex align-items-center justify-content-between px-4 sm:px-6 shrink-0"
+      style={{
+        background: 'var(--color-surface)',
+        borderBottom: '1px solid var(--color-border)',
+      }}
+      role="banner"
+    >
       {/* Hamburger + Search */}
-      <div className="flex items-center gap-3 flex-1">
+      <div className="flex align-items-center gap-3 flex-1">
         <button
           onClick={() => {
             if (window.innerWidth < 1024) toggleSidebar()
             else useSidebarStore.getState().toggleDesktop()
           }}
-          className="w-10 h-10 flex items-center justify-center rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors -ml-1.5"
+          className="w-10 h-10 flex align-items-center justify-content-center rounded-lg transition-colors -ml-1.5"
+          style={{ color: 'var(--color-text-muted)' }}
           aria-label="Alternar menu de navegação"
+          onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--color-card-inner)'; e.currentTarget.style.color = 'var(--color-text-primary)' }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--color-text-muted)' }}
         >
           <Menu className="w-5 h-5" />
         </button>
         <div className="relative w-full max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: 'var(--color-text-muted)' }} />
           <input
             type="search"
             value={searchQuery}
@@ -110,14 +120,15 @@ export function Header() {
             }}
             placeholder="Pesquisar casos, clientes..."
             aria-label="Pesquisar casos por nome do cliente"
-            className="w-full pl-9 pr-12 py-2 bg-slate-50 border border-slate-200 rounded-full text-sm font-sans focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all placeholder:text-slate-400 text-slate-900"
+            className="neo-input-neo w-full pl-9 pr-12 py-2 rounded-full text-sm"
           />
           {searchQuery.trim() && (
             <button
               onClick={() => {
                 router.push(`/cases?search=${encodeURIComponent(searchQuery.trim())}`)
               }}
-              className="absolute right-1.5 top-1/2 -translate-y-1/2 w-7 h-7 flex items-center justify-center bg-amber-600 hover:bg-amber-700 text-white rounded-full transition-colors"
+              className="absolute right-1.5 top-1/2 -translate-y-1/2 w-7 h-7 flex align-items-center justify-content-center rounded-full transition-colors"
+              style={{ background: 'var(--color-primary)', color: '#FFFFFF' }}
               aria-label={`Pesquisar por "${searchQuery.trim()}"`}
             >
               <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
@@ -126,50 +137,70 @@ export function Header() {
         </div>
       </div>
 
-      <div className="flex items-center gap-4">
+      <div className="flex align-items-center gap-4">
         <div className="relative" ref={dropdownRef}>
           <button
             onClick={() => setOpen((o) => !o)}
-            className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-slate-50 text-slate-500 transition-colors relative"
+            className="w-10 h-10 flex align-items-center justify-content-center rounded-full transition-colors relative"
+            style={{ color: 'var(--color-text-muted)' }}
             aria-label={`Notificações${unreadCount > 0 ? ` (${unreadCount} não lidas)` : ''}`}
+            onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--color-card-inner)' }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent' }}
           >
             <Bell className="w-5 h-5" aria-hidden="true" />
             {unreadCount > 0 && (
-              <span className="absolute top-2 right-2 min-w-[16px] h-4 px-0.5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white leading-none">
+              <span
+                className="absolute top-2 right-2 min-w-[16px] h-4 px-0.5 text-white text-[10px] font-bold rounded-full flex align-items-center justify-content-center border-2 leading-none"
+                style={{ background: '#DC2626', borderColor: 'var(--color-surface)' }}
+              >
                 {unreadCount > 9 ? '9+' : unreadCount}
               </span>
             )}
           </button>
 
           {open && (
-            <div className="absolute right-0 top-12 w-80 bg-white border border-slate-200 rounded-xl shadow-lg z-50 overflow-hidden">
-              <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
-                <span className="font-semibold text-sm text-slate-900">Notificações</span>
-                <button onClick={() => setOpen(false)} className="text-slate-400 hover:text-slate-600" aria-label="Fechar notificações">
+            <div
+              className="absolute right-0 top-12 w-80 z-50 overflow-hidden"
+              style={{
+                background: 'var(--color-card-bg)',
+                borderRadius: 'var(--radius-md)',
+                boxShadow: 'var(--shadow-neu-lg)',
+              }}
+            >
+              <div className="flex align-items-center justify-content-between px-4 py-3" style={{ borderBottom: '1px solid var(--color-border)' }}>
+                <span className="font-semibold text-sm" style={{ color: 'var(--color-text-primary)' }}>Notificações</span>
+                <button onClick={() => setOpen(false)} style={{ color: 'var(--color-text-muted)' }} aria-label="Fechar notificações">
                   <X className="w-4 h-4" />
                 </button>
               </div>
 
-              <div className="max-h-72 overflow-y-auto divide-y divide-slate-50">
+              <div className="max-h-72 overflow-y-auto">
                 {notifications.length === 0 ? (
-                  <p className="text-sm text-slate-500 text-center py-8">Nenhuma notificação</p>
+                  <p className="text-sm text-center py-8" style={{ color: 'var(--color-text-muted)' }}>Nenhuma notificação</p>
                 ) : (
                   notifications.map((n) => (
                     <div
                       key={n.id}
-                      className={`px-4 py-3 flex gap-3 items-start cursor-pointer hover:bg-slate-50 transition-colors ${n.read ? 'opacity-60' : ''}`}
+                      className="px-4 py-3 flex gap-3 align-items-start cursor-pointer transition-colors"
+                      style={{
+                        borderBottom: '1px solid var(--color-border)',
+                        opacity: n.read ? 0.6 : 1,
+                      }}
                       onClick={() => !n.read && markAsRead(n.id)}
+                      onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(0,0,0,0.02)' }}
+                      onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent' }}
                     >
-                      <div className={`mt-1 w-2 h-2 rounded-full shrink-0 ${n.read ? 'bg-slate-300' : 'bg-amber-500'}`} />
+                      <div className="mt-1 w-2 h-2 rounded-full shrink-0" style={{ background: n.read ? 'var(--color-text-muted)' : 'var(--color-primary)' }} />
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm text-slate-800 leading-snug">{n.message}</p>
-                        <p className="text-xs text-slate-400 mt-1">
+                        <p className="text-sm leading-snug" style={{ color: 'var(--color-text-primary)' }}>{n.message}</p>
+                        <p className="text-xs mt-1" style={{ color: 'var(--color-text-muted)' }}>
                           {new Date(n.createdAt).toLocaleDateString('pt-BR')}
                         </p>
                         {n.caseId && (
                           <Link
                             href={`/cases/${n.caseId}`}
-                            className="text-xs text-amber-600 hover:underline mt-0.5 inline-block"
+                            className="text-xs mt-0.5 inline-block"
+                            style={{ color: 'var(--color-primary)' }}
                             onClick={() => setOpen(false)}
                           >
                             Ver caso →
@@ -184,15 +215,27 @@ export function Header() {
           )}
         </div>
 
-        <div className="h-8 w-px bg-slate-200"></div>
-        <button className="flex items-center gap-3 hover:bg-slate-50 py-1.5 px-3 rounded-full transition-colors" aria-label="Perfil do usuário">
-          <div className="flex flex-col items-end">
-            <span className="font-sans font-semibold text-sm text-slate-900 leading-none">
+        <div className="h-8 w-px" style={{ background: 'var(--color-border)' }}></div>
+        <button
+          className="flex align-items-center gap-3 py-1.5 px-3 rounded-full transition-colors"
+          aria-label="Perfil do usuário"
+          onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--color-card-inner)' }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent' }}
+        >
+          <div className="flex flex-column align-items-end">
+            <span className="font-sans font-semibold text-sm leading-none" style={{ color: 'var(--color-text-primary)' }}>
               {session?.user?.name || 'Usuário'}
             </span>
-            <span className="font-sans text-xs text-slate-500 mt-1">Advogado</span>
+            <span className="font-sans text-xs mt-1" style={{ color: 'var(--color-text-muted)' }}>Advogado</span>
           </div>
-          <div className="w-9 h-9 rounded-full bg-amber-100 flex items-center justify-center border border-amber-200 text-amber-700 font-serif font-bold text-sm">
+          <div
+            className="w-9 h-9 rounded-full flex align-items-center justify-content-center font-serif font-bold text-sm"
+            style={{
+              background: 'var(--color-primary-tint)',
+              border: '2px solid var(--color-primary)',
+              color: 'var(--color-primary)',
+            }}
+          >
             {session?.user?.name?.charAt(0).toUpperCase() || 'U'}
           </div>
         </button>

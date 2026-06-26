@@ -1,5 +1,9 @@
 import type { Metadata } from 'next'
 import { Inter, Playfair_Display, JetBrains_Mono } from 'next/font/google'
+import { PrimeReactProvider } from './PrimeReactProvider'
+import 'primereact/resources/themes/lara-light-amber/theme.css'
+import 'primereact/resources/primereact.min.css'
+import 'primeicons/primeicons.css'
 import './globals.css'
 
 const inter = Inter({
@@ -37,7 +41,9 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="pt-BR" className={`${inter.variable} ${playfair.variable} ${jetbrainsMono.variable}`}>
-      <body className="font-sans">{children}</body>
+      <body>
+        <PrimeReactProvider>{children}</PrimeReactProvider>
+      </body>
     </html>
   )
 }

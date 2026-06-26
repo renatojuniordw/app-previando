@@ -66,9 +66,9 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div className="p-8 flex items-center justify-center h-[calc(100vh-4rem)]">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-8 h-8 border-4 border-amber-500 border-t-transparent animate-spin rounded-full"></div>
+      <div className="p-8 flex align-items-center justify-content-center h-[calc(100vh-4rem)]">
+        <div className="flex flex-column align-items-center gap-4">
+          <div className="w-8 h-8 border-4 border-[var(--color-primary)] border-t-transparent animate-spin rounded-full"></div>
           <p className="font-sans font-medium text-slate-500 animate-pulse">Carregando painel...</p>
         </div>
       </div>
@@ -95,22 +95,22 @@ export default function DashboardPage() {
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6 lg:space-y-8">
       {/* Header */}
-      <div className="flex items-end justify-between">
+      <div className="flex align-items-end justify-content-between">
         <div>
           <h1 className="font-serif font-bold text-3xl text-slate-900 tracking-tight">Visão Geral</h1>
           <p className="font-sans text-sm text-slate-500 mt-1 font-medium">Acompanhamento do escritório</p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex align-items-center gap-3">
           <Link
             href="/clients/list"
-            className="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 shadow-sm transition-all flex items-center gap-2"
+            className="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 shadow-sm transition-all flex align-items-center gap-2"
             aria-label="Ver lista de clientes"
           >
             <Users className="w-4 h-4" aria-hidden="true" /> <span className="hidden sm:inline">Clientes</span>
           </Link>
           <Link
             href="/clients/kanban"
-            className="px-4 py-2 bg-amber-600 text-white rounded-lg text-sm font-medium hover:bg-amber-700 shadow-sm transition-all flex items-center gap-2"
+            className="px-4 py-2 bg-[var(--color-primary)] text-white rounded-lg text-sm font-medium hover:bg-[var(--color-primary-dark)] shadow-sm transition-all flex align-items-center gap-2"
             aria-label="Kanban de casos"
           >
             <Columns className="w-4 h-4" aria-hidden="true" /> <span className="hidden sm:inline">Kanban</span>
@@ -153,12 +153,12 @@ export default function DashboardPage() {
       {/* Empty state */}
       {!data && !loading && (
         <div className="text-center py-16 bg-white border border-slate-200 rounded-xl shadow-sm">
-          <Users className="w-12 h-12 text-amber-400 mx-auto mb-4" />
+          <Users className="w-12 h-12 text-[var(--color-primary-hover)] mx-auto mb-4" />
           <h3 className="font-serif font-bold text-xl text-slate-900 mb-2">Bem-vindo ao Previando</h3>
           <p className="font-sans text-slate-500 mb-6 max-w-md mx-auto">
             Cadastre seu primeiro cliente para começar.
           </p>
-          <Link href="/clients/list" className="inline-flex items-center justify-center gap-2 px-4 py-2.5 font-sans font-medium text-sm rounded-md bg-slate-900 text-white hover:bg-slate-800 transition-colors duration-200 cursor-pointer select-none shadow-sm">
+          <Link href="/clients/list" className="inline-flex align-items-center justify-content-center gap-2 px-4 py-2.5 font-sans font-medium text-sm rounded-md bg-slate-900 text-white hover:bg-slate-800 transition-colors duration-200 cursor-pointer select-none shadow-sm">
             Cadastrar Cliente <ChevronRight className="w-4 h-4" />
           </Link>
         </div>

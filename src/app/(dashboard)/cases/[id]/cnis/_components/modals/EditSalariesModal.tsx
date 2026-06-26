@@ -22,7 +22,7 @@ export function EditSalariesModal({
   return (
     <Modal open={open} onClose={onClose} title="GERENCIAR CONTRIBUIÇÕES / SALÁRIOS">
       <div className="space-y-4 font-sans text-sm">
-        <div className="bg-slate-50 border border-slate-150 rounded-xl p-4 space-y-3">
+        <div className="bg-[var(--color-card-inner)] border border-[var(--color-border)] rounded-xl p-4 space-y-3">
           <h6 className="font-bold text-slate-700 text-xs uppercase tracking-wide">Adicionar Salário de Contribuição</h6>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
@@ -33,7 +33,7 @@ export function EditSalariesModal({
                 value={newCompetencia}
                 onChange={e => onChangeCompetencia(e.target.value)}
                 placeholder="Ex: MM/YYYY ou YYYY-MM"
-                className="w-full border border-slate-200 rounded-lg p-2 text-xs"
+                className="w-full neo-input-neo text-xs text-xs"
               />
             </div>
             <div className="space-y-1">
@@ -44,14 +44,14 @@ export function EditSalariesModal({
                 value={newValor}
                 onChange={e => onChangeValor(e.target.value)}
                 placeholder="Ex: 2500,00"
-                className="w-full border border-slate-200 rounded-lg p-2 text-xs"
+                className="w-full neo-input-neo text-xs text-xs"
               />
             </div>
           </div>
           <button
             type="button"
             onClick={onAdd}
-            className="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 rounded-lg text-xs transition-colors flex items-center justify-center gap-1 focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:outline-none"
+            className="w-full neo-btn neo-btn-primary text-xs w-full transition-colors flex align-items-center justify-content-center gap-1 focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:outline-none"
           >
             <Plus className="w-3.5 h-3.5" />
             Adicionar Salário à Lista
@@ -63,14 +63,14 @@ export function EditSalariesModal({
           {salarios.length === 0 ? (
             <p className="text-slate-450 italic text-center py-4 text-xs">Nenhum salário cadastrado para este vínculo.</p>
           ) : (
-            <div className="border border-slate-150 rounded-xl overflow-hidden max-h-60 overflow-y-auto divide-y divide-slate-150">
+            <div className="border border-[var(--color-border)] rounded-xl overflow-hidden max-h-60 overflow-y-auto divide-y divide-[var(--color-border)]">
               {salarios.map((sal, sIdx) => (
-                <div key={sIdx} className="px-4 py-2 flex items-center justify-between gap-4 hover:bg-slate-50 transition-colors">
+                <div key={sIdx} className="px-4 py-2 flex align-items-center justify-content-between gap-4 hover:bg-[var(--color-surface)] transition-colors">
                   <div>
                     <span className="font-bold text-slate-800 text-xs">{formatCompetencia(sal.competencia)}</span>
                     <span className="text-slate-500 text-[10px] ml-2">({sal.competencia})</span>
                   </div>
-                  <div className="flex items-center gap-3">
+                  <div className="flex align-items-center gap-3">
                     <span className="font-bold text-slate-700 text-xs tabular-nums">{formatCurrency(sal.valor)}</span>
                     <button
                       type="button"
@@ -88,10 +88,10 @@ export function EditSalariesModal({
         </div>
 
         <div className="flex gap-3 pt-3 border-t border-slate-100">
-          <button onClick={onSave} className="flex-1 bg-amber-600 hover:bg-amber-700 text-white font-semibold py-2.5 px-4 rounded-lg text-center transition-colors focus-visible:ring-2 focus-visible:ring-amber-500">
+          <button onClick={onSave} className="flex-1 neo-btn neo-btn-primary flex-1 text-center transition-colors focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]">
             Confirmar Salários
           </button>
-          <button onClick={onClose} className="flex-1 border border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold py-2.5 px-4 rounded-lg text-center transition-colors">
+          <button onClick={onClose} className="flex-1 border border-slate-200 hover:bg-[var(--color-surface)] text-slate-700 font-semibold py-2.5 px-4 rounded-lg text-center transition-colors">
             Voltar
           </button>
         </div>

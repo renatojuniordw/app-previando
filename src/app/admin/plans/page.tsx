@@ -66,9 +66,9 @@ export default function AdminPlansPage() {
 
   if (loading) {
     return (
-      <div className="p-8 flex items-center justify-center">
-        <div className="flex flex-col items-center gap-3">
-          <div className="w-6 h-6 border-4 border-amber-500 border-t-transparent animate-spin rounded-full" />
+      <div className="p-8 flex align-items-center justify-content-center">
+        <div className="flex flex-column align-items-center gap-3">
+          <div className="w-6 h-6 border-4 border-[var(--color-primary)] border-t-transparent animate-spin rounded-full" />
           <p className="font-sans text-sm text-slate-500 animate-pulse">Carregando planos...</p>
         </div>
       </div>
@@ -91,7 +91,7 @@ export default function AdminPlansPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {plans.map((plan) => (
           <Card key={plan.plan} variant="light" className="p-6">
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex align-items-center justify-content-between mb-4">
               <div>
                 <h3 className="font-serif font-bold text-lg text-slate-900">{plan.plan}</h3>
               </div>
@@ -111,7 +111,7 @@ export default function AdminPlansPage() {
                       type="number"
                       value={String(editData.maxClients ?? '')}
                       onChange={(e) => setEditData((d) => ({ ...d, maxClients: e.target.value === '' ? null : Number(e.target.value) }))}
-                      className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500"
+                      className="w-full px-3 py-2 text-sm neo-input-neo rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)]"
                       placeholder="null = ilimitado"
                     />
                   </div>
@@ -121,7 +121,7 @@ export default function AdminPlansPage() {
                       type="number"
                       value={String(editData.maxCalculationsPerMonth ?? '')}
                       onChange={(e) => setEditData((d) => ({ ...d, maxCalculationsPerMonth: e.target.value === '' ? null : Number(e.target.value) }))}
-                      className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500"
+                      className="w-full px-3 py-2 text-sm neo-input-neo rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)]"
                       placeholder="null = ilimitado"
                     />
                   </div>
@@ -131,7 +131,7 @@ export default function AdminPlansPage() {
                       type="number"
                       value={String(editData.maxOpinionsPerMonth ?? '')}
                       onChange={(e) => setEditData((d) => ({ ...d, maxOpinionsPerMonth: e.target.value === '' ? null : Number(e.target.value) }))}
-                      className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500"
+                      className="w-full px-3 py-2 text-sm neo-input-neo rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)]"
                       placeholder="null = ilimitado"
                     />
                   </div>
@@ -139,12 +139,12 @@ export default function AdminPlansPage() {
 
                 <div className="space-y-2 border-t border-slate-100 pt-3">
                   {(['simulatorEnabled', 'retroativosEnabled', 'exportPdfEnabled', 'whatsappShareEnabled', 'watermarkEnabled'] as const).map((key) => (
-                    <label key={key} className="flex items-center gap-2 cursor-pointer">
+                    <label key={key} className="flex align-items-center gap-2 cursor-pointer">
                       <input
                         type="checkbox"
                         checked={Boolean(editData[key])}
                         onChange={(e) => setEditData((d) => ({ ...d, [key]: e.target.checked }))}
-                        className="rounded border-slate-300 text-amber-600 focus:ring-amber-500"
+                        className="rounded border-slate-300 text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
                       />
                       <span className="text-sm text-slate-700 capitalize">
                         {key.replace(/([A-Z])/g, ' $1').trim()}
@@ -160,15 +160,15 @@ export default function AdminPlansPage() {
               </div>
             ) : (
               <div className="space-y-3 text-sm">
-                <div className="flex justify-between pb-2 border-b border-slate-100">
+                <div className="flex justify-content-between pb-2 border-b border-slate-100">
                   <span className="text-slate-500">Max Clientes</span>
                   <span className="font-semibold text-slate-900">{plan.maxClients ?? '∞'}</span>
                 </div>
-                <div className="flex justify-between pb-2 border-b border-slate-100">
+                <div className="flex justify-content-between pb-2 border-b border-slate-100">
                   <span className="text-slate-500">Max Cálculos</span>
                   <span className="font-semibold text-slate-900">{plan.maxCalculationsPerMonth ?? '∞'}/mês</span>
                 </div>
-                <div className="flex justify-between pb-2 border-b border-slate-100">
+                <div className="flex justify-content-between pb-2 border-b border-slate-100">
                   <span className="text-slate-500">Max Pareceres</span>
                   <span className="font-semibold text-slate-900">{plan.maxOpinionsPerMonth ?? '∞'}/mês</span>
                 </div>
@@ -180,7 +180,7 @@ export default function AdminPlansPage() {
                     ['whatsappShareEnabled', 'WhatsApp'],
                     ['watermarkEnabled', 'Marca d\'água'],
                   ] as const).map(([key, label]) => (
-                    <div key={key} className="flex items-center justify-between text-xs">
+                    <div key={key} className="flex align-items-center justify-content-between text-xs">
                       <span className="text-slate-500">{label}</span>
                       <span className={plan[key] ? 'text-emerald-600 font-bold' : 'text-red-400 font-bold'}>
                         {plan[key] ? '✓' : '✗'}

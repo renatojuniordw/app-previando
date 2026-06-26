@@ -172,8 +172,8 @@ export default function SimulatorPage() {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center py-20">
-        <Loader2 className="w-8 h-8 text-amber-500 animate-spin" />
+      <div className="flex flex-column align-items-center justify-content-center py-20">
+        <Loader2 className="w-8 h-8 text-[var(--color-primary)] animate-spin" />
         <p className="font-sans font-medium text-slate-500 mt-4">Carregando simulador de cenários...</p>
       </div>
     )
@@ -181,7 +181,7 @@ export default function SimulatorPage() {
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
-      <div className="flex items-center justify-between">
+      <div className="flex align-items-center justify-content-between">
         <div>
           <h2 className="font-serif font-bold text-2xl text-slate-900 tracking-tight">Simulador de Planejamento</h2>
           <p className="font-sans text-sm text-slate-500 mt-1">Simule o impacto de contribuições futuras na aposentadoria do cliente.</p>
@@ -195,7 +195,7 @@ export default function SimulatorPage() {
               }
               setShowModal(true)
             }}
-            className="bg-amber-600 hover:bg-amber-700 text-white flex items-center gap-2 shadow-sm font-semibold"
+            className="bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] text-white flex align-items-center gap-2 shadow-sm font-semibold"
           >
             <Compass className="w-4 h-4" />
             Nova Simulação
@@ -204,8 +204,8 @@ export default function SimulatorPage() {
       </div>
 
       {simulations.length === 0 ? (
-        <div className="py-20 flex flex-col items-center justify-center border border-dashed border-slate-300 bg-slate-50 rounded-2xl text-center">
-          <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center mb-4 border border-slate-200 shadow-sm">
+        <div className="py-20 flex flex-column align-items-center justify-content-center border border-dashed border-slate-300 bg-slate-50 rounded-2xl text-center">
+          <div className="w-16 h-16 rounded-full bg-white flex align-items-center justify-content-center mb-4 border border-slate-200 shadow-sm">
             <Compass className="w-8 h-8 text-slate-400" />
           </div>
           <h3 className="font-serif font-bold text-lg text-slate-900 mb-2">Nenhuma Simulação Criada</h3>
@@ -220,7 +220,7 @@ export default function SimulatorPage() {
               }
               setShowModal(true)
             }}
-            className="bg-amber-600 hover:bg-amber-700 text-white flex items-center gap-2 shadow-sm"
+            className="bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] text-white flex align-items-center gap-2 shadow-sm"
           >
             <Compass className="w-4 h-4" />
             Iniciar Planejamento
@@ -250,20 +250,20 @@ export default function SimulatorPage() {
               : 'Não calculada'
 
             return (
-              <div key={sim.id} className="border border-slate-200 rounded-xl shadow-sm overflow-hidden bg-white">
+              <div key={sim.id} className="border border-slate-200 rounded-xl neo-card-flat overflow-hidden bg-white">
                 {/* Header da Simulação */}
-                <div className="px-6 py-4 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-50/50">
+                <div className="px-6 py-4 border-b border-slate-100 flex flex-column sm:flex-row sm:align-items-center justify-content-between gap-4 bg-slate-50/50">
                   <div className="space-y-1">
                     <h3 className="font-sans font-bold text-slate-800 text-base sm:text-lg">
                       {sim.scenarioName}
                     </h3>
-                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500 font-medium">
-                      <span className="flex items-center gap-1">
+                    <div className="flex flex-wrap align-items-center gap-x-3 gap-y-1 text-xs text-slate-500 font-medium">
+                      <span className="flex align-items-center gap-1">
                         <Calendar className="w-3.5 h-3.5 text-slate-400" />
                         Aposentadoria Simulada em: {formatDate(sim.dibProjected)}
                       </span>
                       {paramsSim?.modalidade && (
-                        <span className="flex items-center gap-1">
+                        <span className="flex align-items-center gap-1">
                           <Scale className="w-3.5 h-3.5 text-slate-400" />
                           Modalidade: {modalidadeLabels[paramsSim.modalidade] ?? paramsSim.modalidade}
                         </span>
@@ -272,7 +272,7 @@ export default function SimulatorPage() {
                   </div>
                   <button
                     onClick={() => handleDelete(sim.id)}
-                    className="p-2 border border-red-200 text-red-600 rounded-lg hover:bg-red-50 hover:text-red-700 transition-colors shrink-0 flex items-center gap-1.5 font-sans font-semibold text-xs self-start sm:self-center"
+                    className="p-2 border border-red-200 text-red-600 rounded-lg hover:bg-red-50 hover:text-red-700 transition-colors neo-btn shrink-0 flex align-items-center gap-1.5 font-sans font-semibold text-xs self-start sm:self-center"
                     aria-label={`Excluir cenário "${sim.scenarioName}"`}
                   >
                     <Trash2 className="w-4 h-4" aria-hidden="true" />
@@ -283,7 +283,7 @@ export default function SimulatorPage() {
                 {/* Grid Visual de Comparação */}
                 <div className="p-4 sm:p-6 grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
                   {/* Cenário Atual */}
-                  <div className="bg-slate-50 border border-slate-200/60 rounded-xl p-5 relative overflow-hidden flex flex-col justify-between min-h-[120px]">
+                  <div className="bg-slate-50 border border-slate-200/60 rounded-xl p-5 relative overflow-hidden flex flex-column justify-content-between min-h-[120px]">
                     <div>
                       <span className="font-sans text-[10px] uppercase font-bold tracking-wider text-slate-400 block mb-1">
                         RMI Estimada Hoje
@@ -298,26 +298,26 @@ export default function SimulatorPage() {
                   </div>
 
                   {/* Icon Seta */}
-                  <div className="hidden md:flex items-center justify-center -mx-3">
-                    <div className="w-10 h-10 rounded-full bg-amber-50 border border-amber-200 text-amber-600 flex items-center justify-center shadow-sm">
+                  <div className="hidden md:flex align-items-center justify-content-center -mx-3">
+                    <div className="w-10 h-10 rounded-full bg-[var(--color-primary-tint)] border border-[#F0B09A] text-[var(--color-primary)] flex align-items-center justify-content-center shadow-sm">
                       <ArrowRight className="w-5 h-5" />
                     </div>
                   </div>
 
                   {/* Cenário Projetado */}
-                  <div className="bg-amber-50/20 border border-amber-200/60 rounded-xl p-5 relative overflow-hidden flex flex-col justify-between min-h-[120px]">
+                  <div className="bg-[rgba(242,232,228,0.2)] border border-[#F0B09A]/60 rounded-xl p-5 relative overflow-hidden flex flex-column justify-content-between min-h-[120px]">
                     <div className="absolute top-3 right-3">
                       <TrendingUp className="w-5 h-5 text-emerald-500" />
                     </div>
                     <div>
-                      <span className="font-sans text-[10px] uppercase font-bold tracking-wider text-amber-700 block mb-1">
+                      <span className="font-sans text-[10px] uppercase font-bold tracking-wider text-[var(--color-primary-dark)] block mb-1">
                         RMI Projetada Planejada
                       </span>
-                      <p className="font-sans font-bold text-amber-600 text-2xl tracking-tight">
+                      <p className="font-sans font-bold text-[var(--color-primary)] text-2xl tracking-tight">
                         {formatCurrency(sim.rmiProjected)}
                       </p>
                     </div>
-                    <span className="font-sans text-[10px] text-amber-700/80 font-semibold block mt-4">
+                    <span className="font-sans text-[10px] text-[var(--color-primary-dark)]/80 font-semibold block mt-4">
                       Contribuição futura: {formatCurrency(paramsSim?.valorContribuicaoFutura || 1512)}/mês
                     </span>
                   </div>
@@ -325,9 +325,9 @@ export default function SimulatorPage() {
 
                 {/* Ganho Destaque */}
                 {gain > 0 && (
-                  <div className="px-6 py-4 bg-emerald-50/50 border-t border-slate-100 flex items-center justify-between gap-4">
-                    <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-full bg-emerald-100 border border-emerald-200 text-emerald-600 flex items-center justify-center">
+                  <div className="px-6 py-4 bg-emerald-50/50 border-t border-slate-100 flex align-items-center justify-content-between gap-4">
+                    <div className="flex align-items-center gap-2">
+                      <div className="w-8 h-8 rounded-full bg-emerald-100 border border-emerald-200 text-emerald-600 flex align-items-center justify-content-center">
                         <TrendingUp className="w-4.5 h-4.5" />
                       </div>
                       <div>
@@ -345,10 +345,10 @@ export default function SimulatorPage() {
 
                 {/* Bloco de Elegibilidade Premium */}
                 {paramsSim && typeof paramsSim.elegivel === 'boolean' && (
-                  <div className={`px-6 py-4 border-t border-slate-100 flex flex-col gap-3 ${paramsSim.elegivel ? 'bg-emerald-50/20' : 'bg-amber-50/10'}`}>
-                    <div className="flex items-center justify-between gap-4">
-                      <div className="flex items-center gap-2">
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${paramsSim.elegivel ? 'bg-emerald-100 text-emerald-600' : 'bg-amber-100 text-amber-600'}`}>
+                  <div className={`px-6 py-4 border-t border-slate-100 flex flex-column gap-3 ${paramsSim.elegivel ? 'bg-emerald-50/20' : 'bg-[var(--color-primary-tint)]/10'}`}>
+                    <div className="flex align-items-center justify-content-between gap-4">
+                      <div className="flex align-items-center gap-2">
+                        <div className={`w-8 h-8 rounded-full flex align-items-center justify-content-center ${paramsSim.elegivel ? 'bg-emerald-100 text-emerald-600' : 'bg-[#F5D0C3] text-[var(--color-primary)]'}`}>
                           {paramsSim.elegivel ? (
                             <CheckCircle2 className="w-4.5 h-4.5" />
                           ) : (
@@ -363,7 +363,7 @@ export default function SimulatorPage() {
                         </div>
                       </div>
                       <div className="text-right">
-                        <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold ${paramsSim.elegivel ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}`}>
+                        <span className={`inline-flex align-items-center px-2.5 py-1 rounded-full text-xs font-bold ${paramsSim.elegivel ? 'bg-emerald-100 text-emerald-800' : 'bg-[#F5D0C3] text-[#A03A15]'}`}>
                           {paramsSim.elegivel ? 'Requisitos Atingidos' : 'Pré-requisitos Pendentes'}
                         </span>
                       </div>
@@ -371,10 +371,10 @@ export default function SimulatorPage() {
 
                     {/* Pendências de forma visual premium */}
                     {!paramsSim.elegivel && paramsSim.pendencias && paramsSim.pendencias.length > 0 && (
-                      <div className="mt-1 pl-10 space-y-1.5 border-l border-amber-200/50">
+                      <div className="mt-1 pl-10 space-y-1.5 border-l border-[#F0B09A]/50">
                         {paramsSim.pendencias.map((pend, idx) => (
-                          <div key={idx} className="flex items-center gap-2 text-xs font-sans text-amber-800">
-                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" />
+                          <div key={idx} className="flex align-items-center gap-2 text-xs font-sans text-[#A03A15]">
+                            <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-primary)] shrink-0" />
                             <span>{pend}</span>
                           </div>
                         ))}
@@ -382,7 +382,7 @@ export default function SimulatorPage() {
                     )}
 
                     {paramsSim.elegivel && (
-                      <div className="mt-1 pl-10 text-xs font-sans text-emerald-800 flex items-center gap-2">
+                      <div className="mt-1 pl-10 text-xs font-sans text-emerald-800 flex align-items-center gap-2">
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
                         <span>O segurado preencherá todos os requisitos legais na data projetada.</span>
                       </div>
@@ -421,7 +421,7 @@ export default function SimulatorPage() {
       <Modal open={showModal} onClose={() => setShowModal(false)} title="NOVA SIMULAÇÃO DE APOSENTADORIA" size="lg">
         <div className="space-y-5">
           {errorMessage && (
-            <div className="border border-red-200 bg-red-50 rounded-xl p-4 flex items-start gap-3">
+            <div className="border border-red-200 bg-red-50 rounded-xl p-4 flex align-items-start gap-3">
               <ShieldAlert className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
               <p className="font-sans text-sm font-medium text-red-700">{errorMessage}</p>
             </div>
@@ -440,7 +440,7 @@ export default function SimulatorPage() {
               <input
                 value={scenarioName}
                 onChange={(e) => setScenarioName(e.target.value)}
-                className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm font-sans focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 outline-none"
+                className="w-full bg-white rounded-md px-3 py-2 text-sm font-sans focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)]/30 neo-input-neo outline-none"
                 placeholder="Ex: Planejamento Contribuindo no Teto até 2030"
               />
             </div>
@@ -450,7 +450,7 @@ export default function SimulatorPage() {
               <select
                 value={gender}
                 onChange={(e) => setGender(e.target.value as 'M' | 'F')}
-                className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm font-sans focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 outline-none"
+                className="w-full bg-white rounded-md px-3 py-2 text-sm font-sans focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)]/30 neo-input-neo outline-none"
               >
                 <option value="F">Feminino</option>
                 <option value="M">Masculino</option>
@@ -463,7 +463,7 @@ export default function SimulatorPage() {
                 type="date"
                 value={dibProjetada}
                 onChange={(e) => setDibProjetada(e.target.value)}
-                className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm font-sans focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 outline-none"
+                className="w-full bg-white rounded-md px-3 py-2 text-sm font-sans focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)]/30 neo-input-neo outline-none"
               />
             </div>
 
@@ -472,7 +472,7 @@ export default function SimulatorPage() {
               <select
                 value={modalidade}
                 onChange={(e) => setModalidade(e.target.value)}
-                className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm font-sans focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 outline-none"
+                className="w-full bg-white rounded-md px-3 py-2 text-sm font-sans focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)]/30 neo-input-neo outline-none"
               >
                 {(modalidades.length > 0 ? modalidades : MODALIDADES_PADRAO).map((item) => (
                   <option key={item.codigo} value={item.codigo}>{item.label}</option>
@@ -489,7 +489,7 @@ export default function SimulatorPage() {
                 step="0.1"
                 value={tempoEspecialAnos}
                 onChange={(e) => setTempoEspecialAnos(Number(e.target.value))}
-                className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm font-sans focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 outline-none"
+                className="w-full bg-white rounded-md px-3 py-2 text-sm font-sans focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)]/30 neo-input-neo outline-none"
                 placeholder="Ex: 12.5"
               />
             </div>
@@ -499,7 +499,7 @@ export default function SimulatorPage() {
               <select
                 value={tipoContribuicao}
                 onChange={(e) => setTipoContribuicao(e.target.value as 'MINIMO' | 'TETO' | 'CUSTOM')}
-                className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm font-sans focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 outline-none"
+                className="w-full bg-white rounded-md px-3 py-2 text-sm font-sans focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)]/30 neo-input-neo outline-none"
               >
                 <option value="MINIMO">Sobre o Salário Mínimo ({new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(salarioVigente.valor)})</option>
                 <option value="TETO">Sobre o Teto Previdenciário ({new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(salarioVigente.teto)})</option>
@@ -511,7 +511,7 @@ export default function SimulatorPage() {
               <div className="animate-slide-down">
                 <label className="font-sans font-bold text-xs text-slate-600 block mb-1">Salário de Contribuição Mensal Planejado (BRL)</label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 text-sm">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex align-items-center pointer-events-none text-slate-400 text-sm">
                     R$
                   </div>
                   <input
@@ -520,7 +520,7 @@ export default function SimulatorPage() {
                     max="10000"
                     value={valorCustomContribuicao}
                     onChange={(e) => setValorCustomContribuicao(Number(e.target.value))}
-                    className="w-full bg-white border border-slate-300 rounded-lg pl-9 pr-3 py-2 text-sm font-sans focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 outline-none"
+                    className="w-full bg-white border border-slate-300 rounded-lg pl-9 pr-3 py-2 text-sm font-sans focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)]/30 outline-none"
                     placeholder="Ex: 3000"
                   />
                 </div>
@@ -532,7 +532,7 @@ export default function SimulatorPage() {
             <Button
               onClick={handleCreate}
               loading={creating}
-              className="flex-1 bg-amber-600 hover:bg-amber-700 text-white font-semibold"
+              className="flex-1 bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] text-white font-semibold"
             >
               Rodar Planejamento
             </Button>

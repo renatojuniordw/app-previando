@@ -14,7 +14,7 @@ export function createAuditWorker(redis: Redis): Worker {
       await writeAuditDirect(data)
     },
     {
-      connection: redis,
+      connection: redis as any,
       concurrency: 10,
     }
   )

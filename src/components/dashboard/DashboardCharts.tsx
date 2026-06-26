@@ -31,13 +31,13 @@ export const DashboardCharts = memo(function DashboardCharts({ data }: { data: C
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       {monthChartData.length > 0 && (
         <Card variant="light" className="p-6 lg:col-span-2">
-          <h3 className="font-serif font-bold text-lg text-slate-900 mb-4">Casos por Mês</h3>
+          <h3 className="font-serif font-bold text-lg text-[var(--color-text-primary)] mb-4">Casos por Mês</h3>
           <ResponsiveContainer width="100%" height={180}>
             <BarChart data={monthChartData}>
               <XAxis dataKey="name" tick={{ fontSize: 12 }} />
               <YAxis tick={{ fontSize: 12 }} allowDecimals={false} />
               <Tooltip />
-              <Bar dataKey="casos" fill="#d97706" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="casos" fill="var(--color-primary)" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </Card>
@@ -45,7 +45,7 @@ export const DashboardCharts = memo(function DashboardCharts({ data }: { data: C
 
       {priorityChartData.length > 0 && (
         <Card variant="light" className="p-6">
-          <h3 className="font-serif font-bold text-lg text-slate-900 mb-4">Clientes por Prioridade</h3>
+          <h3 className="font-serif font-bold text-lg text-[var(--color-text-primary)] mb-4">Clientes por Prioridade</h3>
           <ResponsiveContainer width="100%" height={180}>
             <PieChart>
               <Pie

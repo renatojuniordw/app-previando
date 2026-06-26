@@ -28,9 +28,9 @@ export default function AdminDashboardPage() {
 
   if (loading) {
     return (
-      <div className="p-8 flex items-center justify-center">
-        <div className="flex flex-col items-center gap-3">
-          <div className="w-6 h-6 border-4 border-amber-500 border-t-transparent animate-spin rounded-full" />
+      <div className="p-8 flex align-items-center justify-content-center">
+        <div className="flex flex-column align-items-center gap-3">
+          <div className="w-6 h-6 border-4 border-[var(--color-primary)] border-t-transparent animate-spin rounded-full" />
           <p className="font-sans text-sm text-slate-500 animate-pulse">Carregando métricas...</p>
         </div>
       </div>
@@ -59,12 +59,12 @@ export default function AdminDashboardPage() {
       {/* KPI Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {KPI_CARDS.map(({ icon: Icon, label, value, highlight }) => (
-          <Card key={label} variant="light" className="p-6 flex flex-col gap-3">
-            <div className="flex items-center gap-2 text-slate-400">
+          <Card key={label} variant="light" className="p-6 flex flex-column gap-3">
+            <div className="flex align-items-center gap-2 text-slate-400">
               <Icon className="w-4 h-4" />
               <span className="text-xs font-semibold uppercase tracking-wide">{label}</span>
             </div>
-            <p className={`font-bold text-2xl ${highlight ? 'text-amber-600' : 'text-slate-900'}`}>
+            <p className={`font-bold text-2xl ${highlight ? 'text-[var(--color-primary)]' : 'text-slate-900'}`}>
               {value}
             </p>
           </Card>
@@ -78,8 +78,8 @@ export default function AdminDashboardPage() {
           <h3 className="font-serif font-bold text-lg text-slate-900 mb-4">Usuários por Plano</h3>
           <div className="space-y-3">
             {['FREE', 'SOLO', 'PRO'].map((plan) => (
-              <div key={plan} className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
+              <div key={plan} className="flex align-items-center justify-content-between">
+                <div className="flex align-items-center gap-3">
                   <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider bg-slate-100 px-2 py-0.5 rounded">
                     {plan}
                   </span>
@@ -94,26 +94,26 @@ export default function AdminDashboardPage() {
         <Card variant="light" className="p-6">
           <h3 className="font-serif font-bold text-lg text-slate-900 mb-4">Uso de IA</h3>
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-slate-500">
+            <div className="flex align-items-center justify-content-between">
+              <div className="flex align-items-center gap-2 text-slate-500">
                 <Calculator className="w-4 h-4" />
                 <span className="text-sm font-medium">Cálculos</span>
               </div>
               <span className="font-bold text-slate-900">{metrics.usage.totalCalculations}</span>
             </div>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-slate-500">
+            <div className="flex align-items-center justify-content-between">
+              <div className="flex align-items-center gap-2 text-slate-500">
                 <FileText className="w-4 h-4" />
                 <span className="text-sm font-medium">Pareceres</span>
               </div>
               <span className="font-bold text-slate-900">{metrics.usage.totalOpinions}</span>
             </div>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-slate-500">
+            <div className="flex align-items-center justify-content-between">
+              <div className="flex align-items-center gap-2 text-slate-500">
                 <Cpu className="w-4 h-4" />
                 <span className="text-sm font-medium">Custo IA/mês</span>
               </div>
-              <span className="font-bold text-amber-600">${metrics.usage.aiCostThisMonthUsd.toFixed(2)}</span>
+              <span className="font-bold text-[var(--color-primary)]">${metrics.usage.aiCostThisMonthUsd.toFixed(2)}</span>
             </div>
           </div>
         </Card>
@@ -124,7 +124,7 @@ export default function AdminDashboardPage() {
           <p className="font-bold text-3xl text-slate-900 mb-4">{metrics.cases.total}</p>
           <div className="space-y-2">
             {Object.entries(metrics.cases.byStatus).map(([status, count]) => (
-              <div key={status} className="flex items-center justify-between text-sm">
+              <div key={status} className="flex align-items-center justify-content-between text-sm">
                 <span className="text-slate-500 capitalize">{status.toLowerCase()}</span>
                 <span className="font-semibold text-slate-700">{count}</span>
               </div>

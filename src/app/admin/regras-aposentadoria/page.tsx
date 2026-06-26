@@ -153,7 +153,7 @@ export default function RegrasAposentadoriaPage() {
   const modalidadeLabels = Object.fromEntries(modalidades.map(({ codigo, label }) => [codigo, label]))
   return (
     <div className="p-8 space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex align-items-center justify-content-between">
         <div>
           <h1 className="font-serif font-bold text-2xl text-slate-900">Regras de Aposentadoria</h1>
           <p className="font-sans text-sm text-slate-500 mt-1">
@@ -163,7 +163,7 @@ export default function RegrasAposentadoriaPage() {
         {!showForm && (
           <button
             onClick={() => { setShowForm(true); setEditingId(null); setForm(EMPTY_FORM); setError('') }}
-            className="flex items-center gap-2 bg-amber-600 hover:bg-amber-700 text-white font-sans font-semibold text-sm px-4 py-2.5 rounded-lg transition-colors"
+            className="flex align-items-center gap-2 bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] text-white font-sans font-semibold text-sm px-4 py-2.5 rounded-lg neo-btn transition-colors"
           >
             <Plus className="w-4 h-4" />
             Nova Regra
@@ -171,7 +171,7 @@ export default function RegrasAposentadoriaPage() {
         )}
       </div>
       {showForm && (
-        <div className="bg-white border border-slate-200 rounded-xl p-6 space-y-4 shadow-sm">
+        <div className="bg-white border border-slate-200 rounded-xl p-6 space-y-4 neo-card-flat">
           <h2 className="font-serif font-bold text-lg text-slate-900">
             {editingId ? 'Editar Regra' : 'Nova Regra'}
           </h2>
@@ -182,7 +182,7 @@ export default function RegrasAposentadoriaPage() {
                 value={form.modalidade}
                 onChange={e => setForm(f => ({ ...f, modalidade: e.target.value }))}
                 disabled={!!editingId}
-                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm font-sans focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 outline-none disabled:bg-slate-50 disabled:text-slate-400"
+                className="w-full neo-input-neo rounded-md px-3 py-2 text-sm font-sans focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)]/30 outline-none disabled:bg-slate-50 disabled:text-slate-400"
               >
                 <option value="">Selecione...</option>
                 {modalidades.map((modalidade) => (
@@ -196,7 +196,7 @@ export default function RegrasAposentadoriaPage() {
                 value={form.genero}
                 onChange={e => setForm(f => ({ ...f, genero: e.target.value }))}
                 disabled={!!editingId}
-                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm font-sans focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 outline-none disabled:bg-slate-50 disabled:text-slate-400"
+                className="w-full neo-input-neo rounded-md px-3 py-2 text-sm font-sans focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)]/30 outline-none disabled:bg-slate-50 disabled:text-slate-400"
               >
                 <option value="M">Homens (M)</option>
                 <option value="F">Mulheres (F)</option>
@@ -210,7 +210,7 @@ export default function RegrasAposentadoriaPage() {
                 value={form.vigencia}
                 onChange={e => setForm(f => ({ ...f, vigencia: e.target.value }))}
                 disabled={!!editingId}
-                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm font-sans focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 outline-none disabled:bg-slate-50 disabled:text-slate-400"
+                className="w-full neo-input-neo rounded-md px-3 py-2 text-sm font-sans focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)]/30 outline-none disabled:bg-slate-50 disabled:text-slate-400"
               />
             </div>
             <div>
@@ -221,7 +221,7 @@ export default function RegrasAposentadoriaPage() {
                 value={form.idadeMinima}
                 onChange={e => setForm(f => ({ ...f, idadeMinima: e.target.value }))}
                 placeholder="Ex: 62 ou 59.5"
-                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm font-sans focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 outline-none"
+                className="w-full neo-input-neo rounded-md px-3 py-2 text-sm font-sans focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)]/30 outline-none"
               />
             </div>
             <div>
@@ -232,7 +232,7 @@ export default function RegrasAposentadoriaPage() {
                 value={form.tempoContribuicaoAnos}
                 onChange={e => setForm(f => ({ ...f, tempoContribuicaoAnos: e.target.value }))}
                 placeholder="Ex: 35"
-                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm font-sans focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 outline-none"
+                className="w-full neo-input-neo rounded-md px-3 py-2 text-sm font-sans focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)]/30 outline-none"
               />
             </div>
             <div>
@@ -243,7 +243,7 @@ export default function RegrasAposentadoriaPage() {
                 value={form.pontosMinimos}
                 onChange={e => setForm(f => ({ ...f, pontosMinimos: e.target.value }))}
                 placeholder="Ex: 103"
-                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm font-sans focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 outline-none"
+                className="w-full neo-input-neo rounded-md px-3 py-2 text-sm font-sans focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)]/30 outline-none"
               />
             </div>
             <div>
@@ -254,7 +254,7 @@ export default function RegrasAposentadoriaPage() {
                 value={form.carenciaMeses}
                 onChange={e => setForm(f => ({ ...f, carenciaMeses: e.target.value }))}
                 placeholder="Ex: 180"
-                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm font-sans focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 outline-none"
+                className="w-full neo-input-neo rounded-md px-3 py-2 text-sm font-sans focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)]/30 outline-none"
               />
             </div>
             <div className="sm:col-span-2">
@@ -264,7 +264,7 @@ export default function RegrasAposentadoriaPage() {
                 value={form.descricao}
                 onChange={e => setForm(f => ({ ...f, descricao: e.target.value }))}
                 placeholder="Ex: Regra Permanente - Homens"
-                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm font-sans focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 outline-none"
+                className="w-full neo-input-neo rounded-md px-3 py-2 text-sm font-sans focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)]/30 outline-none"
               />
             </div>
             <div>
@@ -274,7 +274,7 @@ export default function RegrasAposentadoriaPage() {
                 value={form.legislacao}
                 onChange={e => setForm(f => ({ ...f, legislacao: e.target.value }))}
                 placeholder="Ex: EC 103/2019"
-                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm font-sans focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 outline-none"
+                className="w-full neo-input-neo rounded-md px-3 py-2 text-sm font-sans focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)]/30 outline-none"
               />
             </div>
             <div className="sm:col-span-3">
@@ -284,7 +284,7 @@ export default function RegrasAposentadoriaPage() {
                 onChange={e => setForm(f => ({ ...f, observacoes: e.target.value }))}
                 placeholder="Notas adicionais sobre esta regra..."
                 rows={2}
-                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm font-sans focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 outline-none resize-none"
+                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm font-sans focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)]/30 outline-none resize-none"
               />
             </div>
           </div>
@@ -293,14 +293,14 @@ export default function RegrasAposentadoriaPage() {
             <button
               onClick={handleSubmit}
               disabled={saving}
-              className="flex items-center gap-2 bg-amber-600 hover:bg-amber-700 disabled:opacity-60 text-white font-sans font-semibold text-sm px-4 py-2.5 rounded-lg transition-colors"
+              className="flex align-items-center gap-2 bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] disabled:opacity-60 text-white font-sans font-semibold text-sm px-4 py-2.5 rounded-lg neo-btn transition-colors"
             >
               <Check className="w-4 h-4" />
               {saving ? 'Salvando...' : 'Salvar'}
             </button>
             <button
               onClick={handleCancel}
-              className="flex items-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-sans font-semibold text-sm px-4 py-2.5 rounded-lg transition-colors"
+              className="flex align-items-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-sans font-semibold text-sm px-4 py-2.5 rounded-lg neo-btn transition-colors"
             >
               <X className="w-4 h-4" />
               Cancelar
@@ -318,12 +318,12 @@ export default function RegrasAposentadoriaPage() {
             const isExpanded = expandedGroups[modalidade] !== false // padrão: aberto
             const label = modalidadeLabels[modalidade] ?? modalidade
             return (
-              <div key={modalidade} className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+              <div key={modalidade} className="bg-white border border-slate-200 rounded-xl overflow-hidden neo-card-flat">
                 <button
                   onClick={() => toggleGroup(modalidade)}
-                  className="w-full flex items-center justify-between px-5 py-3.5 text-left hover:bg-slate-50 transition-colors"
+                  className="w-full flex align-items-center justify-content-between px-5 py-3.5 text-left hover:bg-slate-50 transition-colors"
                 >
-                  <div className="flex items-center gap-3">
+                  <div className="flex align-items-center gap-3">
                     <span className="font-serif font-bold text-sm text-slate-900">{label}</span>
                     <span className="text-xs bg-slate-100 text-slate-500 px-2 py-0.5 rounded font-sans font-medium">
                       {modalidade}
@@ -348,7 +348,7 @@ export default function RegrasAposentadoriaPage() {
                     {regs.map((r, i) => (
                       <div
                         key={r.id}
-                        className={`grid grid-cols-[80px_1fr_80px_100px_80px_80px_1fr_80px_auto] px-5 py-3.5 items-center text-sm font-sans border-t border-slate-100 ${i === 0 ? 'bg-amber-50' : ''}`}
+                        className={`grid grid-cols-[80px_1fr_80px_100px_80px_80px_1fr_80px_auto] px-5 py-3.5 align-items-center text-sm font-sans border-t border-slate-100 ${i === 0 ? 'bg-[var(--color-primary-tint)]' : ''}`}
                       >
                         <span className={`font-semibold text-xs px-2 py-0.5 rounded w-fit ${r.genero === 'M' ? 'bg-blue-100 text-blue-700' : r.genero === 'F' ? 'bg-pink-100 text-pink-700' : 'bg-slate-100 text-slate-600'}`}>
                           {GENERO_LABELS[r.genero] ?? r.genero}
@@ -361,12 +361,12 @@ export default function RegrasAposentadoriaPage() {
                         <span className="text-slate-500 text-xs">{r.legislacao}</span>
                         <span className="text-slate-500 text-xs">
                           {fmtDate(r.vigencia)}
-                          {i === 0 && <span className="ml-1 text-[9px] bg-amber-500 text-white px-1 py-0.5 rounded font-bold uppercase">Vigente</span>}
+                          {i === 0 && <span className="ml-1 text-[9px] bg-[var(--color-primary)] text-white px-1 py-0.5 rounded font-bold uppercase">Vigente</span>}
                         </span>
                         <div className="flex gap-1">
                           <button
                             onClick={() => handleEdit(r)}
-                            className="p-1.5 rounded-lg text-slate-400 hover:text-amber-600 hover:bg-amber-50 transition-colors"
+                            className="p-1.5 rounded-lg text-slate-400 hover:text-[var(--color-primary)] hover:bg-[var(--color-primary-tint)] transition-colors"
                             title="Editar"
                           >
                             <Pencil className="w-3.5 h-3.5" />

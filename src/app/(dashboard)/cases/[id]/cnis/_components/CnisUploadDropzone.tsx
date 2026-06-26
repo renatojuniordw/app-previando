@@ -16,13 +16,13 @@ export function CnisUploadDropzone({ isDragging, uploading, isProcessing, onDrag
       onDragOver={onDragOver}
       onDragLeave={onDragLeave}
       onDrop={onDrop}
-      className={`py-20 flex flex-col items-center justify-center border-2 border-dashed rounded-2xl text-center transition-all duration-200 ${
+      className={`py-20 flex flex-column align-items-center justify-content-center border-2 border-dashed rounded-2xl text-center transition-all duration-200 ${
         isDragging
-          ? 'border-amber-500 bg-amber-50/50 scale-[0.99] shadow-inner'
-          : 'border-slate-300 bg-slate-50 hover:bg-slate-50/80 hover:border-slate-400'
+          ? 'border-[var(--color-primary)] bg-[rgba(242,232,228,0.5)] scale-[0.99] shadow-inner'
+          : 'border-[var(--color-border)] bg-[var(--color-surface)] hover:bg-[var(--color-surface)]/80'
       }`}
     >
-      <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center mb-4 border border-slate-200 shadow-sm">
+      <div className="w-16 h-16 rounded-full bg-[var(--color-card-bg)] flex align-items-center justify-content-center mb-4 border border-[var(--color-border)] shadow-sm">
         <FileText className="w-8 h-8 text-slate-400" />
       </div>
       <h3 className="font-serif font-bold text-lg text-slate-900 mb-2">Nenhum CNIS Enviado</h3>
@@ -32,7 +32,7 @@ export function CnisUploadDropzone({ isDragging, uploading, isProcessing, onDrag
       <button
         onClick={onUploadClick}
         disabled={uploading || isProcessing}
-        className="bg-amber-600 text-white font-sans font-semibold text-sm px-6 py-3 rounded-lg hover:bg-amber-700 transition-colors disabled:opacity-50 shadow-sm flex items-center gap-2 focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:outline-none"
+        className="neo-btn neo-btn-primary text-sm flex align-items-center gap-2 focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:outline-none"
       >
         {uploading ? (
           <><Loader2 className="w-4 h-4 animate-spin" />Enviando Arquivo…</>

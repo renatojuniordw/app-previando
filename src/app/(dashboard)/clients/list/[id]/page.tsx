@@ -132,9 +132,9 @@ export default function ClientDetailPage() {
   return (
     <ErrorBoundary>
     <div className="p-4 sm:p-6 space-y-6">
-      <div className="flex items-start justify-between">
+      <div className="flex align-items-start justify-content-between">
         <div>
-          <div className="flex items-center gap-3 mb-1">
+          <div className="flex align-items-center gap-3 mb-1">
             <Link href="/clients/list" className="font-sans text-sm font-medium text-slate-500 hover:text-slate-900">
               ← Clientes
             </Link>
@@ -178,8 +178,8 @@ export default function ClientDetailPage() {
 
       {/* Resumo de Casos */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <Card variant="light" className="p-6 flex items-center gap-4">
-          <div className="w-12 h-12 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-600 shrink-0">
+        <Card variant="light" className="p-6 flex align-items-center gap-4">
+          <div className="w-12 h-12 rounded-full bg-slate-100 border border-slate-200 flex align-items-center justify-content-center text-slate-600 shrink-0">
             <Briefcase className="w-5 h-5" />
           </div>
           <div>
@@ -187,8 +187,8 @@ export default function ClientDetailPage() {
             <p className="font-sans font-bold text-2xl text-slate-900 mt-0.5">{totalCases}</p>
           </div>
         </Card>
-        <Card variant="light" className="p-6 flex items-center gap-4">
-          <div className="w-12 h-12 rounded-full bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-600 shrink-0">
+        <Card variant="light" className="p-6 flex align-items-center gap-4">
+          <div className="w-12 h-12 rounded-full bg-[var(--color-primary-tint)] border border-[#F5D0C3] flex align-items-center justify-content-center text-[var(--color-primary)] shrink-0">
             <Clock className="w-5 h-5" />
           </div>
           <div>
@@ -196,8 +196,8 @@ export default function ClientDetailPage() {
             <p className="font-sans font-bold text-2xl text-slate-900 mt-0.5">{activeCases}</p>
           </div>
         </Card>
-        <Card variant="light" className="p-6 flex items-center gap-4">
-          <div className="w-12 h-12 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 shrink-0">
+        <Card variant="light" className="p-6 flex align-items-center gap-4">
+          <div className="w-12 h-12 rounded-full bg-emerald-50 border border-emerald-100 flex align-items-center justify-content-center text-emerald-600 shrink-0">
             <CheckCircle className="w-5 h-5" />
           </div>
           <div>
@@ -229,8 +229,8 @@ export default function ClientDetailPage() {
           <div className="space-y-2">
             {client.cases.map((caso) => (
               <Link key={caso.id} href={`/cases/${caso.id}`}>
-                <div className="border border-slate-200 bg-white rounded-md p-3 hover:border-amber-600 shadow-sm transition-colors cursor-pointer">
-                  <div className="flex items-center justify-between">
+                <div className="border border-slate-200 bg-white rounded-md p-3 hover:border-[var(--color-primary-dark)] neo-btn transition-colors cursor-pointer">
+                  <div className="flex align-items-center justify-content-between">
                     <div>
                       <p className="font-sans font-semibold text-sm text-slate-900">
                         {BENEFIT_DB_LABELS[caso.benefitType] ?? BENEFIT_SHORT_LABELS[caso.benefitType] ?? caso.benefitType}
@@ -239,7 +239,7 @@ export default function ClientDetailPage() {
                         {formatDate(caso.createdAt)}
                       </p>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex align-items-center gap-2">
                       {caso.cnisDocument && (
                         <Badge variant={['PROCESSED', 'PROCESSADO'].includes(caso.cnisDocument.processingStatus.toUpperCase()) ? 'lime' : 'yellow'}>
                           CNIS {['PROCESSED', 'PROCESSADO'].includes(caso.cnisDocument.processingStatus.toUpperCase()) ? '✅' : '⏳'}
@@ -273,7 +273,7 @@ export default function ClientDetailPage() {
         <form onSubmit={handleSubmit(createCase)} className="space-y-4">
           <div>
             <label className="neo-label">Tipo de Benefício</label>
-            <select {...register('benefitType')} className="neo-input">
+            <select {...register('benefitType')} className="neo-input-neo px-3 py-2 text-sm font-sans rounded-md">
               <option value="">Selecione...</option>
               {Object.entries(BENEFIT_SHORT_LABELS).map(([value, label]) => (
                 <option key={value} value={value}>{label}</option>
@@ -285,7 +285,7 @@ export default function ClientDetailPage() {
           </div>
           <div>
             <label className="neo-label">Prioridade</label>
-            <select {...register('priority')} className="neo-input">
+            <select {...register('priority')} className="neo-input-neo px-3 py-2 text-sm font-sans rounded-md">
               <option value="NORMAL">Normal</option>
               <option value="ATTENTION">Atenção</option>
               <option value="CRITICAL">Crítico</option>
@@ -295,7 +295,7 @@ export default function ClientDetailPage() {
             <label className="neo-label">Observações</label>
             <textarea
               {...register('notes')}
-              className="neo-input min-h-[80px] resize-none"
+              className="neo-input-neo min-h-[80px] resize-none px-3 py-2 text-sm font-sans rounded-md"
               placeholder="Detalhes do caso..."
             />
           </div>
@@ -313,7 +313,7 @@ export default function ClientDetailPage() {
             <textarea
               value={notesText}
               onChange={(e) => setNotesText(e.target.value)}
-              className="neo-input min-h-[120px] resize-none"
+              className="neo-input-neo min-h-[120px] resize-none px-3 py-2 text-sm font-sans rounded-md"
               placeholder="Digite as observações do cliente..."
             />
           </div>

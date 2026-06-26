@@ -13,11 +13,11 @@ export function ReprocessModal({ open, reprocessing, reprocessError, onClose, on
   return (
     <Modal open={open} onClose={onClose} title="REPROCESSAR EXTRATO DO CNIS?">
       <div className="space-y-4 font-sans text-sm text-slate-600 leading-relaxed">
-        <div className="border border-amber-255 bg-amber-50 rounded-xl p-4 flex items-start gap-3 text-amber-800">
-          <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+        <div className="bg-[var(--color-primary-tint)] rounded-xl p-4 flex align-items-start gap-3 text-[#A03A15]">
+          <AlertCircle className="w-5 h-5 text-[var(--color-primary)] shrink-0 mt-0.5" />
           <div>
             <p className="font-bold text-sm">Fila de Execução em Nuvem</p>
-            <p className="text-xs text-amber-700 mt-1">
+            <p className="text-xs text-[var(--color-primary-dark)] mt-1">
               O sistema utilizará o arquivo PDF já guardado na nuvem para realizar um novo processamento completo da IA. Isso evitará consumo extra de banda e redundância de arquivos.
             </p>
           </div>
@@ -27,10 +27,10 @@ export function ReprocessModal({ open, reprocessing, reprocessError, onClose, on
           <div className="text-xs font-semibold text-red-600 bg-red-50 border border-red-200 p-2.5 rounded-lg">{reprocessError}</div>
         )}
         <div className="flex gap-3 pt-2">
-          <button onClick={onConfirm} disabled={reprocessing} className="flex-1 bg-amber-600 hover:bg-amber-700 disabled:opacity-50 text-white font-semibold py-2.5 px-4 rounded-lg text-center transition-colors font-sans text-sm flex items-center justify-center gap-2 focus-visible:ring-2 focus-visible:ring-amber-500">
+          <button onClick={onConfirm} disabled={reprocessing} className="flex-1 neo-btn neo-btn-primary flex-1 text-center transition-colors font-sans text-sm flex align-items-center justify-content-center gap-2 focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]">
             {reprocessing ? <><Loader2 className="w-4 h-4 animate-spin" />Reprocessando…</> : 'SIM, REPROCESSAR'}
           </button>
-          <button onClick={onClose} disabled={reprocessing} className="flex-1 border border-slate-200 hover:bg-slate-50 disabled:opacity-50 text-slate-700 font-semibold py-2.5 px-4 rounded-lg text-center transition-colors font-sans text-sm">
+          <button onClick={onClose} disabled={reprocessing} className="flex-1 neo-btn-outline flex-1 text-center transition-colors font-sans text-sm">
             CANCELAR
           </button>
         </div>

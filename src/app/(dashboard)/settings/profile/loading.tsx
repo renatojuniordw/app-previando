@@ -6,7 +6,7 @@ export default function ProfileLoading() {
 
       {/* Account Data card */}
       <div className="bg-white border border-slate-200 rounded-xl p-6 space-y-4">
-        <div className="flex items-center gap-2">
+        <div className="flex align-items-center gap-2">
           <div className="h-5 w-5 bg-slate-200 rounded" />
           <div className="h-5 w-36 bg-slate-200 rounded" />
         </div>
@@ -25,7 +25,7 @@ export default function ProfileLoading() {
 
       {/* Change Password card */}
       <div className="bg-white border border-slate-200 rounded-xl p-6 space-y-4">
-        <div className="flex items-center gap-2">
+        <div className="flex align-items-center gap-2">
           <div className="h-5 w-5 bg-slate-200 rounded" />
           <div className="h-5 w-28 bg-slate-200 rounded" />
         </div>
@@ -45,7 +45,7 @@ export default function ProfileLoading() {
 
       {/* Current Plan card */}
       <div className="bg-white border border-slate-200 rounded-xl p-6 space-y-4">
-        <div className="flex items-center gap-2">
+        <div className="flex align-items-center gap-2">
           <div className="h-5 w-5 bg-slate-200 rounded" />
           <div className="h-5 w-24 bg-slate-200 rounded" />
         </div>

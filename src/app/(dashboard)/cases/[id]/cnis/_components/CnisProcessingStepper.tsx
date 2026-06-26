@@ -11,15 +11,15 @@ type StepStatus = 'completed' | 'active' | 'waiting'
 function StepIcon({ status }: { status: StepStatus }) {
   if (status === 'completed') {
     return (
-      <div className="w-7 h-7 rounded-full bg-emerald-100 border border-emerald-300 text-emerald-700 flex items-center justify-center text-xs font-bold shrink-0 shadow-sm">
+      <div className="w-7 h-7 rounded-full bg-emerald-100 border border-emerald-300 text-emerald-700 flex align-items-center justify-content-center text-xs font-bold shrink-0 shadow-sm">
         ✓
       </div>
     )
   }
   if (status === 'active') {
     return (
-      <div className="w-7 h-7 rounded-full bg-amber-50 border border-amber-300 text-amber-700 flex items-center justify-center text-xs font-bold shrink-0 shadow-sm animate-pulse">
-        <Loader2 className="w-4 h-4 animate-spin text-amber-600" />
+      <div className="w-7 h-7 rounded-full bg-[var(--color-primary-tint)] border border-[#EB8B6A] text-[var(--color-primary-dark)] flex align-items-center justify-content-center text-xs font-bold shrink-0 shadow-sm animate-pulse">
+        <Loader2 className="w-4 h-4 animate-spin text-[var(--color-primary)]" />
       </div>
     )
   }
@@ -28,7 +28,7 @@ function StepIcon({ status }: { status: StepStatus }) {
 
 function StepNumber({ n }: { n: number }) {
   return (
-    <div className="w-7 h-7 rounded-full bg-slate-100 border border-slate-200 text-slate-400 flex items-center justify-center text-xs font-bold shrink-0">
+    <div className="w-7 h-7 rounded-full bg-slate-100 border border-slate-200 text-slate-400 flex align-items-center justify-content-center text-xs font-bold shrink-0">
       {n}
     </div>
   )
@@ -38,7 +38,7 @@ function Step({ n, label, completedText, activeText, status }: {
   n: number; label: string; completedText: string; activeText: string; status: StepStatus
 }) {
   return (
-    <div className="flex items-center gap-3 flex-1">
+    <div className="flex align-items-center gap-3 flex-1">
       {status === 'waiting' ? <StepNumber n={n} /> : <StepIcon status={status} />}
       <div>
         <p className="font-sans font-bold text-xs text-slate-800">{label}</p>
@@ -59,9 +59,9 @@ export function CnisProcessingStepper({ processingStatus, stuckWarning }: Props)
       <div className="bg-slate-50 border border-slate-150 rounded-xl p-5 space-y-4">
         <h4 className="font-sans font-bold text-xs text-slate-700 tracking-wide uppercase">Progresso de Extração do CNIS</h4>
 
-        <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
-          <div className="flex items-center gap-3 flex-1">
-            <div className="w-7 h-7 rounded-full bg-emerald-100 border border-emerald-300 text-emerald-700 flex items-center justify-center text-xs font-bold shrink-0 shadow-sm">✓</div>
+        <div className="flex flex-column md:flex-row align-items-stretch md:align-items-center justify-content-between gap-4">
+          <div className="flex align-items-center gap-3 flex-1">
+            <div className="w-7 h-7 rounded-full bg-emerald-100 border border-emerald-300 text-emerald-700 flex align-items-center justify-content-center text-xs font-bold shrink-0 shadow-sm">✓</div>
             <div>
               <p className="font-sans font-bold text-xs text-slate-800">1. Upload do Arquivo</p>
               <p className="font-sans text-[10px] text-slate-500">Enviado e salvo na nuvem</p>
@@ -79,7 +79,7 @@ export function CnisProcessingStepper({ processingStatus, stuckWarning }: Props)
       </div>
 
       {stuckWarning && (
-        <div className="border border-orange-200 bg-orange-50 rounded-lg p-4 flex items-start gap-3">
+        <div className="border border-orange-200 bg-orange-50 rounded-lg p-4 flex align-items-start gap-3">
           <AlertCircle className="w-5 h-5 text-orange-500 shrink-0 mt-0.5" />
           <div>
             <p className="font-sans text-sm font-bold text-orange-800">Processamento demorado</p>

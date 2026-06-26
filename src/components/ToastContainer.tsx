@@ -10,10 +10,16 @@ const ICONS = {
   info: Info,
 }
 
-const STYLES = {
-  success: 'bg-emerald-50 border-emerald-200 text-emerald-800',
-  error: 'bg-red-50 border-red-200 text-red-800',
-  info: 'bg-blue-50 border-blue-200 text-blue-800',
+const STYLES: Record<string, React.CSSProperties> = {
+  success: { background: 'var(--color-primary-tint)', borderColor: 'var(--color-primary)' },
+  error: { background: 'var(--color-error-bg)', borderColor: 'var(--color-error)' },
+  info: { background: 'var(--color-info-bg)', borderColor: 'var(--color-info)' },
+}
+
+const TEXT_CLASSES = {
+  success: 'text-emerald-800',
+  error: 'text-red-800',
+  info: 'text-blue-800',
 }
 
 const ICON_COLORS = {
@@ -33,13 +39,14 @@ export function ToastContainer() {
   if (!mounted || toasts.length === 0) return null
 
   return (
-    <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2 max-w-sm" role="status" aria-live="polite">
+    <div className="fixed bottom-4 right-4 z-50 flex flex-column gap-2 max-w-sm" role="status" aria-live="polite">
       {toasts.map((toast) => {
         const Icon = ICONS[toast.type]
         return (
           <div
             key={toast.id}
-            className={`flex items-start gap-3 p-4 border rounded-xl shadow-lg animate-slide-up bg-white ${STYLES[toast.type]}`}
+            className={`flex align-items-start gap-3 p-4 border rounded-xl animate-slide-up neo-card-flat ${TEXT_CLASSES[toast.type]}`}
+            style={STYLES[toast.type]}
           >
             <Icon className={`w-5 h-5 shrink-0 mt-0.5 ${ICON_COLORS[toast.type]}`} />
             <div className="flex-1 min-w-0">

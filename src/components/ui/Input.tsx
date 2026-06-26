@@ -20,17 +20,17 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
         <input
           ref={ref}
           className={cn(
-            'neo-input w-full',
-            error && 'border-red-500 focus:border-red-500 focus:ring-red-500',
+            'neo-input-neo',
+            error && 'ring-2 ring-red-500 focus:ring-red-500',
             className
           )}
           {...props}
         />
         {error && (
-          <p className="font-sans text-sm text-red-500">{error}</p>
+          <p className="font-sans text-sm" style={{ color: '#DC2626' }}>{error}</p>
         )}
         {hint && !error && (
-          <p className="font-sans text-sm text-slate-500">{hint}</p>
+          <p className="font-sans text-sm" style={{ color: 'var(--color-text-muted)' }}>{hint}</p>
         )}
       </div>
     )
