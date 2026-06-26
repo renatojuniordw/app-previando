@@ -11,6 +11,7 @@ export interface RunSimulationInput {
   dibProjetada: string
   valorContribuicaoFutura: number
   modalidade: string
+  tempoEspecialAnos?: number
 }
 
 /**
@@ -23,7 +24,7 @@ export class SimulationOrchestrator {
    * e salva no banco de dados.
    */
   static async run(input: RunSimulationInput) {
-    const { caseId, scenarioName, gender, dibProjetada, valorContribuicaoFutura, modalidade } = input
+    const { caseId, scenarioName, gender, dibProjetada, valorContribuicaoFutura, modalidade, tempoEspecialAnos = 0 } = input
 
     // 1. Busca e valida o documento CNIS utilizando o helper centralizado
     const { extracted } = await findAndValidateCnis(caseId)
@@ -48,6 +49,7 @@ export class SimulationOrchestrator {
       valorContribuicaoFutura,
       extractedData: extracted,
       modalidade,
+      tempoEspecialAnos,
       salarioMinimo: salarioVigente.valor,
       tetoPrevidenciario: salarioVigente.teto,
       regrasVigentes,

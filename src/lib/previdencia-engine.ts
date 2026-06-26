@@ -242,9 +242,9 @@ export function calculatePrevidenciario(input: CalculationInput): CalculationRes
       if (idadeNaApuracao >= idadeMinima && tempoContribuicaoAnos >= tempoMinimoIdade && carenciaMeses >= carenciaExigida) {
         elegivel = true
       } else {
-        if (idadeNaApuracao < idadeMinima) pendencias.push(`Idade mínima de ${idadeMinima} anos não atingida (possui ${idadeNaApuracao}).`)
-        if (tempoContribuicaoAnos < tempoMinimoIdade) pendencias.push(`Tempo de contribuição mínimo de ${tempoMinimoIdade} anos não atingido (possui ${tempoContribuicaoAnos}).`)
-        if (carenciaMeses < carenciaExigida) pendencias.push(`Carência de ${carenciaExigida} contribuições mensais não cumprida (possui ${carenciaMeses}).`)
+        if (idadeNaApuracao < idadeMinima) pendencias.push(`Idade mínima de ${idadeMinima} anos não atingida (idade apurada: ${idadeNaApuracao} anos).`)
+        if (tempoContribuicaoAnos < tempoMinimoIdade) pendencias.push(`Tempo de contribuição mínimo de ${tempoMinimoIdade} anos não atingido (tempo apurado: ${tempoContribuicaoAnos} anos).`)
+        if (carenciaMeses < carenciaExigida) pendencias.push(`Carência de ${carenciaExigida} contribuições mensais não cumprida (carência apurada: ${carenciaMeses}).`)
       }
       break
     }
@@ -258,8 +258,8 @@ export function calculatePrevidenciario(input: CalculationInput): CalculationRes
       if (tempoContribuicaoAnos >= tempoMinimoTC && carenciaMeses >= carenciaExigida) {
         elegivel = true
       } else {
-        if (tempoContribuicaoAnos < tempoMinimoTC) pendencias.push(`Tempo de contribuição de ${tempoMinimoTC} anos não atingido (possui ${tempoContribuicaoAnos}).`)
-        if (carenciaMeses < carenciaExigida) pendencias.push(`Carência de ${carenciaExigida} contribuições mensais não cumprida (possui ${carenciaMeses}).`)
+        if (tempoContribuicaoAnos < tempoMinimoTC) pendencias.push(`Tempo de contribuição de ${tempoMinimoTC} anos não atingido (tempo apurado: ${tempoContribuicaoAnos} anos).`)
+        if (carenciaMeses < carenciaExigida) pendencias.push(`Carência de ${carenciaExigida} contribuições mensais não cumprida (carência apurada: ${carenciaMeses}).`)
       }
       break
     }
@@ -276,9 +276,9 @@ export function calculatePrevidenciario(input: CalculationInput): CalculationRes
       if (tempoContribuicaoAnos >= tempoMinTCRegra && pontosAtuais >= pontosExigidos && carenciaMeses >= carenciaExigida) {
         elegivel = true
       } else {
-        if (tempoContribuicaoAnos < tempoMinTCRegra) pendencias.push(`Tempo de contribuição de ${tempoMinTCRegra} anos não atingido (possui ${tempoContribuicaoAnos}).`)
-        if (pontosAtuais < pontosExigidos) pendencias.push(`Pontuação mínima de ${pontosExigidos} pontos não atingida (soma de idade e tempo deu ${pontosAtuais.toFixed(1)}).`)
-        if (carenciaMeses < carenciaExigida) pendencias.push(`Carência de ${carenciaExigida} contribuições mensais não cumprida (possui ${carenciaMeses}).`)
+        if (tempoContribuicaoAnos < tempoMinTCRegra) pendencias.push(`Tempo de contribuição de ${tempoMinTCRegra} anos não atingido (tempo apurado: ${tempoContribuicaoAnos} anos).`)
+        if (pontosAtuais < pontosExigidos) pendencias.push(`Pontuação mínima de ${pontosExigidos} pontos não atingida (pontuação apurada: ${pontosAtuais.toFixed(1)} pontos).`)
+        if (carenciaMeses < carenciaExigida) pendencias.push(`Carência de ${carenciaExigida} contribuições mensais não cumprida (carência apurada: ${carenciaMeses}).`)
       }
       break
     }
@@ -309,8 +309,8 @@ export function calculatePrevidenciario(input: CalculationInput): CalculationRes
       if (idadeNaApuracao >= idadePedagio100 && tempoContribuicaoAnos >= tempoPedagio100 && carenciaMeses >= carenciaExigida) {
         elegivel = true
       } else {
-        if (idadeNaApuracao < idadePedagio100) pendencias.push(`Idade mínima de ${idadePedagio100} anos não atingida para pedágio de 100% (possui ${idadeNaApuracao}).`)
-        if (tempoContribuicaoAnos < tempoPedagio100) pendencias.push(`Tempo de contribuição de ${tempoPedagio100} anos não atingido para pedágio de 100% (possui ${tempoContribuicaoAnos}).`)
+        if (idadeNaApuracao < idadePedagio100) pendencias.push(`Idade mínima de ${idadePedagio100} anos não atingida para pedágio de 100% (idade apurada: ${idadeNaApuracao} anos).`)
+        if (tempoContribuicaoAnos < tempoPedagio100) pendencias.push(`Tempo de contribuição de ${tempoPedagio100} anos não atingido para pedágio de 100% (tempo apurado: ${tempoContribuicaoAnos} anos).`)
         if (carenciaMeses < carenciaExigida) pendencias.push(`Carência de ${carenciaExigida} contribuições mensais não cumprida.`)
       }
       break
@@ -325,8 +325,8 @@ export function calculatePrevidenciario(input: CalculationInput): CalculationRes
       if (idadeNaApuracao >= idadeEspecialMinima && tempoContribuicaoAnos >= tempoEspecialMinimo) {
         elegivel = true
       } else {
-        if (idadeNaApuracao < idadeEspecialMinima) pendencias.push(`Idade mínima para especial de ${idadeEspecialMinima} anos não atingida (possui ${idadeNaApuracao}).`)
-        if (tempoContribuicaoAnos < tempoEspecialMinimo) pendencias.push(`Tempo mínimo especial de ${tempoEspecialMinimo} anos não atingido (possui ${tempoContribuicaoAnos.toFixed(1)}).`)
+        if (idadeNaApuracao < idadeEspecialMinima) pendencias.push(`Idade mínima para aposentadoria especial de ${idadeEspecialMinima} anos não atingida (idade apurada: ${idadeNaApuracao} anos).`)
+        if (tempoContribuicaoAnos < tempoEspecialMinimo) pendencias.push(`Tempo mínimo especial de ${tempoEspecialMinimo} anos não atingido (tempo apurado: ${tempoContribuicaoAnos.toFixed(1)} anos).`)
       }
       break
     }
@@ -340,8 +340,8 @@ export function calculatePrevidenciario(input: CalculationInput): CalculationRes
       if (idadeNaApuracao >= idadeHibrida && tempoContribuicaoAnos >= tempoHibrida) {
         elegivel = true
       } else {
-        if (idadeNaApuracao < idadeHibrida) pendencias.push(`Idade mínima híbrida de ${idadeHibrida} anos não atingida (possui ${idadeNaApuracao}).`)
-        if (tempoContribuicaoAnos < tempoHibrida) pendencias.push(`Tempo de contribuição mínimo de ${tempoHibrida} anos não atingido (possui ${tempoContribuicaoAnos}).`)
+        if (idadeNaApuracao < idadeHibrida) pendencias.push(`Idade mínima híbrida de ${idadeHibrida} anos não atingida (idade apurada: ${idadeNaApuracao} anos).`)
+        if (tempoContribuicaoAnos < tempoHibrida) pendencias.push(`Tempo de contribuição mínimo de ${tempoHibrida} anos não atingido (tempo apurado: ${tempoContribuicaoAnos} anos).`)
       }
       break
     }
@@ -354,7 +354,7 @@ export function calculatePrevidenciario(input: CalculationInput): CalculationRes
       elegivel = carenciaMeses >= carenciaExigida || modalidade === 'AUXILIO_DOENCA_B91'
 
       if (carenciaMeses < carenciaExigida && modalidade === 'AUXILIO_DOENCA_B31') {
-        pendencias.push(`Carência mínima de ${carenciaExigida} contribuições para auxílio-doença previdenciário não cumprida (possui ${carenciaMeses}).`)
+        pendencias.push(`Carência mínima de ${carenciaExigida} contribuições para auxílio-doença previdenciário não cumprida (carência apurada: ${carenciaMeses}).`)
       }
       break
     }
@@ -393,7 +393,7 @@ export function calculatePrevidenciario(input: CalculationInput): CalculationRes
       coeficiente = 1.00
       elegivel = idadeNaApuracao >= idadeBPC
       if (idadeNaApuracao < idadeBPC) {
-        pendencias.push(`Idade mínima de ${idadeBPC} anos para BPC/LOAS Idoso não atingida (possui ${idadeNaApuracao}). Deficiência não avaliada.`)
+        pendencias.push(`Idade mínima de ${idadeBPC} anos para BPC/LOAS Idoso não atingida (idade apurada: ${idadeNaApuracao} anos). Deficiência não avaliada.`)
       }
       break
     }
@@ -478,6 +478,7 @@ export function projectSimulations(params: {
   valorContribuicaoFutura: number
   extractedData: CnisExtractedData | null
   modalidade?: string
+  tempoEspecialAnos?: number
   salarioMinimo?: number
   tetoPrevidenciario?: number
   regrasVigentes?: RegrasVigentes
@@ -488,7 +489,7 @@ export function projectSimulations(params: {
   dibProjected: string
   gainVsNow: number
 } {
-  const { birthDate, gender, dibProjetada, valorContribuicaoFutura, extractedData, modalidade = 'APOSENTADORIA_IDADE', salarioMinimo, tetoPrevidenciario, regrasVigentes } = params
+  const { birthDate, gender, dibProjetada, valorContribuicaoFutura, extractedData, modalidade = 'APOSENTADORIA_IDADE', tempoEspecialAnos = 0, salarioMinimo, tetoPrevidenciario, regrasVigentes } = params
 
   // 1. Clona o CNIS existente
   const clonedData: CnisExtractedData = extractedData 
@@ -557,6 +558,7 @@ export function projectSimulations(params: {
     dib: dibProjetada,
     modalidade,
     extractedData: clonedData,
+    tempoEspecialAnos,
     salarioMinimo,
     tetoPrevidenciario,
     regrasVigentes,
@@ -569,6 +571,7 @@ export function projectSimulations(params: {
     dib: new Date().toISOString().split('T')[0],
     modalidade,
     extractedData,
+    tempoEspecialAnos,
     salarioMinimo,
     tetoPrevidenciario,
     regrasVigentes,
@@ -578,12 +581,36 @@ export function projectSimulations(params: {
   const rmaProjected = calcProjetado.rma
   const gainVsNow = Math.max(0, Number((rmiProjected - calcHoje.rmi).toFixed(2)))
 
+  // Cálculo preciso da idade (anos e meses) na DIB projetada
+  const birth = new Date(birthDate)
+  const ref = new Date(dibProjetada)
+  let ageYears = 0
+  let ageMonths = 0
+  if (!isNaN(birth.getTime()) && !isNaN(ref.getTime())) {
+    ageYears = ref.getFullYear() - birth.getFullYear()
+    ageMonths = ref.getMonth() - birth.getMonth()
+    if (ageMonths < 0 || (ageMonths === 0 && ref.getDate() < birth.getDate())) {
+      ageYears--
+      ageMonths = 12 + ageMonths
+    }
+    if (ref.getDate() < birth.getDate() && ageMonths > 0) {
+      ageMonths--
+    }
+  }
+
   return {
     scenarioParams: {
       valorContribuicaoFutura,
       competenciasSimuladas: salariosProjetados.length,
       dibProjetada,
-      modalidade
+      modalidade,
+      gender,
+      tempoEspecialAnos,
+      elegivel: calcProjetado.elegivel,
+      pendencias: calcProjetado.pendencias,
+      idadeNaApuracaoAnos: ageYears,
+      idadeNaApuracaoMeses: ageMonths,
+      tempoContribuicaoAnos: Number((calcProjetado.tempoContribuicao / 12).toFixed(1)),
     },
     rmiProjected,
     rmaProjected,

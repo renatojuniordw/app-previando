@@ -11,4 +11,5 @@ export const runSimulationSchema = z.object({
     'HIBRIDA', 'AUXILIO_DOENCA_B31', 'AUXILIO_DOENCA_B91',
     'SALARIO_MATERNIDADE', 'AUXILIO_RECLUSAO', 'PENSAO_MORTE', 'BPC_LOAS',
   ]),
+  tempoEspecialAnos: z.number().nonnegative().optional().default(0),
 }).strict() // Rejeita qualquer tentativa de injetar valores pré-calculados de RMI/rma/gainVsNow

@@ -75,7 +75,39 @@ export default function RetroativosPage() {
   const load = useCallback(async () => {
     try {
       const response = await api.get(`/cases/${params.id}/retroativos`)
-      setRetroativos(response.data.retroativos ?? [])
+      const mapped = (response.data.retroativos ?? []).map((r: {
+        id: string
+        entitlementStartDate: string
+        requestDate: string
+        monthsLate: number
+        monthlyGrossValue: string | number
+        totalGrossValue: string | number
+        totalCorrectedValue: string | number
+        correctionIndex: string
+        discountValue: string | number
+        discountDescription: string | null
+        finalNetValue: string | number
+        calculationMemory: {
+          parcelas: ParcelaRetroativa[]
+          acumuladoINPC: number
+        }
+        createdAt: string
+      }) => ({
+        id: r.id,
+        dataInicioDireito: r.entitlementStartDate,
+        dataRequerimento: r.requestDate,
+        mesesAtraso: Number(r.monthsLate),
+        valorMensalBruto: Number(r.monthlyGrossValue),
+        valorTotalBruto: Number(r.totalGrossValue),
+        valorTotalCorrigido: Number(r.totalCorrectedValue),
+        indiceCorrecao: r.correctionIndex,
+        valorDescontos: Number(r.discountValue),
+        descricaoDescontos: r.discountDescription,
+        valorLiquidoFinal: Number(r.finalNetValue),
+        memoriaCalculo: r.calculationMemory,
+        createdAt: r.createdAt
+      }))
+      setRetroativos(mapped)
     } catch {
       // noop
     } finally {
@@ -163,13 +195,15 @@ export default function RetroativosPage() {
             Calcule os valores atrasados devidos pelo INSS com correção monetária oficial.
           </p>
         </div>
-        <Button
-          onClick={() => setShowModal(true)}
-          className="bg-amber-600 hover:bg-amber-700 text-white flex items-center gap-2 shadow-sm font-semibold"
-        >
-          <Plus className="w-4 h-4" />
-          Novo Cálculo
-        </Button>
+        {retroativos.length > 0 && (
+          <Button
+            onClick={() => setShowModal(true)}
+            className="bg-amber-600 hover:bg-amber-700 text-white flex items-center gap-2 shadow-sm font-semibold"
+          >
+            <Plus className="w-4 h-4" />
+            Nova Liquidação
+          </Button>
+        )}
       </div>
 
       {retroativos.length === 0 ? (
@@ -177,7 +211,7 @@ export default function RetroativosPage() {
           <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center mb-4 border border-slate-200 shadow-sm">
             <History className="w-8 h-8 text-slate-400" />
           </div>
-          <h3 className="font-serif font-bold text-lg text-slate-900 mb-2">Nenhum Cálculo de Retroativos</h3>
+          <h3 className="font-serif font-bold text-lg text-slate-900 mb-2">Nenhuma Liquidação de Retroativos</h3>
           <p className="font-sans text-sm text-slate-500 mb-6 max-w-md mx-auto">
             Gere a memória de cálculo completa de parcelas atrasadas, corrigindo-as mês a mês pelo INPC oficial.
           </p>
@@ -340,8 +374,8 @@ export default function RetroativosPage() {
         </div>
       )}
 
-      {/* Modal Visual de Novo Cálculo de Retroativos */}
-      <Modal open={showModal} onClose={() => setShowModal(false)} title="NOVO CÁLCULO DE RETROATIVOS" size="lg">
+      {/* Modal Visual de Nova Liquidação de Retroativos */}
+      <Modal open={showModal} onClose={() => setShowModal(false)} title="NOVA LIQUIDAÇÃO DE RETROATIVOS" size="lg">
         <div className="space-y-5">
           {errorMessage && (
             <div className="border border-red-200 bg-red-50 rounded-xl p-4 flex items-start gap-3">

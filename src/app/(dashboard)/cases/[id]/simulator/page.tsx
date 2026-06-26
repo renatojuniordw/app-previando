@@ -18,7 +18,9 @@ import {
   Loader2,
   Trash2,
   Compass,
-  ArrowRight
+  ArrowRight,
+  CheckCircle2,
+  AlertCircle
 } from 'lucide-react'
 
 interface Simulation {
@@ -64,6 +66,8 @@ export default function SimulatorPage() {
   const [modalidade, setModalidade] = useState('APOSENTADORIA_IDADE')
   const [gender, setGender] = useState<'M' | 'F'>('F')
   const [dibProjetada, setDibProjetada] = useState('2030-01-01')
+  
+  const [tempoEspecialAnos, setTempoEspecialAnos] = useState(0)
   
   // Valor padrão de contribuição futura (ex: Salário Mínimo ou customizado)
   const [tipoContribuicao, setTipoContribuicao] = useState<'MINIMO' | 'TETO' | 'CUSTOM'>('MINIMO')
@@ -138,11 +142,13 @@ export default function SimulatorPage() {
         dibProjetada,
         valorContribuicaoFutura,
         modalidade,
+        tempoEspecialAnos: Number(tempoEspecialAnos),
       })
 
       setShowModal(false)
       // Reseta form
       setScenarioName('')
+      setTempoEspecialAnos(0)
       setTipoContribuicao('MINIMO')
       setValorCustomContribuicao(salarioVigente.valor)
       addToast({ type: 'success', title: 'Simulação criada', message: 'Cenário de planejamento gerado com sucesso.' })
@@ -180,19 +186,21 @@ export default function SimulatorPage() {
           <h2 className="font-serif font-bold text-2xl text-slate-900 tracking-tight">Simulador de Planejamento</h2>
           <p className="font-sans text-sm text-slate-500 mt-1">Simule o impacto de contribuições futuras na aposentadoria do cliente.</p>
         </div>
-        <Button
-          onClick={() => {
-            if (!cnisDocument) {
-              alert('Por favor, primeiro envie e processe o documento CNIS deste caso.')
-              return
-            }
-            setShowModal(true)
-          }}
-          className="bg-amber-600 hover:bg-amber-700 text-white flex items-center gap-2 shadow-sm font-semibold"
-        >
-          <Compass className="w-4 h-4" />
-          Nova Simulação
-        </Button>
+        {simulations.length > 0 && (
+          <Button
+            onClick={() => {
+              if (!cnisDocument) {
+                alert('Por favor, primeiro envie e processe o documento CNIS deste caso.')
+                return
+              }
+              setShowModal(true)
+            }}
+            className="bg-amber-600 hover:bg-amber-700 text-white flex items-center gap-2 shadow-sm font-semibold"
+          >
+            <Compass className="w-4 h-4" />
+            Nova Simulação
+          </Button>
+        )}
       </div>
 
       {simulations.length === 0 ? (
@@ -221,8 +229,25 @@ export default function SimulatorPage() {
       ) : (
         <div className="space-y-6">
           {simulations.map((sim) => {
-            const paramsSim = sim.scenarioParams as { modalidade?: string; valorContribuicaoFutura?: number; competenciasSimuladas?: number } | null | undefined
+            const paramsSim = sim.scenarioParams as {
+              modalidade?: string
+              valorContribuicaoFutura?: number
+              competenciasSimuladas?: number
+              tempoEspecialAnos?: number
+              gender?: string
+              elegivel?: boolean
+              pendencias?: string[]
+              idadeNaApuracaoAnos?: number
+              idadeNaApuracaoMeses?: number
+              tempoContribuicaoAnos?: number
+            } | null | undefined
             const gain = Number(sim.gainVsNow)
+
+            const ageYears = paramsSim?.idadeNaApuracaoAnos
+            const ageMonths = paramsSim?.idadeNaApuracaoMeses
+            const ageDisplay = typeof ageYears === 'number'
+              ? `${ageYears} ano${ageYears !== 1 ? 's' : ''}${ageMonths ? ` e ${ageMonths} mê${ageMonths !== 1 ? 'ses' : 's'}` : ''}`
+              : 'Não calculada'
 
             return (
               <div key={sim.id} className="border border-slate-200 rounded-xl shadow-sm overflow-hidden bg-white">
@@ -318,6 +343,53 @@ export default function SimulatorPage() {
                   </div>
                 )}
 
+                {/* Bloco de Elegibilidade Premium */}
+                {paramsSim && typeof paramsSim.elegivel === 'boolean' && (
+                  <div className={`px-6 py-4 border-t border-slate-100 flex flex-col gap-3 ${paramsSim.elegivel ? 'bg-emerald-50/20' : 'bg-amber-50/10'}`}>
+                    <div className="flex items-center justify-between gap-4">
+                      <div className="flex items-center gap-2">
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${paramsSim.elegivel ? 'bg-emerald-100 text-emerald-600' : 'bg-amber-100 text-amber-600'}`}>
+                          {paramsSim.elegivel ? (
+                            <CheckCircle2 className="w-4.5 h-4.5" />
+                          ) : (
+                            <AlertCircle className="w-4.5 h-4.5" />
+                          )}
+                        </div>
+                        <div>
+                          <span className="font-sans text-xs font-bold text-slate-800 block">Diagnóstico de Aposentadoria na Data Projetada</span>
+                          <span className="font-sans text-xs text-slate-500 font-medium">
+                            Cenário simulado para {formatDate(sim.dibProjected)}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold ${paramsSim.elegivel ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}`}>
+                          {paramsSim.elegivel ? 'Requisitos Atingidos' : 'Pré-requisitos Pendentes'}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Pendências de forma visual premium */}
+                    {!paramsSim.elegivel && paramsSim.pendencias && paramsSim.pendencias.length > 0 && (
+                      <div className="mt-1 pl-10 space-y-1.5 border-l border-amber-200/50">
+                        {paramsSim.pendencias.map((pend, idx) => (
+                          <div key={idx} className="flex items-center gap-2 text-xs font-sans text-amber-800">
+                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" />
+                            <span>{pend}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {paramsSim.elegivel && (
+                      <div className="mt-1 pl-10 text-xs font-sans text-emerald-800 flex items-center gap-2">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
+                        <span>O segurado preencherá todos os requisitos legais na data projetada.</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {/* Detalhamento das Variáveis da Simulação */}
                 <div className="px-6 py-4 bg-slate-50/30 border-t border-slate-100 grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs font-sans text-slate-600">
                   <div>
@@ -332,7 +404,7 @@ export default function SimulatorPage() {
                   </div>
                   <div>
                     <span className="text-slate-400 font-bold block">IDADE DE APOSENTADORIA</span>
-                    <span className="font-bold text-slate-800 text-sm mt-0.5">Planejada e simulada</span>
+                    <span className="font-bold text-slate-800 text-sm mt-0.5">{ageDisplay}</span>
                   </div>
                   <div>
                     <span className="text-slate-400 font-bold block">FONTE DE DADOS</span>
@@ -406,6 +478,20 @@ export default function SimulatorPage() {
                   <option key={item.codigo} value={item.codigo}>{item.label}</option>
                 ))}
               </select>
+            </div>
+
+            <div>
+              <label className="font-sans font-bold text-xs text-slate-600 block mb-1">Tempo Especial Atual (Anos)</label>
+              <input
+                type="number"
+                min="0"
+                max="50"
+                step="0.1"
+                value={tempoEspecialAnos}
+                onChange={(e) => setTempoEspecialAnos(Number(e.target.value))}
+                className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm font-sans focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 outline-none"
+                placeholder="Ex: 12.5"
+              />
             </div>
 
             <div>
