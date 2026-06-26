@@ -88,7 +88,8 @@ export function parseCnisProgrammatically(
     inicio: string | null
     fim: string | null
     isBeneficio: boolean
-    salarios: Array<{ competencia: string; valor: number }>
+    indicadores: string[]
+    salarios: Array<{ competencia: string; valor: number; indicadores?: string[] }>
   }
 
   const periods: TempPeriod[] = []
@@ -161,6 +162,7 @@ export function parseCnisProgrammatically(
           inicio: null,
           fim: null,
           isBeneficio: false,
+          indicadores: [],
           salarios: []
         }
       } else if (currentPeriod) {
@@ -296,6 +298,20 @@ export function parseCnisProgrammatically(
       }
     }
 
+    // Extrair indicadores ao nível do período
+    const periodIndicatorsMatch = line.match(/(?:Indicadores|Indicador)\s*:\s*(.+)$/i)
+    if (periodIndicatorsMatch && currentPeriod) {
+      const inds = periodIndicatorsMatch[1]
+        .split(/[\s,]+/)
+        .map(ind => ind.trim())
+        .filter(ind => ind.length > 0 && /^[A-Z0-9_-]+$/.test(ind))
+      for (const ind of inds) {
+        if (!currentPeriod.indicadores.includes(ind)) {
+          currentPeriod.indicadores.push(ind)
+        }
+      }
+    }
+
     if (rawComp && rawVal) {
       const hasBlockIndicator = /BLOQ-EC103|PREM-FVIN|PREM-BLOQ-EC103/i.test(rawIndicators)
 
@@ -304,12 +320,35 @@ export function parseCnisProgrammatically(
         const competencia = `${parts[1]}-${parts[0]}` // YYYY-MM
         const valor = parseFloat(rawVal.replace(/\./g, '').replace(',', '.'))
 
+        const parsedIndicators = rawIndicators
+          ? rawIndicators
+              .split(/[\s,]+/)
+              .map(ind => ind.trim())
+              .filter(ind => ind.length > 0 && /^[A-Z0-9_-]+$/.test(ind))
+          : []
+
         if (!isNaN(valor)) {
           const existing = currentPeriod.salarios.find(s => s.competencia === competencia)
           if (existing) {
             existing.valor = parseFloat((existing.valor + valor).toFixed(2))
+            if (parsedIndicators.length > 0) {
+              existing.indicadores = Array.from(new Set([...(existing.indicadores || []), ...parsedIndicators]))
+            }
           } else {
-            currentPeriod.salarios.push({ competencia, valor })
+            currentPeriod.salarios.push({
+              competencia,
+              valor,
+              indicadores: parsedIndicators.length > 0 ? parsedIndicators : undefined
+            })
+          }
+
+          // Adicionar ao acumulado de indicadores do período
+          if (parsedIndicators.length > 0) {
+            for (const ind of parsedIndicators) {
+              if (!currentPeriod.indicadores.includes(ind)) {
+                currentPeriod.indicadores.push(ind)
+              }
+            }
           }
         }
       }
@@ -353,6 +392,7 @@ export function parseCnisProgrammatically(
       empregador: p.empregador,
       inicio: p.inicio || (p.salarios.length > 0 ? p.salarios[0].competencia : null),
       fim: p.fim || (p.salarios.length > 0 ? p.salarios[p.salarios.length - 1].competencia : null),
+      indicadores: p.indicadores.length > 0 ? p.indicadores : undefined,
       salarios: p.salarios,
       gaps
     }

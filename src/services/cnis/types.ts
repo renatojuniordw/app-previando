@@ -9,7 +9,8 @@ export interface CnisExtractedData {
     empregador: string | null
     inicio: string | null
     fim: string | null
-    salarios: Array<{ competencia: string; valor: number }>
+    indicadores?: Array<string>
+    salarios: Array<{ competencia: string; valor: number; indicadores?: Array<string> }>
     gaps: Array<string>
   }>
 }
@@ -28,7 +29,8 @@ export function generateMarkdown(data: CnisExtractedData): string {
       const count = p.salarios?.length ?? 0
       const gapCount = p.gaps?.length ?? 0
       const gapNote = gapCount > 0 ? ` — **${gapCount} gap(s)**: ${p.gaps.join(', ')}` : ''
-      md += `- **${p.empregador ?? 'Empregador não identificado'}**: ${p.inicio ?? '?'} → ${p.fim ?? 'Ativo'} (${count} competências${gapNote})\n`
+      const indNote = p.indicadores?.length ? ` [Indicadores: ${p.indicadores.join(', ')}]` : ''
+      md += `- **${p.empregador ?? 'Empregador não identificado'}**: ${p.inicio ?? '?'} → ${p.fim ?? 'Ativo'} (${count} competências${gapNote})${indNote}\n`
     }
   }
 

@@ -1,4 +1,5 @@
 import { Periodo, PeriodWarning } from './_types'
+import { getIndicatorDetails } from '@/services/cnis/indicatorsDictionary'
 
 export const formatCurrency = (value: number) =>
   new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value)
@@ -20,6 +21,16 @@ export const formatDateString = (dateStr: string) => {
 
 export const getPeriodWarnings = (periodo: Periodo, idx: number, allPeriodos: Periodo[]): PeriodWarning[] => {
   const warnings: PeriodWarning[] = []
+
+  if (periodo.indicadores && periodo.indicadores.length > 0) {
+    periodo.indicadores.forEach(ind => {
+      const details = getIndicatorDetails(ind)
+      warnings.push({
+        type: details.critico ? 'warning' : 'info',
+        message: `${ind}: ${details.descricao}`,
+      })
+    })
+  }
 
   if (!periodo.fim) {
     warnings.push({ type: 'info', message: 'Vínculo sem data de encerramento registrada no CNIS (ativo).' })

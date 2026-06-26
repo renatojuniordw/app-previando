@@ -12,7 +12,8 @@ export interface Periodo {
   empregador: string
   inicio: string
   fim: string | null
-  salarios: Array<{ competencia: string; valor: number }>
+  indicadores?: string[]
+  salarios: Array<{ competencia: string; valor: number; indicadores?: string[] }>
 }
 
 export interface CnisExtractedData {

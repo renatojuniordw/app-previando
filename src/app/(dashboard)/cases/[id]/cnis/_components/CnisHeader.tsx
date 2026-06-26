@@ -1,4 +1,4 @@
-import { Eye, EyeOff, Loader2, Trash2, Upload, ExternalLink } from 'lucide-react'
+import { Eye, EyeOff, Loader2, Trash2, Upload, ExternalLink, BookOpen } from 'lucide-react'
 
 interface Props {
   hasCnis: boolean
@@ -13,11 +13,13 @@ interface Props {
   onUploadClick: () => void
   fileRef: React.RefObject<HTMLInputElement>
   onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void
+  onOpenDictionary: () => void
 }
 
 export function CnisHeader({
   hasCnis, downloadUrl, showPdfViewer, uploading, isProcessing, deleting,
   processingStatus, onTogglePdf, onDeleteClick, onUploadClick, fileRef, onFileChange,
+  onOpenDictionary,
 }: Props) {
   const showUploadButton = !hasCnis || processingStatus === 'FAILED'
 
@@ -50,6 +52,18 @@ export function CnisHeader({
               Abrir PDF Original
             </a>
           </>
+        )}
+
+        {hasCnis && (
+          <button
+            type="button"
+            onClick={onOpenDictionary}
+            className="border border-slate-200 hover:bg-slate-50 text-slate-700 font-sans font-semibold text-sm px-4 py-2 rounded-lg transition-colors shadow-sm flex items-center gap-2 focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:outline-none"
+            title="Dicionário de Indicadores"
+          >
+            <BookOpen className="w-4 h-4 text-amber-500" />
+            Dicionário
+          </button>
         )}
 
         {hasCnis && (

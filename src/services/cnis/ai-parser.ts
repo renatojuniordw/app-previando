@@ -53,10 +53,12 @@ SCHEMA DE SAÍDA:
       "empregador": string | null,
       "inicio": string | null,     // formato: "YYYY-MM"
       "fim": string | null,        // formato: "YYYY-MM" — null se vínculo ainda ativo
+      "indicadores": [string],     // array contendo indicadores do período se houver (ex: ["PEXT"])
       "salarios": [
         {
           "competencia": string,   // formato: "YYYY-MM"
-          "valor": number          // valor numérico, ex: 1320.00
+          "valor": number,         // valor numérico, ex: 1320.00
+          "indicadores": [string]  // array contendo indicadores da competência se houver (ex: ["PSC-MEN"])
         }
       ],
       "gaps": [string]             // competências ausentes dentro do período, ex: ["2020-06"]
@@ -80,8 +82,9 @@ EXEMPLO PARCIAL DE SAÍDA ESPERADA (para referência de formato):
       "empregador": "EMPRESA EXEMPLO LTDA",
       "inicio": "1995-04",
       "fim": "1998-09",
+      "indicadores": ["PEXT"],
       "salarios": [
-        { "competencia": "1995-04", "valor": 450.00 },
+        { "competencia": "1995-04", "valor": 450.00, "indicadores": ["PSC-MEN"] },
         { "competencia": "1995-05", "valor": 450.00 }
       ],
       "gaps": ["1995-06"]

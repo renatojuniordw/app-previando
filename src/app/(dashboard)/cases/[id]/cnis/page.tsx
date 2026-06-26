@@ -17,6 +17,7 @@ import { SaveConfirmModal } from './_components/modals/SaveConfirmModal'
 import { ReprocessModal } from './_components/modals/ReprocessModal'
 import { EditPeriodModal } from './_components/modals/EditPeriodModal'
 import { EditSalariesModal } from './_components/modals/EditSalariesModal'
+import { CnisIndicatorsDrawer } from './_components/CnisIndicatorsDrawer'
 
 export default function CnisCasePage() {
   const params = useParams()
@@ -28,6 +29,7 @@ export default function CnisCasePage() {
 
   const [showPdfViewer, setShowPdfViewer] = useState(false)
   const [pdfBlobUrl, setPdfBlobUrl] = useState<string | null>(null)
+  const [showIndicatorsDrawer, setShowIndicatorsDrawer] = useState(false)
 
   useEffect(() => {
     if (!cnis?.downloadUrl) return
@@ -85,6 +87,7 @@ export default function CnisCasePage() {
         onUploadClick={() => fileRef.current?.click()}
         fileRef={fileRef}
         onFileChange={handleUpload}
+        onOpenDictionary={() => setShowIndicatorsDrawer(true)}
       />
 
       <CnisBanners
@@ -197,6 +200,11 @@ export default function CnisCasePage() {
         onChangeValor={editing.setNewValor}
         onAdd={editing.addSalaryItem}
         onRemove={editing.removeSalaryItem}
+      />
+
+      <CnisIndicatorsDrawer
+        open={showIndicatorsDrawer}
+        onClose={() => setShowIndicatorsDrawer(false)}
       />
     </div>
   )
