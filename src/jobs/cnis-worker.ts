@@ -2,7 +2,7 @@ import { Worker } from 'bullmq'
 import Redis from 'ioredis'
 import { prisma } from '../lib/prisma'
 import { downloadPDF } from '../services/r2'
-import { parseCnisWithAI, parseCnisProgrammatically } from '../services/cnis-parser'
+import { parseCnisWithAI, validateCnisProgrammaticResult, parseCnisProgrammatically } from '../services/cnis-parser'
 import { Logger } from '../lib/logger'
 import { writeAuditDirect } from '../lib/audit'
 
@@ -73,18 +73,31 @@ export function createCnisWorker(redis: Redis): Worker {
         try {
           const progResult = parseCnisProgrammatically(pdfText)
           if (progResult) {
-            markdown = progResult.markdown
-            extractedData = progResult.extractedData
-            isProgrammatic = true
-            logger.info(`Parser programático determinístico obteve sucesso para o segurado: ${extractedData.nome}`)
+            logger.info(`Parser programático obteve sucesso para: ${progResult.extractedData.nome}. Iniciando validação...`)
+
+            const validation = await validateCnisProgrammaticResult(pdfText, {
+              nit: progResult.extractedData.nit ?? null,
+              nome: progResult.extractedData.nome ?? null,
+              primeiraContribuicao: progResult.extractedData.primeiraContribuicao ?? null,
+              ultimaContribuicao: progResult.extractedData.ultimaContribuicao ?? null,
+            })
+
+            if (validation.valid) {
+              markdown = progResult.markdown
+              extractedData = progResult.extractedData
+              isProgrammatic = true
+              logger.info(`Validação confirmada — usando resultado programático`)
+            } else {
+              logger.warn(`Validação reprovada (${validation.reason}). Escalando para AI parser completo...`)
+            }
           }
         } catch (progErr) {
           logger.warn(`Erro no parser programático (ignorando e seguindo para IA):`, progErr)
         }
 
-        // Se o parser programático falhar ou não retornar dados, executa IA
+        // Fallback: programático falhou, não retornou dados, ou validação reprovou
         if (!extractedData) {
-          logger.info(`Parser programático não obteve sucesso. Iniciando fallback via IA...`)
+          logger.info(`Iniciando AI parser completo...`)
           const aiResult = await parseCnisWithAI(pdfText)
           markdown = aiResult.markdown
           extractedData = aiResult.extractedData

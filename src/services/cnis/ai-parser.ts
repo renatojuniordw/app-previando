@@ -116,6 +116,54 @@ function parseJson<T>(raw: string): T | null {
   }
 }
 
+interface ValidationResult {
+  valid: boolean
+  reason?: string
+}
+
+export async function validateCnisProgrammaticResult(
+  pdfText: string,
+  result: { nit: string | null; nome: string | null; primeiraContribuicao: string | null; ultimaContribuicao: string | null }
+): Promise<ValidationResult> {
+  // Usa início + fim do texto para cobrir cabeçalho (NIT/nome) e última competência
+  const head = sanitizeForAI(pdfText.slice(0, 8000), 8000)
+  const tail = sanitizeForAI(pdfText.slice(-3000), 3000)
+  const excerpt = `${head}\n...\n${tail}`
+
+  const prompt = `Você recebeu um trecho de um CNIS brasileiro. Verifique se os valores abaixo batem com o que está no texto.
+
+VALORES A CONFIRMAR:
+- NIT: ${result.nit ?? 'não encontrado'}
+- Nome: ${result.nome ?? 'não encontrado'}
+- Primeira contribuição (YYYY-MM): ${result.primeiraContribuicao ?? 'não encontrado'}
+- Última contribuição (YYYY-MM): ${result.ultimaContribuicao ?? 'não encontrado'}
+
+Responda APENAS com JSON neste formato (sem markdown):
+{"valid": true} se todos os campos batem, ou
+{"valid": false, "reason": "descrição do que diverge"} se algum campo diverge ou não for localizável no texto.
+
+TRECHO DO CNIS:
+${excerpt}`
+
+  try {
+    const response = await openai.chat.completions.create({
+      model: AI_MODELS.OPERATIONAL,
+      messages: [{ role: 'user', content: prompt }],
+      temperature: 0,
+      max_tokens: 100,
+    })
+
+    const content = response.choices[0]?.message?.content ?? ''
+    const parsed = parseJson<ValidationResult>(content)
+    if (!parsed || typeof parsed.valid !== 'boolean') {
+      return { valid: false, reason: 'resposta de validação inválida' }
+    }
+    return parsed
+  } catch (err) {
+    return { valid: false, reason: `erro na validação: ${err instanceof Error ? err.message : String(err)}` }
+  }
+}
+
 export async function parseCnisWithAI(
   pdfText: string
 ): Promise<{ markdown: string; extractedData: CnisExtractedData; tokens: number }> {
