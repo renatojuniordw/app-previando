@@ -37,21 +37,21 @@ export function CnisExtractedDataView({
     <div className="space-y-8 mt-6">
       {/* Dados do Segurado */}
       <div className="border-t border-slate-150 pt-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+        <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
           <h4 className="font-serif font-bold text-lg text-slate-900 flex items-center gap-2">
             <User className="w-5 h-5 text-amber-600" aria-hidden="true" />
             Dados do Segurado
           </h4>
           <button
             onClick={onExportCSV}
-            className="text-xs font-semibold text-amber-700 hover:text-amber-800 bg-amber-50 hover:bg-amber-100 border border-amber-100 px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 self-start sm:self-auto focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:outline-none"
+            className="text-xs font-semibold text-amber-700 hover:text-amber-800 bg-amber-50 hover:bg-amber-100 border border-amber-100 px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:outline-none"
           >
             <Download className="w-3.5 h-3.5" />
             Exportar para CSV
           </button>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 2xl:grid-cols-3 gap-4">
           <EditableField label="Nome Completo" value={data.nome ?? 'Não identificado'} prompt="Editar Nome Completo:" currentValue={data.nome || ''} onSave={v => onEditField('nome', v)} />
           <EditableField label="NIT / PIS" value={data.nit ?? 'Não identificado'} prompt="Editar NIT/PIS:" currentValue={data.nit || ''} onSave={v => onEditField('nit', v)} />
           <EditableField label="Data de Nascimento" value={formatDateString(data.dataNascimento ?? '')} prompt="Editar Data Nascimento (formato AAAA-MM-DD):" currentValue={data.dataNascimento || ''} onSave={v => onEditField('dataNascimento', v)} />
@@ -73,13 +73,13 @@ export function CnisExtractedDataView({
 
       {/* Histórico de Vínculos */}
       <div className="space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-t border-slate-100 pt-6">
-          <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center justify-between gap-4 border-t border-slate-100 pt-6">
+          <div className="flex flex-wrap items-center gap-2">
             <h4 className="font-serif font-bold text-lg text-slate-900 flex items-center gap-2">
               <Briefcase className="w-5 h-5 text-amber-600" aria-hidden="true" />
               Histórico de Vínculos Empregatícios
             </h4>
-            <span className="font-sans text-xs text-slate-500 font-medium bg-slate-100 px-2.5 py-1 rounded-full">
+            <span className="font-sans text-xs text-slate-500 font-medium bg-slate-100 px-2.5 py-1 rounded-full whitespace-nowrap">
               {data.periodos?.length ?? 0} {data.periodos?.length === 1 ? 'vínculo' : 'vínculos'}
             </span>
           </div>

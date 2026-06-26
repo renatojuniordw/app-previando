@@ -98,8 +98,8 @@ export default function CnisCasePage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {showPdfViewer && cnis?.downloadUrl && (
-          <div className="lg:col-span-5 bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden sticky top-6 z-10 hidden md:block">
-            <div className="px-4 py-3 bg-slate-50 border-b border-slate-150 flex items-center justify-between">
+          <div className="lg:col-span-5 bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden sticky top-6 z-10 hidden lg:flex flex-col h-[calc(100vh-6rem)]">
+            <div className="px-4 py-3 bg-slate-50 border-b border-slate-150 flex items-center justify-between shrink-0">
               <span className="font-sans font-bold text-xs text-slate-700 flex items-center gap-1.5">
                 <FileText className="w-4 h-4 text-slate-400" />
                 Documento CNIS Original
@@ -114,7 +114,7 @@ export default function CnisCasePage() {
                 </button>
               </div>
             </div>
-            <iframe src={pdfBlobUrl ?? ''} className="w-full h-[600px] border-0 bg-slate-100" title="Extrato CNIS Original" />
+            <iframe src={pdfBlobUrl ?? ''} className="w-full grow border-0 bg-slate-100" title="Extrato CNIS Original" />
           </div>
         )}
 

@@ -1,4 +1,4 @@
-import { Eye, EyeOff, Loader2, Trash2, Upload } from 'lucide-react'
+import { Eye, EyeOff, Loader2, Trash2, Upload, ExternalLink } from 'lucide-react'
 
 interface Props {
   hasCnis: boolean
@@ -31,14 +31,25 @@ export function CnisHeader({
         <input ref={fileRef} type="file" accept=".pdf" className="hidden" onChange={onFileChange} />
 
         {hasCnis && downloadUrl && (
-          <button
-            onClick={onTogglePdf}
-            className="border border-slate-200 hover:bg-slate-50 text-slate-700 font-sans font-semibold text-sm px-4 py-2 rounded-lg transition-colors shadow-sm flex items-center gap-2 focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:outline-none"
-            aria-label={showPdfViewer ? 'Ocultar PDF original' : 'Exibir PDF original lado a lado'}
-          >
-            {showPdfViewer ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-            {showPdfViewer ? 'Ocultar PDF' : 'Ver PDF Lado a Lado'}
-          </button>
+          <>
+            <button
+              onClick={onTogglePdf}
+              className="hidden lg:flex border border-slate-200 hover:bg-slate-50 text-slate-700 font-sans font-semibold text-sm px-4 py-2 rounded-lg transition-colors shadow-sm items-center gap-2 focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:outline-none"
+              aria-label={showPdfViewer ? 'Ocultar PDF original' : 'Exibir PDF original lado a lado'}
+            >
+              {showPdfViewer ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              {showPdfViewer ? 'Ocultar PDF' : 'Ver PDF Lado a Lado'}
+            </button>
+            <a
+              href={downloadUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex lg:hidden border border-slate-200 hover:bg-slate-50 text-slate-700 font-sans font-semibold text-sm px-4 py-2 rounded-lg transition-colors shadow-sm items-center gap-2 focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:outline-none"
+            >
+              <ExternalLink className="w-4 h-4" />
+              Abrir PDF Original
+            </a>
+          </>
         )}
 
         {hasCnis && (
