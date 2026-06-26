@@ -59,3 +59,43 @@ export async function DELETE(req: NextRequest, { params }: { params: { caseId: s
     return handleApiError(err)
   }
 }
+
+export async function PUT(req: NextRequest, { params }: { params: { caseId: string } }) {
+  try {
+    const session = await auth()
+    if (!session?.user?.id) return NextResponse.json({ error: 'Não autorizado.' }, { status: 401 })
+
+    await verifyCaseOwnership(params.caseId, session.user.id)
+
+    const body = await req.json()
+    const { extractedData } = body
+
+    if (!extractedData) {
+      return NextResponse.json({ error: 'Dados extraídos são obrigatórios.' }, { status: 400 })
+    }
+
+    const nit = extractedData.nit || null
+    const totalContributions = typeof extractedData.totalContribuicoes === 'number'
+      ? extractedData.totalContribuicoes
+      : (extractedData.periodos?.reduce((acc: number, p: any) => acc + (p.salarios?.length || 0), 0) ?? null)
+
+    const firstContribution = extractedData.primeiraContribuicao ? new Date(extractedData.primeiraContribuicao) : null
+    const lastContribution = extractedData.ultimaContribuicao ? new Date(extractedData.ultimaContribuicao) : null
+
+    const updated = await prisma.cnisDocument.update({
+      where: { caseId: params.caseId },
+      data: {
+        extractedData,
+        nit,
+        totalContributions,
+        firstContribution: firstContribution && !isNaN(firstContribution.getTime()) ? firstContribution : null,
+        lastContribution: lastContribution && !isNaN(lastContribution.getTime()) ? lastContribution : null,
+      },
+    })
+
+    return NextResponse.json({ success: true, cnisDocument: updated })
+  } catch (err) {
+    return handleApiError(err)
+  }
+}
+
