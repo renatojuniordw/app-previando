@@ -14,8 +14,20 @@ import { Modal } from '@/components/ui/Modal'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { BENEFIT_SHORT_LABELS, STATUS_LABELS } from '@/lib/constants'
+import { BENEFIT_SHORT_LABELS, STATUS_LABELS, PRIORITY_LABELS, BENEFIT_DB_LABELS } from '@/lib/constants'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
+import { ClientFloatingActions } from '@/components/client/ClientFloatingActions'
+
+const getCaseStatusLabel = (status: string) => {
+  const dbToLabel: Record<string, string> = {
+    PROSPECTING: 'Prospecção',
+    ANALYSIS: 'Análise',
+    READY_TO_REQUEST: 'Pronto p/ Requerer',
+    PROCESSING: 'Em Processamento',
+    FINISHED: 'Finalizado',
+  }
+  return dbToLabel[status] ?? STATUS_LABELS[status] ?? status
+}
 
 interface ClientDetail {
   id: string
@@ -51,6 +63,9 @@ export default function ClientDetailPage() {
   const [loading, setLoading] = useState(true)
   const [showCaseModal, setShowCaseModal] = useState(false)
   const [creatingCase, setCreatingCase] = useState(false)
+  const [showNotesModal, setShowNotesModal] = useState(false)
+  const [editingNotes, setEditingNotes] = useState(false)
+  const [notesText, setNotesText] = useState('')
   const { addToast } = useToast()
 
   const { register, handleSubmit, formState: { errors } } = useForm<CaseForm>({
@@ -79,6 +94,28 @@ export default function ClientDetailPage() {
     }
   }
 
+  const saveNotes = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setEditingNotes(true)
+    try {
+      await api.put(`/clients/${params.id}`, { notes: notesText })
+      setShowNotesModal(false)
+      addToast({ type: 'success', title: 'Sucesso', message: 'Observações atualizadas.' })
+      const r = await api.get(`/clients/${params.id}`)
+      setClient(r.data.client)
+    } catch {
+      addToast({ type: 'error', title: 'Erro', message: 'Não foi possível atualizar as observações.' })
+    } finally {
+      setEditingNotes(false)
+    }
+  }
+
+  const handleCopyCpf = (cpf: string) => {
+    navigator.clipboard.writeText(cpf.replace(/\D/g, ''))
+    addToast({ type: 'success', title: 'Copiado', message: 'CPF copiado.' })
+  }
+
+
   if (loading) {
     return <div className="p-8 font-sans font-medium text-slate-500 animate-pulse">Carregando...</div>
   }
@@ -86,6 +123,10 @@ export default function ClientDetailPage() {
   if (!client) {
     return <div className="p-8 font-sans text-slate-500">Cliente não encontrado.</div>
   }
+
+  const totalCases = client.cases.length
+  const finishedCases = client.cases.filter(c => ['FINISHED', 'FINALIZADO'].includes(c.status.toUpperCase())).length
+  const activeCases = totalCases - finishedCases
 
   return (
     <ErrorBoundary>
@@ -100,7 +141,6 @@ export default function ClientDetailPage() {
           <h1 className="font-serif font-bold text-3xl text-slate-900 tracking-tight">{client.name}</h1>
           <p className="font-sans text-sm text-slate-500 font-medium">CPF: {maskCPF(client.cpf)}</p>
         </div>
-        <Button onClick={() => setShowCaseModal(true)}>+ Novo Caso</Button>
       </div>
 
       {/* Dados do cliente */}
@@ -121,7 +161,11 @@ export default function ClientDetailPage() {
           </div>
           <div>
             <span className="text-slate-500 text-xs font-medium uppercase tracking-wide">Prioridade</span>
-            <p className="text-slate-900 font-medium">{client.priority}</p>
+            <div className="mt-0.5">
+              <Badge variant={client.priority === 'CRITICAL' ? 'red' : client.priority === 'ATTENTION' ? 'yellow' : 'slate'}>
+                {PRIORITY_LABELS[client.priority] ?? client.priority}
+              </Badge>
+            </div>
           </div>
         </div>
         {client.notes && (
@@ -130,6 +174,22 @@ export default function ClientDetailPage() {
           </div>
         )}
       </Card>
+
+      {/* Resumo de Casos */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <Card className="p-4 bg-slate-50 border-slate-200 shadow-sm flex flex-col justify-center">
+          <p className="text-xs font-sans uppercase tracking-wide text-slate-500 font-semibold">Total de Casos</p>
+          <p className="text-3xl font-serif font-bold text-slate-900 mt-1">{totalCases}</p>
+        </Card>
+        <Card className="p-4 bg-blue-50 border-blue-200 shadow-sm flex flex-col justify-center">
+          <p className="text-xs font-sans uppercase tracking-wide text-blue-700 font-semibold">Em Andamento</p>
+          <p className="text-3xl font-serif font-bold text-blue-900 mt-1">{activeCases}</p>
+        </Card>
+        <Card className="p-4 bg-emerald-50 border-emerald-200 shadow-sm flex flex-col justify-center">
+          <p className="text-xs font-sans uppercase tracking-wide text-emerald-700 font-semibold">Finalizados</p>
+          <p className="text-3xl font-serif font-bold text-emerald-900 mt-1">{finishedCases}</p>
+        </Card>
+      </div>
 
       {/* Casos */}
       <Card variant="dark">
@@ -157,17 +217,32 @@ export default function ClientDetailPage() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="font-sans font-semibold text-sm text-slate-900">
-                        {BENEFIT_SHORT_LABELS[caso.benefitType] ?? caso.benefitType}
+                        {BENEFIT_DB_LABELS[caso.benefitType] ?? BENEFIT_SHORT_LABELS[caso.benefitType] ?? caso.benefitType}
                       </p>
                       <p className="font-sans text-sm text-slate-500">
                         {formatDate(caso.createdAt)}
                       </p>
                     </div>
                     <div className="flex items-center gap-2">
+                      {caso.cnisDocument && (
+                        <Badge variant={['PROCESSED', 'PROCESSADO'].includes(caso.cnisDocument.processingStatus.toUpperCase()) ? 'lime' : 'yellow'}>
+                          CNIS {['PROCESSED', 'PROCESSADO'].includes(caso.cnisDocument.processingStatus.toUpperCase()) ? '✅' : '⏳'}
+                        </Badge>
+                      )}
                       <Badge variant={caso.priority === 'CRITICAL' ? 'red' : caso.priority === 'ATTENTION' ? 'yellow' : 'slate'}>
-                        {caso.priority}
+                        {PRIORITY_LABELS[caso.priority] ?? caso.priority}
                       </Badge>
-                      <Badge variant="lime">{STATUS_LABELS[caso.status] ?? caso.status}</Badge>
+                      <Badge 
+                        variant={
+                          ['PROSPECTING', 'PROSPECCAO'].includes(caso.status.toUpperCase()) ? 'slate' :
+                          ['ANALYSIS', 'ANALISE'].includes(caso.status.toUpperCase()) ? 'blue' :
+                          ['READY_TO_REQUEST', 'PRONTO_PARA_REQUERER'].includes(caso.status.toUpperCase()) ? 'yellow' :
+                          ['PROCESSING', 'EM_PROCESSAMENTO'].includes(caso.status.toUpperCase()) ? 'lime' :
+                          ['FINISHED', 'FINALIZADO'].includes(caso.status.toUpperCase()) ? 'green' : 'slate'
+                        }
+                      >
+                        {getCaseStatusLabel(caso.status)}
+                      </Badge>
                     </div>
                   </div>
                 </div>
@@ -214,6 +289,35 @@ export default function ClientDetailPage() {
           </div>
         </form>
       </Modal>
+
+      {/* Modal Editar Notas */}
+      <Modal open={showNotesModal} onClose={() => setShowNotesModal(false)} title="Editar Observações">
+        <form onSubmit={saveNotes} className="space-y-4">
+          <div>
+            <textarea
+              value={notesText}
+              onChange={(e) => setNotesText(e.target.value)}
+              className="neo-input min-h-[120px] resize-none"
+              placeholder="Digite as observações do cliente..."
+            />
+          </div>
+          <div className="flex gap-3">
+            <Button type="submit" loading={editingNotes} className="flex-1">Salvar</Button>
+            <Button type="button" variant="outline" onClick={() => setShowNotesModal(false)} className="flex-1">Cancelar</Button>
+          </div>
+        </form>
+      </Modal>
+
+      <ClientFloatingActions 
+        phone={client.phone} 
+        email={client.email} 
+        cpf={client.cpf}
+        onEdit={() => {
+          setNotesText(client.notes || '')
+          setShowNotesModal(true)
+        }}
+        onCopyCpf={handleCopyCpf}
+      />
     </div>
     </ErrorBoundary>
   )
