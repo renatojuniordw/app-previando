@@ -15,6 +15,7 @@ interface BpcResultProps {
   onCopy: () => void
   onExportPdf: () => void
   onOpenChecklist?: () => void
+  onRegenerate?: () => void
 }
 
 const TYPE_LABELS: Record<string, string> = {
@@ -68,7 +69,7 @@ function parseChecklistMarkdown(text: string): {
   return { items, pendencias }
 }
 
-export function BpcResult({ caseId, result, type, onCopy, onExportPdf, onOpenChecklist }: BpcResultProps) {
+export function BpcResult({ caseId, result, type, onCopy, onExportPdf, onOpenChecklist, onRegenerate }: BpcResultProps) {
   const [importing, setImporting] = useState(false)
   const [importDone, setImportDone] = useState(false)
 
@@ -118,6 +119,11 @@ export function BpcResult({ caseId, result, type, onCopy, onExportPdf, onOpenChe
         <Button variant="outline" onClick={onExportPdf} className="text-xs py-2">
           📄 Exportar PDF
         </Button>
+        {onRegenerate && (
+          <Button variant="outline" onClick={onRegenerate} className="text-xs py-2 border-slate-300 text-slate-600 hover:bg-slate-100">
+            🔄 Regenerar
+          </Button>
+        )}
         {type === 'checklist' && (
           <Button
             variant="outline"

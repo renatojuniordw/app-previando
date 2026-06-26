@@ -43,6 +43,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       rendaPerCapita: parseFloat(analysis.rendaPerCapita.toString()),
       barreirasRelatadas: analysis.barreiras ?? '',
       resumoLaudos: analysis.resumoLaudos ?? undefined,
+      preAnalise: analysis.preAnalise ?? undefined,
     }
 
     const result = await analisarLaudo(texto, paramsData)

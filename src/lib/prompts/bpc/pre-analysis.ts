@@ -41,11 +41,12 @@ export function buildPreAnalysisUserPrompt(params: {
   barreiras: string
   resumoLaudos?: string
   relatoSocial?: string
+  analiseLaudo?: string
 }): string {
   const {
     patologia, cid, idade, faixaEtaria,
     rendaFamiliar, membrosGrupo, rendaPerCapita,
-    salarioMinimoVigente, barreiras, resumoLaudos, relatoSocial
+    salarioMinimoVigente, barreiras, resumoLaudos, relatoSocial, analiseLaudo
   } = params
 
   const limiteRenda = salarioMinimoVigente / 4
@@ -61,6 +62,10 @@ export function buildPreAnalysisUserPrompt(params: {
 
   const relatoSection = relatoSocial?.trim()
     ? `\nRELATO DA ENTREVISTA SOCIAL (coletado pelo advogado):\n${relatoSocial}`
+    : ''
+
+  const laudoAnaliseSection = analiseLaudo?.trim()
+    ? `\nANÁLISE DO LAUDO MÉDICO (já avaliado pela IA):\n${analiseLaudo}`
     : ''
 
   return `Analise a viabilidade deste caso para concessão do BPC/LOAS com base nos critérios legais vigentes.
@@ -84,6 +89,7 @@ ${barreiras || 'Não informado — considere como lacuna crítica para avaliaç�
 
 ${laudosSection}
 ${relatoSection}
+${laudoAnaliseSection}
 ---
 Produza sua análise seguindo rigorosamente o formato de resposta definido no seu papel.`
 }

@@ -62,6 +62,9 @@ export default function BpcPage() {
   const [laudoText, setLaudoText] = useState('')
   const [laudoAnalyzing, setLaudoAnalyzing] = useState(false)
 
+  // Confirmação de regeneração
+  const [confirmingTab, setConfirmingTab] = useState<AnalysisTab | null>(null)
+
   const load = useCallback(() => {
     setLoading(true)
     api.get(`/cases/${caseId}/bpc`)
@@ -103,8 +106,7 @@ export default function BpcPage() {
     }
   }
 
-  const handleGenerate = async (tab: AnalysisTab | null) => {
-    if (!tab) return
+  const executeGenerate = async (tab: AnalysisTab) => {
     if (tab === 'laudo') {
       setShowLaudoModal(true)
       return
@@ -123,6 +125,22 @@ export default function BpcPage() {
     } finally {
       setGeneratingTab(null)
     }
+  }
+
+  const handleGenerate = (tab: AnalysisTab | null) => {
+    if (!tab) return
+    executeGenerate(tab)
+  }
+
+  const handleRegenerateRequest = (tab: AnalysisTab) => {
+    setConfirmingTab(tab)
+  }
+
+  const handleConfirmRegenerate = () => {
+    if (!confirmingTab) return
+    const tab = confirmingTab
+    setConfirmingTab(null)
+    executeGenerate(tab)
   }
 
   const handleLaudoAnalysis = async () => {
@@ -293,6 +311,7 @@ export default function BpcPage() {
                   onCopy={handleCopy}
                   onExportPdf={handleExportPdf}
                   onOpenChecklist={activeTab === 'checklist' ? openChecklist : undefined}
+                  onRegenerate={() => handleRegenerateRequest(activeTab)}
                 />
               ) : (
                 <div className="flex-1 flex flex-col items-center justify-center py-16 text-center px-6">
@@ -326,6 +345,26 @@ export default function BpcPage() {
           </Card>
         </div>
       </div>
+
+      {/* MODAL — CONFIRMAÇÃO DE REGENERAÇÃO */}
+      <Modal open={!!confirmingTab} onClose={() => setConfirmingTab(null)} title="Regenerar análise?">
+        <div className="space-y-4 font-sans">
+          <p className="text-sm text-slate-600">
+            Este conteúdo já foi gerado anteriormente. Ao regenerar, o resultado atual será substituído por uma nova análise com os dados mais recentes do caso.
+          </p>
+          <p className="text-xs text-slate-500">
+            O histórico de análises anteriores fica salvo no prontuário do caso.
+          </p>
+          <div className="flex gap-3">
+            <Button onClick={handleConfirmRegenerate} className="flex-1">
+              Sim, regenerar
+            </Button>
+            <Button variant="outline" onClick={() => setConfirmingTab(null)} className="flex-1">
+              Cancelar
+            </Button>
+          </div>
+        </div>
+      </Modal>
 
       {/* MODAL — ANÁLISE DE LAUDO */}
       <Modal open={showLaudoModal} onClose={() => setShowLaudoModal(false)} title="Analisar Laudo Médico">

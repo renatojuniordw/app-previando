@@ -6,16 +6,21 @@ export function buildLaudoAnalysisUserPrompt(params: {
   patologia: string
   faixaEtaria: string
   laudo: string
+  preAnalise?: string
 }): string {
-  const { patologia, faixaEtaria, laudo } = params
+  const { patologia, faixaEtaria, laudo, preAnalise } = params
   const faixaLabel = faixaEtaria === 'MENOR_16'
     ? 'Menor de 16 anos — foco em casa, escola, apoio familiar, desenvolvimento'
     : 'Maior de 16 anos — foco em trabalho, autonomia, vida comunitária, atividades diárias'
 
+  const preAnaliseSection = preAnalise?.trim()
+    ? `\nPRÉ-ANÁLISE DO CASO (use como referência das lacunas e pontos críticos já identificados):\n${preAnalise}\n`
+    : ''
+
   return `Analise este laudo médico para fins de BPC/LOAS:
 
 Patologia: ${patologia} | Faixa etária: ${faixaLabel}
-
+${preAnaliseSection}
 LAUDO:
 ${laudo}
 
@@ -29,6 +34,7 @@ Avalie:
 7. Pontos positivos e negativos (objetivo e direto)
 8. O laudo sustenta o pedido ou precisa de complementação?
 9. Como seria o laudo ideal para este caso? (estrutura, conteúdos mínimos)
+${preAnalise ? '10. Como este laudo responde às lacunas documentais apontadas na pré-análise?' : ''}
 
 Classificação final: APTO | PARCIALMENTE APTO | INAPTO — com justificativa.`
 }

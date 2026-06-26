@@ -24,16 +24,21 @@ export interface BpcAnalysisParams {
   rendaPerCapita: number
   barreirasRelatadas: string
   resumoLaudos?: string
+  // Contexto cascateado de etapas anteriores
   relatoSocial?: string
+  preAnalise?: string
+  analiseLaudo?: string
+  perguntasMedicas?: string
 }
 
 export async function gerarPreAnalise(params: BpcAnalysisParams): Promise<string> {
-  const { patologia, cid, idade, faixaEtaria, rendaFamiliar, membrosGrupo, rendaPerCapita, barreirasRelatadas, resumoLaudos, relatoSocial } = params
+  const { patologia, cid, idade, faixaEtaria, rendaFamiliar, membrosGrupo, rendaPerCapita, barreirasRelatadas, resumoLaudos, relatoSocial, analiseLaudo } = params
   const p = s(patologia, 500)
   const c = s(cid, 50)
   const b = s(barreirasRelatadas, 3000)
   const r = s(resumoLaudos, 3000)
   const rs = s(relatoSocial, 5000)
+  const al = s(analiseLaudo, 2000)
 
   const userPrompt = buildPreAnalysisUserPrompt({
     patologia: p,
@@ -47,6 +52,7 @@ export async function gerarPreAnalise(params: BpcAnalysisParams): Promise<string
     barreiras: b,
     resumoLaudos: r,
     relatoSocial: rs || undefined,
+    analiseLaudo: al || undefined,
   })
 
   const response = await getOpenAI().chat.completions.create({
@@ -63,14 +69,16 @@ export async function gerarPreAnalise(params: BpcAnalysisParams): Promise<string
 }
 
 export async function analisarLaudo(laudo: string, params: BpcAnalysisParams): Promise<string> {
-  const { patologia, faixaEtaria } = params
+  const { patologia, faixaEtaria, preAnalise } = params
   const p = s(patologia, 500)
   const l = s(laudo, 5000)
+  const pa = s(preAnalise, 2000)
 
   const userPrompt = buildLaudoAnalysisUserPrompt({
     patologia: p,
     faixaEtaria,
     laudo: l,
+    preAnalise: pa || undefined,
   })
 
   const response = await getOpenAI().chat.completions.create({
@@ -87,10 +95,12 @@ export async function analisarLaudo(laudo: string, params: BpcAnalysisParams): P
 }
 
 export async function gerarPerguntasSocial(params: BpcAnalysisParams): Promise<RelatoSocialFromAI> {
-  const { patologia, cid, idade, faixaEtaria, barreirasRelatadas } = params
+  const { patologia, cid, idade, faixaEtaria, barreirasRelatadas, preAnalise, analiseLaudo } = params
   const p = s(patologia, 500)
   const c = s(cid, 50)
   const b = s(barreirasRelatadas, 3000)
+  const pa = s(preAnalise, 2000)
+  const al = s(analiseLaudo, 2000)
 
   const userPrompt = buildSocialQuestionsUserPrompt({
     patologia: p,
@@ -98,6 +108,8 @@ export async function gerarPerguntasSocial(params: BpcAnalysisParams): Promise<R
     idade,
     faixaEtaria,
     barreiras: b,
+    preAnalise: pa || undefined,
+    analiseLaudo: al || undefined,
   })
 
   const response = await getOpenAI().chat.completions.create({
@@ -116,12 +128,14 @@ export async function gerarPerguntasSocial(params: BpcAnalysisParams): Promise<R
 }
 
 export async function gerarPerguntasMedicas(params: BpcAnalysisParams): Promise<string> {
-  const { patologia, cid, idade, faixaEtaria, barreirasRelatadas, resumoLaudos, relatoSocial } = params
+  const { patologia, cid, idade, faixaEtaria, barreirasRelatadas, resumoLaudos, relatoSocial, preAnalise, analiseLaudo } = params
   const p = s(patologia, 500)
   const c = s(cid, 50)
   const b = s(barreirasRelatadas, 3000)
   const r = s(resumoLaudos, 3000)
   const rs = s(relatoSocial, 5000)
+  const pa = s(preAnalise, 2000)
+  const al = s(analiseLaudo, 2000)
 
   const userPrompt = buildMedicalQuestionsUserPrompt({
     patologia: p,
@@ -131,6 +145,8 @@ export async function gerarPerguntasMedicas(params: BpcAnalysisParams): Promise<
     barreiras: b,
     resumoLaudos: r,
     relatoSocial: rs || undefined,
+    preAnalise: pa || undefined,
+    analiseLaudo: al || undefined,
   })
 
   const response = await getOpenAI().chat.completions.create({
@@ -147,16 +163,22 @@ export async function gerarPerguntasMedicas(params: BpcAnalysisParams): Promise<
 }
 
 export async function gerarChecklist(params: BpcAnalysisParams): Promise<string> {
-  const { patologia, cid, faixaEtaria, relatoSocial } = params
+  const { patologia, cid, faixaEtaria, relatoSocial, preAnalise, analiseLaudo, perguntasMedicas } = params
   const p = s(patologia, 500)
   const c = s(cid, 50)
   const rs = s(relatoSocial, 5000)
+  const pa = s(preAnalise, 2000)
+  const al = s(analiseLaudo, 2000)
+  const pm = s(perguntasMedicas, 2000)
 
   const userPrompt = buildChecklistUserPrompt({
     patologia: p,
     cid: c,
     faixaEtaria,
     relatoSocial: rs || undefined,
+    preAnalise: pa || undefined,
+    analiseLaudo: al || undefined,
+    perguntasMedicas: pm || undefined,
   })
 
   const response = await getOpenAI().chat.completions.create({

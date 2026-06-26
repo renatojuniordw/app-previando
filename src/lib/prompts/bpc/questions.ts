@@ -11,16 +11,26 @@ export function buildSocialQuestionsUserPrompt(params: {
   idade: number
   faixaEtaria: string
   barreiras: string
+  preAnalise?: string
+  analiseLaudo?: string
 }): string {
   const faixaLabel = params.faixaEtaria === 'MENOR_16'
     ? 'Menor de 16 anos — foco em casa, escola, apoio familiar, desenvolvimento'
     : 'Maior de 16 anos — foco em trabalho, autonomia, vida comunitária, atividades diárias'
 
+  const preAnaliseSection = params.preAnalise?.trim()
+    ? `\nPRÉ-ANÁLISE DO CASO (use as lacunas e pontos críticos para direcionar perguntas específicas):\n${params.preAnalise}\n`
+    : ''
+
+  const laudoSection = params.analiseLaudo?.trim()
+    ? `\nANÁLISE DO LAUDO MÉDICO (use para aprofundar perguntas sobre aspectos funcionais identificados):\n${params.analiseLaudo}\n`
+    : ''
+
   return `Gere perguntas para roteiro de entrevista social (BPC/LOAS) para este caso:
 
 Patologia: ${params.patologia} | CID: ${params.cid || 'N/A'} | Idade: ${params.idade} | Faixa: ${faixaLabel}
 Barreiras relatadas: ${params.barreiras}
-
+${preAnaliseSection}${laudoSection}
 Retorne JSON com exatamente este schema:
 {
   "dominios": [
@@ -61,10 +71,20 @@ export function buildMedicalQuestionsUserPrompt(params: {
   barreiras: string
   resumoLaudos?: string
   relatoSocial?: string
+  preAnalise?: string
+  analiseLaudo?: string
 }): string {
   const faixaLabel = params.faixaEtaria === 'MENOR_16'
     ? 'Menor de 16 anos — foco em casa, escola, apoio familiar, desenvolvimento'
     : 'Maior de 16 anos — foco em trabalho, autonomia, vida comunitária, atividades diárias'
+
+  const preAnaliseSection = params.preAnalise?.trim()
+    ? `\nPRÉ-ANÁLISE DO CASO (considere as lacunas documentais e pontos críticos ao direcionar as orientações):\n${params.preAnalise}\n`
+    : ''
+
+  const laudoSection = params.analiseLaudo?.trim()
+    ? `\nANÁLISE DO LAUDO MÉDICO (use para identificar inconsistências e aspectos que o perito vai questionar):\n${params.analiseLaudo}\n`
+    : ''
 
   const relatoSection = params.relatoSocial?.trim()
     ? `\nRELATO DA ENTREVISTA SOCIAL (coletado pelo advogado):\n${params.relatoSocial}\n`
@@ -75,7 +95,7 @@ export function buildMedicalQuestionsUserPrompt(params: {
 Patologia: ${params.patologia} | CID: ${params.cid || 'N/A'} | Idade: ${params.idade} | Faixa: ${faixaLabel}
 Barreiras: ${params.barreiras}
 Laudos: ${params.resumoLaudos || 'Não informado'}
-${relatoSection}
+${preAnaliseSection}${laudoSection}${relatoSection}
 
 Gere entre 20 e 25 perguntas técnicas que o perito tende a fazer,
 cobrindo obrigatoriamente:

@@ -25,6 +25,7 @@ export function BpcSocialInterview({
   const [localRelato, setLocalRelato] = useState<RelatoSocial | null>(relatoSocial)
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set())
   const [dirty, setDirty] = useState(false)
+  const [confirmingRegenerate, setConfirmingRegenerate] = useState(false)
 
   const handleGenerate = async () => {
     setGenerating(true)
@@ -136,15 +137,33 @@ export function BpcSocialInterview({
             </span>
           )}
         </div>
-        <div className="flex gap-2 shrink-0">
-          <Button
-            variant="outline"
-            onClick={handleGenerate}
-            loading={generating}
-            className="text-xs py-1.5"
-          >
-            Regenerar
-          </Button>
+        <div className="flex gap-2 shrink-0 items-center">
+          {confirmingRegenerate ? (
+            <div className="flex items-center gap-2 bg-amber-50 border border-amber-300 rounded-md px-3 py-1.5">
+              <span className="font-sans text-xs text-amber-800">Substituir roteiro atual?</span>
+              <button
+                onClick={() => { setConfirmingRegenerate(false); handleGenerate() }}
+                className="text-xs font-semibold text-red-600 hover:text-red-800"
+              >
+                Sim
+              </button>
+              <button
+                onClick={() => setConfirmingRegenerate(false)}
+                className="text-xs font-semibold text-slate-500 hover:text-slate-700"
+              >
+                Não
+              </button>
+            </div>
+          ) : (
+            <Button
+              variant="outline"
+              onClick={() => setConfirmingRegenerate(true)}
+              loading={generating}
+              className="text-xs py-1.5"
+            >
+              Regenerar
+            </Button>
+          )}
           <Button
             onClick={handleSave}
             loading={saving}

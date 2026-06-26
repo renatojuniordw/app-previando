@@ -40,6 +40,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       barreirasRelatadas: analysis.barreiras ?? '',
       resumoLaudos: analysis.resumoLaudos ?? undefined,
       relatoSocial,
+      analiseLaudo: analysis.analiseLaudo ?? undefined,
     }
 
     const result = await gerarPreAnalise(paramsData)

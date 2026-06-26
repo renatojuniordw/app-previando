@@ -54,6 +54,8 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       rendaPerCapita: parseFloat(analysis.rendaPerCapita.toString()),
       barreirasRelatadas: analysis.barreiras ?? '',
       resumoLaudos: analysis.resumoLaudos ?? undefined,
+      preAnalise: analysis.preAnalise ?? undefined,
+      analiseLaudo: analysis.analiseLaudo ?? undefined,
     }
 
     const aiResult = await gerarPerguntasSocial(paramsData)
