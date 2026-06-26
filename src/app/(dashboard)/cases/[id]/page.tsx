@@ -8,6 +8,8 @@ import { CaseInfoCard } from './_components/CaseInfoCard'
 import { ActivitySummary } from './_components/ActivitySummary'
 import { StatusModal } from './_components/StatusModal'
 
+import { EditCaseModal } from './_components/EditCaseModal'
+
 export default function CaseOverviewPage() {
   const {
     caseData,
@@ -15,10 +17,14 @@ export default function CaseOverviewPage() {
     showStatusModal,
     newStatus,
     updatingStatus,
+    showEditModal,
+    updatingCase,
     load,
     setNewStatus,
     setShowStatusModal,
+    setShowEditModal,
     handleStatusChange,
+    handleEditSubmit,
     handleExportPDF,
   } = useCaseOverview()
 
@@ -36,11 +42,12 @@ export default function CaseOverviewPage() {
   }
 
   return (
-    <div className="space-y-6 max-w-3xl">
+    <div className="space-y-6 max-w-5xl mx-auto">
       <CaseInfoCard
         caseData={caseData}
         onStatusChangeClick={() => setShowStatusModal(true)}
         onExportPDF={handleExportPDF}
+        onEditClick={() => setShowEditModal(true)}
       />
 
       <ActivitySummary counts={caseData._count} />
@@ -52,6 +59,14 @@ export default function CaseOverviewPage() {
         onClose={() => setShowStatusModal(false)}
         onStatusChange={setNewStatus}
         onConfirm={handleStatusChange}
+      />
+
+      <EditCaseModal
+        open={showEditModal}
+        caseData={caseData}
+        loading={updatingCase}
+        onClose={() => setShowEditModal(false)}
+        onSave={handleEditSubmit}
       />
     </div>
   )

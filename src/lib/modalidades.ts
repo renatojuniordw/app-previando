@@ -42,26 +42,15 @@ export async function getModalidades(options: GetModalidadesOptions = {}): Promi
     return getModalidadesFallback()
   }
 
-  const merged = new Map<string, ModalidadeOption>()
-
-  for (const fallback of getModalidadesFallback()) {
-    if (options.includeInactive || fallback.ativo) {
-      merged.set(fallback.codigo, fallback)
-    }
-  }
-
-  for (const registro of registros) {
-    merged.set(registro.code, {
+  return registros
+    .map((registro) => ({
       id: registro.id,
       codigo: registro.code,
       label: registro.label,
       descricao: registro.description,
       ativo: registro.active,
       ordem: registro.order,
-    })
-  }
-
-  return Array.from(merged.values())
+    }))
     .filter((item) => options.includeInactive || item.ativo)
     .sort(sortModalidades)
 }

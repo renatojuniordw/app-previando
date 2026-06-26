@@ -11,3 +11,9 @@ export const PRIORITY_VARIANT: Record<string, 'red' | 'yellow' | 'slate'> = {
   ATTENTION: 'yellow',
   NORMAL: 'slate',
 }
+
+export const PRIORITY_OPTIONS = [
+  { value: 'CRITICAL', label: 'Crítico' },
+  { value: 'ATTENTION', label: 'Atenção' },
+  { value: 'NORMAL', label: 'Normal' },
+]

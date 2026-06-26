@@ -17,6 +17,9 @@ export function useCaseOverview() {
   const [newStatus, setNewStatus] = useState('')
   const [updatingStatus, setUpdatingStatus] = useState(false)
 
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [updatingCase, setUpdatingCase] = useState(false)
+
   const load = useCallback(() => {
     api.get(`/cases/${params.id}`)
       .then((r) => {
@@ -45,6 +48,24 @@ export function useCaseOverview() {
     }
   }
 
+  const handleEditSubmit = async (data: { priority: string; deadlineDate: string; notes: string }) => {
+    setUpdatingCase(true)
+    try {
+      await api.put(`/cases/${params.id}`, {
+        priority: data.priority,
+        deadlineDate: data.deadlineDate ? new Date(data.deadlineDate).toISOString() : null,
+        notes: data.notes || null,
+      })
+      setShowEditModal(false)
+      addToast({ type: 'success', title: 'Sucesso', message: 'Caso atualizado com sucesso.' })
+      load()
+    } catch {
+      addToast({ type: 'error', title: 'Erro', message: 'Não foi possível atualizar o caso.' })
+    } finally {
+      setUpdatingCase(false)
+    }
+  }
+
   const handleExportPDF = () => {
     window.open(`/api/export/pdf/${params.id}`, '_blank')
   }
@@ -55,10 +76,14 @@ export function useCaseOverview() {
     showStatusModal,
     newStatus,
     updatingStatus,
+    showEditModal,
+    updatingCase,
     load,
     setNewStatus,
     setShowStatusModal,
+    setShowEditModal,
     handleStatusChange,
+    handleEditSubmit,
     handleExportPDF,
   }
 }

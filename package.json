@@ -15,6 +15,7 @@
     "worker": "ts-node --compiler-options '{\"module\":\"CommonJS\"}' src/jobs/worker.ts"
   },
   "dependencies": {
+    "@ag-media/react-pdf-table": "^2.0.3",
     "@auth/prisma-adapter": "^2.7.4",
     "@aws-sdk/client-s3": "^3.699.0",
     "@aws-sdk/s3-request-presigner": "^3.699.0",
@@ -23,6 +24,7 @@
     "@dnd-kit/utilities": "^3.2.2",
     "@hookform/resolvers": "^3.9.1",
     "@prisma/client": "^5.22.0",
+    "@react-pdf/renderer": "^4.5.1",
     "axios": "^1.7.9",
     "bcryptjs": "^2.4.3",
     "bullmq": "^5.23.0",
@@ -37,6 +39,7 @@
     "next-auth": "^5.0.0-beta.25",
     "openai": "^4.73.1",
     "pdf-parse": "^1.1.1",
+    "pdfkit": "^0.19.1",
     "prisma": "^5.22.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
@@ -52,6 +55,7 @@
     "@types/bcryptjs": "^2.4.6",
     "@types/node": "^22.10.5",
     "@types/pdf-parse": "^1.1.4",
+    "@types/pdfkit": "^0.17.6",
     "@types/react": "^18.3.18",
     "@types/react-dom": "^18.3.5",
     "autoprefixer": "^10.4.20",
