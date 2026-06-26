@@ -70,7 +70,7 @@ TIPO DE BENEFÍCIO: ${input.benefitType}
 STATUS DO CASO: ${input.caseStatus}
 
 RESUMO DO CNIS:
-${input.cnisSummary ? sanitizeForAI(input.cnisSummary.slice(0, 2000)) : 'Não disponível'}
+${input.cnisSummary ? sanitizeForAI(input.cnisSummary, 100000) : 'Não disponível'}
 
 CÁLCULOS REALIZADOS:
 ${calcsText}

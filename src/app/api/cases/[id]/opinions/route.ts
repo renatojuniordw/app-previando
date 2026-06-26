@@ -99,7 +99,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       clientName: caso.client?.name ?? 'Cliente',
       benefitType: caso.benefitType,
       caseStatus: caso.status,
-      cnisSummary: caso.cnisDocument?.markdownContent?.slice(0, 2000),
+      cnisSummary: caso.cnisDocument?.markdownContent ?? undefined,
       calculations: caso.calculations.map((c) => ({
         modalidade: c.modality,
         rmi: c.rmi != null ? String(c.rmi) : '0',
