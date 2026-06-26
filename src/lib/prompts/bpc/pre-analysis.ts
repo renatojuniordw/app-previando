@@ -40,11 +40,12 @@ export function buildPreAnalysisUserPrompt(params: {
   salarioMinimoVigente: number
   barreiras: string
   resumoLaudos?: string
+  relatoSocial?: string
 }): string {
   const {
     patologia, cid, idade, faixaEtaria,
     rendaFamiliar, membrosGrupo, rendaPerCapita,
-    salarioMinimoVigente, barreiras, resumoLaudos
+    salarioMinimoVigente, barreiras, resumoLaudos, relatoSocial
   } = params
 
   const limiteRenda = salarioMinimoVigente / 4
@@ -57,6 +58,10 @@ export function buildPreAnalysisUserPrompt(params: {
   const laudosSection = resumoLaudos?.trim()
     ? `Resumo dos laudos médicos/sociais:\n${resumoLaudos}`
     : `Resumo dos laudos médicos/sociais: NÃO FORNECIDO — considere esta ausência como lacuna documental crítica.`
+
+  const relatoSection = relatoSocial?.trim()
+    ? `\nRELATO DA ENTREVISTA SOCIAL (coletado pelo advogado):\n${relatoSocial}`
+    : ''
 
   return `Analise a viabilidade deste caso para concessão do BPC/LOAS com base nos critérios legais vigentes.
 
@@ -78,7 +83,7 @@ Barreiras relatadas pelo requerente:
 ${barreiras || 'Não informado — considere como lacuna crítica para avaliação do impedimento.'}
 
 ${laudosSection}
-
+${relatoSection}
 ---
 Produza sua análise seguindo rigorosamente o formato de resposta definido no seu papel.`
 }

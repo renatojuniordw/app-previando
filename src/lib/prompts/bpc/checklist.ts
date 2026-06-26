@@ -5,15 +5,20 @@ export function buildChecklistUserPrompt(params: {
   patologia: string
   cid?: string
   faixaEtaria: string
+  relatoSocial?: string
 }): string {
   const faixaLabel = params.faixaEtaria === 'MENOR_16'
     ? 'Menor de 16 anos — foco em casa, escola, apoio familiar, desenvolvimento'
     : 'Maior de 16 anos — foco em trabalho, autonomia, vida comunitária, atividades diárias'
 
+  const relatoSection = params.relatoSocial?.trim()
+    ? `\nCONTEXTO DA ENTREVISTA SOCIAL:\n${params.relatoSocial}\n\nUse o contexto acima para identificar documentos específicos que comprovem as situações relatadas.\n`
+    : ''
+
   return `Gere checklist de documentação para BPC/LOAS:
 
 Patologia: ${params.patologia} | CID: ${params.cid || 'N/A'} | Faixa: ${faixaLabel}
-
+${relatoSection}
 Liste:
 1. Documentos obrigatórios (sem eles o pedido não prospera)
 2. Documentos recomendados (fortalecem o caso)

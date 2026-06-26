@@ -8,6 +8,8 @@ import { Modal } from '@/components/ui/Modal'
 import { Card } from '@/components/ui/Card'
 import { BpcForm } from '@/components/bpc/BpcForm'
 import { BpcResult } from '@/components/bpc/BpcResult'
+import { BpcSocialInterview } from '@/components/bpc/BpcSocialInterview'
+import type { RelatoSocial } from '@/types/bpc-social'
 
 interface BpcAnalysis {
   id: string
@@ -25,6 +27,7 @@ interface BpcAnalysis {
   perguntasSocial: string | null
   perguntasMedicas: string | null
   checklist: string | null
+  relatoSocial: RelatoSocial | null
 }
 
 type AnalysisTab = 'preAnalise' | 'laudo' | 'social' | 'medical' | 'checklist'
@@ -73,13 +76,13 @@ export default function BpcPage() {
           setTabResults({
             preAnalise: saved.preAnalise ?? undefined,
             laudo: saved.analiseLaudo ?? undefined,
-            social: saved.perguntasSocial ?? undefined,
             medical: saved.perguntasMedicas ?? undefined,
             checklist: saved.checklist ?? undefined,
           })
-          // Abre na primeira tab que já tem resultado
-          const first = TABS.find((t) => saved[t.field])
+          // Abre na primeira tab que já tem resultado (social usa relatoSocial, não tabResults)
+          const first = TABS.find((t) => t.id !== 'social' && saved[t.field])
           if (first) setActiveTab(first.id)
+          else if (saved.relatoSocial) setActiveTab('social')
         }
       })
       .catch(() => null)
@@ -114,7 +117,7 @@ export default function BpcPage() {
     try {
       const r = await api.post(`/cases/${caseId}/bpc/${tabConfig.endpoint}`, {})
       setTabResults((prev) => ({ ...prev, [tab]: r.data.result }))
-      setBpcNotesCount((n) => n + 1)
+      if (r.data.bpcNotesCount !== undefined) setBpcNotesCount(r.data.bpcNotesCount)
     } catch {
       // error handled by api interceptor
     } finally {
@@ -129,7 +132,7 @@ export default function BpcPage() {
       const r = await api.post(`/cases/${caseId}/bpc/laudo`, { texto: laudoText })
       setTabResults((prev) => ({ ...prev, laudo: r.data.result }))
       setActiveTab('laudo')
-      setBpcNotesCount((n) => n + 1)
+      if (r.data.bpcNotesCount !== undefined) setBpcNotesCount(r.data.bpcNotesCount)
       setShowLaudoModal(false)
       setLaudoText('')
     } catch {
@@ -233,7 +236,9 @@ export default function BpcPage() {
             <div className="bg-slate-50 border-b border-slate-200">
               <div className="flex overflow-x-auto no-scrollbar">
                 {TABS.map((tab) => {
-                  const hasSaved = !!tabResults[tab.id]
+                  const hasSaved = tab.id === 'social'
+                    ? !!analysis?.relatoSocial
+                    : !!tabResults[tab.id]
                   const isActive = activeTab === tab.id
                   const isGenerating = generatingTab === tab.id
                   return (
@@ -262,7 +267,17 @@ export default function BpcPage() {
 
             {/* Conteúdo da tab ativa */}
             <div className="flex-1 flex flex-col bg-white">
-              {!analysis ? (
+              {activeTab === 'social' ? (
+                <BpcSocialInterview
+                  caseId={caseId}
+                  analysisExists={!!analysis}
+                  relatoSocial={analysis?.relatoSocial ?? null}
+                  onRelatoChange={(relato) =>
+                    setAnalysis((prev) => prev ? { ...prev, relatoSocial: relato } : null)
+                  }
+                  onNoteSaved={setBpcNotesCount}
+                />
+              ) : !analysis ? (
                 <div className="flex-1 flex flex-col items-center justify-center py-16 text-center px-6">
                   <span className="text-4xl mb-4 grayscale opacity-50">🔒</span>
                   <h4 className="font-sans font-semibold text-slate-700 mb-1">Análises Bloqueadas</h4>
@@ -294,20 +309,14 @@ export default function BpcPage() {
                       ? 'Isso pode levar alguns segundos dependendo da complexidade dos dados.'
                       : `Clique abaixo para gerar a análise focada em ${activeTabConfig.label.toLowerCase()} com base nos dados informados.`}
                   </p>
-                  
+
                   {generatingTab !== activeTab && activeTab !== 'laudo' && (
-                    <Button
-                      onClick={() => handleGenerate(activeTab)}
-                      className="px-6"
-                    >
+                    <Button onClick={() => handleGenerate(activeTab)} className="px-6">
                       Gerar Análise Agora
                     </Button>
                   )}
                   {generatingTab !== activeTab && activeTab === 'laudo' && (
-                    <Button
-                      onClick={() => setShowLaudoModal(true)}
-                      className="px-6"
-                    >
+                    <Button onClick={() => setShowLaudoModal(true)} className="px-6">
                       Analisar Laudo
                     </Button>
                   )}

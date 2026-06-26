@@ -8,6 +8,7 @@ import { logAudit } from '@/lib/audit'
 import { analisarLaudo } from '@/services/bpc'
 import { saveBpcToNotes } from '@/lib/bpc-notes'
 import { prisma } from '@/lib/prisma'
+import { NoteType } from '@prisma/client'
 import { z } from 'zod'
 
 const LaudoSchema = z.object({
@@ -53,6 +54,10 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
     await saveBpcToNotes(params.id, session.user.id, 'laudo', result)
 
+    const bpcNotesCount = await prisma.caseNote.count({
+      where: { caseId: params.id, type: NoteType.BPC_ANALYSIS },
+    })
+
     await logAudit({
       userId: session.user.id,
       action: 'bpc.laudo',
@@ -61,7 +66,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       metadata: { caseId: params.id },
     })
 
-    return NextResponse.json({ result })
+    return NextResponse.json({ result, bpcNotesCount })
   } catch (err: unknown) {
     return handleApiError(err)
   }

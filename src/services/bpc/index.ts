@@ -5,6 +5,7 @@ import { BPC_LAUDO_SYSTEM_PROMPT, buildLaudoAnalysisUserPrompt } from '@/lib/pro
 import { BPC_SOCIAL_QUESTIONS_SYSTEM_PROMPT, BPC_MEDICAL_QUESTIONS_SYSTEM_PROMPT, buildSocialQuestionsUserPrompt, buildMedicalQuestionsUserPrompt } from '@/lib/prompts/bpc/questions'
 import { BPC_CHECKLIST_SYSTEM_PROMPT, buildChecklistUserPrompt } from '@/lib/prompts/bpc/checklist'
 import { BPC_CAROUSEL_SYSTEM_PROMPT, buildCarouselUserPrompt } from '@/lib/prompts/bpc/carousel'
+import type { RelatoSocialFromAI } from '@/types/bpc-social'
 
 // Atualizar anualmente conforme reajuste do salário mínimo
 const SALARIO_MINIMO_VIGENTE = 1518.00
@@ -23,14 +24,16 @@ export interface BpcAnalysisParams {
   rendaPerCapita: number
   barreirasRelatadas: string
   resumoLaudos?: string
+  relatoSocial?: string
 }
 
 export async function gerarPreAnalise(params: BpcAnalysisParams): Promise<string> {
-  const { patologia, cid, idade, faixaEtaria, rendaFamiliar, membrosGrupo, rendaPerCapita, barreirasRelatadas, resumoLaudos } = params
+  const { patologia, cid, idade, faixaEtaria, rendaFamiliar, membrosGrupo, rendaPerCapita, barreirasRelatadas, resumoLaudos, relatoSocial } = params
   const p = s(patologia, 500)
   const c = s(cid, 50)
   const b = s(barreirasRelatadas, 3000)
   const r = s(resumoLaudos, 3000)
+  const rs = s(relatoSocial, 5000)
 
   const userPrompt = buildPreAnalysisUserPrompt({
     patologia: p,
@@ -43,6 +46,7 @@ export async function gerarPreAnalise(params: BpcAnalysisParams): Promise<string
     salarioMinimoVigente: SALARIO_MINIMO_VIGENTE,
     barreiras: b,
     resumoLaudos: r,
+    relatoSocial: rs || undefined,
   })
 
   const response = await getOpenAI().chat.completions.create({
@@ -82,7 +86,7 @@ export async function analisarLaudo(laudo: string, params: BpcAnalysisParams): P
   return response.choices[0].message.content ?? 'Não foi possível analisar o laudo.'
 }
 
-export async function gerarPerguntasSocial(params: BpcAnalysisParams): Promise<string> {
+export async function gerarPerguntasSocial(params: BpcAnalysisParams): Promise<RelatoSocialFromAI> {
   const { patologia, cid, idade, faixaEtaria, barreirasRelatadas } = params
   const p = s(patologia, 500)
   const c = s(cid, 50)
@@ -100,21 +104,24 @@ export async function gerarPerguntasSocial(params: BpcAnalysisParams): Promise<s
     model: 'gpt-4o-mini',
     temperature: 0.3,
     max_tokens: 3000,
+    response_format: { type: 'json_object' },
     messages: [
       { role: 'system', content: BPC_SOCIAL_QUESTIONS_SYSTEM_PROMPT },
       { role: 'user', content: userPrompt },
     ],
   })
 
-  return response.choices[0].message.content ?? 'Não foi possível gerar as perguntas.'
+  const content = response.choices[0].message.content ?? '{}'
+  return JSON.parse(content) as RelatoSocialFromAI
 }
 
 export async function gerarPerguntasMedicas(params: BpcAnalysisParams): Promise<string> {
-  const { patologia, cid, idade, faixaEtaria, barreirasRelatadas, resumoLaudos } = params
+  const { patologia, cid, idade, faixaEtaria, barreirasRelatadas, resumoLaudos, relatoSocial } = params
   const p = s(patologia, 500)
   const c = s(cid, 50)
   const b = s(barreirasRelatadas, 3000)
   const r = s(resumoLaudos, 3000)
+  const rs = s(relatoSocial, 5000)
 
   const userPrompt = buildMedicalQuestionsUserPrompt({
     patologia: p,
@@ -123,6 +130,7 @@ export async function gerarPerguntasMedicas(params: BpcAnalysisParams): Promise<
     faixaEtaria,
     barreiras: b,
     resumoLaudos: r,
+    relatoSocial: rs || undefined,
   })
 
   const response = await getOpenAI().chat.completions.create({
@@ -139,14 +147,16 @@ export async function gerarPerguntasMedicas(params: BpcAnalysisParams): Promise<
 }
 
 export async function gerarChecklist(params: BpcAnalysisParams): Promise<string> {
-  const { patologia, cid, faixaEtaria } = params
+  const { patologia, cid, faixaEtaria, relatoSocial } = params
   const p = s(patologia, 500)
   const c = s(cid, 50)
+  const rs = s(relatoSocial, 5000)
 
   const userPrompt = buildChecklistUserPrompt({
     patologia: p,
     cid: c,
     faixaEtaria,
+    relatoSocial: rs || undefined,
   })
 
   const response = await getOpenAI().chat.completions.create({

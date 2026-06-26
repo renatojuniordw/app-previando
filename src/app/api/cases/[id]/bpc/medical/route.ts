@@ -5,8 +5,10 @@ import { guardFeature, guardBpcAnalysisLimit } from '@/lib/plan-guard'
 import { rateLimit } from '@/lib/rate-limit'
 import { handleApiError } from '@/lib/api-error'
 import { gerarPerguntasMedicas } from '@/services/bpc'
-import { saveBpcToNotes } from '@/lib/bpc-notes'
+import { saveBpcToNotes, formatRelatoSocialText } from '@/lib/bpc-notes'
 import { prisma } from '@/lib/prisma'
+import type { RelatoSocial } from '@/types/bpc-social'
+import { NoteType } from '@prisma/client'
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
   try {
     const session = await auth()
@@ -22,6 +24,10 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     const analysis = await prisma.bpcAnalysis.findUnique({ where: { caseId: params.id } })
     if (!analysis) return NextResponse.json({ error: 'Dados do formulário BPC não encontrados.' }, { status: 400 })
 
+    const relatoSocial = analysis.relatoSocial
+      ? formatRelatoSocialText(analysis.relatoSocial as unknown as RelatoSocial)
+      : undefined
+
     const paramsData = {
       patologia: analysis.patologia,
       cid: analysis.cid ?? undefined,
@@ -32,6 +38,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       rendaPerCapita: parseFloat(analysis.rendaPerCapita.toString()),
       barreirasRelatadas: analysis.barreiras ?? '',
       resumoLaudos: analysis.resumoLaudos ?? undefined,
+      relatoSocial,
     }
 
     const result = await gerarPerguntasMedicas(paramsData)
@@ -43,7 +50,11 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
     await saveBpcToNotes(params.id, session.user.id, 'medical', result)
 
-    return NextResponse.json({ result })
+    const bpcNotesCount = await prisma.caseNote.count({
+      where: { caseId: params.id, type: NoteType.BPC_ANALYSIS },
+    })
+
+    return NextResponse.json({ result, bpcNotesCount })
   } catch (err: unknown) {
     return handleApiError(err)
   }
