@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/Button'
 import { Modal } from '@/components/ui/Modal'
 import { Card } from '@/components/ui/Card'
 import { BpcForm } from '@/components/bpc/BpcForm'
-import { BpcAnalysisButtons } from '@/components/bpc/BpcAnalysisButtons'
 import { BpcResult } from '@/components/bpc/BpcResult'
 
 interface BpcAnalysis {
@@ -177,7 +176,7 @@ export default function BpcPage() {
   }
 
   return (
-    <div className="space-y-6 max-w-4xl font-sans">
+    <div className="space-y-6 max-w-6xl font-sans">
       <div className="flex items-center justify-between border-b border-slate-200 pb-4">
         <div>
           <h2 className="font-serif font-semibold text-xl text-slate-900">BPC/LOAS</h2>
@@ -208,106 +207,116 @@ export default function BpcPage() {
         </div>
       )}
 
-      {/* BLOCO 1 — DADOS DO CASO */}
-      <BpcForm
-        caseId={caseId}
-        analysis={analysis}
-        clientBirthDate={clientBirthDate}
-        onSave={handleSave}
-        saving={saving}
-      />
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* COLUNA ESQUERDA: DADOS */}
+        <div className="lg:col-span-5 flex flex-col gap-6">
+          <BpcForm
+            caseId={caseId}
+            analysis={analysis}
+            clientBirthDate={clientBirthDate}
+            onSave={handleSave}
+            saving={saving}
+          />
+        </div>
 
-      {/* BLOCO 2 — ANÁLISES COM IA */}
-      <BpcAnalysisButtons
-        onAnalyze={handleGenerate}
-        onOpenLaudo={() => setShowLaudoModal(true)}
-        loading={generatingTab !== null}
-        disabled={!analysis}
-      />
-
-      {/* BLOCO 3 — HISTÓRICO + RESULTADO */}
-      {analysis && (
-        <Card variant="light" className="p-0 overflow-hidden">
-          {/* Tabs de histórico */}
-          <div className="bg-slate-50 border-b border-slate-200">
-            <div className="flex overflow-x-auto no-scrollbar">
-              {TABS.map((tab) => {
-                const hasSaved = !!tabResults[tab.id]
-                const isActive = activeTab === tab.id
-                const isGenerating = generatingTab === tab.id
-                return (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
-                    className={`flex items-center gap-1.5 px-4 py-2.5 text-xs font-sans font-medium whitespace-nowrap border-b-2 transition-all ${
-                      isActive
-                        ? 'border-amber-500 text-amber-700 bg-white'
-                        : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-100'
-                    }`}
-                  >
-                    {isGenerating ? (
-                      <span className="w-3 h-3 border-2 border-amber-500 border-t-transparent rounded-full animate-spin inline-block" />
-                    ) : hasSaved ? (
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" />
-                    ) : (
-                      <span className="w-1.5 h-1.5 rounded-full bg-slate-300 inline-block" />
-                    )}
-                    {tab.label}
-                  </button>
-                )
-              })}
+        {/* COLUNA DIREITA: INTELIGÊNCIA ARTIFICIAL */}
+        <div className="lg:col-span-7">
+          <Card variant="light" className="p-0 overflow-hidden flex flex-col h-full min-h-[600px]">
+            {/* Cabecalho IA */}
+            <div className="bg-slate-900 px-5 py-4 border-b border-slate-800 flex items-center justify-between">
+              <h3 className="font-sans font-semibold text-sm text-white flex items-center gap-2">
+                <span className="text-amber-500">✦</span> Análises com IA
+              </h3>
             </div>
-          </div>
 
-          {/* Conteúdo da tab ativa */}
-          {activeResult ? (
-            <BpcResult
-              caseId={caseId}
-              result={activeResult}
-              type={activeTab}
-              onCopy={handleCopy}
-              onExportPdf={handleExportPdf}
-              onOpenChecklist={activeTab === 'checklist' ? openChecklist : undefined}
-            />
-          ) : (
-            <div className="flex flex-col items-center justify-center py-10 text-center px-6">
-              <span className="text-2xl mb-3">
-                {generatingTab === activeTab ? '⏳' : '📭'}
-              </span>
-              <p className="font-sans text-sm font-medium text-slate-700 mb-1">
-                {generatingTab === activeTab
-                  ? 'Gerando análise...'
-                  : `Nenhuma ${activeTabConfig.label.toLowerCase()} gerada ainda`}
-              </p>
-              {generatingTab !== activeTab && (
-                <p className="font-sans text-xs text-slate-400 mb-4">
-                  Use o botão correspondente acima para gerar com IA.
-                </p>
-              )}
-              {generatingTab !== activeTab && activeTab !== 'laudo' && (
-                <Button
-                  variant="outline"
-                  onClick={() => handleGenerate(activeTab)}
-                  disabled={!analysis}
-                  className="text-xs"
-                >
-                  Gerar agora
-                </Button>
-              )}
-              {generatingTab !== activeTab && activeTab === 'laudo' && (
-                <Button
-                  variant="outline"
-                  onClick={() => setShowLaudoModal(true)}
-                  disabled={!analysis}
-                  className="text-xs"
-                >
-                  Analisar laudo
-                </Button>
+            {/* Tabs de opções */}
+            <div className="bg-slate-50 border-b border-slate-200">
+              <div className="flex overflow-x-auto no-scrollbar">
+                {TABS.map((tab) => {
+                  const hasSaved = !!tabResults[tab.id]
+                  const isActive = activeTab === tab.id
+                  const isGenerating = generatingTab === tab.id
+                  return (
+                    <button
+                      key={tab.id}
+                      onClick={() => setActiveTab(tab.id)}
+                      className={`flex items-center gap-1.5 px-4 py-3 text-xs font-sans font-medium whitespace-nowrap border-b-2 transition-all ${
+                        isActive
+                          ? 'border-amber-500 text-amber-700 bg-white'
+                          : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-100'
+                      }`}
+                    >
+                      {isGenerating ? (
+                        <span className="w-2.5 h-2.5 border-2 border-amber-500 border-t-transparent rounded-full animate-spin inline-block" />
+                      ) : hasSaved ? (
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" />
+                      ) : (
+                        <span className="w-1.5 h-1.5 rounded-full bg-slate-300 inline-block" />
+                      )}
+                      {tab.label}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+
+            {/* Conteúdo da tab ativa */}
+            <div className="flex-1 flex flex-col bg-white">
+              {!analysis ? (
+                <div className="flex-1 flex flex-col items-center justify-center py-16 text-center px-6">
+                  <span className="text-4xl mb-4 grayscale opacity-50">🔒</span>
+                  <h4 className="font-sans font-semibold text-slate-700 mb-1">Análises Bloqueadas</h4>
+                  <p className="font-sans text-sm text-slate-500 max-w-sm">
+                    Preencha e salve os dados do caso na aba ao lado para liberar as análises com Inteligência Artificial.
+                  </p>
+                </div>
+              ) : activeResult ? (
+                <BpcResult
+                  caseId={caseId}
+                  result={activeResult}
+                  type={activeTab}
+                  onCopy={handleCopy}
+                  onExportPdf={handleExportPdf}
+                  onOpenChecklist={activeTab === 'checklist' ? openChecklist : undefined}
+                />
+              ) : (
+                <div className="flex-1 flex flex-col items-center justify-center py-16 text-center px-6">
+                  <span className="text-3xl mb-3">
+                    {generatingTab === activeTab ? '⏳' : activeTab === 'laudo' ? '📋' : '✨'}
+                  </span>
+                  <h4 className="font-sans font-semibold text-slate-700 mb-1">
+                    {generatingTab === activeTab
+                      ? 'Processando com IA...'
+                      : `${activeTabConfig.label}`}
+                  </h4>
+                  <p className="font-sans text-sm text-slate-500 max-w-sm mb-6">
+                    {generatingTab === activeTab
+                      ? 'Isso pode levar alguns segundos dependendo da complexidade dos dados.'
+                      : `Clique abaixo para gerar a análise focada em ${activeTabConfig.label.toLowerCase()} com base nos dados informados.`}
+                  </p>
+                  
+                  {generatingTab !== activeTab && activeTab !== 'laudo' && (
+                    <Button
+                      onClick={() => handleGenerate(activeTab)}
+                      className="px-6"
+                    >
+                      Gerar Análise Agora
+                    </Button>
+                  )}
+                  {generatingTab !== activeTab && activeTab === 'laudo' && (
+                    <Button
+                      onClick={() => setShowLaudoModal(true)}
+                      className="px-6"
+                    >
+                      Analisar Laudo
+                    </Button>
+                  )}
+                </div>
               )}
             </div>
-          )}
-        </Card>
-      )}
+          </Card>
+        </div>
+      </div>
 
       {/* MODAL — ANÁLISE DE LAUDO */}
       <Modal open={showLaudoModal} onClose={() => setShowLaudoModal(false)} title="Analisar Laudo Médico">

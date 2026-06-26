@@ -101,7 +101,7 @@ export function BpcForm({ caseId, analysis, clientBirthDate, onSave, saving }: B
   }
 
   const handleSave = () => {
-    if (!patologia || !idade || !rendaFamiliar || !membrosGrupo) return
+    if (!patologia.trim() || idade === '' || rendaFamiliar === '' || membrosGrupo === '') return
     onSave({
       patologia,
       cid: cid || undefined,
@@ -115,131 +115,146 @@ export function BpcForm({ caseId, analysis, clientBirthDate, onSave, saving }: B
     })
   }
 
+  const isFormValid = patologia.trim() !== '' && idade !== '' && rendaFamiliar !== '' && membrosGrupo !== ''
+
   return (
-    <Card variant="light" className="p-6">
-      <h3 className="font-sans font-semibold text-sm text-slate-900 mb-4">Dados do Caso BPC/LOAS</h3>
+    <Card variant="light" className="p-0 overflow-hidden">
+      <div className="bg-slate-50 px-5 py-4 border-b border-slate-200 flex items-center justify-between">
+        <h3 className="font-sans font-semibold text-sm text-slate-900">Dados do Caso BPC/LOAS</h3>
+        {analysis && (
+          <Badge variant="green" className="text-[10px] uppercase tracking-wider">Dados Salvos</Badge>
+        )}
+      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label className="neo-label">Patologia</label>
-          <input
-            type="text"
-            value={patologia}
-            onChange={(e) => setPatologia(e.target.value)}
-            className="w-full neo-input font-sans text-sm"
-            placeholder="Ex: Autismo, TDAH, Esquizofrenia..."
-          />
-        </div>
+      <div className="p-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div>
+            <label className="neo-label">Patologia</label>
+            <input
+              type="text"
+              value={patologia}
+              onChange={(e) => setPatologia(e.target.value)}
+              className="w-full neo-input font-sans text-sm"
+              placeholder="Ex: Autismo, TDAH, Esquizofrenia..."
+            />
+          </div>
 
-        <div>
-          <label className="neo-label">CID (opcional)</label>
-          <input
-            type="text"
-            value={cid}
-            onChange={(e) => setCid(e.target.value)}
-            className="w-full neo-input font-sans text-sm"
-            placeholder="Ex: F84.0"
-          />
-        </div>
+          <div>
+            <label className="neo-label">CID (opcional)</label>
+            <input
+              type="text"
+              value={cid}
+              onChange={(e) => setCid(e.target.value)}
+              className="w-full neo-input font-sans text-sm"
+              placeholder="Ex: F84.0"
+            />
+          </div>
 
-        <div>
-          <label className="neo-label flex items-center gap-2">
-            Idade
-            {suggestedIdade && !analysis && (
-              <span className="text-[10px] font-mono font-bold text-amber-600 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded">
-                calculada do cadastro
+          <div>
+            <label className="neo-label flex items-center gap-2">
+              Idade
+              {suggestedIdade && !analysis && (
+                <span className="text-[10px] font-mono font-bold text-amber-600 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded">
+                  calculada do cadastro
+                </span>
+              )}
+            </label>
+            <input
+              type="number"
+              value={idade}
+              onChange={(e) => setIdade(e.target.value)}
+              className="w-full neo-input font-sans text-sm"
+              placeholder="Idade do segurado"
+            />
+            {faixaEtaria && (
+              <span className="font-sans text-xs text-slate-500 mt-1 block">
+                {faixaEtaria === 'MENOR_16' ? 'Menor de 16 anos' : 'Maior de 16 anos'}
               </span>
             )}
-          </label>
-          <input
-            type="number"
-            value={idade}
-            onChange={(e) => setIdade(e.target.value)}
-            className="w-full neo-input font-sans text-sm"
-            placeholder="Idade do segurado"
-          />
-          {faixaEtaria && (
-            <span className="font-sans text-xs text-slate-500 mt-1 block">
-              {faixaEtaria === 'MENOR_16' ? 'Menor de 16 anos' : 'Maior de 16 anos'}
-            </span>
-          )}
-        </div>
+          </div>
 
-        <div className="md:col-span-1" />
+          <div className="md:col-span-1 hidden md:block" />
 
-        <div>
-          <label className="neo-label">Renda Familiar (R$)</label>
-          <input
-            type="number"
-            step="0.01"
-            value={rendaFamiliar}
-            onChange={(e) => setRendaFamiliar(e.target.value)}
-            className="w-full neo-input font-sans text-sm"
-            placeholder="Renda total da família"
-          />
-        </div>
+          <div>
+            <label className="neo-label">Renda Familiar (R$)</label>
+            <input
+              type="number"
+              step="0.01"
+              value={rendaFamiliar}
+              onChange={(e) => setRendaFamiliar(e.target.value)}
+              className="w-full neo-input font-sans text-sm"
+              placeholder="Renda total da família"
+            />
+          </div>
 
-        <div>
-          <label className="neo-label">Nº Membros do Grupo Familiar</label>
-          <input
-            type="number"
-            value={membrosGrupo}
-            onChange={(e) => setMembrosGrupo(e.target.value)}
-            className="w-full neo-input font-sans text-sm"
-            placeholder="Quantidade de membros"
-          />
-        </div>
+          <div>
+            <label className="neo-label">Nº Membros do Grupo Familiar</label>
+            <input
+              type="number"
+              value={membrosGrupo}
+              onChange={(e) => setMembrosGrupo(e.target.value)}
+              className="w-full neo-input font-sans text-sm"
+              placeholder="Quantidade de membros"
+            />
+          </div>
 
-        {membrosGrupo && parseFloat(membrosGrupo) > 0 && (
-          <div className="md:col-span-2">
-            <div className="flex items-center gap-2">
-              <span className="font-sans text-xs text-slate-500">Renda per capita:</span>
-              <Badge variant={acimaDoLimite ? 'red' : 'green'}>
-                R$ {rendaPerCapita.toFixed(2)} — {acimaDoLimite ? 'ACIMA DO LIMITE LEGAL' : 'DENTRO DO LIMITE'}
-              </Badge>
+          {membrosGrupo && parseFloat(membrosGrupo) > 0 && (
+            <div className="md:col-span-2 p-3 bg-slate-50 rounded-md border border-slate-200">
+              <div className="flex items-center gap-2">
+                <span className="font-sans text-xs font-medium text-slate-600">Renda per capita:</span>
+                <Badge variant={acimaDoLimite ? 'red' : 'green'} className="font-mono">
+                  R$ {rendaPerCapita.toFixed(2)} — {acimaDoLimite ? 'ACIMA DO LIMITE LEGAL' : 'DENTRO DO LIMITE'}
+                </Badge>
+              </div>
+              {acimaDoLimite && (
+                <p className="font-sans text-xs text-red-600 mt-1.5 flex items-start gap-1">
+                  <span className="mt-0.5">⚠️</span> 
+                  <span>
+                    Limite legal: R$ {LIMITE_PER_CAPITA.toFixed(2)} (1/4 SM). Verifique possibilidade de exclusão de membros ou critérios de miserabilidade no laudo social.
+                  </span>
+                </p>
+              )}
             </div>
-            {acimaDoLimite && (
-              <p className="font-sans text-xs text-amber-600 mt-1">
-                Limite legal: R$ {LIMITE_PER_CAPITA.toFixed(2)} (1/4 SM). Verifique possibilidade de exclusão de membros ou critérios de miserabilidade.
-              </p>
-            )}
-          </div>
-        )}
+          )}
 
-        <div className="md:col-span-2">
-          <div className="flex items-center justify-between mb-1">
-            <label className="neo-label mb-0">Barreiras Relatadas</label>
-            <button
-              type="button"
-              onClick={handleImportarProntuario}
-              disabled={importing}
-              className="text-[11px] font-sans font-medium text-amber-600 hover:text-amber-700 underline underline-offset-2 disabled:opacity-50"
-            >
-              {importing ? 'Importando...' : 'Importar do Prontuário'}
-            </button>
+          <div className="md:col-span-2 mt-2">
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="neo-label mb-0">Barreiras Relatadas</label>
+              <button
+                type="button"
+                onClick={handleImportarProntuario}
+                disabled={importing}
+                className="text-xs font-sans font-semibold text-amber-600 hover:text-amber-700 underline underline-offset-2 disabled:opacity-50 flex items-center gap-1"
+              >
+                {importing ? '⏳ Importando...' : '📥 Importar do Prontuário'}
+              </button>
+            </div>
+            <textarea
+              value={barreiras}
+              onChange={(e) => setBarreiras(e.target.value)}
+              className="w-full neo-input min-h-[100px] resize-none font-sans text-sm"
+              placeholder="Descreva as barreiras enfrentadas: mobilidade, comunicação, acesso a serviços, preconceito..."
+            />
           </div>
-          <textarea
-            value={barreiras}
-            onChange={(e) => setBarreiras(e.target.value)}
-            className="w-full neo-input min-h-[80px] resize-none font-sans text-sm"
-            placeholder="Descreva as barreiras enfrentadas: mobilidade, comunicação, acesso a serviços, preconceito..."
-          />
-        </div>
 
-        <div className="md:col-span-2">
-          <label className="neo-label">Resumo dos Laudos (opcional)</label>
-          <textarea
-            value={resumoLaudos}
-            onChange={(e) => setResumoLaudos(e.target.value)}
-            className="w-full neo-input min-h-[80px] resize-none font-sans text-sm"
-            placeholder="Resumo dos laudos médicos disponíveis..."
-          />
+          <div className="md:col-span-2">
+            <label className="neo-label mb-1.5">Resumo dos Laudos (opcional)</label>
+            <textarea
+              value={resumoLaudos}
+              onChange={(e) => setResumoLaudos(e.target.value)}
+              className="w-full neo-input min-h-[100px] resize-none font-sans text-sm"
+              placeholder="Resumo dos laudos médicos disponíveis, limitações e diagnósticos secundários..."
+            />
+          </div>
         </div>
       </div>
 
-      <div className="mt-4 flex justify-end">
-        <Button onClick={handleSave} loading={saving} disabled={!patologia || !idade || !rendaFamiliar || !membrosGrupo}>
-          Salvar Dados
+      <div className="bg-slate-50 border-t border-slate-200 px-6 py-4 flex items-center justify-between">
+        <p className="text-xs text-slate-500 font-medium">
+          {!isFormValid ? 'Preencha os campos obrigatórios para salvar.' : 'Os dados salvos serão utilizados na análise da IA.'}
+        </p>
+        <Button onClick={handleSave} loading={saving} disabled={!isFormValid}>
+          {analysis ? 'Atualizar Dados' : 'Salvar Dados'}
         </Button>
       </div>
     </Card>
