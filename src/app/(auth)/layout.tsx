@@ -3,9 +3,10 @@ import { Scale } from 'lucide-react'
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row">
+      <a href="#auth-content" className="skip-link">Pular para o conteúdo principal</a>
       {/* Left Panel - Branding */}
       <div className="hidden md:flex md:w-1/2 lg:w-5/12 bg-slate-900 text-white flex-col justify-between p-12 relative overflow-hidden">
-        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1589829085413-56de8ae18c73?q=80&w=2000&auto=format&fit=crop')] bg-cover bg-center opacity-10 mix-blend-overlay"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-amber-900/20 via-transparent to-slate-900/50" />
         <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/80 to-slate-900/40"></div>
         
         <div className="relative z-10">
@@ -36,7 +37,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       </div>
 
       {/* Right Panel - Form */}
-      <div className="flex-1 flex flex-col items-center justify-center p-6 md:p-12 relative bg-white">
+      <div id="auth-content" className="flex-1 flex flex-col items-center justify-center p-6 md:p-12 relative bg-white">
         {/* Mobile Logo */}
         <div className="md:hidden flex flex-col items-center mb-8">
           <div className="w-12 h-12 rounded-xl bg-amber-600 flex items-center justify-center mb-3">

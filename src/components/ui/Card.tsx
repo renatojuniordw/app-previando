@@ -33,7 +33,7 @@ export function CardHeader({ title, subtitle, action }: CardHeaderProps) {
     <div className="flex items-start justify-between mb-4">
       <div>
         <h3 className="font-sans font-semibold text-base text-slate-900">{title}</h3>
-        {subtitle && <p className="font-sans text-sm text-slate-500 mt-1">{subtitle}</p>}
+        {subtitle && <p className="font-sans text-sm text-slate-600 mt-1">{subtitle}</p>}
       </div>
       {action}
     </div>

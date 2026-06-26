@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react'
 import { cn } from '@/lib/utils'
+import { useBodyScrollLock } from '@/hooks/useBodyScrollLock'
 import { X } from 'lucide-react'
 
 interface DrawerProps {
@@ -15,6 +16,7 @@ interface DrawerProps {
 
 export function Drawer({ open, onClose, title, description, children, className }: DrawerProps) {
   const drawerRef = useRef<HTMLDivElement>(null)
+  useBodyScrollLock(open)
 
   // Esc key closure
   useEffect(() => {
@@ -23,12 +25,8 @@ export function Drawer({ open, onClose, title, description, children, className 
     }
     if (open) {
       document.addEventListener('keydown', handleKeyDown)
-      // Prevent body scrolling when drawer is active
-      const originalStyle = document.body.style.overflow
-      document.body.style.overflow = 'hidden'
       return () => {
         document.removeEventListener('keydown', handleKeyDown)
-        document.body.style.overflow = originalStyle
       }
     }
   }, [open, onClose])
@@ -74,7 +72,7 @@ export function Drawer({ open, onClose, title, description, children, className 
         </div>
 
         {/* Content Area with scroll */}
-        <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
+        <div className="flex-1 overflow-y-auto p-6 neo-scroll">
           {children}
         </div>
       </div>

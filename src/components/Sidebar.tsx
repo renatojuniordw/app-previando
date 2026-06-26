@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils'
 import { LayoutDashboard, Users, Columns, CreditCard, Settings, LogOut, Activity, Calendar, FolderOpen, X } from 'lucide-react'
 import { UsageBar } from '@/components/UsageBar'
 import { useSidebarStore } from '@/store/sidebar'
+import { useBodyScrollLock } from '@/hooks/useBodyScrollLock'
 import { useEffect, useCallback } from 'react'
 
 const NAV_ITEMS = [
@@ -23,6 +24,8 @@ const NAV_ITEMS = [
 export function Sidebar() {
   const pathname = usePathname()
   const { isOpen, close } = useSidebarStore()
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 1024
+  useBodyScrollLock(isOpen && isMobile)
 
   // Close sidebar on route change (mobile only)
   useEffect(() => {
@@ -37,11 +40,8 @@ export function Sidebar() {
   useEffect(() => {
     if (isOpen) {
       document.addEventListener('keydown', handleKeyDown)
-      const original = document.body.style.overflow
-      document.body.style.overflow = 'hidden'
       return () => {
         document.removeEventListener('keydown', handleKeyDown)
-        document.body.style.overflow = original
       }
     }
   }, [isOpen, handleKeyDown])

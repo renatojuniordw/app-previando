@@ -7,7 +7,8 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { signIn } from 'next-auth/react'
 import Link from 'next/link'
-import { AlertCircle, ArrowRight, Loader2 } from 'lucide-react'
+import { AlertCircle, ArrowRight, Loader2, Eye, EyeOff } from 'lucide-react'
+import Input from '@/components/ui/Input'
 
 const schema = z.object({
   name: z.string().min(2, 'Mínimo 2 caracteres').max(100),
@@ -27,6 +28,7 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [googleLoading, setGoogleLoading] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
 
   const {
     register,
@@ -67,12 +69,12 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="w-full">
+    <div className="w-full max-w-md">
       <div className="mb-8">
         <h2 className="font-serif font-bold text-3xl text-slate-900 mb-2">
           Criar conta grátis
         </h2>
-        <p className="font-sans text-slate-500">
+        <p className="font-sans text-slate-600">
           Sem cartão de crédito · Plano FREE para sempre
         </p>
       </div>
@@ -87,7 +89,7 @@ export default function RegisterPage() {
       <button
         onClick={handleGoogle}
         disabled={googleLoading}
-        className="w-full flex items-center justify-center gap-3 px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-slate-700 font-sans font-medium hover:bg-slate-50 hover:text-slate-900 shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-slate-200 mb-6"
+        className="w-full flex items-center justify-center gap-3 px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-slate-700 font-sans font-medium hover:bg-slate-50 hover:text-slate-900 shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-slate-200 mb-6"
       >
         {googleLoading ? (
           <span className="flex items-center gap-2">
@@ -126,68 +128,56 @@ export default function RegisterPage() {
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <div>
-          <label className="block font-sans text-sm font-semibold text-slate-700 mb-1.5">
-            Nome completo
-          </label>
-          <input
-            {...register('name')}
-            className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm font-sans focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all placeholder:text-slate-400 text-slate-900 shadow-sm"
-            placeholder="Dr. João da Silva"
-            disabled={loading}
-          />
-          {errors.name && (
-            <p className="mt-1.5 font-sans text-xs font-medium text-red-500">{errors.name.message}</p>
-          )}
-        </div>
+        <Input
+          label="Nome completo"
+          {...register('name')}
+          placeholder="Dr. João da Silva"
+          error={errors.name?.message}
+          disabled={loading}
+        />
 
-        <div>
-          <label className="block font-sans text-sm font-semibold text-slate-700 mb-1.5">
-            Email profissional
-          </label>
-          <input
-            type="email"
-            {...register('email')}
-            className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm font-sans focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all placeholder:text-slate-400 text-slate-900 shadow-sm"
-            placeholder="advogado@escritorio.com.br"
-            disabled={loading}
-          />
-          {errors.email && (
-            <p className="mt-1.5 font-sans text-xs font-medium text-red-500">{errors.email.message}</p>
-          )}
-        </div>
+        <Input
+          label="Email profissional"
+          type="email"
+          {...register('email')}
+          placeholder="advogado@escritorio.com.br"
+          error={errors.email?.message}
+          disabled={loading}
+        />
 
-        <div>
-          <label className="block font-sans text-sm font-semibold text-slate-700 mb-1.5">
-            Número OAB <span className="text-slate-400 font-normal">(opcional)</span>
-          </label>
-          <input
-            {...register('oabNumber')}
-            className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm font-sans focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all placeholder:text-slate-400 text-slate-900 shadow-sm"
-            placeholder="SP 123456"
-            disabled={loading}
-          />
-        </div>
+        <Input
+          label="Número OAB <span className='text-slate-400 font-normal'>(opcional)</span>"}
+          {...register('oabNumber')}
+          placeholder="SP 123456"
+          disabled={loading}
+        />
 
-        <div>
-          <label className="block font-sans text-sm font-semibold text-slate-700 mb-1.5">
-            Senha
-          </label>
-          <input
-            type="password"
+        <div className="relative">
+          <Input
+            label="Senha"
+            type={showPassword ? 'text' : 'password'}
             {...register('password')}
-            className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm font-sans focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all placeholder:text-slate-400 text-slate-900 shadow-sm"
             placeholder="Mín. 8 chars, 1 maiúscula, 1 número"
+            error={errors.password?.message}
             disabled={loading}
           />
-          {errors.password && (
-            <p className="mt-1.5 font-sans text-xs font-medium text-red-500">{errors.password.message}</p>
-          )}
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute right-3 top-[34px] text-slate-400 hover:text-slate-600 transition-colors"
+            aria-label={showPassword ? 'Esconder senha' : 'Mostrar senha'}
+          >
+            {showPassword ? (
+              <EyeOff className="w-4 h-4" />
+            ) : (
+              <Eye className="w-4 h-4" />
+            )}
+          </button>
         </div>
 
-        <button 
-          type="submit" 
-          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-sm font-semibold shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-amber-500/20 mt-4" 
+        <button
+          type="submit"
+          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-sm font-semibold shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-amber-500/20 mt-4"
           disabled={loading}
         >
           {loading ? (
@@ -204,7 +194,7 @@ export default function RegisterPage() {
         </button>
       </form>
 
-      <p className="text-center font-sans text-sm text-slate-500 mt-8">
+      <p className="text-center font-sans text-sm text-slate-600 mt-8">
         Já tem uma conta?{' '}
         <Link href="/login" className="text-amber-600 font-semibold hover:text-amber-700 transition-colors">
           Entrar na Plataforma

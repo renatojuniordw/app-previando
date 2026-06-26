@@ -15,10 +15,32 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 
     await verifyCaseOwnership(params.id, session.user.id)
 
-    const opinions = await prisma.opinion.findMany({
+    const rows = await prisma.opinion.findMany({
       where: { caseId: params.id },
       orderBy: { createdAt: 'desc' },
     })
+
+    // Mapeia campos do banco (generatedContent/customizedContent) para os nomes
+    // esperados pelo frontend (content/editedContent)
+    const opinions = rows.map((o) => ({
+      id: o.id,
+      status: o.status,
+      content: o.generatedContent,
+      editedContent: o.customizedContent ?? null,
+      generationCostUsd: o.generationCostUsd,
+      createdAt: o.createdAt,
+      updatedAt: o.updatedAt,
+    }))
+
+    console.log('[opinions GET] caseId=%s count=%d', params.id, opinions.length)
+    if (opinions.length > 0) {
+      console.log('[opinions GET] primeiro parecer:', {
+        id: opinions[0].id,
+        status: opinions[0].status,
+        contentLength: opinions[0].content?.length ?? 0,
+        hasEditedContent: opinions[0].editedContent !== null,
+      })
+    }
 
     return NextResponse.json({ opinions })
   } catch (err) {
@@ -62,6 +84,17 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
     if (!caso) return NextResponse.json({ error: 'Caso não encontrado.' }, { status: 404 })
 
+    console.log('[opinions POST] Dados do caso para geração:', {
+      caseId: params.id,
+      clientName: caso.client?.name,
+      benefitType: caso.benefitType,
+      caseStatus: caso.status,
+      hasCnis: Boolean(caso.cnisDocument?.markdownContent),
+      cnisLength: caso.cnisDocument?.markdownContent?.length ?? 0,
+      eligibleCalculations: caso.calculations.length,
+      notesCount: caso.caseNotes.length,
+    })
+
     const result = await generateOpinion({
       clientName: caso.client?.name ?? 'Cliente',
       benefitType: caso.benefitType,
@@ -79,6 +112,13 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
         content: n.content,
         createdAt: n.createdAt,
       })),
+    })
+
+    console.log('[opinions POST] generateOpinion retornou:', {
+      contentLength: result.content?.length ?? 0,
+      tokensUsed: result.tokensUsed,
+      costUsd: result.costUsd,
+      model: result.model,
     })
 
     const opinion = await prisma.opinion.create({

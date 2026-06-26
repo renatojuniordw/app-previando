@@ -12,11 +12,12 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   return (
     <SessionProvider session={session}>
+      <a href="#main-content" className="skip-link">Pular para o conteúdo principal</a>
       <div className="flex min-h-screen bg-slate-50 font-sans text-slate-900">
         <Sidebar />
         <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
           <Header />
-          <main className="flex-1 overflow-auto bg-[#F8FAFC]">
+          <main id="main-content" className="flex-1 overflow-auto bg-slate-50">
             {children}
           </main>
         </div>

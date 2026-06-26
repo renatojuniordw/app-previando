@@ -43,6 +43,7 @@ export function Modal({ open, onClose, title, children, className, size = 'md' }
           <button
             onClick={onClose}
             className="font-sans text-slate-500 hover:text-slate-900 text-lg leading-none"
+            aria-label="Fechar"
           >
             ✕
           </button>

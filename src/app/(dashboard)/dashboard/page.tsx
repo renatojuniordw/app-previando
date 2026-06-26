@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import api from '@/lib/api'
+import { useToast } from '@/store/toast'
 import { Users, ChevronRight, Columns } from 'lucide-react'
 import dynamic from 'next/dynamic'
 
@@ -52,11 +53,14 @@ interface DashboardData {
 export default function DashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null)
   const [loading, setLoading] = useState(true)
+  const { addToast } = useToast()
 
   useEffect(() => {
     api.get('/dashboard/summary')
       .then((r) => setData(r.data))
-      .catch(() => null)
+      .catch(() => {
+        addToast({ type: 'error', title: 'Erro ao carregar dashboard' })
+      })
       .finally(() => setLoading(false))
   }, [])
 

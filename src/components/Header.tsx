@@ -7,6 +7,8 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useSidebarStore } from '@/store/sidebar'
 
+import { useToast } from '@/store/toast'
+
 interface AppNotification {
   id: string
   type: string
@@ -20,6 +22,7 @@ export function Header() {
   const { data: session } = useSession()
   const router = useRouter()
   const { toggle: toggleSidebar } = useSidebarStore()
+  const { addToast } = useToast()
   const [notifications, setNotifications] = useState<AppNotification[]>([])
   const [unreadCount, setUnreadCount] = useState(0)
   const [open, setOpen] = useState(false)
@@ -73,7 +76,9 @@ export function Header() {
       })
 
       setUnreadCount(data.unreadCount)
-    } catch {}
+    } catch {
+      // Silenciar erros de polling — o usuário não precisa ser incomodado por falhas temporárias
+    }
   }
 
   async function markAsRead(id: string) {
@@ -140,7 +145,7 @@ export function Header() {
             <div className="absolute right-0 top-12 w-80 bg-white border border-slate-200 rounded-xl shadow-lg z-50 overflow-hidden">
               <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
                 <span className="font-semibold text-sm text-slate-900">Notificações</span>
-                <button onClick={() => setOpen(false)} className="text-slate-400 hover:text-slate-600">
+                <button onClick={() => setOpen(false)} className="text-slate-400 hover:text-slate-600" aria-label="Fechar notificações">
                   <X className="w-4 h-4" />
                 </button>
               </div>

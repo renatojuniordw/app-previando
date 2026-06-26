@@ -42,7 +42,7 @@ export const DashboardKpiGrid = memo(function DashboardKpiGrid({ data }: { data:
               </div>
               <div>
                 <p className="font-sans font-semibold text-3xl text-slate-900">{value}</p>
-                <p className="font-sans font-medium text-sm text-slate-500 mt-1">{label}</p>
+                <p className="font-sans font-medium text-sm text-slate-600 mt-1">{label}</p>
               </div>
             </Card>
           )
@@ -52,21 +52,21 @@ export const DashboardKpiGrid = memo(function DashboardKpiGrid({ data }: { data:
       {(data.calculationsTotal ?? 0) > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <Card variant="light" className="p-6 flex flex-col gap-2">
-            <div className="flex items-center gap-2 text-slate-500 mb-1">
+            <div className="flex items-center gap-2 text-slate-600 mb-1">
               <TrendingUp className="w-4 h-4" />
               <span className="text-xs font-medium uppercase tracking-wide">Cálculos Realizados</span>
             </div>
             <p className="font-serif font-bold text-2xl text-slate-900">{data.calculationsTotal}</p>
           </Card>
           <Card variant="light" className="p-6 flex flex-col gap-2">
-            <div className="flex items-center gap-2 text-slate-500 mb-1">
+            <div className="flex items-center gap-2 text-slate-600 mb-1">
               <TrendingUp className="w-4 h-4" />
               <span className="text-xs font-medium uppercase tracking-wide">RMI Médio</span>
             </div>
             <p className="font-serif font-bold text-2xl text-slate-900">{formatCurrency(data.avgRmi)}</p>
           </Card>
           <Card variant="light" className="p-6 flex flex-col gap-2">
-            <div className="flex items-center gap-2 text-slate-500 mb-1">
+            <div className="flex items-center gap-2 text-slate-600 mb-1">
               <TrendingUp className="w-4 h-4" />
               <span className="text-xs font-medium uppercase tracking-wide">RMI Total Potencial</span>
             </div>

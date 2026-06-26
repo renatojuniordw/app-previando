@@ -80,7 +80,7 @@ export function ClientFloatingActions({ phone, email, cpf, onEdit, onCopyCpf }: 
   ].filter((a) => a.show)
 
   return (
-    <div ref={menuRef} className="fixed bottom-6 right-6 z-40 flex flex-col items-end gap-3">
+    <div ref={menuRef} className="fixed bottom-6 right-6 z-40 flex flex-col items-end gap-3 pointer-events-none">
       <div
         className={cn(
           'flex flex-col items-end gap-3 transition-all duration-300 ease-out origin-bottom transform',
@@ -102,7 +102,7 @@ export function ClientFloatingActions({ phone, email, cpf, onEdit, onCopyCpf }: 
               <button
                 onClick={action.onClick}
                 className={cn(
-                  'w-12 h-12 rounded-full bg-white border border-slate-200 shadow-lg flex items-center justify-center transition-all duration-200',
+                  'w-12 h-12 rounded-full bg-white border border-slate-200 shadow-lg flex items-center justify-center transition-all duration-200 pointer-events-auto',
                   action.color
                 )}
                 aria-label={action.label}
@@ -118,7 +118,7 @@ export function ClientFloatingActions({ phone, email, cpf, onEdit, onCopyCpf }: 
       <button
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
-          'w-14 h-14 rounded-full flex items-center justify-center shadow-xl text-white transition-all duration-300 transform active:scale-95',
+          'w-14 h-14 rounded-full flex items-center justify-center shadow-xl text-white transition-all duration-300 transform active:scale-95 pointer-events-auto',
           isOpen
             ? 'bg-slate-800 hover:bg-slate-700 rotate-90 scale-95'
             : 'bg-emerald-600 hover:bg-emerald-500 hover:shadow-emerald-500/20 hover:scale-105'
