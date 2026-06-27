@@ -8,253 +8,1351 @@ export interface IndicatorInfo {
 }
 
 export const CNIS_INDICATORS: Record<string, IndicatorInfo> = {
-  // Acertos
-  'ACNISVR': {
-    sigla: 'ACNISVR',
-    tipo: 'Acerto',
-    grupo: 'VÍNCULOS E REMUNERAÇÕES',
-    descricao: 'Acerto realizado pelo INSS.',
-    acao: 'Vínculo ou remuneração já acertado administrativamente. Geralmente não exige ação, mas confirme se as datas e valores estão corretos.',
-    critico: false
-  },
-  'ADIV-DADOS-GFIP': {
-    sigla: 'ADIV-DADOS-GFIP',
-    tipo: 'Acerto',
-    grupo: 'VÍNCULOS E REMUNERAÇÕES',
-    descricao: 'Validação de vínculo ou remuneração com divergência de dado cadastral do trabalhador em GFIP.',
-    acao: 'Indica divergência cadastral (como CPF, data de nascimento ou NIT). Verifique os dados cadastrais do cliente e retifique no INSS se houver erro.',
-    critico: false
-  },
-  'AEXT-IND': {
-    sigla: 'AEXT-IND',
+  'PDESFAZ-AJ-EC103': {
+    sigla: 'PDESFAZ-AJ-EC103',
     tipo: 'Pendência',
-    grupo: 'VÍNCULOS E REMUNERAÇÕES',
-    descricao: 'Vínculo extemporâneo não confirmado pelo INSS.',
-    acao: 'O INSS não aceitou a comprovação do período extemporâneo. Apresente provas contemporâneas robustas (CTPS, termo de rescisão, extrato do FGTS) para comprovar.',
+    grupo: 'AJUSTES EC103 - OUTROS INDICADORES',
+    descricao: "Pendência por desfazimento de agrupamento ou utilização",
+    acao: "Período posterior à EC 103/2019 com contribuição abaixo do salário mínimo. Necessário complementar, agrupar ou utilizar excedentes para contar para carência e tempo de serviço.",
     critico: true
   },
-  'AEXT-INDJ': {
-    sigla: 'AEXT-INDJ',
+  'PMOV-INCONSIST': {
+    sigla: 'PMOV-INCONSIST',
     tipo: 'Pendência',
-    grupo: 'VÍNCULOS E REMUNERAÇÕES',
-    descricao: 'Vínculo extemporâneo não confirmado por decisão judicial.',
-    acao: 'Houve uma ação judicial que tentou reconhecer este vínculo, mas foi indeferida ou não confirmada. Necessário analisar a sentença judicial para ver se restou alguma alternativa.',
+    grupo: 'AJUSTES EC103 - OUTROS INDICADORES',
+    descricao: "Pendência de registro inconsistente de movimentação entre competências",
+    acao: "Período posterior à EC 103/2019 com contribuição abaixo do salário mínimo. Necessário complementar, agrupar ou utilizar excedentes para contar para carência e tempo de serviço.",
     critico: true
   },
-  'AEXT-INDR': {
-    sigla: 'AEXT-INDR',
+  'PREM-BLOQ-EC103': {
+    sigla: 'PREM-BLOQ-EC103',
     tipo: 'Pendência',
-    grupo: 'VÍNCULOS E REMUNERAÇÕES',
-    descricao: 'Vínculo extemporâneo não confirmado por decisão recursal.',
-    acao: 'Vínculo indeferido na junta de recursos do INSS. Apresente novas provas ou acione a via judicial.',
+    grupo: 'AJUSTES EC103 - OUTROS INDICADORES',
+    descricao: "Pendência de bloqueio de remuneração/contribuição para ajuste entre competências",
+    acao: "Período posterior à EC 103/2019 com contribuição abaixo do salário mínimo. Necessário complementar, agrupar ou utilizar excedentes para contar para carência e tempo de serviço.",
     critico: true
   },
-  'AEXT-VI': {
-    sigla: 'AEXT-VI',
+  'PSC-MEN-SM-EC103': {
+    sigla: 'PSC-MEN-SM-EC103',
     tipo: 'Pendência',
-    grupo: 'VÍNCULOS E REMUNERAÇÕES',
-    descricao: 'Vínculo extemporâneo não confirmado pelo INSS.',
-    acao: 'Vínculo inserido fora do prazo e sem comprovação aceita. Exige apresentação de documentos contemporâneos da época da atividade comercial/laboral.',
+    grupo: 'AJUSTES EC103 - OUTROS INDICADORES',
+    descricao: "Pendência que sinaliza que a competência possui salário de contribuição menor do que o mínimo. Competência não tratada, passível de complementação, utilização ou agrupamento",
+    acao: "Período posterior à EC 103/2019 com contribuição abaixo do salário mínimo. Necessário complementar, agrupar ou utilizar excedentes para contar para carência e tempo de serviço.",
     critico: true
   },
-  'AEXT-VP': {
-    sigla: 'AEXT-VP',
-    tipo: 'Acerto',
-    grupo: 'VÍNCULOS E REMUNERAÇÕES',
-    descricao: 'Vínculo extemporâneo confirmado parcialmente pelo INSS.',
-    acao: 'Apenas parte do período foi homologada. Verifique qual trecho ficou de fora e junte documentos adicionais para comprovar a integralidade.',
-    critico: true
-  },
-  'AEXT-VPR': {
-    sigla: 'AEXT-VPR',
-    tipo: 'Acerto',
-    grupo: 'VÍNCULOS E REMUNERAÇÕES',
-    descricao: 'Vínculo extemporâneo confirmado parcialmente por decisão recursal.',
-    acao: 'Confirmação parcial em grau de recurso administrativo. Avalie se compensa ingressar com ação judicial para o restante do período.',
-    critico: true
-  },
-  'AEXT-VPT': {
-    sigla: 'AEXT-VPT',
-    tipo: 'Acerto',
-    grupo: 'VÍNCULOS E REMUNERAÇÕES',
-    descricao: 'Vínculo extemporâneo confirmado parcialmente por decisão judicial.',
-    acao: 'Vínculo judicial homologado em parte pelo juiz. Verifique a sentença.',
-    critico: true
-  },
-  'AEXT-VT': {
-    sigla: 'AEXT-VT',
-    tipo: 'Acerto',
-    grupo: 'VÍNCULOS E REMUNERAÇÕES',
-    descricao: 'Vínculo extemporâneo confirmado pelo INSS.',
-    acao: 'Período extemporâneo totalmente confirmado e homologado. Não exige ação.',
-    critico: false
-  },
-  'AEXT-VTJ': {
-    sigla: 'AEXT-VTJ',
-    tipo: 'Acerto',
-    grupo: 'VÍNCULOS E REMUNERAÇÕES',
-    descricao: 'Vínculo extemporâneo confirmado por decisão judicial.',
-    acao: 'Período reconhecido judicialmente e implantado no CNIS. Sem ação pendente.',
-    critico: false
-  },
-  'AEXT-VTR': {
-    sigla: 'AEXT-VTR',
-    tipo: 'Acerto',
-    grupo: 'VÍNCULOS E REMUNERAÇÕES',
-    descricao: 'Vínculo extemporâneo confirmado por decisão recursal.',
-    acao: 'Período reconhecido em recurso no Conselho de Recursos da Previdência. Sem ação pendente.',
-    critico: false
-  },
-  'ASE-DEF': {
-    sigla: 'ASE-DEF',
-    tipo: 'Acerto',
-    grupo: 'SEGURADO ESPECIAL',
-    descricao: 'Acerto Período Segurado Especial Deferido.',
-    acao: 'Período de trabalhador rural / segurado especial validado pelo INSS. Não exige ação.',
-    critico: false
-  },
-  'ASE-DEFJ': {
-    sigla: 'ASE-DEFJ',
-    tipo: 'Acerto',
-    grupo: 'SEGURADO ESPECIAL',
-    descricao: 'Acerto Período Segurado Especial Deferido Judicial.',
-    acao: 'Período de segurado especial confirmado por sentença judicial. Não exige ação.',
-    critico: false
-  },
-  'ASE-DEFR': {
-    sigla: 'ASE-DEFR',
-    tipo: 'Acerto',
-    grupo: 'SEGURADO ESPECIAL',
-    descricao: 'Acerto Período Segurado Especial Deferido Recursal.',
-    acao: 'Período de segurado especial confirmado em recurso administrativo. Não exige ação.',
-    critico: false
-  },
-  'ASEF-DEF': {
-    sigla: 'ASEF-DEF',
-    tipo: 'Acerto',
-    grupo: 'SEGURADO ESPECIAL',
-    descricao: 'Acerto Período Segurado Especial FUNAI Deferido.',
-    acao: 'Período de indígena cadastrado pela FUNAI homologado. Não exige ação.',
-    critico: false
-  },
-  'ASE-IND': {
-    sigla: 'ASE-IND',
+  'PREC-CDCONC': {
+    sigla: 'PREC-CDCONC',
     tipo: 'Pendência',
-    grupo: 'SEGURADO ESPECIAL',
-    descricao: 'Acerto Período Segurado Especial Indeferido.',
-    acao: 'O INSS negou o enquadramento rural deste período. Necessário juntar novas autodeclarações rurais, certidões da época, notas fiscais ou contratos de parceria/arrendamento.',
+    grupo: 'CONTRIBUIÇÕES',
+    descricao: "Recolhimento ou período atividade de contribuinte em dobro concomitante com outro TFV (Tipo de Filiado no Vínculo)",
+    acao: "Apresentar documentos (CTPS, contratos de trabalho, recibos, guias de recolhimento pagas) para regularizar o vínculo no INSS.",
     critico: true
   },
-  'ASE-NSE': {
-    sigla: 'ASE-NSE',
+  'PREC-COD1821': {
+    sigla: 'PREC-COD1821',
     tipo: 'Pendência',
-    grupo: 'SEGURADO ESPECIAL',
-    descricao: 'Acerto Período Não Segurado Especial.',
-    acao: 'INSS descaracterizou a condição de segurado especial. Apresente defesa ou novas provas contemporâneas.',
+    grupo: 'CONTRIBUIÇÕES',
+    descricao: "Recolhimento com código de pagamento 1821 - Mandato Eletivo",
+    acao: "Apresentar documentos (CTPS, contratos de trabalho, recibos, guias de recolhimento pagas) para regularizar o vínculo no INSS.",
     critico: true
   },
-  'AVR-AGPVINC': {
-    sigla: 'AVR-AGPVINC',
-    tipo: 'Acerto',
-    grupo: 'VÍNCULOS E REMUNERAÇÕES',
-    descricao: 'Acerto de Agrupamento de Vínculos.',
-    acao: 'O INSS agrupou vínculos com CPFs ou dados similares. Verifique se o agrupamento foi correto e confira as datas.',
-    critico: false
-  },
-  'AVRC-DEF': {
-    sigla: 'AVRC-DEF',
-    tipo: 'Acerto',
-    grupo: 'VÍNCULOS E REMUNERAÇÕES',
-    descricao: 'Acerto confirmado pelo INSS.',
-    acao: 'Vínculo regularizado administrativamente. Não exige ação.',
-    critico: false
-  },
-
-  // Pendências comuns críticas
-  'PEXT': {
-    sigla: 'PEXT',
+  'PREC-CSE': {
+    sigla: 'PREC-CSE',
     tipo: 'Pendência',
-    grupo: 'VÍNCULOS E REMUNERAÇÕES',
-    descricao: 'Pendência de vínculo extemporâneo.',
-    acao: 'O vínculo foi informado fora do prazo legal de recolhimento. Para validá-lo, o advogado deve anexar cópia da CTPS, contratos de trabalho, recibos, ficha de registro ou extrato analítico do FGTS.',
+    grupo: 'CONTRIBUIÇÕES',
+    descricao: "Recolhimento de segurado especial pendente de comprovação da atividade",
+    acao: "Apresentar documentos (CTPS, contratos de trabalho, recibos, guias de recolhimento pagas) para regularizar o vínculo no INSS.",
     critico: true
   },
-  'PSC-MEN': {
-    sigla: 'PSC-MEN',
+  'PRECFACULTCONC': {
+    sigla: 'PRECFACULTCONC',
     tipo: 'Pendência',
-    grupo: 'VÍNCULOS E REMUNERAÇÕES',
-    descricao: 'Período com recolhimento abaixo do salário mínimo.',
-    acao: 'A remuneração da competência ficou abaixo do salário mínimo vigente na época. Desde a EC 103/2019, essas competências não contam para tempo de contribuição ou carência, a menos que sejam complementadas, agrupadas ou que haja transferência de excedente.',
+    grupo: 'CONTRIBUIÇÕES',
+    descricao: "Recolhimento ou período de contribuinte facultativo concomitante com outros vínculos",
+    acao: "Apresentar documentos (CTPS, contratos de trabalho, recibos, guias de recolhimento pagas) para regularizar o vínculo no INSS.",
     critico: true
   },
   'PREC-FBR': {
     sigla: 'PREC-FBR',
     tipo: 'Pendência',
-    grupo: 'CONTRIBUINTE INDIVIDUAL/FACULTATIVO',
-    descricao: 'Recolhimento abaixo do salário mínimo para segurado facultativo de baixa renda.',
-    acao: 'Contribuição feita com a alíquota de 5% de baixa renda, mas a condição não foi validada (por exemplo, ausência de inscrição ativa no CadÚnico ou renda familiar inadequada). O segurado precisará comprovar a condição ou complementar as guias para a alíquota de 11% ou 20%.',
+    grupo: 'CONTRIBUIÇÕES',
+    descricao: "Recolhimento de segurado Facultativo de Baixa Renda não validado",
+    acao: "Recolhimento de Facultativo Baixa Renda pendente de validação. Necessário comprovar inscrição ativa no CadÚnico e renda familiar compatível.",
     critico: true
   },
-  'IEAN': {
-    sigla: 'IEAN',
-    tipo: 'Informativo',
-    grupo: 'APOSENTADORIA ESPECIAL',
-    descricao: 'Exposição a agentes nocivos.',
-    acao: 'Indica que houve informação de recolhimento com exposição a agentes nocivos (insalubridade ou periculosidade). Excelente indício para pedir conversão de tempo especial em comum. Solicite o PPP (Perfil Profissiográfico Previdenciário) e o LTCAT à empresa.',
+  'PREC-FBR (FBR-AUT-BAT)': {
+    sigla: 'PREC-FBR (FBR-AUT-BAT)',
+    tipo: 'Pendência',
+    grupo: 'CONTRIBUIÇÕES',
+    descricao: "Recolhimento de segurado Facultativo de Baixa Renda com atualização cadastral/elos no CNIS aguardando batimentos",
+    acao: "Recolhimento de Facultativo Baixa Renda pendente de validação. Necessário comprovar inscrição ativa no CadÚnico e renda familiar compatível.",
+    critico: true
+  },
+  'PREC-FBR (FBR-AUT-CONCBEN)': {
+    sigla: 'PREC-FBR (FBR-AUT-CONCBEN)',
+    tipo: 'Pendência',
+    grupo: 'CONTRIBUIÇÕES',
+    descricao: "Recolhimento de segurado Facultativo de Baixa Renda concomitante com benefício incompatível (previdenciário/BPC/PA)",
+    acao: "Recolhimento de Facultativo Baixa Renda pendente de validação. Necessário comprovar inscrição ativa no CadÚnico e renda familiar compatível.",
+    critico: true
+  },
+  'PREC-FBR (FBR-AUT-CONCQSA)': {
+    sigla: 'PREC-FBR (FBR-AUT-CONCQSA)',
+    tipo: 'Pendência',
+    grupo: 'CONTRIBUIÇÕES',
+    descricao: "Recolhimento de segurado Facultativo de Baixa Renda participante de quadro societário (QSA) de empresa",
+    acao: "Recolhimento de Facultativo Baixa Renda pendente de validação. Necessário comprovar inscrição ativa no CadÚnico e renda familiar compatível.",
+    critico: true
+  },
+  'PREC-FBR (FBR-AUT-CONCSD)': {
+    sigla: 'PREC-FBR (FBR-AUT-CONCSD)',
+    tipo: 'Pendência',
+    grupo: 'CONTRIBUIÇÕES',
+    descricao: "Recolhimento de segurado Facultativo de Baixa Renda concomitante com período de Seguro Desemprego (SD/SDPA)",
+    acao: "Recolhimento de Facultativo Baixa Renda pendente de validação. Necessário comprovar inscrição ativa no CadÚnico e renda familiar compatível.",
+    critico: true
+  },
+  'PREC-FBR (FBR-AUT-DUPGRUPFAM)': {
+    sigla: 'PREC-FBR (FBR-AUT-DUPGRUPFAM)',
+    tipo: 'Pendência',
+    grupo: 'CONTRIBUIÇÕES',
+    descricao: "Recolhimento de segurado Facultativo de Baixa Renda com duplicidade de grupo familiar",
+    acao: "Recolhimento de Facultativo Baixa Renda pendente de validação. Necessário comprovar inscrição ativa no CadÚnico e renda familiar compatível.",
+    critico: true
+  },
+  'PREC-FBR (FBR-AUT-EXPCAD)': {
+    sigla: 'PREC-FBR (FBR-AUT-EXPCAD)',
+    tipo: 'Pendência',
+    grupo: 'CONTRIBUIÇÕES',
+    descricao: "Recolhimento de segurado Facultativo de Baixa Renda sem atualização bienal no CadÚnico",
+    acao: "Recolhimento de Facultativo Baixa Renda pendente de validação. Necessário comprovar inscrição ativa no CadÚnico e renda familiar compatível.",
+    critico: true
+  },
+  'PREC-FBR (FBR-AUT-FACULTCONC)': {
+    sigla: 'PREC-FBR (FBR-AUT-FACULTCONC)',
+    tipo: 'Pendência',
+    grupo: 'CONTRIBUIÇÕES',
+    descricao: "Recolhimento de segurado Facultativo de Baixa Renda concomitante com filiação incompatível (segurado obrigatório)",
+    acao: "Recolhimento de Facultativo Baixa Renda pendente de validação. Necessário comprovar inscrição ativa no CadÚnico e renda familiar compatível.",
+    critico: true
+  },
+  'PREC-FBR (FBR-AUT-OBITO)': {
+    sigla: 'PREC-FBR (FBR-AUT-OBITO)',
+    tipo: 'Pendência',
+    grupo: 'CONTRIBUIÇÕES',
+    descricao: "Recolhimento de segurado Facultativo de Baixa Renda com óbito anterior à competência de referência ou à data do pagamento",
+    acao: "Recolhimento de Facultativo Baixa Renda pendente de validação. Necessário comprovar inscrição ativa no CadÚnico e renda familiar compatível.",
+    critico: true
+  },
+  'PREC-FBR (FBR-AUT-PENDCAD)': {
+    sigla: 'PREC-FBR (FBR-AUT-PENDCAD)',
+    tipo: 'Pendência',
+    grupo: 'CONTRIBUIÇÕES',
+    descricao: "Recolhimento de segurado Facultativo de Baixa Renda sem cadastro no CadÚnico",
+    acao: "Recolhimento de Facultativo Baixa Renda pendente de validação. Necessário comprovar inscrição ativa no CadÚnico e renda familiar compatível.",
+    critico: true
+  },
+  'PREC-FBR (FBR-AUT-PENDPROCES)': {
+    sigla: 'PREC-FBR (FBR-AUT-PENDPROCES)',
+    tipo: 'Pendência',
+    grupo: 'CONTRIBUIÇÕES',
+    descricao: "Recolhimento de segurado Facultativo de Baixa Renda pendente de processamento no CadÚnico",
+    acao: "Recolhimento de Facultativo Baixa Renda pendente de validação. Necessário comprovar inscrição ativa no CadÚnico e renda familiar compatível.",
+    critico: true
+  },
+  'PREC-FBR (FBR-AUT-RENPES)': {
+    sigla: 'PREC-FBR (FBR-AUT-RENPES)',
+    tipo: 'Pendência',
+    grupo: 'CONTRIBUIÇÕES',
+    descricao: "Recolhimento de segurado Facultativo de Baixa Renda com renda pessoal informada no CadÚnico",
+    acao: "Recolhimento de Facultativo Baixa Renda pendente de validação. Necessário comprovar inscrição ativa no CadÚnico e renda familiar compatível.",
+    critico: true
+  },
+  'PREC-FBR (FBR-AUT-RENSUP)': {
+    sigla: 'PREC-FBR (FBR-AUT-RENSUP)',
+    tipo: 'Pendência',
+    grupo: 'CONTRIBUIÇÕES',
+    descricao: "Recolhimento de segurado Facultativo de Baixa Renda com renda familiar superior a 2 salários mínimos",
+    acao: "Recolhimento de Facultativo Baixa Renda pendente de validação. Necessário comprovar inscrição ativa no CadÚnico e renda familiar compatível.",
+    critico: true
+  },
+  'PREC-FBR-ANT': {
+    sigla: 'PREC-FBR-ANT',
+    tipo: 'Pendência',
+    grupo: 'CONTRIBUIÇÕES',
+    descricao: "Recolhimento de segurado Facultativo de Baixa Renda anterior a 09/2011 (inválido)",
+    acao: "Recolhimento de Facultativo Baixa Renda pendente de validação. Necessário comprovar inscrição ativa no CadÚnico e renda familiar compatível.",
+    critico: true
+  },
+  'PREC-LC150-DOM': {
+    sigla: 'PREC-LC150-DOM',
+    tipo: 'Pendência',
+    grupo: 'CONTRIBUIÇÕES',
+    descricao: "Pagamento de doméstica em GPS em período de remuneração de fonte INSS/eSocial",
+    acao: "Apresentar documentos (CTPS, contratos de trabalho, recibos, guias de recolhimento pagas) para regularizar o vínculo no INSS.",
+    critico: true
+  },
+  'PREC-MENOR-MIN': {
+    sigla: 'PREC-MENOR-MIN',
+    tipo: 'Pendência',
+    grupo: 'CONTRIBUIÇÕES',
+    descricao: "Recolhimento abaixo do valor mínimo",
+    acao: "Apresentar documentos (CTPS, contratos de trabalho, recibos, guias de recolhimento pagas) para regularizar o vínculo no INSS.",
+    critico: true
+  },
+  'PREC-OBITO': {
+    sigla: 'PREC-OBITO',
+    tipo: 'Pendência',
+    grupo: 'CONTRIBUIÇÕES',
+    descricao: "Competência do recolhimento posterior ao mês do óbito",
+    acao: "Divergência de data de óbito. Apresentar certidão de nascimento/casamento atualizada ou justificar administrativamente.",
+    critico: true
+  },
+  'PREC-PMIG-DOM': {
+    sigla: 'PREC-PMIG-DOM',
+    tipo: 'Pendência',
+    grupo: 'CONTRIBUIÇÕES',
+    descricao: "Recolhimento de empregado doméstico sem comprovação de vínculo",
+    acao: "Apresentar documentos (CTPS, contratos de trabalho, recibos, guias de recolhimento pagas) para regularizar o vínculo no INSS.",
+    critico: true
+  },
+  'PREM-EXT': {
+    sigla: 'PREM-EXT',
+    tipo: 'Pendência',
+    grupo: 'CONTRIBUIÇÕES',
+    descricao: "Remuneração informada fora do prazo, passível de comprovação",
+    acao: "Período extemporâneo (fora do prazo). Apresentar documentos contemporâneos da época (CTPS, termo de rescisão, extrato do FGTS).",
+    critico: true
+  },
+  'PREM-TSVE-PER-QUARENTENA': {
+    sigla: 'PREM-TSVE-PER-QUARENTENA',
+    tipo: 'Pendência',
+    grupo: 'CONTRIBUIÇÕES',
+    descricao: "Remuneração informada após o término do TSVE referente ao período de Quarentena",
+    acao: "Apresentar documentos (CTPS, contratos de trabalho, recibos, guias de recolhimento pagas) para regularizar o vínculo no INSS.",
+    critico: true
+  },
+  'PREM-TSVE-PER-TERM-JUD': {
+    sigla: 'PREM-TSVE-PER-TERM-JUD',
+    tipo: 'Pendência',
+    grupo: 'CONTRIBUIÇÕES',
+    descricao: "Pendência de Remuneração após o término do TSVE reconhecido judicialmente com data anterior a competências de remunerações já informadas no eSocial",
+    acao: "Apresentar documentos (CTPS, contratos de trabalho, recibos, guias de recolhimento pagas) para regularizar o vínculo no INSS.",
+    critico: true
+  },
+  'PREM-TSVE-POS-QUARENTENA': {
+    sigla: 'PREM-TSVE-POS-QUARENTENA',
+    tipo: 'Pendência',
+    grupo: 'CONTRIBUIÇÕES',
+    descricao: "Pendência de Remuneração informada para TSVE após o período de Quarentena",
+    acao: "Apresentar documentos (CTPS, contratos de trabalho, recibos, guias de recolhimento pagas) para regularizar o vínculo no INSS.",
+    critico: true
+  },
+  'PREM-TSVE-POS-TERM-JUD': {
+    sigla: 'PREM-TSVE-POS-TERM-JUD',
+    tipo: 'Pendência',
+    grupo: 'CONTRIBUIÇÕES',
+    descricao: "Pendência de Remuneração após o período entre o término do TSVE e o último dia trabalhado",
+    acao: "Apresentar documentos (CTPS, contratos de trabalho, recibos, guias de recolhimento pagas) para regularizar o vínculo no INSS.",
+    critico: true
+  },
+  'PREM-TSVE-PROC-TRAB': {
+    sigla: 'PREM-TSVE-PROC-TRAB',
+    tipo: 'Pendência',
+    grupo: 'CONTRIBUIÇÕES',
+    descricao: "Pendência de Reconhecimento de Remuneração de Trabalhador sem Vínculo oriundo de Processo Trabalhista",
+    acao: "Apresentar documentos (CTPS, contratos de trabalho, recibos, guias de recolhimento pagas) para regularizar o vínculo no INSS.",
+    critico: true
+  },
+  'PDT-NASC-FIL-INV': {
+    sigla: 'PDT-NASC-FIL-INV',
+    tipo: 'Pendência',
+    grupo: 'CONTRIBUIÇÕES/VÍNCULOS E REMUNERAÇÕES',
+    descricao: "Idade do filiado menor que a permitida pela legislação",
+    acao: "Apresentar documentos (CTPS, contratos de trabalho, recibos, guias de recolhimento pagas) para regularizar o vínculo no INSS.",
+    critico: true
+  },
+  'PDT-NASC-FIL-MENOR-INV': {
+    sigla: 'PDT-NASC-FIL-MENOR-INV',
+    tipo: 'Pendência',
+    grupo: 'CONTRIBUIÇÕES/VÍNCULOS E REMUNERAÇÕES',
+    descricao: "Idade do filiado menor aprendiz menor que a permitida pela legislação",
+    acao: "Apresentar documentos (CTPS, contratos de trabalho, recibos, guias de recolhimento pagas) para regularizar o vínculo no INSS.",
+    critico: true
+  },
+  'PREM-NASC': {
+    sigla: 'PREM-NASC',
+    tipo: 'Pendência',
+    grupo: 'CONTRIBUIÇÕES/VÍNCULOS E REMUNERAÇÕES',
+    descricao: "Remuneração antes da data de nascimento do Filiado",
+    acao: "Apresentar documentos (CTPS, contratos de trabalho, recibos, guias de recolhimento pagas) para regularizar o vínculo no INSS.",
+    critico: true
+  },
+  'PDARF-ALT-COMP-FORA-VIG': {
+    sigla: 'PDARF-ALT-COMP-FORA-VIG',
+    tipo: 'Pendência',
+    grupo: 'DARF - EVENTOS',
+    descricao: "Indicador de Darf incluído por alteração de competência fora do período de vigência",
+    acao: "Apresentar documentos (CTPS, contratos de trabalho, recibos, guias de recolhimento pagas) para regularizar o vínculo no INSS.",
+    critico: true
+  },
+  'PDARF-ALT-CPF': {
+    sigla: 'PDARF-ALT-CPF',
+    tipo: 'Pendência',
+    grupo: 'DARF - EVENTOS',
+    descricao: "Darf desassociado do CPF originário pela RFB",
+    acao: "Apresentar documentos (CTPS, contratos de trabalho, recibos, guias de recolhimento pagas) para regularizar o vínculo no INSS.",
     critico: false
   },
-  'PCON': {
-    sigla: 'PCON',
+  'PDARF-EVENTO-INCONSISTENTE': {
+    sigla: 'PDARF-EVENTO-INCONSISTENTE',
+    tipo: 'Pendência',
+    grupo: 'DARF - EVENTOS',
+    descricao: "Evento inconsistente",
+    acao: "Apresentar documentos (CTPS, contratos de trabalho, recibos, guias de recolhimento pagas) para regularizar o vínculo no INSS.",
+    critico: true
+  },
+  'PDARF-INV-ALT-CODRECEITA': {
+    sigla: 'PDARF-INV-ALT-CODRECEITA',
+    tipo: 'Pendência',
+    grupo: 'DARF - EVENTOS',
+    descricao: "Indicador de Darf invalidado por alteração pela RFB para código de receita não tratado",
+    acao: "Apresentar documentos (CTPS, contratos de trabalho, recibos, guias de recolhimento pagas) para regularizar o vínculo no INSS.",
+    critico: false
+  },
+  'PDARF-RESTIT-PARCIAL': {
+    sigla: 'PDARF-RESTIT-PARCIAL',
+    tipo: 'Pendência',
+    grupo: 'DARF - EVENTOS',
+    descricao: "Indicador de Darf com Valor Restituído Parcial",
+    acao: "Apresentar documentos (CTPS, contratos de trabalho, recibos, guias de recolhimento pagas) para regularizar o vínculo no INSS.",
+    critico: false
+  },
+  'PDARF-RESTIT-TOTAL': {
+    sigla: 'PDARF-RESTIT-TOTAL',
+    tipo: 'Pendência',
+    grupo: 'DARF - EVENTOS',
+    descricao: "Indicador de Darf com Valor Restituído Total",
+    acao: "Apresentar documentos (CTPS, contratos de trabalho, recibos, guias de recolhimento pagas) para regularizar o vínculo no INSS.",
+    critico: false
+  },
+  'PNIT-CRIT': {
+    sigla: 'PNIT-CRIT',
+    tipo: 'Pendência',
+    grupo: 'GERAIS DO NIT OU DE DADOS CADASTRAIS',
+    descricao: "NIT em faixa crítica",
+    acao: "Apresentar documentos (CTPS, contratos de trabalho, recibos, guias de recolhimento pagas) para regularizar o vínculo no INSS.",
+    critico: true
+  },
+  'PNIT-IND': {
+    sigla: 'PNIT-IND',
+    tipo: 'Pendência',
+    grupo: 'GERAIS DO NIT OU DE DADOS CADASTRAIS',
+    descricao: "NIT Indeterminado",
+    acao: "Apresentar documentos (CTPS, contratos de trabalho, recibos, guias de recolhimento pagas) para regularizar o vínculo no INSS.",
+    critico: true
+  },
+  'PNIT-O094': {
+    sigla: 'PNIT-O094',
+    tipo: 'Pendência',
+    grupo: 'GERAIS DO NIT OU DE DADOS CADASTRAIS',
+    descricao: "NIT invalidado pertencente à faixa crítica do tipo Ofício INSS 094",
+    acao: "Apresentar documentos (CTPS, contratos de trabalho, recibos, guias de recolhimento pagas) para regularizar o vínculo no INSS.",
+    critico: true
+  },
+  'PNIT-SC': {
+    sigla: 'PNIT-SC',
+    tipo: 'Pendência',
+    grupo: 'GERAIS DO NIT OU DE DADOS CADASTRAIS',
+    descricao: "NIT não encontrado cadastrado/inexistente",
+    acao: "Apresentar documentos (CTPS, contratos de trabalho, recibos, guias de recolhimento pagas) para regularizar o vínculo no INSS.",
+    critico: true
+  },
+  'PNIT-SUP': {
+    sigla: 'PNIT-SUP',
+    tipo: 'Pendência',
+    grupo: 'GERAIS DO NIT OU DE DADOS CADASTRAIS',
+    descricao: "NIT com indício de superposição de dados",
+    acao: "Apresentar documentos (CTPS, contratos de trabalho, recibos, guias de recolhimento pagas) para regularizar o vínculo no INSS.",
+    critico: true
+  },
+  'PSE-NEG': {
+    sigla: 'PSE-NEG',
+    tipo: 'Pendência',
+    grupo: 'SEGURADO ESPECIAL',
+    descricao: "Período Segurado Especial Negativo",
+    acao: "Apresentar documentos (CTPS, contratos de trabalho, recibos, guias de recolhimento pagas) para regularizar o vínculo no INSS.",
+    critico: true
+  },
+  'PSE-PEN': {
+    sigla: 'PSE-PEN',
+    tipo: 'Pendência',
+    grupo: 'SEGURADO ESPECIAL',
+    descricao: "Período Segurado Especial Pendente",
+    acao: "Apresentar documentos (CTPS, contratos de trabalho, recibos, guias de recolhimento pagas) para regularizar o vínculo no INSS.",
+    critico: true
+  },
+  'PSE-POS': {
+    sigla: 'PSE-POS',
+    tipo: 'Pendência',
+    grupo: 'SEGURADO ESPECIAL',
+    descricao: "Período Segurado Especial Positivo",
+    acao: "Apresentar documentos (CTPS, contratos de trabalho, recibos, guias de recolhimento pagas) para regularizar o vínculo no INSS.",
+    critico: true
+  },
+  'NDET': {
+    sigla: 'NDET',
     tipo: 'Pendência',
     grupo: 'VÍNCULOS E REMUNERAÇÕES',
-    descricao: 'Período com indicação de concorrência de vínculos.',
-    acao: 'Há sobreposição de datas de vínculos de emprego ou atividades. Verifique se o cliente trabalhou em mais de um lugar ao mesmo tempo ou se há erro de preenchimento das datas de fim no CNIS.',
-    critico: false
+    descricao: "Data de início de atividade foi estimada na migração",
+    acao: "Apresentar documentos (CTPS, contratos de trabalho, recibos, guias de recolhimento pagas) para regularizar o vínculo no INSS.",
+    critico: true
   },
-  'PRAS': {
-    sigla: 'PRAS',
+  'PADM-EMPR': {
+    sigla: 'PADM-EMPR',
     tipo: 'Pendência',
-    grupo: 'CONTRIBUINTE INDIVIDUAL',
-    descricao: 'Pendente de Regularização de Atividade de Segurado.',
-    acao: 'O INSS necessita da comprovação da efetiva atividade de contribuinte individual. Apresente alvará, comprovante de ISS, declaração de imposto de renda ou recibos de prestação de serviços (RPA).',
+    grupo: 'VÍNCULOS E REMUNERAÇÕES',
+    descricao: "Data de admissão anterior ao início da atividade do empregador / Data de admissão posterior à data de encerramento da atividade do empregador",
+    acao: "Apresentar documentos (CTPS, contratos de trabalho, recibos, guias de recolhimento pagas) para regularizar o vínculo no INSS.",
+    critico: true
+  },
+  'PCEI-EQP-INV': {
+    sigla: 'PCEI-EQP-INV',
+    tipo: 'Pendência',
+    grupo: 'VÍNCULOS E REMUNERAÇÕES',
+    descricao: "Empregador com identificador inválido (CEI)",
+    acao: "Apresentar documentos (CTPS, contratos de trabalho, recibos, guias de recolhimento pagas) para regularizar o vínculo no INSS.",
+    critico: true
+  },
+  'PDIV-DADOS-GFIP': {
+    sigla: 'PDIV-DADOS-GFIP',
+    tipo: 'Pendência',
+    grupo: 'VÍNCULOS E REMUNERAÇÕES',
+    descricao: "Vínculo ou remuneração pendente por divergência de dado cadastral do trabalhador em GFIP",
+    acao: "Apresentar documentos (CTPS, contratos de trabalho, recibos, guias de recolhimento pagas) para regularizar o vínculo no INSS.",
+    critico: true
+  },
+  'PEMP-CAD': {
+    sigla: 'PEMP-CAD',
+    tipo: 'Pendência',
+    grupo: 'VÍNCULOS E REMUNERAÇÕES',
+    descricao: "Faltam dados cadastrais do empregador (CNPJ ou CEI)",
+    acao: "Apresentar documentos (CTPS, contratos de trabalho, recibos, guias de recolhimento pagas) para regularizar o vínculo no INSS.",
+    critico: true
+  },
+  'PEMP-IDINV': {
+    sigla: 'PEMP-IDINV',
+    tipo: 'Pendência',
+    grupo: 'VÍNCULOS E REMUNERAÇÕES',
+    descricao: "Empregador com identificador inválido",
+    acao: "Apresentar documentos (CTPS, contratos de trabalho, recibos, guias de recolhimento pagas) para regularizar o vínculo no INSS.",
+    critico: true
+  },
+  'PEXT': {
+    sigla: 'PEXT',
+    tipo: 'Pendência',
+    grupo: 'VÍNCULOS E REMUNERAÇÕES',
+    descricao: "Vínculo com informação extemporânea, passível de comprovação",
+    acao: "Período extemporâneo (fora do prazo). Apresentar documentos contemporâneos da época (CTPS, termo de rescisão, extrato do FGTS).",
+    critico: true
+  },
+  'PREC-COD1821_FORA_VIG': {
+    sigla: 'PREC-COD1821_FORA_VIG',
+    tipo: 'Pendência',
+    grupo: 'VÍNCULOS E REMUNERAÇÕES',
+    descricao: "Recolhimento com código de pagamento 1821 - mandato eletivo, fora da vigência",
+    acao: "Apresentar documentos (CTPS, contratos de trabalho, recibos, guias de recolhimento pagas) para regularizar o vínculo no INSS.",
+    critico: true
+  },
+  'PREM-EMPR': {
+    sigla: 'PREM-EMPR',
+    tipo: 'Pendência',
+    grupo: 'VÍNCULOS E REMUNERAÇÕES',
+    descricao: "Remunerações após a data de encerramento / antes da data de início de atividade do empregador",
+    acao: "Apresentar documentos (CTPS, contratos de trabalho, recibos, guias de recolhimento pagas) para regularizar o vínculo no INSS.",
+    critico: true
+  },
+  'PREM-FORA-ATIV-INTERM': {
+    sigla: 'PREM-FORA-ATIV-INTERM',
+    tipo: 'Pendência',
+    grupo: 'VÍNCULOS E REMUNERAÇÕES',
+    descricao: "Remuneração de trabalho intermitente fora do período de atividade de intermitente",
+    acao: "Apresentar documentos (CTPS, contratos de trabalho, recibos, guias de recolhimento pagas) para regularizar o vínculo no INSS.",
+    critico: true
+  },
+  'PREM-FORA-CONVOC': {
+    sigla: 'PREM-FORA-CONVOC',
+    tipo: 'Pendência',
+    grupo: 'VÍNCULOS E REMUNERAÇÕES',
+    descricao: "Remuneração de trabalho intermitente não coberta por Convocatória (extinto, substituído por PREM-FORA-ATIV-INTERM)",
+    acao: "Indicador obsoleto ou descontinuado pelo INSS. Não costuma exigir tratamento para períodos recentes, mas verifique o histórico.",
+    critico: true
+  },
+  'PREM-FORA-REINTEG-ANISTIA': {
+    sigla: 'PREM-FORA-REINTEG-ANISTIA',
+    tipo: 'Pendência',
+    grupo: 'VÍNCULOS E REMUNERAÇÕES',
+    descricao: "Pendência de Remuneração fora do período da Reintegração por Anistia Legal",
+    acao: "Apresentar documentos (CTPS, contratos de trabalho, recibos, guias de recolhimento pagas) para regularizar o vínculo no INSS.",
+    critico: true
+  },
+  'PREM-FORA-REINTEG-OUTROSTIPOS': {
+    sigla: 'PREM-FORA-REINTEG-OUTROSTIPOS',
+    tipo: 'Pendência',
+    grupo: 'VÍNCULOS E REMUNERAÇÕES',
+    descricao: "Pendência de Remuneração fora do período da Reintegração por iniciativa do empregador ou por outros motivos",
+    acao: "Apresentar documentos (CTPS, contratos de trabalho, recibos, guias de recolhimento pagas) para regularizar o vínculo no INSS.",
+    critico: true
+  },
+  'PREM-FORA-REINTEG-PROC-TRAB': {
+    sigla: 'PREM-FORA-REINTEG-PROC-TRAB',
+    tipo: 'Pendência',
+    grupo: 'VÍNCULOS E REMUNERAÇÕES',
+    descricao: "Pendência de Remuneração fora do período da Reintegração oriunda de Processo Trabalhista",
+    acao: "Apresentar documentos (CTPS, contratos de trabalho, recibos, guias de recolhimento pagas) para regularizar o vínculo no INSS.",
     critico: true
   },
   'PREM-FVIN': {
     sigla: 'PREM-FVIN',
     tipo: 'Pendência',
     grupo: 'VÍNCULOS E REMUNERAÇÕES',
-    descricao: 'Remuneração pós-fim de vínculo.',
-    acao: 'Aparece quando há salários declarados após a data de desligamento. Verifique se foi pagamento de rescisão complementar/acordo trabalhista ou se a data de encerramento do vínculo está errada.',
-    critico: false
-  },
-  'PCON-VINC': {
-    sigla: 'PCON-VINC',
-    tipo: 'Pendência',
-    grupo: 'VÍNCULOS E REMUNERAÇÕES',
-    descricao: 'Vínculo com pendência de concorrência.',
-    acao: 'Indica vínculos simultâneos no mesmo período. Verifique se a concomitância é real ou erro cadastral.',
-    critico: false
-  },
-  'PADM-EMPR': {
-    sigla: 'PADM-EMPR',
-    tipo: 'Pendência',
-    grupo: 'VÍNCULOS E REMUNERAÇÕES',
-    descricao: 'Admissão anterior ao início da empresa.',
-    acao: 'A data de admissão informada é anterior à data de fundação do CNPJ da empresa. Exige acerto com cópia da CTPS e contrato social da empresa para esclarecer.',
+    descricao: "Remuneração após o fim do vínculo",
+    acao: "Apresentar documentos (CTPS, contratos de trabalho, recibos, guias de recolhimento pagas) para regularizar o vínculo no INSS.",
     critico: true
-  }
+  },
+  'PREM-IVIN': {
+    sigla: 'PREM-IVIN',
+    tipo: 'Pendência',
+    grupo: 'VÍNCULOS E REMUNERAÇÕES',
+    descricao: "Remuneração antes do início do vínculo",
+    acao: "Apresentar documentos (CTPS, contratos de trabalho, recibos, guias de recolhimento pagas) para regularizar o vínculo no INSS.",
+    critico: true
+  },
+  'PREM-OBITO': {
+    sigla: 'PREM-OBITO',
+    tipo: 'Pendência',
+    grupo: 'VÍNCULOS E REMUNERAÇÕES',
+    descricao: "Remuneração após óbito",
+    acao: "Divergência de data de óbito. Apresentar certidão de nascimento/casamento atualizada ou justificar administrativamente.",
+    critico: true
+  },
+  'PREM-PER-DESLIG-APOSENT': {
+    sigla: 'PREM-PER-DESLIG-APOSENT',
+    tipo: 'Pendência',
+    grupo: 'VÍNCULOS E REMUNERAÇÕES',
+    descricao: "Pendência de Remuneração após o desligamento por aposentadoria de servidor com data anterior à competência de remuneração já informada no eSocial",
+    acao: "Apresentar documentos (CTPS, contratos de trabalho, recibos, guias de recolhimento pagas) para regularizar o vínculo no INSS.",
+    critico: true
+  },
+  'PREM-PER-DESLIG-JUD': {
+    sigla: 'PREM-PER-DESLIG-JUD',
+    tipo: 'Pendência',
+    grupo: 'VÍNCULOS E REMUNERAÇÕES',
+    descricao: "Pendência de Remuneração após o desligamento reconhecido judicialmente com data anterior à competência de remuneração já informada no eSocial",
+    acao: "Apresentar documentos (CTPS, contratos de trabalho, recibos, guias de recolhimento pagas) para regularizar o vínculo no INSS.",
+    critico: true
+  },
+  'PREM-POS-DESLIG-APOSENT': {
+    sigla: 'PREM-POS-DESLIG-APOSENT',
+    tipo: 'Pendência',
+    grupo: 'VÍNCULOS E REMUNERAÇÕES',
+    descricao: "Pendência de Remuneração após o período entre o desligamento por aposentadoria de servidor e o último dia trabalhado",
+    acao: "Apresentar documentos (CTPS, contratos de trabalho, recibos, guias de recolhimento pagas) para regularizar o vínculo no INSS.",
+    critico: true
+  },
+  'PREM-POS-DESLIG-JUD': {
+    sigla: 'PREM-POS-DESLIG-JUD',
+    tipo: 'Pendência',
+    grupo: 'VÍNCULOS E REMUNERAÇÕES',
+    descricao: "Pendência de Remuneração após o período entre o desligamento e o último dia trabalhado",
+    acao: "Apresentar documentos (CTPS, contratos de trabalho, recibos, guias de recolhimento pagas) para regularizar o vínculo no INSS.",
+    critico: true
+  },
+  'PREM-POS-QRT': {
+    sigla: 'PREM-POS-QRT',
+    tipo: 'Pendência',
+    grupo: 'VÍNCULOS E REMUNERAÇÕES',
+    descricao: "Remuneração posterior ao período de quarentena (substituído por PREM-POS-QUARENTENA e PREM-TSVE-POS-QUARENTENA)",
+    acao: "Indicador obsoleto ou descontinuado pelo INSS. Não costuma exigir tratamento para períodos recentes, mas verifique o histórico.",
+    critico: true
+  },
+  'PREM-POS-QUARENTENA': {
+    sigla: 'PREM-POS-QUARENTENA',
+    tipo: 'Pendência',
+    grupo: 'VÍNCULOS E REMUNERAÇÕES',
+    descricao: "Pendência de Remuneração informada após o período de Quarentena",
+    acao: "Apresentar documentos (CTPS, contratos de trabalho, recibos, guias de recolhimento pagas) para regularizar o vínculo no INSS.",
+    critico: true
+  },
+  'PREM-REINTEG-ANISTIA': {
+    sigla: 'PREM-REINTEG-ANISTIA',
+    tipo: 'Pendência',
+    grupo: 'VÍNCULOS E REMUNERAÇÕES',
+    descricao: "Pendência em Remuneração de período de Anistia Legal",
+    acao: "Apresentar documentos (CTPS, contratos de trabalho, recibos, guias de recolhimento pagas) para regularizar o vínculo no INSS.",
+    critico: true
+  },
+  'PREM-REINTEG-OUTROSTIPOS': {
+    sigla: 'PREM-REINTEG-OUTROSTIPOS',
+    tipo: 'Pendência',
+    grupo: 'VÍNCULOS E REMUNERAÇÕES',
+    descricao: "Pendência em Remuneração de período de Reintegração por iniciativa do empregador ou por outros motivos",
+    acao: "Apresentar documentos (CTPS, contratos de trabalho, recibos, guias de recolhimento pagas) para regularizar o vínculo no INSS.",
+    critico: true
+  },
+  'PREM-VINC-PROC-TRAB': {
+    sigla: 'PREM-VINC-PROC-TRAB',
+    tipo: 'Pendência',
+    grupo: 'VÍNCULOS E REMUNERAÇÕES',
+    descricao: "Pendência de Reconhecimento de Remuneração no Vínculo oriunda de Processo Trabalhista",
+    acao: "Apresentar documentos (CTPS, contratos de trabalho, recibos, guias de recolhimento pagas) para regularizar o vínculo no INSS.",
+    critico: true
+  },
+  'PRES-EMPR': {
+    sigla: 'PRES-EMPR',
+    tipo: 'Pendência',
+    grupo: 'VÍNCULOS E REMUNERAÇÕES',
+    descricao: "Data de rescisão posterior à data de encerramento / anterior à data de início da Atividade do Empregador",
+    acao: "Apresentar documentos (CTPS, contratos de trabalho, recibos, guias de recolhimento pagas) para regularizar o vínculo no INSS.",
+    critico: true
+  },
+  'PRPPS': {
+    sigla: 'PRPPS',
+    tipo: 'Pendência',
+    grupo: 'VÍNCULOS E REMUNERAÇÕES',
+    descricao: "Vínculo de empregado com informações de Regime Próprio (Servidor Público)",
+    acao: "Vínculo de Regime Próprio de Previdência Social. Solicitar a CTC no órgão público correspondente e averbar no INSS.",
+    critico: true
+  },
+  'PRPSE': {
+    sigla: 'PRPSE',
+    tipo: 'Pendência',
+    grupo: 'VÍNCULOS E REMUNERAÇÕES',
+    descricao: "Vínculo de empregado do Regime de Previdência no Exterior",
+    acao: "Apresentar documentos (CTPS, contratos de trabalho, recibos, guias de recolhimento pagas) para regularizar o vínculo no INSS.",
+    critico: true
+  },
+  'PSUC-DIVERG-DT-ADM': {
+    sigla: 'PSUC-DIVERG-DT-ADM',
+    tipo: 'Pendência',
+    grupo: 'VÍNCULOS E REMUNERAÇÕES',
+    descricao: "Pendência que indica que o vínculo é sucessor e foram encontradas divergências envolvendo a data de admissão (desabilitado desde 19/09/2024)",
+    acao: "Indicador obsoleto ou descontinuado pelo INSS. Não costuma exigir tratamento para períodos recentes, mas verifique o histórico.",
+    critico: false
+  },
+  'PVIN-ADMISSAO-DESLIG-PROC-TRAB': {
+    sigla: 'PVIN-ADMISSAO-DESLIG-PROC-TRAB',
+    tipo: 'Pendência',
+    grupo: 'VÍNCULOS E REMUNERAÇÕES',
+    descricao: "Pendência por Alteração da Data de Admissão e Inclusão ou Alteração da Data de Desligamento, oriundas de Processo Trabalhista",
+    acao: "Apresentar documentos (CTPS, contratos de trabalho, recibos, guias de recolhimento pagas) para regularizar o vínculo no INSS.",
+    critico: true
+  },
+  'PVIN-ADMISSAO-PROC-TRAB': {
+    sigla: 'PVIN-ADMISSAO-PROC-TRAB',
+    tipo: 'Pendência',
+    grupo: 'VÍNCULOS E REMUNERAÇÕES',
+    descricao: "Pendência por Alteração da Data de Admissão oriunda de Processo Trabalhista",
+    acao: "Apresentar documentos (CTPS, contratos de trabalho, recibos, guias de recolhimento pagas) para regularizar o vínculo no INSS.",
+    critico: true
+  },
+  'PVIN-ADM-OBITO': {
+    sigla: 'PVIN-ADM-OBITO',
+    tipo: 'Pendência',
+    grupo: 'VÍNCULOS E REMUNERAÇÕES',
+    descricao: "Data de admissão posterior ao óbito",
+    acao: "Divergência de data de óbito. Apresentar certidão de nascimento/casamento atualizada ou justificar administrativamente.",
+    critico: true
+  },
+  'PVIN-AGRUP-INC': {
+    sigla: 'PVIN-AGRUP-INC',
+    tipo: 'Pendência',
+    grupo: 'VÍNCULOS E REMUNERAÇÕES',
+    descricao: "Pendência que sinaliza inconsistência em Vínculo agrupador quando não foi possível encontrar todos os seus vínculos agrupados relacionados",
+    acao: "Apresentar documentos (CTPS, contratos de trabalho, recibos, guias de recolhimento pagas) para regularizar o vínculo no INSS.",
+    critico: true
+  },
+  'PVIN-CAGED': {
+    sigla: 'PVIN-CAGED',
+    tipo: 'Pendência',
+    grupo: 'VÍNCULOS E REMUNERAÇÕES',
+    descricao: "Vínculo Oriundo da fonte CAGED",
+    acao: "Apresentar documentos (CTPS, contratos de trabalho, recibos, guias de recolhimento pagas) para regularizar o vínculo no INSS.",
+    critico: true
+  },
+  'PVIN-DESLIG-JUSTICA-TRAB': {
+    sigla: 'PVIN-DESLIG-JUSTICA-TRAB',
+    tipo: 'Pendência',
+    grupo: 'VÍNCULOS E REMUNERAÇÕES',
+    descricao: "Pendência por Inclusão da Data de Desligamento feita pela Justiça do Trabalho por meio do Evento S-8299 do eSocial",
+    acao: "Apresentar documentos (CTPS, contratos de trabalho, recibos, guias de recolhimento pagas) para regularizar o vínculo no INSS.",
+    critico: true
+  },
+  'PVIN-DESLIG-OBITO': {
+    sigla: 'PVIN-DESLIG-OBITO',
+    tipo: 'Pendência',
+    grupo: 'VÍNCULOS E REMUNERAÇÕES',
+    descricao: "Data do desligamento posterior à data do óbito",
+    acao: "Divergência de data de óbito. Apresentar certidão de nascimento/casamento atualizada ou justificar administrativamente.",
+    critico: true
+  },
+  'PVIN-DESLIG-PROC-TRAB': {
+    sigla: 'PVIN-DESLIG-PROC-TRAB',
+    tipo: 'Pendência',
+    grupo: 'VÍNCULOS E REMUNERAÇÕES',
+    descricao: "Pendência por Inclusão ou Alteração da Data de Desligamento oriunda de Processo Trabalhista",
+    acao: "Apresentar documentos (CTPS, contratos de trabalho, recibos, guias de recolhimento pagas) para regularizar o vínculo no INSS.",
+    critico: true
+  },
+  'PVIN-IRREG': {
+    sigla: 'PVIN-IRREG',
+    tipo: 'Pendência',
+    grupo: 'VÍNCULOS E REMUNERAÇÕES',
+    descricao: "Vínculo em situação de irregularidade",
+    acao: "Apresentar documentos (CTPS, contratos de trabalho, recibos, guias de recolhimento pagas) para regularizar o vínculo no INSS.",
+    critico: true
+  },
+  'PVIN-MAND-ELETIVO-TOTAL': {
+    sigla: 'PVIN-MAND-ELETIVO-TOTAL',
+    tipo: 'Pendência',
+    grupo: 'VÍNCULOS E REMUNERAÇÕES',
+    descricao: "Vínculo totalmente caracterizado como mandato eletivo",
+    acao: "Apresentar documentos (CTPS, contratos de trabalho, recibos, guias de recolhimento pagas) para regularizar o vínculo no INSS.",
+    critico: true
+  },
+  'PVIN-ME': {
+    sigla: 'PVIN-ME',
+    tipo: 'Pendência',
+    grupo: 'VÍNCULOS E REMUNERAÇÕES',
+    descricao: "Vínculo de mandato eletivo, passível de comprovação (substituído por PVIN-MAND-ELETIVO-TOTAL a partir de 10/09/2025)",
+    acao: "Indicador obsoleto ou descontinuado pelo INSS. Não costuma exigir tratamento para períodos recentes, mas verifique o histórico.",
+    critico: true
+  },
+  'PVIN-OBITO': {
+    sigla: 'PVIN-OBITO',
+    tipo: 'Pendência',
+    grupo: 'VÍNCULOS E REMUNERAÇÕES',
+    descricao: "Data de admissão posterior ao óbito (substituído por PVIN-ADM-OBITO em 01/10/2024)",
+    acao: "Indicador obsoleto ou descontinuado pelo INSS. Não costuma exigir tratamento para períodos recentes, mas verifique o histórico.",
+    critico: true
+  },
+  'PVIN-RE': {
+    sigla: 'PVIN-RE',
+    tipo: 'Pendência',
+    grupo: 'VÍNCULOS E REMUNERAÇÕES',
+    descricao: "Causa de rescisão estimada por não ter sido informada pela fonte (RAIS/FGTS/GRE)",
+    acao: "Apresentar documentos (CTPS, contratos de trabalho, recibos, guias de recolhimento pagas) para regularizar o vínculo no INSS.",
+    critico: true
+  },
+  'PVIN-REC-PROC-TRAB': {
+    sigla: 'PVIN-REC-PROC-TRAB',
+    tipo: 'Pendência',
+    grupo: 'VÍNCULOS E REMUNERAÇÕES',
+    descricao: "Pendência de Reconhecimento de Vínculo oriundo de Processo Trabalhista",
+    acao: "Apresentar documentos (CTPS, contratos de trabalho, recibos, guias de recolhimento pagas) para regularizar o vínculo no INSS.",
+    critico: true
+  },
+  'PVIN-RESP-INDIRETO-PROC-TRAB': {
+    sigla: 'PVIN-RESP-INDIRETO-PROC-TRAB',
+    tipo: 'Pendência',
+    grupo: 'VÍNCULOS E REMUNERAÇÕES',
+    descricao: "Pendência de Reconhecimento de Vínculo informado por Responsável Indireto em Processo Trabalhista",
+    acao: "Apresentar documentos (CTPS, contratos de trabalho, recibos, guias de recolhimento pagas) para regularizar o vínculo no INSS.",
+    critico: true
+  },
+  'PVIN-SUBSTIT-INC': {
+    sigla: 'PVIN-SUBSTIT-INC',
+    tipo: 'Pendência',
+    grupo: 'VÍNCULOS E REMUNERAÇÕES',
+    descricao: "Pendência que sinaliza inconsistência em Vínculo prevalente quando não foi possível encontrar todos os seus vínculos relacionados",
+    acao: "Apresentar documentos (CTPS, contratos de trabalho, recibos, guias de recolhimento pagas) para regularizar o vínculo no INSS.",
+    critico: true
+  },
+  'PVIN-TRAB-INTERM': {
+    sigla: 'PVIN-TRAB-INTERM',
+    tipo: 'Pendência',
+    grupo: 'VÍNCULOS E REMUNERAÇÕES',
+    descricao: "Pendência relacionada a Vínculo que possui informações de trabalho intermitente",
+    acao: "Apresentar documentos (CTPS, contratos de trabalho, recibos, guias de recolhimento pagas) para regularizar o vínculo no INSS.",
+    critico: true
+  },
+  'PVIN-UNIC-CONTR-PROC-TRAB': {
+    sigla: 'PVIN-UNIC-CONTR-PROC-TRAB',
+    tipo: 'Pendência',
+    grupo: 'VÍNCULOS E REMUNERAÇÕES',
+    descricao: "Pendência de Vínculo que possui Unicidade Contratual oriunda de Processo Trabalhista",
+    acao: "Apresentar documentos (CTPS, contratos de trabalho, recibos, guias de recolhimento pagas) para regularizar o vínculo no INSS.",
+    critico: true
+  },
+  'PVIN-UNIC-CONTR-TSVE-PROC-TRAB': {
+    sigla: 'PVIN-UNIC-CONTR-TSVE-PROC-TRAB',
+    tipo: 'Pendência',
+    grupo: 'VÍNCULOS E REMUNERAÇÕES',
+    descricao: "Pendência de Vínculo que possui Unicidade Contratual do período de TSVE oriunda de Processo Trabalhista",
+    acao: "Apresentar documentos (CTPS, contratos de trabalho, recibos, guias de recolhimento pagas) para regularizar o vínculo no INSS.",
+    critico: true
+  },
+  'IAGRUP-MN-SM-EC103': {
+    sigla: 'IAGRUP-MN-SM-EC103',
+    tipo: 'Informativo',
+    grupo: 'AJUSTES EC103 - AGRUPAMENTO',
+    descricao: "Indicador de competência objeto de agrupamento que recebeu de outra competência mas permaneceu abaixo do mínimo (favorecida)",
+    acao: "Competência ajustada através de agrupamento de contribuições. Verifique se o resultado atingiu o salário mínimo.",
+    critico: false
+  },
+  'IAGRUP-SM-EC103': {
+    sigla: 'IAGRUP-SM-EC103',
+    tipo: 'Informativo',
+    grupo: 'AJUSTES EC103 - AGRUPAMENTO',
+    descricao: "Indicador de competência objeto de agrupamento que resultou em salário de contribuição igual ao valor mínimo (favorecida)",
+    acao: "Competência ajustada através de agrupamento de contribuições. Verifique se o resultado atingiu o salário mínimo.",
+    critico: false
+  },
+  'IAGRUP-VR-EC103': {
+    sigla: 'IAGRUP-VR-EC103',
+    tipo: 'Informativo',
+    grupo: 'AJUSTES EC103 - AGRUPAMENTO',
+    descricao: "Indicador de competência objeto de agrupamento onde restou valor residual (desfavorecida)",
+    acao: "Competência ajustada através de agrupamento de contribuições. Verifique se o resultado atingiu o salário mínimo.",
+    critico: false
+  },
+  'IAGRUP-ZER-EC103': {
+    sigla: 'IAGRUP-ZER-EC103',
+    tipo: 'Informativo',
+    grupo: 'AJUSTES EC103 - AGRUPAMENTO',
+    descricao: "Indicador de competência objeto de agrupamento que restou zerada (desfavorecida)",
+    acao: "Competência ajustada através de agrupamento de contribuições. Verifique se o resultado atingiu o salário mínimo.",
+    critico: false
+  },
+  'ICOMPL-VR-SM-EC103': {
+    sigla: 'ICOMPL-VR-SM-EC103',
+    tipo: 'Informativo',
+    grupo: 'AJUSTES EC103 - COMPLEMENTAÇÃO',
+    descricao: "Indicador de competência que possui recolhimento de complementação para o valor mínimo",
+    acao: "Competência ajustada por meio de recolhimento de guia complementar. Sem pendências adicionais.",
+    critico: false
+  },
+  'IVLR-DARF-LIMITADO': {
+    sigla: 'IVLR-DARF-LIMITADO',
+    tipo: 'Informativo',
+    grupo: 'AJUSTES EC103 - COMPLEMENTAÇÃO',
+    descricao: "Valor de DARF foi limitado de forma que o valor total da competência não ultrapasse o valor do Salário Mínimo na competência",
+    acao: "Competência ajustada por meio de recolhimento de guia complementar. Sem pendências adicionais.",
+    critico: false
+  },
+  'IREL-PREV-POSSUI-COMP-AJUST': {
+    sigla: 'IREL-PREV-POSSUI-COMP-AJUST',
+    tipo: 'Informativo',
+    grupo: 'AJUSTES EC103 - OUTROS INDICADORES',
+    descricao: "Relação Previdenciária possui alguma competência que foi ajustada (favorecida/desfavorecida)",
+    acao: "Indicador informativo. Enquadramento específico ou processamento já concluído. Geralmente não impede o direito.",
+    critico: false
+  },
+  'ICED-VR-EXC-EC103': {
+    sigla: 'ICED-VR-EXC-EC103',
+    tipo: 'Informativo',
+    grupo: 'AJUSTES EC103 - UTILIZAÇÃO',
+    descricao: "Indicador de competência que cedeu valor excedente para outra competência",
+    acao: "Competência ajustada utilizando excedentes de outras remunerações. Confirme se a carência do período foi homologada.",
+    critico: false
+  },
+  'IUTILIZ-EXC-EC103': {
+    sigla: 'IUTILIZ-EXC-EC103',
+    tipo: 'Informativo',
+    grupo: 'AJUSTES EC103 - UTILIZAÇÃO',
+    descricao: "Indicador de competência que foi favorecida por valor de remuneração(ões) excedente(s) de outra(s) competência(s)",
+    acao: "Competência ajustada utilizando excedentes de outras remunerações. Confirme se a carência do período foi homologada.",
+    critico: false
+  },
+  'IUTILIZ-EXC-MN-SM-EC103': {
+    sigla: 'IUTILIZ-EXC-MN-SM-EC103',
+    tipo: 'Informativo',
+    grupo: 'AJUSTES EC103 - UTILIZAÇÃO',
+    descricao: "Indicador de competência que foi favorecida por valor de remuneração(ões) excedente(s) de outra(s) competência(s), mas permaneceu inferior ao mínimo",
+    acao: "Competência ajustada utilizando excedentes de outras remunerações. Confirme se a carência do período foi homologada.",
+    critico: false
+  },
+  'GFIP': {
+    sigla: 'GFIP',
+    tipo: 'Informativo',
+    grupo: 'CONTRIBUIÇÕES',
+    descricao: "Indica que remuneração da competência foi declarada em GFIP",
+    acao: "Indicador informativo. Enquadramento específico ou processamento já concluído. Geralmente não impede o direito.",
+    critico: false
+  },
+  'IREC-DESINDEXA': {
+    sigla: 'IREC-DESINDEXA',
+    tipo: 'Informativo',
+    grupo: 'CONTRIBUIÇÕES',
+    descricao: "Indica que a contribuição da competência foi desindexada",
+    acao: "Indicador informativo. Enquadramento específico ou processamento já concluído. Geralmente não impede o direito.",
+    critico: false
+  },
+  'IREC-FBR': {
+    sigla: 'IREC-FBR',
+    tipo: 'Acerto',
+    grupo: 'CONTRIBUIÇÕES',
+    descricao: "Recolhimento de segurado Facultativo de Baixa Renda (L 12470/2011) validado",
+    acao: "Indicador informativo. Enquadramento específico ou processamento já concluído. Geralmente não impede o direito.",
+    critico: false
+  },
+  'IREC-FBR-DEF': {
+    sigla: 'IREC-FBR-DEF',
+    tipo: 'Acerto',
+    grupo: 'CONTRIBUIÇÕES',
+    descricao: "Recolhimento de segurado Facultativo de Baixa Renda deferido/válido via Portal CNIS",
+    acao: "Indicador informativo. Enquadramento específico ou processamento já concluído. Geralmente não impede o direito.",
+    critico: false
+  },
+  'IREC-FBR-IND': {
+    sigla: 'IREC-FBR-IND',
+    tipo: 'Acerto',
+    grupo: 'CONTRIBUIÇÕES',
+    descricao: "Recolhimento de segurado Facultativo de Baixa Renda indeferido/inválido via Portal CNIS",
+    acao: "Indicador informativo. Enquadramento específico ou processamento já concluído. Geralmente não impede o direito.",
+    critico: true
+  },
+  'IREC-INDPEND': {
+    sigla: 'IREC-INDPEND',
+    tipo: 'Informativo',
+    grupo: 'CONTRIBUIÇÕES',
+    descricao: "Recolhimentos com indicadores/pendências",
+    acao: "Indicador informativo. Enquadramento específico ou processamento já concluído. Geralmente não impede o direito.",
+    critico: false
+  },
+  'IREC-LC123': {
+    sigla: 'IREC-LC123',
+    tipo: 'Informativo',
+    grupo: 'CONTRIBUIÇÕES',
+    descricao: "Recolhimento no Plano Simplificado de Previdência Social (LC 123/2006)",
+    acao: "Contribuição reduzida (5% ou 11%). Para aposentadoria por tempo de contribuição ou CTC, será necessário complementar para a alíquota de 20%.",
+    critico: true
+  },
+  'IREC-LC123-SUP': {
+    sigla: 'IREC-LC123-SUP',
+    tipo: 'Informativo',
+    grupo: 'CONTRIBUIÇÕES',
+    descricao: "Recolhimento no Plano Simplificado de Previdência Social (LC 123/2006) superior ao salário mínimo",
+    acao: "Contribuição reduzida (5% ou 11%). Para aposentadoria por tempo de contribuição ou CTC, será necessário complementar para a alíquota de 20%.",
+    critico: true
+  },
+  'IREC-LIM-SM': {
+    sigla: 'IREC-LIM-SM',
+    tipo: 'Informativo',
+    grupo: 'CONTRIBUIÇÕES',
+    descricao: "Indica que a contribuição da competência foi limitada ao salário mínimo",
+    acao: "Indicador informativo. Enquadramento específico ou processamento já concluído. Geralmente não impede o direito.",
+    critico: false
+  },
+  'IREC-MEI': {
+    sigla: 'IREC-MEI',
+    tipo: 'Informativo',
+    grupo: 'CONTRIBUIÇÕES',
+    descricao: "Indica que a contribuição da competência foi recolhida com código MEI",
+    acao: "Contribuição reduzida (5% ou 11%). Para aposentadoria por tempo de contribuição ou CTC, será necessário complementar para a alíquota de 20%.",
+    critico: true
+  },
+  'IRECOL': {
+    sigla: 'IRECOL',
+    tipo: 'Informativo',
+    grupo: 'CONTRIBUIÇÕES',
+    descricao: "Indica que a contribuição da competência é recolhimento",
+    acao: "Indicador informativo. Enquadramento específico ou processamento já concluído. Geralmente não impede o direito.",
+    critico: false
+  },
+  'IRECOL (ILEI123)': {
+    sigla: 'IRECOL (ILEI123)',
+    tipo: 'Informativo',
+    grupo: 'CONTRIBUIÇÕES',
+    descricao: "Indica que a contribuição da competência foi recolhida com código da Lei Complementar 123",
+    acao: "Indicador informativo. Enquadramento específico ou processamento já concluído. Geralmente não impede o direito.",
+    critico: true
+  },
+  'IRECOL (IMEI)': {
+    sigla: 'IRECOL (IMEI)',
+    tipo: 'Informativo',
+    grupo: 'CONTRIBUIÇÕES',
+    descricao: "Indica que a contribuição da competência foi recolhida com código MEI",
+    acao: "Contribuição reduzida (5% ou 11%). Para aposentadoria por tempo de contribuição ou CTC, será necessário complementar para a alíquota de 20%.",
+    critico: true
+  },
+  'IREM-TSVE-PER-QUARENTENA': {
+    sigla: 'IREM-TSVE-PER-QUARENTENA',
+    tipo: 'Informativo',
+    grupo: 'CONTRIBUIÇÕES',
+    descricao: "Remuneração informada após o término do TSVE referente ao período de Quarentena (aplicação suspensa)",
+    acao: "Indicador informativo. Enquadramento específico ou processamento já concluído. Geralmente não impede o direito.",
+    critico: false
+  },
+  'ISALMIN': {
+    sigla: 'ISALMIN',
+    tipo: 'Informativo',
+    grupo: 'CONTRIBUIÇÕES',
+    descricao: "Indica que a contribuição da competência foi limitada ao salário mínimo (Extrato PRISMA/SABI)",
+    acao: "Indicador informativo. Enquadramento específico ou processamento já concluído. Geralmente não impede o direito.",
+    critico: false
+  },
+  'IDARF-CPF-NAO-INF': {
+    sigla: 'IDARF-CPF-NAO-INF',
+    tipo: 'Informativo',
+    grupo: 'DARF - ERROS DE PROCESSAMENTO',
+    descricao: "Indicador de Darf para CPF não informado no evento",
+    acao: "Indicador informativo. Enquadramento específico ou processamento já concluído. Geralmente não impede o direito.",
+    critico: true
+  },
+  'IDARF-ESPECIE-CI-INVALIDA': {
+    sigla: 'IDARF-ESPECIE-CI-INVALIDA',
+    tipo: 'Informativo',
+    grupo: 'DARF - ERROS DE PROCESSAMENTO',
+    descricao: "Indicador de Darf para Espécie CI inválida na competência",
+    acao: "Indicador informativo. Enquadramento específico ou processamento já concluído. Geralmente não impede o direito.",
+    critico: false
+  },
+  'IDARF-EXT-SEM-ANO-CIV': {
+    sigla: 'IDARF-EXT-SEM-ANO-CIV',
+    tipo: 'Informativo',
+    grupo: 'DARF - ERROS DE PROCESSAMENTO',
+    descricao: "Indicador de Darf para a inexistência de ano civil presente na Extrato",
+    acao: "Indicador informativo. Enquadramento específico ou processamento já concluído. Geralmente não impede o direito.",
+    critico: true
+  },
+  'IDARF-FIL-CAD-DIV': {
+    sigla: 'IDARF-FIL-CAD-DIV',
+    tipo: 'Informativo',
+    grupo: 'DARF - ERROS DE PROCESSAMENTO',
+    descricao: "Indicador de DARF para filiado com dados cadastrais divergentes entre CNIS e RFB",
+    acao: "Indicador informativo. Enquadramento específico ou processamento já concluído. Geralmente não impede o direito.",
+    critico: true
+  },
+  'IDARF-FIL-NAO-ENC': {
+    sigla: 'IDARF-FIL-NAO-ENC',
+    tipo: 'Informativo',
+    grupo: 'DARF - ERROS DE PROCESSAMENTO',
+    descricao: "Indicador de Darf para filiado não encontrado no cadastro de pessoas físicas",
+    acao: "Indicador informativo. Enquadramento específico ou processamento já concluído. Geralmente não impede o direito.",
+    critico: true
+  },
+  'IDARF-SEM-EMISS-ANT': {
+    sigla: 'IDARF-SEM-EMISS-ANT',
+    tipo: 'Informativo',
+    grupo: 'DARF - ERROS DE PROCESSAMENTO',
+    descricao: "Indicador de Darf sem emissão registrada anteriormente",
+    acao: "Indicador informativo. Enquadramento específico ou processamento já concluído. Geralmente não impede o direito.",
+    critico: false
+  },
+  'IDARF-TIPOFILIADO-INVALIDO': {
+    sigla: 'IDARF-TIPOFILIADO-INVALIDO',
+    tipo: 'Informativo',
+    grupo: 'DARF - ERROS DE PROCESSAMENTO',
+    descricao: "Indicador de Darf para Tipo de Filiado inválido na competência",
+    acao: "Indicador informativo. Enquadramento específico ou processamento já concluído. Geralmente não impede o direito.",
+    critico: false
+  },
+  'IDARF-TIPOFILIADO-NAO-INFORMADO': {
+    sigla: 'IDARF-TIPOFILIADO-NAO-INFORMADO',
+    tipo: 'Informativo',
+    grupo: 'DARF - ERROS DE PROCESSAMENTO',
+    descricao: "Indicador de Darf para Tipo de Filiado não informado na competência",
+    acao: "Indicador informativo. Enquadramento específico ou processamento já concluído. Geralmente não impede o direito.",
+    critico: false
+  },
+  'IDARF-ALT-CODRECEITA': {
+    sigla: 'IDARF-ALT-CODRECEITA',
+    tipo: 'Informativo',
+    grupo: 'DARF - EVENTOS',
+    descricao: "Indicador de Darf incluído por alteração de código de receita aplicável pelo INSS por outro código também aplicável",
+    acao: "Indicador informativo. Enquadramento específico ou processamento já concluído. Geralmente não impede o direito.",
+    critico: false
+  },
+  'IDARF-ALT-COMPETENCIA': {
+    sigla: 'IDARF-ALT-COMPETENCIA',
+    tipo: 'Informativo',
+    grupo: 'DARF - EVENTOS',
+    descricao: "Indicador de Darf incluído por alteração de competência dentro do período de vigência",
+    acao: "Indicador informativo. Enquadramento específico ou processamento já concluído. Geralmente não impede o direito.",
+    critico: false
+  },
+  'IDARF-ALT-CPF': {
+    sigla: 'IDARF-ALT-CPF',
+    tipo: 'Informativo',
+    grupo: 'DARF - EVENTOS',
+    descricao: "Indicador de Darf alterado pela RFB para o CPF do titular",
+    acao: "Indicador informativo. Enquadramento específico ou processamento já concluído. Geralmente não impede o direito.",
+    critico: false
+  },
+  'IDARF-ALT-DADOS': {
+    sigla: 'IDARF-ALT-DADOS',
+    tipo: 'Informativo',
+    grupo: 'DARF - EVENTOS',
+    descricao: "Indicador de Darf incluído por alteração de dados",
+    acao: "Indicador informativo. Enquadramento específico ou processamento já concluído. Geralmente não impede o direito.",
+    critico: false
+  },
+  'IDARF-DESFAZ-CANCEL': {
+    sigla: 'IDARF-DESFAZ-CANCEL',
+    tipo: 'Informativo',
+    grupo: 'DARF - EVENTOS',
+    descricao: "Indicador de Darf com Cancelamento Desfeito",
+    acao: "Indicador informativo. Enquadramento específico ou processamento já concluído. Geralmente não impede o direito.",
+    critico: false
+  },
+  'IDARF-DESFAZ-RESTIT-PARCIAL': {
+    sigla: 'IDARF-DESFAZ-RESTIT-PARCIAL',
+    tipo: 'Informativo',
+    grupo: 'DARF - EVENTOS',
+    descricao: "Indicador de Darf com Valor Restituído Parcial Desfeito",
+    acao: "Indicador informativo. Enquadramento específico ou processamento já concluído. Geralmente não impede o direito.",
+    critico: false
+  },
+  'IDARF-DESFAZ-RESTIT-TOTAL': {
+    sigla: 'IDARF-DESFAZ-RESTIT-TOTAL',
+    tipo: 'Informativo',
+    grupo: 'DARF - EVENTOS',
+    descricao: "Indicador de Darf com Valor Restituído Total Desfeito",
+    acao: "Indicador informativo. Enquadramento específico ou processamento já concluído. Geralmente não impede o direito.",
+    critico: false
+  },
+  'PCTC-NTR': {
+    sigla: 'PCTC-NTR',
+    tipo: 'Informativo',
+    grupo: 'GERAIS DO NIT OU DE DADOS CADASTRAIS',
+    descricao: "Certidão de Tempo de Contribuição pendente de análise do INSS",
+    acao: "Indicador informativo. Enquadramento específico ou processamento já concluído. Geralmente não impede o direito.",
+    critico: false
+  },
+  'ISE-CVU': {
+    sigla: 'ISE-CVU',
+    tipo: 'Informativo',
+    grupo: 'SEGURADO ESPECIAL',
+    descricao: "Período de segurado especial concomitante com outro período urbano",
+    acao: "Indicador informativo. Enquadramento específico ou processamento já concluído. Geralmente não impede o direito.",
+    critico: true
+  },
+  'IDT': {
+    sigla: 'IDT',
+    tipo: 'Informativo',
+    grupo: 'VÍNCULOS E REMUNERAÇÕES',
+    descricao: "Indicador de Demanda de Natureza Trabalhista",
+    acao: "Indicador informativo. Enquadramento específico ou processamento já concluído. Geralmente não impede o direito.",
+    critico: false
+  },
+  'IEAN': {
+    sigla: 'IEAN',
+    tipo: 'Informativo',
+    grupo: 'VÍNCULOS E REMUNERAÇÕES',
+    descricao: "Exposição a agente nocivo informada pelo empregador, passível de comprovação",
+    acao: "Indicação de exposição a agentes nocivos. Excelente indício para aposentadoria especial. Solicite o PPP e o LTCAT.",
+    critico: false
+  },
+  'IREM-ACD': {
+    sigla: 'IREM-ACD',
+    tipo: 'Informativo',
+    grupo: 'VÍNCULOS E REMUNERAÇÕES',
+    descricao: "Remuneração possui parcela de Acordo, Convenção ou Dissídio Coletivo",
+    acao: "Indicador informativo. Enquadramento específico ou processamento já concluído. Geralmente não impede o direito.",
+    critico: false
+  },
+  'IREM-INDPEND': {
+    sigla: 'IREM-INDPEND',
+    tipo: 'Informativo',
+    grupo: 'VÍNCULOS E REMUNERAÇÕES',
+    descricao: "Remunerações com indicadores/pendência",
+    acao: "Indicador informativo. Enquadramento específico ou processamento já concluído. Geralmente não impede o direito.",
+    critico: false
+  },
+  'IREM-PARC-CEDIDO': {
+    sigla: 'IREM-PARC-CEDIDO',
+    tipo: 'Informativo',
+    grupo: 'VÍNCULOS E REMUNERAÇÕES',
+    descricao: "Remuneração possui parcela de remuneração decorrente de Trabalhador Cedido",
+    acao: "Indicador informativo. Enquadramento específico ou processamento já concluído. Geralmente não impede o direito.",
+    critico: false
+  },
+  'IREM-PARC-DIRSIND': {
+    sigla: 'IREM-PARC-DIRSIND',
+    tipo: 'Informativo',
+    grupo: 'VÍNCULOS E REMUNERAÇÕES',
+    descricao: "Remuneração possui parcela de remuneração decorrente de Dirigente Sindical",
+    acao: "Indicador informativo. Enquadramento específico ou processamento já concluído. Geralmente não impede o direito.",
+    critico: false
+  },
+  'IREM-PERQRT': {
+    sigla: 'IREM-PERQRT',
+    tipo: 'Informativo',
+    grupo: 'VÍNCULOS E REMUNERAÇÕES',
+    descricao: "Remuneração em período de quarentena (substituído por IREM-PER-QUARENTENA e IREM-TSVE-PER-QUARENTENA)",
+    acao: "Indicador obsoleto ou descontinuado pelo INSS. Não costuma exigir tratamento para períodos recentes, mas verifique o histórico.",
+    critico: false
+  },
+  'IREM-PER-QUARENTENA': {
+    sigla: 'IREM-PER-QUARENTENA',
+    tipo: 'Informativo',
+    grupo: 'VÍNCULOS E REMUNERAÇÕES',
+    descricao: "Remuneração informada após o desligamento referente ao período de quarentena",
+    acao: "Indicador informativo. Enquadramento específico ou processamento já concluído. Geralmente não impede o direito.",
+    critico: false
+  },
+  'IREM-RECL-TRAB': {
+    sigla: 'IREM-RECL-TRAB',
+    tipo: 'Informativo',
+    grupo: 'VÍNCULOS E REMUNERAÇÕES',
+    descricao: "Remuneração possui parcela de reclamatória trabalhista (substituído por IREM-VINC-PROC-TRAB)",
+    acao: "Indicador obsoleto ou descontinuado pelo INSS. Não costuma exigir tratamento para períodos recentes, mas verifique o histórico.",
+    critico: false
+  },
+  'IREM-REINTEG-PARC-PROC-TRAB': {
+    sigla: 'IREM-REINTEG-PARC-PROC-TRAB',
+    tipo: 'Informativo',
+    grupo: 'VÍNCULOS E REMUNERAÇÕES',
+    descricao: "Remuneração de período de Reintegração parcial oriunda de Processo Trabalhista",
+    acao: "Indicador informativo. Enquadramento específico ou processamento já concluído. Geralmente não impede o direito.",
+    critico: false
+  },
+  'IREM-REINTEG-TOT-PROC-TRAB': {
+    sigla: 'IREM-REINTEG-TOT-PROC-TRAB',
+    tipo: 'Informativo',
+    grupo: 'VÍNCULOS E REMUNERAÇÕES',
+    descricao: "Remuneração de período de Reintegração total oriunda de Processo Trabalhista",
+    acao: "Indicador informativo. Enquadramento específico ou processamento já concluído. Geralmente não impede o direito.",
+    critico: false
+  },
+  'IREM-TRAB-INTERM': {
+    sigla: 'IREM-TRAB-INTERM',
+    tipo: 'Informativo',
+    grupo: 'VÍNCULOS E REMUNERAÇÕES',
+    descricao: "Remuneração relacionada a Trabalho Intermitente",
+    acao: "Indicador informativo. Enquadramento específico ou processamento já concluído. Geralmente não impede o direito.",
+    critico: false
+  },
+  'IREM-TRAB-VERDE-AMARELO': {
+    sigla: 'IREM-TRAB-VERDE-AMARELO',
+    tipo: 'Informativo',
+    grupo: 'VÍNCULOS E REMUNERAÇÕES',
+    descricao: "Indicador remunerações pertencentes ao Vínculo que possua algum período de categoria relacionada a carteira verde amarela",
+    acao: "Indicador informativo. Enquadramento específico ou processamento já concluído. Geralmente não impede o direito.",
+    critico: false
+  },
+  'IREM-VINC-PROC-TRAB': {
+    sigla: 'IREM-VINC-PROC-TRAB',
+    tipo: 'Informativo',
+    grupo: 'VÍNCULOS E REMUNERAÇÕES',
+    descricao: "Remuneração no Vínculo oriunda de Processo Trabalhista",
+    acao: "Indicador informativo. Enquadramento específico ou processamento já concluído. Geralmente não impede o direito.",
+    critico: false
+  },
+  'IVIN-AGRUP-VINC': {
+    sigla: 'IVIN-AGRUP-VINC',
+    tipo: 'Informativo',
+    grupo: 'VÍNCULOS E REMUNERAÇÕES',
+    descricao: "Indicador de Vínculo Trabalhista gerado pelo Serviço de agrupamento de vínculos",
+    acao: "Indicador informativo. Enquadramento específico ou processamento já concluído. Geralmente não impede o direito.",
+    critico: false
+  },
+  'IVIN-AGRUP-VINC-PART': {
+    sigla: 'IVIN-AGRUP-VINC-PART',
+    tipo: 'Informativo',
+    grupo: 'VÍNCULOS E REMUNERAÇÕES',
+    descricao: "Indicador que marca o vínculo que foi alvo do Serviço de agrupamento de vínculos",
+    acao: "Indicador informativo. Enquadramento específico ou processamento já concluído. Geralmente não impede o direito.",
+    critico: false
+  },
+  'IVIN-DESLIG-JUSTICA-TRAB': {
+    sigla: 'IVIN-DESLIG-JUSTICA-TRAB',
+    tipo: 'Informativo',
+    grupo: 'VÍNCULOS E REMUNERAÇÕES',
+    descricao: "Inclusão da Data de Desligamento feita pela Justiça do Trabalho por meio do Evento S-8299 do eSocial",
+    acao: "Indicador informativo. Enquadramento específico ou processamento já concluído. Geralmente não impede o direito.",
+    critico: false
+  },
+  'IVIN-JORN-DIFERENCIADA': {
+    sigla: 'IVIN-JORN-DIFERENCIADA',
+    tipo: 'Informativo',
+    grupo: 'VÍNCULOS E REMUNERAÇÕES',
+    descricao: "Vínculo possui regime de jornada diferenciada",
+    acao: "Indicador informativo. Enquadramento específico ou processamento já concluído. Geralmente não impede o direito.",
+    critico: false
+  },
+  'IVIN-MAND-ELETIVO-PARCIAL': {
+    sigla: 'IVIN-MAND-ELETIVO-PARCIAL',
+    tipo: 'Informativo',
+    grupo: 'VÍNCULOS E REMUNERAÇÕES',
+    descricao: "Vínculo parcialmente caracterizado como mandato eletivo",
+    acao: "Indicador informativo. Enquadramento específico ou processamento já concluído. Geralmente não impede o direito.",
+    critico: true
+  },
+  'IVIN-POSSUI-REG-PRELIM': {
+    sigla: 'IVIN-POSSUI-REG-PRELIM',
+    tipo: 'Informativo',
+    grupo: 'VÍNCULOS E REMUNERAÇÕES',
+    descricao: "Indicador que informa que a Relação Trabalhista possui um registro preliminar informado anteriormente em eSocial",
+    acao: "Indicador informativo. Enquadramento específico ou processamento já concluído. Geralmente não impede o direito.",
+    critico: false
+  },
+  'IVIN-POSSUI-REM-TRAB-INTERM': {
+    sigla: 'IVIN-POSSUI-REM-TRAB-INTERM',
+    tipo: 'Informativo',
+    grupo: 'VÍNCULOS E REMUNERAÇÕES',
+    descricao: "Relação Trabalhista possui Remunerações de Trabalho Intermitente",
+    acao: "Indicador informativo. Enquadramento específico ou processamento já concluído. Geralmente não impede o direito.",
+    critico: false
+  },
+  'IVIN-POSSUI-REM-TRANS': {
+    sigla: 'IVIN-POSSUI-REM-TRANS',
+    tipo: 'Informativo',
+    grupo: 'VÍNCULOS E REMUNERAÇÕES',
+    descricao: "Vínculo possui remuneração que foi transferida para este por Cessionário de Dirigente Sindical ou Trabalhador Cedido",
+    acao: "Indicador informativo. Enquadramento específico ou processamento já concluído. Geralmente não impede o direito.",
+    critico: false
+  },
+  'IVIN-PROC-TRAB': {
+    sigla: 'IVIN-PROC-TRAB',
+    tipo: 'Informativo',
+    grupo: 'VÍNCULOS E REMUNERAÇÕES',
+    descricao: "Vínculo possui Processo Trabalhista",
+    acao: "Indicador informativo. Enquadramento específico ou processamento já concluído. Geralmente não impede o direito.",
+    critico: false
+  },
+  'IVIN-REG-PRELIM': {
+    sigla: 'IVIN-REG-PRELIM',
+    tipo: 'Informativo',
+    grupo: 'VÍNCULOS E REMUNERAÇÕES',
+    descricao: "Indicador que informa que a Relação Trabalhista é um registro preliminar de vínculo informado eSocial",
+    acao: "Indicador informativo. Enquadramento específico ou processamento já concluído. Geralmente não impede o direito.",
+    critico: true
+  },
+  'IVIN-REINTEG': {
+    sigla: 'IVIN-REINTEG',
+    tipo: 'Informativo',
+    grupo: 'VÍNCULOS E REMUNERAÇÕES',
+    descricao: "Vínculo possui reintegração no último desligamento (substituído por IVIN-REINTEG-PROC-TRAB e IVIN-REINTEG-SERV-PUBLICO)",
+    acao: "Indicador obsoleto ou descontinuado pelo INSS. Não costuma exigir tratamento para períodos recentes, mas verifique o histórico.",
+    critico: false
+  },
+  'IVIN-REINTEG-ANISTIA': {
+    sigla: 'IVIN-REINTEG-ANISTIA',
+    tipo: 'Informativo',
+    grupo: 'VÍNCULOS E REMUNERAÇÕES',
+    descricao: "Indicador de Reintegração por Anistia Legal",
+    acao: "Indicador informativo. Enquadramento específico ou processamento já concluído. Geralmente não impede o direito.",
+    critico: false
+  },
+  'IVIN-REINTEG-OUTROSTIPOS': {
+    sigla: 'IVIN-REINTEG-OUTROSTIPOS',
+    tipo: 'Informativo',
+    grupo: 'VÍNCULOS E REMUNERAÇÕES',
+    descricao: "Vínculo possui reintegração no último desligamento por iniciativa do empregador ou por outros motivos",
+    acao: "Indicador informativo. Enquadramento específico ou processamento já concluído. Geralmente não impede o direito.",
+    critico: false
+  },
 }
 
 export function getIndicatorDetails(sigla: string): IndicatorInfo {
-  // Limpar espaços ou lixo
   const cleanSigla = sigla.trim().toUpperCase()
 
-  // Tentar encontrar correspondência exata
   if (CNIS_INDICATORS[cleanSigla]) {
     return CNIS_INDICATORS[cleanSigla]
   }
 
-  // Tentar casamento parcial
   const baseKey = Object.keys(CNIS_INDICATORS).find(key => cleanSigla.startsWith(key))
   if (baseKey) {
     return {
@@ -263,7 +1361,6 @@ export function getIndicatorDetails(sigla: string): IndicatorInfo {
     }
   }
 
-  // Fallback padrão para indicadores desconhecidos
   return {
     sigla: cleanSigla,
     tipo: 'Outro',
