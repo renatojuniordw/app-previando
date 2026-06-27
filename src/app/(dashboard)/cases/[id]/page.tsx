@@ -7,8 +7,8 @@ import { CaseOverviewSkeleton } from './_components/CaseOverviewSkeleton'
 import { CaseInfoCard } from './_components/CaseInfoCard'
 import { ActivitySummary } from './_components/ActivitySummary'
 import { StatusModal } from './_components/StatusModal'
-
 import { EditCaseModal } from './_components/EditCaseModal'
+import { ProcessCard } from './_components/ProcessCard'
 
 export default function CaseOverviewPage() {
   const {
@@ -19,12 +19,14 @@ export default function CaseOverviewPage() {
     updatingStatus,
     showEditModal,
     updatingCase,
+    checkingProcess,
     load,
     setNewStatus,
     setShowStatusModal,
     setShowEditModal,
     handleStatusChange,
     handleEditSubmit,
+    handleCheckProcess,
     handleExportPDF,
   } = useCaseOverview()
 
@@ -51,6 +53,13 @@ export default function CaseOverviewPage() {
       />
 
       <ActivitySummary counts={caseData._count} />
+
+      <ProcessCard
+        caseData={caseData}
+        checking={checkingProcess}
+        onCheck={handleCheckProcess}
+        onEditClick={() => setShowEditModal(true)}
+      />
 
       <StatusModal
         open={showStatusModal}

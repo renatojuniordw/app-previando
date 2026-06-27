@@ -1,21 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/auth'
-import type { Session } from 'next-auth'
+import { requireAdmin } from '@/lib/admin-guard'
 import { prisma } from '@/lib/prisma'
 import { logAudit } from '@/lib/audit'
 import { handleApiError } from '@/lib/api-error'
 import { invalidatePlanLimitCache } from '@/lib/plan-guard'
 
-function requireAdmin(session: Session | null, req: NextRequest) {
-  if (!session?.user?.isAdmin) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-  return null
-}
-
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const session = await auth()
-    const guard = requireAdmin(session, req)
-    if (guard) return guard
+    const adminResult = await requireAdmin()
+    if ('error' in adminResult) return adminResult.error
 
     const body = await req.json()
     const { plan } = body
@@ -31,7 +24,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     await invalidatePlanLimitCache(plan)
 
     await logAudit({
-      userId: session!.user!.id!,
+      userId: adminResult.userId,
       action: 'admin.plan.change',
       resource: `user:${params.id}`,
       req,

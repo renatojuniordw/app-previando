@@ -1,14 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/auth'
-import type { Session } from 'next-auth'
+import { requireAdmin } from '@/lib/admin-guard'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { handleApiError } from '@/lib/api-error'
-
-function requireAdmin(session: Session | null, req: NextRequest) {
-  if (!session?.user?.isAdmin) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-  return null
-}
 
 const createSchema = z.object({
   vigencia: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Formato esperado: YYYY-MM-DD'),
@@ -20,9 +14,8 @@ const createSchema = z.object({
 
 export async function GET(req: NextRequest) {
   try {
-    const session = await auth()
-    const guard = requireAdmin(session, req)
-    if (guard) return guard
+    const adminResult = await requireAdmin()
+    if ('error' in adminResult) return adminResult.error
 
     const dbRegistros = await prisma.minimumWage.findMany({
       orderBy: { effectiveDate: 'desc' },
@@ -45,9 +38,8 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const session = await auth()
-    const guard = requireAdmin(session, req)
-    if (guard) return guard
+    const adminResult = await requireAdmin()
+    if ('error' in adminResult) return adminResult.error
 
     const parsed = createSchema.safeParse(await req.json())
     if (!parsed.success) {

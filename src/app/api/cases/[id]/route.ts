@@ -9,12 +9,15 @@ import { logAudit } from '@/lib/audit'
 import { getPlanLimit } from '@/lib/plan-guard'
 import { mapCaseStatusToDb, mapCaseToApi, ApiCaseStatus } from '@/lib/mappers'
 
+const CNJ_PROCESS_REGEX = /^\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4}$|^\d{20}$/
+
 const updateSchema = z.object({
   status: z.enum(['PROSPECCAO', 'ANALISE', 'PRONTO_PARA_REQUERER', 'EM_PROCESSAMENTO', 'FINALIZADO']).optional(),
   priority: z.enum(['CRITICAL', 'ATTENTION', 'NORMAL']).optional(),
   deadlineDays: z.number().int().positive().nullable().optional(),
   deadlineDate: z.string().datetime().nullable().optional(),
   notes: z.string().max(5000).nullable().optional(),
+  processNumber: z.string().regex(CNJ_PROCESS_REGEX, 'Formato inválido. Use NNNNNNN-DD.AAAA.J.TT.OOOO').nullable().optional(),
 })
 
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
@@ -77,6 +80,8 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
       data.deadlineDate = parsed.data.deadlineDate ? new Date(parsed.data.deadlineDate) : null
     if (parsed.data.notes !== undefined)
       data.notes = parsed.data.notes ? sanitizeInput(parsed.data.notes) : null
+    if (parsed.data.processNumber !== undefined)
+      data.processNumber = parsed.data.processNumber
 
     const caso = await prisma.case.update({
       where: { id: params.id },

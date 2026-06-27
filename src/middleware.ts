@@ -4,7 +4,7 @@ import { auth } from '@/auth'
 // ioredis não é compatível com Edge Runtime (middleware).
 // O rate limiting é aplicado diretamente nas API routes, onde o Node.js runtime está disponível.
 
-const PUBLIC_PAGES = ['/login', '/register']
+const PUBLIC_PAGES = ['/login', '/register', '/forgot-password', '/reset-password']
 const ADMIN_ROUTES = ['/admin', '/api/admin']
 
 function isPublic(pathname: string): boolean {

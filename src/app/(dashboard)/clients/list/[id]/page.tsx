@@ -324,9 +324,10 @@ export default function ClientDetailPage() {
         </form>
       </Modal>
 
-      <ClientFloatingActions 
-        phone={client.phone} 
-        email={client.email} 
+      <ClientFloatingActions
+        clientId={client.id}
+        phone={client.phone}
+        email={client.email}
         cpf={client.cpf}
         onEdit={() => {
           setNotesText(client.notes || '')

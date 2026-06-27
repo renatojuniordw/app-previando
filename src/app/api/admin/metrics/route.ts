@@ -1,19 +1,12 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { auth } from "@/auth"
-import type { Session } from "next-auth"
+import { NextResponse } from 'next/server'
+import { requireAdmin } from '@/lib/admin-guard'
 import { prisma } from '@/lib/prisma'
 import { handleApiError } from '@/lib/api-error'
 
-function requireAdmin(session: Session | null, req: NextRequest) {
-  if (!session?.user?.isAdmin) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-  return null
-}
-
-export async function GET(req: NextRequest) {
+export async function GET() {
   try {
-  const session = await auth()
-  const guard = requireAdmin(session, req)
-  if (guard) return guard
+  const adminResult = await requireAdmin()
+  if ('error' in adminResult) return adminResult.error
 
   const now = new Date()
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)

@@ -1,14 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/auth'
-import type { Session } from 'next-auth'
+import { requireAdmin } from '@/lib/admin-guard'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { handleApiError } from '@/lib/api-error'
-
-function requireAdmin(session: Session | null, req: NextRequest) {
-  if (!session?.user?.isAdmin) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-  return null
-}
 
 const updateSchema = z.object({
   codigo: z.string().min(1).optional(),
@@ -20,9 +14,8 @@ const updateSchema = z.object({
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const session = await auth()
-    const guard = requireAdmin(session, req)
-    if (guard) return guard
+    const adminResult = await requireAdmin()
+    if ('error' in adminResult) return adminResult.error
 
     const parsed = updateSchema.safeParse(await req.json())
     if (!parsed.success) {
@@ -42,9 +35,8 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 
 export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const session = await auth()
-    const guard = requireAdmin(session, req)
-    if (guard) return guard
+    const adminResult = await requireAdmin()
+    if ('error' in adminResult) return adminResult.error
 
     await prisma.modalityLabel.delete({ where: { id: params.id } })
     return NextResponse.json({ ok: true })

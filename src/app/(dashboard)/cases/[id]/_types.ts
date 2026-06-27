@@ -10,4 +10,9 @@ export interface CaseDetail {
   client: { id: string; name: string; phone: string | null }
   cnisDocument: { processingStatus: string } | null
   _count: { caseNotes: number; calculations: number; checklists: number }
+  processNumber: string | null
+  processLastCheck: string | null
+  processLastMovDate: string | null
+  processLastMovCount: number | null
+  processLastSummary: string | null
 }

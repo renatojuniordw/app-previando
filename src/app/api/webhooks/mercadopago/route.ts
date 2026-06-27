@@ -1,11 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createHmac } from 'crypto'
 import { prisma } from '@/lib/prisma'
+import { redis } from '@/lib/redis'
 import { invalidatePlanLimitCache } from '@/lib/plan-guard'
 import { Logger } from '@/lib/logger'
 import type { PaymentStatus } from '@prisma/client'
 
 const logger = new Logger('WebhookMercadoPago')
+
+async function acquireLock(key: string, ttlSeconds = 30): Promise<boolean> {
+  try {
+    const result = await redis.set(`lock:${key}`, '1', 'EX', ttlSeconds, 'NX')
+    return result === 'OK'
+  } catch {
+    return true // Redis indisponível — deixa processar sem lock
+  }
+}
+
+async function releaseLock(key: string): Promise<void> {
+  try {
+    await redis.del(`lock:${key}`)
+  } catch {
+    // Não crítico — TTL garante liberação automática
+  }
+}
 
 function verifyWebhookSignature(req: NextRequest, _rawBody: string): boolean {
   const secret = process.env.MERCADOPAGO_WEBHOOK_SECRET
@@ -76,42 +94,52 @@ export async function POST(req: NextRequest) {
     if (type === 'subscription_preapproval') {
       const subId = String(data.id)
 
-      const mpSub = await fetch(`https://api.mercadopago.com/preapproval/${subId}`, {
-        headers: { Authorization: `Bearer ${process.env.MERCADOPAGO_ACCESS_TOKEN}` },
-      }).then((r) => r.json())
+      const locked = await acquireLock(`sub:${subId}`)
+      if (!locked) {
+        logger.warn(`Evento duplicado ignorado para subscription ${subId}`)
+        return NextResponse.json({ received: true })
+      }
 
-      if (!mpSub?.payer_email) return NextResponse.json({ received: true })
+      try {
+        const mpSub = await fetch(`https://api.mercadopago.com/preapproval/${subId}`, {
+          headers: { Authorization: `Bearer ${process.env.MERCADOPAGO_ACCESS_TOKEN}` },
+        }).then((r) => r.json())
 
-      const planStatus = mapMpSubscriptionStatus(mpSub.status)
+        if (!mpSub?.payer_email) return NextResponse.json({ received: true })
 
-      await prisma.$transaction(async (tx) => {
-        const user = await tx.user.findUnique({
-          where: { email: mpSub.payer_email },
-          select: { id: true, plan: true },
+        const planStatus = mapMpSubscriptionStatus(mpSub.status)
+
+        await prisma.$transaction(async (tx) => {
+          const user = await tx.user.findUnique({
+            where: { email: mpSub.payer_email },
+            select: { id: true, plan: true },
+          })
+
+          if (!user) return
+
+          let plan = user.plan
+          if (planStatus === 'ACTIVE' && mpSub.preapproval_plan_id) {
+            if (mpSub.preapproval_plan_id === process.env.MP_PLAN_ID_SOLO) plan = 'SOLO'
+            else if (mpSub.preapproval_plan_id === process.env.MP_PLAN_ID_PRO) plan = 'PRO'
+          } else if (planStatus === 'CANCELLED') {
+            plan = 'FREE'
+          }
+
+          await tx.user.update({
+            where: { id: user.id },
+            data: {
+              plan: plan as never,
+              planStatus: planStatus as never,
+              mpSubscriptionId: subId,
+              mpSubscriptionStatus: mpSub.status,
+            },
+          })
+
+          await invalidatePlanLimitCache(plan)
         })
-
-        if (!user) return
-
-        let plan = user.plan
-        if (planStatus === 'ACTIVE' && mpSub.preapproval_plan_id) {
-          if (mpSub.preapproval_plan_id === process.env.MP_PLAN_ID_SOLO) plan = 'SOLO'
-          else if (mpSub.preapproval_plan_id === process.env.MP_PLAN_ID_PRO) plan = 'PRO'
-        } else if (planStatus === 'CANCELLED') {
-          plan = 'FREE'
-        }
-
-        await tx.user.update({
-          where: { id: user.id },
-          data: {
-            plan: plan as never,
-            planStatus: planStatus as never,
-            mpSubscriptionId: subId,
-            mpSubscriptionStatus: mpSub.status,
-          },
-        })
-
-        await invalidatePlanLimitCache(plan)
-      })
+      } finally {
+        await releaseLock(`sub:${subId}`)
+      }
     }
 
     if (type === 'payment') {
