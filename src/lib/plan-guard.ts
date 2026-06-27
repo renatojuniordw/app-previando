@@ -31,7 +31,6 @@ export type PlanFeature =
   | 'WHATSAPP_SHARE'
   | 'DIAGNOSIS'
   | 'USE_BPC_MODULE'
-  | 'BPC_SOCIAL_MEDIA'
 
 const FEATURE_MAP: Record<PlanFeature, keyof PlanLimit> = {
   SIMULATOR: 'simulatorEnabled',
@@ -40,7 +39,6 @@ const FEATURE_MAP: Record<PlanFeature, keyof PlanLimit> = {
   WHATSAPP_SHARE: 'whatsappEnabled',
   DIAGNOSIS: 'diagnosisEnabled',
   USE_BPC_MODULE: 'bpcEnabled',
-  BPC_SOCIAL_MEDIA: 'bpcEnabled',
 }
 
 const FEATURE_LABELS: Record<PlanFeature, string> = {
@@ -50,7 +48,6 @@ const FEATURE_LABELS: Record<PlanFeature, string> = {
   WHATSAPP_SHARE: 'Compartilhar via WhatsApp',
   DIAGNOSIS: 'Diagnóstico IA',
   USE_BPC_MODULE: 'Módulo BPC/LOAS',
-  BPC_SOCIAL_MEDIA: 'Gerador de carrossel BPC',
 }
 
 const PLAN_LIMIT_TTL = 300 // 5 minutos
@@ -222,22 +219,3 @@ export async function guardBpcAnalysisLimit(userId: string, plan: string): Promi
   }
 }
 
-export async function guardBpcSocialMediaLimit(userId: string, plan: string): Promise<void> {
-  const limit = await getPlanLimit(plan)
-  if (!limit.bpcEnabled) {
-    throw new PlanLimitError('Gerador de carrossel BPC não está disponível no seu plano.', 'BPC_SOCIAL_MEDIA', plan === 'FREE' ? 'SOLO' : 'PRO')
-  }
-
-  if (limit.bpcSocialMediaPerMonth === -1) return
-
-  const record = await getOrResetUsageRecord(userId)
-  const currentCount = record?.bpcSocialMediaThisMonth ?? 0
-
-  if (currentCount >= limit.bpcSocialMediaPerMonth) {
-    throw new PlanLimitError(
-      `Limite de ${limit.bpcSocialMediaPerMonth} carrosséis BPC/mês atingido. Atualize seu plano ou aguarde o próximo mês.`,
-      'BPC_SOCIAL_MEDIA',
-      plan === 'FREE' ? 'SOLO' : 'PRO'
-    )
-  }
-}

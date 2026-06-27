@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { signOut } from 'next-auth/react'
 import { cn } from '@/lib/utils'
-import { LayoutDashboard, Users, Columns, CreditCard, Settings, LogOut, Activity, Calendar, FolderOpen, X, Instagram, BookOpen, Files } from 'lucide-react'
+import { LayoutDashboard, Users, Columns, CreditCard, Settings, LogOut, Activity, Calendar, FolderOpen, X, BookOpen, Files } from 'lucide-react'
 import { UsageBar } from '@/components/UsageBar'
 import { useSidebarStore } from '@/store/sidebar'
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock'
@@ -20,7 +20,6 @@ const NAV_ITEMS = [
   { href: '/activity', label: 'Atividade', icon: Activity },
   { href: '/tools/pdf', label: 'Ferramentas de PDF', icon: Files },
   { href: '/tools/cnis-indicators', label: 'Dicionário CNIS', icon: BookOpen },
-  { href: '/tools/social-media', label: 'Carrossel BPC', icon: Instagram },
   { href: '/settings/billing', label: 'Plano', icon: CreditCard },
   { href: '/settings/profile', label: 'Perfil', icon: Settings },
 ]

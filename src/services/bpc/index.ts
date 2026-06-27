@@ -4,7 +4,6 @@ import { BPC_PRE_ANALYSIS_SYSTEM_PROMPT, buildPreAnalysisUserPrompt } from '@/li
 import { BPC_LAUDO_SYSTEM_PROMPT, buildLaudoAnalysisUserPrompt } from '@/lib/prompts/bpc/laudo-analysis'
 import { BPC_SOCIAL_QUESTIONS_SYSTEM_PROMPT, BPC_MEDICAL_QUESTIONS_SYSTEM_PROMPT, buildSocialQuestionsUserPrompt, buildMedicalQuestionsUserPrompt } from '@/lib/prompts/bpc/questions'
 import { BPC_CHECKLIST_SYSTEM_PROMPT, buildChecklistUserPrompt } from '@/lib/prompts/bpc/checklist'
-import { BPC_CAROUSEL_SYSTEM_PROMPT, buildCarouselUserPrompt } from '@/lib/prompts/bpc/carousel'
 import type { RelatoSocialFromAI } from '@/types/bpc-social'
 
 // Atualizar anualmente conforme reajuste do salário mínimo
@@ -194,21 +193,3 @@ export async function gerarChecklist(params: BpcAnalysisParams): Promise<string>
   return response.choices[0].message.content ?? 'Não foi possível gerar o checklist.'
 }
 
-export async function gerarCarrossel(tema: string, contexto: string): Promise<string> {
-  const t = s(tema, 500)
-  const ctx = s(contexto, 3000)
-
-  const userPrompt = buildCarouselUserPrompt(t, ctx)
-
-  const response = await getOpenAI().chat.completions.create({
-    model: 'gpt-4o-mini',
-    temperature: 0.5,
-    max_tokens: 2000,
-    messages: [
-      { role: 'system', content: BPC_CAROUSEL_SYSTEM_PROMPT },
-      { role: 'user', content: userPrompt },
-    ],
-  })
-
-  return response.choices[0].message.content ?? 'Não foi possível gerar o carrossel.'
-}
