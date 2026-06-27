@@ -8,7 +8,7 @@ import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { formatDate } from '@/lib/utils'
 import { Drawer } from '@/components/ui/Drawer'
-import { MessageSquare, FileText, Scale, StickyNote, Calculator, AlertCircle, Plus, History, Building2 } from 'lucide-react'
+import { MessageSquare, FileText, Scale, StickyNote, Calculator, AlertCircle, Plus, History, Building2, Download } from 'lucide-react'
 
 interface CaseNotesDrawerProps {
   open: boolean
@@ -222,6 +222,16 @@ export function CaseNotesDrawer({ open, onClose, caseId }: CaseNotesDrawerProps)
               const noteType = NOTE_TYPES_DISPLAY.find((t) => t.value === note.type)
               const Icon = noteType?.icon ?? FileText
               const variant = NOTE_TYPE_VARIANTS[note.type] ?? 'slate'
+              
+              // Detectar link do R2
+              const r2KeyMatch = note.content.match(/Chave de armazenamento:\s*(documents\/[^\s]+)/)
+              const r2Key = r2KeyMatch ? r2KeyMatch[1] : null
+              
+              // Limpar o texto exibido se contiver a chave do R2
+              const cleanContent = r2KeyMatch
+                ? note.content.replace(/Chave de armazenamento:\s*documents\/[^\s]+/, '').trim()
+                : note.content
+
               return (
                 <Card key={note.id} variant="light" className="p-0 overflow-hidden border-slate-200/80 shadow-xs">
                   <div className="px-4 py-2.5 bg-slate-50/80 border-b border-slate-100 flex items-center justify-between gap-2">
@@ -239,10 +249,21 @@ export function CaseNotesDrawer({ open, onClose, caseId }: CaseNotesDrawerProps)
                       <p className="text-[9px] text-slate-400">{note.author?.name || 'Sistema'}</p>
                     </div>
                   </div>
-                  <div className="px-4 py-3">
+                  <div className="px-4 py-3 space-y-3">
                     <p className="font-sans text-xs text-slate-700 leading-relaxed whitespace-pre-wrap">
-                      {note.content}
+                      {cleanContent}
                     </p>
+                    {r2Key && (
+                      <a
+                        href={`/api/documents/download?key=${encodeURIComponent(r2Key)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 bg-amber-50 border border-amber-200 hover:bg-amber-100 text-amber-800 font-sans font-bold text-xs px-3 py-1.5 rounded-lg transition-all"
+                      >
+                        <Download className="w-3.5 h-3.5" />
+                        Download do Documento
+                      </a>
+                    )}
                   </div>
                 </Card>
               )

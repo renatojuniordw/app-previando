@@ -45,3 +45,27 @@ export async function downloadPDF(key: string): Promise<Buffer> {
 export async function deletePDF(key: string): Promise<void> {
   await r2.send(new DeleteObjectCommand({ Bucket: BUCKET, Key: key }))
 }
+
+export async function uploadDocument(
+  buffer: Buffer,
+  userId: string,
+  caseId: string,
+  fileName: string,
+  contentType: string = 'application/pdf'
+): Promise<string> {
+  const timestamp = Date.now()
+  const normalizedName = fileName.replace(/[^a-zA-Z0-9.-]/g, '_')
+  const key = `documents/${userId}/${caseId}/${timestamp}_${normalizedName}`
+
+  await r2.send(
+    new PutObjectCommand({
+      Bucket: BUCKET,
+      Key: key,
+      Body: buffer,
+      ContentType: contentType,
+    })
+  )
+
+  return key
+}
+
