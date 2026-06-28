@@ -7,6 +7,9 @@ import { generateOpinion } from '@/services/opinion-generator'
 import { rateLimit } from '@/lib/rate-limit'
 import { handleApiError } from '@/lib/api-error'
 import { logAudit } from '@/lib/audit'
+import { Logger } from '@/lib/logger'
+
+const logger = new Logger('OpinionsAPI')
 
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
   try {
@@ -20,8 +23,6 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       orderBy: { createdAt: 'desc' },
     })
 
-    // Mapeia campos do banco (generatedContent/customizedContent) para os nomes
-    // esperados pelo frontend (content/editedContent)
     const opinions = rows.map((o) => ({
       id: o.id,
       status: o.status,
@@ -32,15 +33,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       updatedAt: o.updatedAt,
     }))
 
-    console.log('[opinions GET] caseId=%s count=%d', params.id, opinions.length)
-    if (opinions.length > 0) {
-      console.log('[opinions GET] primeiro parecer:', {
-        id: opinions[0].id,
-        status: opinions[0].status,
-        contentLength: opinions[0].content?.length ?? 0,
-        hasEditedContent: opinions[0].editedContent !== null,
-      })
-    }
+    logger.info(`caseId=${params.id} opinionsCount=${opinions.length}`)
 
     return NextResponse.json({ opinions })
   } catch (err) {
@@ -56,7 +49,6 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     await guardOpinionLimit(session.user.id, session.user.plan)
     await verifyCaseOwnership(params.id, session.user.id)
 
-    // Rate limit: 20 pareceres/hora por usuário
     const limit = await rateLimit(`ai:${session.user.id}`, 20, 3600)
     if (!limit.success) {
       return NextResponse.json(
@@ -84,16 +76,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
     if (!caso) return NextResponse.json({ error: 'Caso não encontrado.' }, { status: 404 })
 
-    console.log('[opinions POST] Dados do caso para geração:', {
-      caseId: params.id,
-      clientName: caso.client?.name,
-      benefitType: caso.benefitType,
-      caseStatus: caso.status,
-      hasCnis: Boolean(caso.cnisDocument?.markdownContent),
-      cnisLength: caso.cnisDocument?.markdownContent?.length ?? 0,
-      eligibleCalculations: caso.calculations.length,
-      notesCount: caso.caseNotes.length,
-    })
+    logger.info(`Gerando parecer para caseId=${params.id} client=${caso.client?.name} benefitType=${caso.benefitType}`)
 
     const result = await generateOpinion({
       clientName: caso.client?.name ?? 'Cliente',
@@ -114,12 +97,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       })),
     })
 
-    console.log('[opinions POST] generateOpinion retornou:', {
-      contentLength: result.content?.length ?? 0,
-      tokensUsed: result.tokensUsed,
-      costUsd: result.costUsd,
-      model: result.model,
-    })
+    logger.info(`Parecer gerado tokens=${result.tokensUsed} cost=${result.costUsd} model=${result.model}`)
 
     const opinion = await prisma.opinion.create({
       data: {
@@ -133,14 +111,12 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       },
     })
 
-    // Incrementa contador
     await prisma.usageRecord.upsert({
       where: { userId: session.user.id },
       create: { userId: session.user.id, opinionsThisMonth: 1 },
       update: { opinionsThisMonth: { increment: 1 } },
     })
 
-    // Registrar log de atividade
     await logAudit({
       userId: session.user.id,
       action: 'opinion.created',

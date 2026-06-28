@@ -33,6 +33,12 @@ function drawFooter(doc: PDFDocType, page: number, totalPages: number) {
   doc.text(`Página ${page} de ${totalPages}`, 400, 265)
 }
 
+function getPageCount(doc: PDFDocType): number {
+  // Acessa o buffer interno de páginas do PDFKit de forma segura
+  const buf = (doc as unknown as { pages?: unknown[] }).pages
+  return Array.isArray(buf) ? buf.length : 1
+}
+
 function drawSectionHeader(doc: PDFDocType, title: string, y: number) {
   doc.font('Helvetica-Bold').fontSize(11).fill(BRAND.accent).text(title, 40, y)
   doc.lineWidth(0.5).moveTo(40, y + 6).lineTo(550, y + 6).stroke(BRAND.border)
@@ -150,7 +156,7 @@ export async function generateCasePDF(data: CasePDFData): Promise<Buffer> {
       if (y > 240) {
         doc.addPage()
         y = 40
-        drawFooter(doc, (doc as any)._pages.length, (doc as any)._pages.length)
+        drawFooter(doc, getPageCount(doc), getPageCount(doc))
       }
       doc.text(line, 40, y)
       y += 12
@@ -208,7 +214,7 @@ export async function generateBpcPDF(data: BpcPDFData): Promise<Buffer> {
     if (y > 240) {
       doc.addPage()
       y = 40
-      drawFooter(doc, (doc as any)._pages.length, (doc as any)._pages.length)
+        drawFooter(doc, getPageCount(doc), getPageCount(doc))
     }
     doc.text(line, 40, y)
     y += 12

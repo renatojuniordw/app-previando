@@ -4,6 +4,7 @@ import { getSalarioVigente } from '@/lib/salario-minimo'
 import { getRegrasVigentes } from '@/lib/regras-aposentadoria'
 import { findAndValidateCnis } from './helpers'
 import { mapModalidadeToDb } from '@/lib/mappers'
+import type { Prisma } from '@prisma/client'
 
 export interface RunCalculationInput {
   caseId: string
@@ -49,7 +50,7 @@ export class CalculationOrchestrator {
       regrasVigentes,
     })
 
-    // 4. Salva no banco de dados mapeando para os campos corretos definidos no schema.prisma do banco
+    // 4. Salva no banco de dados — tipagem segura via Prisma.InputJsonValue
     const calculation = await prisma.calculation.create({
       data: {
         caseId,
@@ -62,7 +63,7 @@ export class CalculationOrchestrator {
           tempoEspecialAnos,
           dependentesPensao,
           clientName: extracted?.nome ?? 'Segurado',
-        },
+        } satisfies Prisma.InputJsonValue,
         benefitSalary: result.salarioBeneficio,
         rmi: result.rmi,
         rma: result.rma,
@@ -74,8 +75,8 @@ export class CalculationOrchestrator {
         ageAtCalculation: result.idadeNaApuracao,
         eligible: result.elegivel,
         pendingIssues: result.pendencias,
-        calculationMemory: result.memoriaCalculo as unknown as object,
-        salaryPeriods: result.periodosSalarios as unknown as object,
+        calculationMemory: result.memoriaCalculo as Prisma.InputJsonValue,
+        salaryPeriods: result.periodosSalarios as Prisma.InputJsonValue,
       },
     })
 

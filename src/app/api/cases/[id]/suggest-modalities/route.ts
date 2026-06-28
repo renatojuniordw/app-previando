@@ -7,7 +7,7 @@ import { calculatePrevidenciario } from '@/lib/previdencia-engine'
 import { getRegrasVigentes } from '@/lib/regras-aposentadoria'
 import { getSalarioVigente } from '@/lib/salario-minimo'
 import { rateLimit } from '@/lib/rate-limit'
-import type { CnisExtractedData } from '@/lib/previdencia-engine'
+import type { CnisExtractedData } from '@/services/cnis/types'
 
 const ALL_MODALITIES = [
   'APOSENTADORIA_IDADE',

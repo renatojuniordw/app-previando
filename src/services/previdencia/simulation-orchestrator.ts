@@ -3,6 +3,7 @@ import { projectSimulations } from '@/lib/previdencia-engine'
 import { getSalarioVigente } from '@/lib/salario-minimo'
 import { getRegrasVigentes } from '@/lib/regras-aposentadoria'
 import { findAndValidateCnis } from './helpers'
+import type { Prisma } from '@prisma/client'
 
 export interface RunSimulationInput {
   caseId: string
@@ -28,7 +29,7 @@ export class SimulationOrchestrator {
 
     // 1. Busca e valida o documento CNIS utilizando o helper centralizado
     const { extracted } = await findAndValidateCnis(caseId)
-    const birthDate = extracted?.dataNascimento as string | undefined
+    const birthDate = extracted?.dataNascimento
 
     if (!birthDate) {
       throw new Error('Data de nascimento do segurado ausente ou não identificada no CNIS.')
@@ -55,12 +56,12 @@ export class SimulationOrchestrator {
       regrasVigentes,
     })
 
-    // 4. Salva a simulação no banco
+    // 4. Salva a simulação no banco — tipagem segura via Prisma.InputJsonValue
     const simulation = await prisma.simulation.create({
       data: {
         caseId,
         scenarioName,
-        scenarioParams: result.scenarioParams as unknown as object,
+        scenarioParams: result.scenarioParams as Prisma.InputJsonValue,
         rmiProjected: result.rmiProjected,
         rmaProjected: result.rmaProjected,
         dibProjected: new Date(result.dibProjected),

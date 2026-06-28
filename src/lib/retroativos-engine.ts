@@ -110,7 +110,10 @@ export function calculateRetroativos(input: RetroativoInput): RetroativoResult {
     valorLiquidoFinal,
     memoriaCalculo: {
       parcelas,
-      acumuladoINPC: Number((valorTotalCorrigido / (valorTotalBruto || 1) - 1).toFixed(4))
+      // Evita divisão por zero: se valorTotalBruto for 0, o acumulado é 0
+      acumuladoINPC: valorTotalBruto > 0
+        ? Number(((valorTotalCorrigido / valorTotalBruto) - 1).toFixed(4))
+        : 0
     }
   }
 }

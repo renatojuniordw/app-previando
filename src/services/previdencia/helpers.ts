@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma'
-import { CnisExtractedData } from '@/lib/previdencia-engine'
+import type { CnisExtractedData } from '@/services/cnis/types'
 
 /**
  * Busca o documento CNIS associado ao caso e valida se o processamento foi concluído com sucesso.

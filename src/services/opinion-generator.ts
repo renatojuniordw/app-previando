@@ -1,6 +1,9 @@
 import { openai } from '../lib/openai'
 import { sanitizeForAI } from '../lib/sanitize'
 import { AI_MODELS, AI_COST_PER_TOKEN, AI_MAX_TOKENS } from '../lib/ai-models'
+import { Logger } from '../lib/logger'
+
+const logger = new Logger('OpinionGenerator')
 
 interface OpinionInput {
   clientName: string
@@ -37,7 +40,7 @@ REGRAS ABSOLUTAS:
 6. Termine sempre com o rodapé: "Calculado via Previando (app.previando.com.br)"`
 
 export async function generateOpinion(input: OpinionInput): Promise<OpinionOutput> {
-  console.log('[opinion-generator] INPUT:', {
+  logger.info('INPUT', {
     clientName: input.clientName,
     benefitType: input.benefitType,
     caseStatus: input.caseStatus,
@@ -89,7 +92,7 @@ Sempre encerre com: "Este parecer é preliminar e não substitui análise juríd
 
   const model = AI_MODELS.CRITICAL
 
-  console.log('[opinion-generator] Chamando OpenAI model=%s promptLength=%d', model, userPrompt.length)
+  logger.info(`Chamando OpenAI model=${model} promptLength=${userPrompt.length}`)
 
   const response = await openai.chat.completions.create({
     model,
@@ -101,7 +104,7 @@ Sempre encerre com: "Este parecer é preliminar e não substitui análise juríd
     ],
   })
 
-  console.log('[opinion-generator] Resposta OpenAI:', {
+  logger.info('Resposta OpenAI', {
     finishReason: response.choices[0]?.finish_reason,
     contentLength: response.choices[0]?.message?.content?.length ?? 0,
     tokensUsed: response.usage?.total_tokens,
@@ -112,7 +115,7 @@ Sempre encerre com: "Este parecer é preliminar e não substitui análise juríd
   const content = response.choices[0]?.message?.content ?? ''
 
   if (!content) {
-    console.warn('[opinion-generator] AVISO: content vazio! finish_reason=%s', response.choices[0]?.finish_reason)
+    logger.warn(`AVISO: content vazio! finish_reason=${response.choices[0]?.finish_reason}`)
   }
 
   const tokensUsed = response.usage?.total_tokens ?? 0

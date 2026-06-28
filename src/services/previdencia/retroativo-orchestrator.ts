@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import { calculateRetroativos } from '@/lib/retroativos-engine'
+import type { Prisma } from '@prisma/client'
 
 export interface RunRetroativoInput {
   caseId: string
@@ -47,7 +48,7 @@ export class RetroativoOrchestrator {
       indicesINPC,
     })
 
-    // 3. Salva o retroativo no banco de dados de forma 100% íntegra
+    // 3. Salva o retroativo no banco de dados — tipagem segura via Prisma.InputJsonValue
     const retroativo = await prisma.retroactive.create({
       data: {
         caseId,
@@ -61,7 +62,7 @@ export class RetroativoOrchestrator {
         discountValue: result.valorDescontos,
         discountDescription: result.descricaoDescontos ?? null,
         finalNetValue: result.valorLiquidoFinal,
-        calculationMemory: result.memoriaCalculo as unknown as object,
+        calculationMemory: result.memoriaCalculo as Prisma.InputJsonValue,
       },
     })
 

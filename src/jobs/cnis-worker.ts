@@ -64,7 +64,7 @@ export function createCnisWorker(redis: Redis): Worker {
 
         // ─── Extração Híbrida ────────────────────────────────────────
         let markdown = ''
-        let extractedData: any = null
+        let extractedData: import('@/services/cnis/types').CnisExtractedData | null = null
         let tokens = 0
         let isProgrammatic = false
 

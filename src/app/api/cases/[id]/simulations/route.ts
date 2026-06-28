@@ -10,6 +10,18 @@ import { PrevidenciaService } from '@/services/previdencia-service'
 import { projectSimulations } from '@/lib/previdencia-engine'
 import { getSalarioVigente } from '@/lib/salario-minimo'
 import { getRegrasVigentes } from '@/lib/regras-aposentadoria'
+import type { CnisExtractedData } from '@/services/cnis/types'
+import type { Prisma } from '@prisma/client'
+
+interface ScenarioParams {
+  elegivel?: boolean
+  gender?: string
+  dibProjetada?: string
+  valorContribuicaoFutura?: number
+  modalidade?: string
+  tempoEspecialAnos?: number
+  [key: string]: unknown
+}
 
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
   try {
@@ -23,9 +35,9 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       orderBy: { createdAt: 'desc' },
     })
 
-    // Enriquecimento e auto-healing para simulações antigas que não possuem elegibilidade/idade no banco
+    // Enriquecimento e auto-healing para simulações antigas
     const hasOldSimulations = simulations.some(sim => {
-      const p = sim.scenarioParams as any
+      const p = sim.scenarioParams as ScenarioParams | null
       return !p || typeof p !== 'object' || !('elegivel' in p)
     })
 
@@ -35,8 +47,8 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       const cnis = await prisma.cnisDocument.findFirst({
         where: { caseId: params.id, processingStatus: { in: ['COMPLETED', 'SUMMARY_READY'] } },
       })
-      const extracted = cnis?.extractedData as any
-      const birthDate = extracted?.dataNascimento as string | undefined
+      const extracted = cnis?.extractedData as CnisExtractedData | null
+      const birthDate = extracted?.dataNascimento
 
       if (birthDate) {
         const hojeStr = new Date().toISOString().slice(0, 10)
@@ -54,7 +66,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 
         enrichedSimulations = await Promise.all(
           simulations.map(async (sim) => {
-            const p = sim.scenarioParams as any
+            const p = sim.scenarioParams as ScenarioParams | null
             if (p && typeof p === 'object' && 'elegivel' in p) {
               return sim
             }
@@ -62,7 +74,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
             try {
               const res = projectSimulations({
                 birthDate,
-                gender: p?.gender || defaultGender,
+                gender: (p?.gender as 'M' | 'F') || defaultGender,
                 dibProjetada: p?.dibProjetada || sim.dibProjected.toISOString().slice(0, 10),
                 valorContribuicaoFutura: Number(p?.valorContribuicaoFutura) || 1621.00,
                 extractedData: extracted,
@@ -73,15 +85,14 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
                 regrasVigentes,
               })
 
-              // Salva assincronamente no DB para auto-healing
               await prisma.simulation.update({
                 where: { id: sim.id },
-                data: { scenarioParams: res.scenarioParams as any },
+                data: { scenarioParams: res.scenarioParams as Prisma.InputJsonValue },
               }).catch(() => {})
 
               return {
                 ...sim,
-                scenarioParams: res.scenarioParams as any,
+                scenarioParams: res.scenarioParams,
               }
             } catch {
               return sim
@@ -102,19 +113,14 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     const session = await auth()
     if (!session?.user?.id) return NextResponse.json({ error: 'Não autorizado.' }, { status: 401 })
 
-    // Validação de acesso à feature do simulador baseado no plano SaaS
     await guardFeature(session.user.plan, 'SIMULATOR')
-    
-    // Validação estrita de posse do caso (Anti-IDOR)
     await verifyCaseOwnership(params.id, session.user.id)
 
-    // Validação estrita dos parâmetros do cenário
     const parsed = runSimulationSchema.safeParse(await req.json())
     if (!parsed.success) {
       return NextResponse.json({ error: 'Dados inválidos.' }, { status: 400 })
     }
 
-    // Execução e persistência seguras ocorrendo estritamente no backend
     const simulation = await PrevidenciaService.runAndSaveSimulation({
       caseId: params.id,
       scenarioName: parsed.data.scenarioName,
@@ -125,7 +131,6 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       tempoEspecialAnos: parsed.data.tempoEspecialAnos,
     })
 
-    // Registrar log de atividade
     await logAudit({
       userId: session.user.id,
       action: 'simulation.created',
@@ -139,4 +144,3 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     return handleApiError(err)
   }
 }
-
