@@ -2,42 +2,76 @@
 import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
-import { Package, Check, X } from 'lucide-react'
+import { Check, X } from 'lucide-react'
 
-interface PlanLimit {
+interface PlanLimitData {
   plan: string
-  maxClients: number | null
-  maxCalculationsPerMonth: number | null
-  maxOpinionsPerMonth: number | null
+  maxClients: number
+  maxCalculationsPerMonth: number
+  maxOpinionsPerMonth: number
+  maxNotesPerCase: number
   simulatorEnabled: boolean
-  retroativosEnabled: boolean
+  retroactiveEnabled: boolean
   exportPdfEnabled: boolean
-  whatsappShareEnabled: boolean
+  whatsappEnabled: boolean
   watermarkEnabled: boolean
+  diagnosisEnabled: boolean
+  bpcEnabled: boolean
+  bpcAnalysesPerMonth: number
+  bpcSocialMediaPerMonth: number
 }
 
+function fmtUnlimited(value: number, suffix = ''): string {
+  if (value === -1) return `∞${suffix}`
+  return `${value}${suffix}`
+}
+
+const NUMERIC_FIELDS: { key: keyof PlanLimitData; label: string; suffix: string }[] = [
+  { key: 'maxClients', label: 'Max Clientes', suffix: '' },
+  { key: 'maxCalculationsPerMonth', label: 'Max Cálculos/mês', suffix: '' },
+  { key: 'maxOpinionsPerMonth', label: 'Max Pareceres/mês', suffix: '' },
+  { key: 'maxNotesPerCase', label: 'Max Anotações/caso', suffix: '' },
+  { key: 'bpcAnalysesPerMonth', label: 'Análises BPC/mês', suffix: '' },
+  { key: 'bpcSocialMediaPerMonth', label: 'Entrevistas Sociais BPC/mês', suffix: '' },
+]
+
+const BOOLEAN_FIELDS: { key: keyof PlanLimitData; label: string }[] = [
+  { key: 'simulatorEnabled', label: 'Simulador' },
+  { key: 'retroactiveEnabled', label: 'Retroativos' },
+  { key: 'exportPdfEnabled', label: 'Export PDF' },
+  { key: 'whatsappEnabled', label: 'WhatsApp' },
+  { key: 'watermarkEnabled', label: 'Marca d\'água' },
+  { key: 'diagnosisEnabled', label: 'Diagnóstico IA' },
+  { key: 'bpcEnabled', label: 'Módulo BPC/LOAS' },
+]
+
 export default function AdminPlansPage() {
-  const [plans, setPlans] = useState<PlanLimit[]>([])
+  const [plans, setPlans] = useState<PlanLimitData[]>([])
   const [loading, setLoading] = useState(true)
   const [editing, setEditing] = useState<string | null>(null)
-  const [editData, setEditData] = useState<Partial<PlanLimit>>({})
+  const [editData, setEditData] = useState<Partial<PlanLimitData>>({})
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState('')
 
-  useEffect(() => {
-    Promise.all(
-      ['FREE', 'SOLO', 'PRO'].map((plan) =>
-        fetch(`/api/billing/plans?plan=${plan}`)
-          .then((r) => r.json())
-          .then((d) => d.planLimit as PlanLimit)
-          .catch(() => null)
-      )
-    )
-      .then((results) => setPlans(results.filter(Boolean) as PlanLimit[]))
-      .finally(() => setLoading(false))
-  }, [])
+  const loadPlans = async () => {
+    setLoading(true)
+    try {
+      const r = await fetch('/api/billing/plans')
+      const data = await r.json()
+      setPlans((data.plans ?? []).map((p: { plan: string; limits: PlanLimitData }) => ({
+        plan: p.plan,
+        ...p.limits,
+      })))
+    } catch {
+      setPlans([])
+    } finally {
+      setLoading(false)
+    }
+  }
 
-  const handleEdit = (plan: PlanLimit) => {
+  useEffect(() => { loadPlans() }, [])
+
+  const handleEdit = (plan: PlanLimitData) => {
     setEditing(plan.plan)
     setEditData({ ...plan })
     setMessage('')
@@ -54,9 +88,7 @@ export default function AdminPlansPage() {
       })
       setMessage(`Plano ${editing} atualizado com sucesso.`)
       setEditing(null)
-      const r = await fetch(`/api/billing/plans?plan=${editing}`)
-      const data = await r.json()
-      setPlans((prev) => prev.map((p) => p.plan === editing ? (data.planLimit ?? p) : p))
+      await loadPlans()
     } catch {
       setMessage('Erro ao salvar.')
     } finally {
@@ -105,40 +137,32 @@ export default function AdminPlansPage() {
             {editing === plan.plan ? (
               <div className="space-y-4">
                 <div className="space-y-3">
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Max Clientes</label>
-                    <input
-                      type="number"
-                      value={String(editData.maxClients ?? '')}
-                      onChange={(e) => setEditData((d) => ({ ...d, maxClients: e.target.value === '' ? null : Number(e.target.value) }))}
-                      className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500"
-                      placeholder="null = ilimitado"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Max Cálculos/mês</label>
-                    <input
-                      type="number"
-                      value={String(editData.maxCalculationsPerMonth ?? '')}
-                      onChange={(e) => setEditData((d) => ({ ...d, maxCalculationsPerMonth: e.target.value === '' ? null : Number(e.target.value) }))}
-                      className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500"
-                      placeholder="null = ilimitado"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Max Pareceres/mês</label>
-                    <input
-                      type="number"
-                      value={String(editData.maxOpinionsPerMonth ?? '')}
-                      onChange={(e) => setEditData((d) => ({ ...d, maxOpinionsPerMonth: e.target.value === '' ? null : Number(e.target.value) }))}
-                      className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500"
-                      placeholder="null = ilimitado"
-                    />
-                  </div>
+                  {NUMERIC_FIELDS.map(({ key, label, suffix }) => (
+                    <div key={key}>
+                      <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">
+                        {label}
+                      </label>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="number"
+                          value={editData[key] !== undefined ? (editData[key] as number) : ''}
+                          onChange={(e) => {
+                            const val = e.target.value === '' ? -1 : Number(e.target.value)
+                            setEditData((d) => ({ ...d, [key]: val }))
+                          }}
+                          className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500"
+                          placeholder="-1 = ilimitado"
+                        />
+                        {suffix && <span className="text-xs text-slate-400 shrink-0">{suffix}</span>}
+                      </div>
+                      <p className="text-[10px] text-slate-400 mt-0.5">-1 = ilimitado</p>
+                    </div>
+                  ))}
                 </div>
 
-                <div className="space-y-2 border-t border-slate-100 pt-3">
-                  {(['simulatorEnabled', 'retroativosEnabled', 'exportPdfEnabled', 'whatsappShareEnabled', 'watermarkEnabled'] as const).map((key) => (
+                <div className="space-y-2 pt-3">
+                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Features</p>
+                  {BOOLEAN_FIELDS.map(({ key, label }) => (
                     <label key={key} className="flex items-center gap-2 cursor-pointer">
                       <input
                         type="checkbox"
@@ -146,9 +170,7 @@ export default function AdminPlansPage() {
                         onChange={(e) => setEditData((d) => ({ ...d, [key]: e.target.checked }))}
                         className="rounded border-slate-300 text-amber-600 focus:ring-amber-500"
                       />
-                      <span className="text-sm text-slate-700 capitalize">
-                        {key.replace(/([A-Z])/g, ' $1').trim()}
-                      </span>
+                      <span className="text-sm text-slate-700">{label}</span>
                     </label>
                   ))}
                 </div>
@@ -160,26 +182,19 @@ export default function AdminPlansPage() {
               </div>
             ) : (
               <div className="space-y-3 text-sm">
-                <div className="flex justify-between pb-2 border-b border-slate-100">
-                  <span className="text-slate-500">Max Clientes</span>
-                  <span className="font-semibold text-slate-900">{plan.maxClients ?? '∞'}</span>
-                </div>
-                <div className="flex justify-between pb-2 border-b border-slate-100">
-                  <span className="text-slate-500">Max Cálculos</span>
-                  <span className="font-semibold text-slate-900">{plan.maxCalculationsPerMonth ?? '∞'}/mês</span>
-                </div>
-                <div className="flex justify-between pb-2 border-b border-slate-100">
-                  <span className="text-slate-500">Max Pareceres</span>
-                  <span className="font-semibold text-slate-900">{plan.maxOpinionsPerMonth ?? '∞'}/mês</span>
-                </div>
-                <div className="space-y-1 pt-1">
-                  {([
-                    ['simulatorEnabled', 'Simulador'],
-                    ['retroativosEnabled', 'Retroativos'],
-                    ['exportPdfEnabled', 'Export PDF'],
-                    ['whatsappShareEnabled', 'WhatsApp'],
-                    ['watermarkEnabled', 'Marca d\'água'],
-                  ] as const).map(([key, label]) => (
+                {NUMERIC_FIELDS.map(({ key, label }) => (
+                  <div key={key} className="flex justify-between pb-2 border-b border-slate-100 last:border-b-0">
+                    <span className="text-slate-500">{label}</span>
+                    <span className="font-semibold text-slate-900">
+                      {key === 'maxCalculationsPerMonth' || key === 'maxOpinionsPerMonth' || key === 'bpcAnalysesPerMonth' || key === 'bpcSocialMediaPerMonth'
+                        ? fmtUnlimited(plan[key], '/mês')
+                        : fmtUnlimited(plan[key])}
+                    </span>
+                  </div>
+                ))}
+                <div className="space-y-1 pt-2">
+                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Features</p>
+                  {BOOLEAN_FIELDS.map(({ key, label }) => (
                     <div key={key} className="flex items-center justify-between text-xs">
                       <span className="text-slate-500">{label}</span>
                       <span className={plan[key] ? 'text-emerald-600 font-bold' : 'text-red-400 font-bold'}>

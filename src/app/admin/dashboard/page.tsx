@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import { Card } from '@/components/ui/Card'
 import { TrendingUp, Users, DollarSign, Calculator, FileText, Cpu } from 'lucide-react'
+import { STATUS_LABELS } from '@/lib/constants'
 
 interface Metrics {
   users: { total: number; byPlan: Record<string, number>; newThisMonth: number }
@@ -123,10 +124,10 @@ export default function AdminDashboardPage() {
           <h3 className="font-serif font-bold text-lg text-slate-900 mb-4">Casos</h3>
           <p className="font-bold text-3xl text-slate-900 mb-4">{metrics.cases.total}</p>
           <div className="space-y-2">
-            {Object.entries(metrics.cases.byStatus).map(([status, count]) => (
+            {Object.entries(STATUS_LABELS).map(([status, label]) => (
               <div key={status} className="flex items-center justify-between text-sm">
-                <span className="text-slate-500 capitalize">{status.toLowerCase()}</span>
-                <span className="font-semibold text-slate-700">{count}</span>
+                <span className="text-slate-500">{label}</span>
+                <span className="font-semibold text-slate-700">{metrics.cases.byStatus[status] ?? 0}</span>
               </div>
             ))}
           </div>

@@ -19,11 +19,16 @@ export async function PATCH(req: NextRequest, { params }: { params: { plan: stri
       maxClients,
       maxCalculationsPerMonth,
       maxOpinionsPerMonth,
+      maxNotesPerCase,
       simulatorEnabled,
-      retroativosEnabled,
+      retroactiveEnabled,
       exportPdfEnabled,
-      whatsappShareEnabled,
+      whatsappEnabled,
       watermarkEnabled,
+      diagnosisEnabled,
+      bpcEnabled,
+      bpcAnalysesPerMonth,
+      bpcSocialMediaPerMonth,
     } = body
 
     const existing = await prisma.planLimit.findUnique({ where: { plan: params.plan as never } })
@@ -35,11 +40,16 @@ export async function PATCH(req: NextRequest, { params }: { params: { plan: stri
         ...(maxClients !== undefined && { maxClients }),
         ...(maxCalculationsPerMonth !== undefined && { maxCalculationsPerMonth }),
         ...(maxOpinionsPerMonth !== undefined && { maxOpinionsPerMonth }),
+        ...(maxNotesPerCase !== undefined && { maxNotesPerCase }),
         ...(simulatorEnabled !== undefined && { simulatorEnabled }),
-        ...(retroativosEnabled !== undefined && { retroativosEnabled }),
+        ...(retroactiveEnabled !== undefined && { retroactiveEnabled }),
         ...(exportPdfEnabled !== undefined && { exportPdfEnabled }),
-        ...(whatsappShareEnabled !== undefined && { whatsappShareEnabled }),
+        ...(whatsappEnabled !== undefined && { whatsappEnabled }),
         ...(watermarkEnabled !== undefined && { watermarkEnabled }),
+        ...(diagnosisEnabled !== undefined && { diagnosisEnabled }),
+        ...(bpcEnabled !== undefined && { bpcEnabled }),
+        ...(bpcAnalysesPerMonth !== undefined && { bpcAnalysesPerMonth }),
+        ...(bpcSocialMediaPerMonth !== undefined && { bpcSocialMediaPerMonth }),
       },
     })
 

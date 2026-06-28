@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { requireAdmin } from '@/lib/admin-guard'
 import { prisma } from '@/lib/prisma'
 import { handleApiError } from '@/lib/api-error'
+import { mapCaseStatusToApi } from '@/lib/mappers'
 
 export async function GET() {
   try {
@@ -43,7 +44,10 @@ export async function GET() {
   for (const row of usersByPlan) byPlanMap[row.plan] = row._count
 
   const byStatusMap: Record<string, number> = {}
-  for (const row of casesByStatus) byStatusMap[row.status] = row._count
+  for (const row of casesByStatus) {
+    const apiStatus = mapCaseStatusToApi(row.status)
+    byStatusMap[apiStatus] = row._count
+  }
 
   const soloMRR = (byPlanMap['SOLO'] ?? 0) * 299
   const proMRR = (byPlanMap['PRO'] ?? 0) * 599
