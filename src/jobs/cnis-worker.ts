@@ -5,6 +5,7 @@ import { downloadPDF } from '../services/r2'
 import { parseCnisWithAI, validateCnisProgrammaticResult, parseCnisProgrammatically } from '../services/cnis-parser'
 import { Logger } from '../lib/logger'
 import { writeAuditDirect } from '../lib/audit'
+import type { Prisma } from '@prisma/client'
 
 const logger = new Logger('CnisWorker')
 
@@ -109,7 +110,7 @@ export function createCnisWorker(redis: Redis): Worker {
           data: {
             processingStatus: 'COMPLETED',
             markdownContent: markdown,
-            extractedData: extractedData as never,
+            extractedData: extractedData as Prisma.InputJsonValue,
             nit: extractedData.nit ?? null,
             totalContributions: extractedData.totalContribuicoes ?? null,
             firstContribution: extractedData.primeiraContribuicao ? toDateTime(extractedData.primeiraContribuicao) : null,

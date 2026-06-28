@@ -60,7 +60,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       getRegrasVigentes(dib),
     ])
 
-    const extractedData = fullCase.cnisDocument!.extractedData as CnisExtractedData
+    const extractedData = fullCase.cnisDocument!.extractedData as unknown as CnisExtractedData
 
     const suggestions = ALL_MODALITIES.flatMap((modalidade) =>
       (['M', 'F'] as const).map((gender) => {

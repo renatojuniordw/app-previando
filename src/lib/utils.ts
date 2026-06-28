@@ -24,31 +24,24 @@ export function formatDate(date: Date | string): string {
     // Formato puro YYYY-MM-DD (data sem timezone)
     if (/^\d{4}-\d{2}-\d{2}$/.test(date)) {
       const [year, month, day] = date.split('-').map(Number)
-      // Constrói a data no timezone local para evitar shifts UTC
       return formatter.format(new Date(year, month - 1, day))
     }
 
     // Formato ISO com T00:00:00 (data pura vinda do banco)
     if (/T00:00:00/.test(date)) {
-      const datePart = date.split('T')[0]
-      const [year, month, day] = datePart.split('-').map(Number)
+      const [year, month, day] = date.split('T')[0].split('-').map(Number)
       return formatter.format(new Date(year, month - 1, day))
     }
+
+    // ISO string com timezone — constrói a partir das partes locais
+    const parsed = new Date(date)
+    if (isNaN(parsed.getTime())) return '—'
+    return formatter.format(new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate()))
   }
 
-  // Para objetos Date, constrói a partir das partes locais
-  const d = typeof date === 'string' ? new Date(date) : date
-  if (isNaN(d.getTime())) return '—'
-
-  // Se for um Date ISO (risco de timezone shift), extrai as partes locais
-  if (typeof date === 'object') {
-    return formatter.format(d)
-  }
-
-  // Fallback seguro: constrói a partir da string, mas usando partes locais
-  const parsed = new Date(date)
-  if (isNaN(parsed.getTime())) return '—'
-  return formatter.format(new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate()))
+  // É um objeto Date
+  if (isNaN(date.getTime())) return '—'
+  return formatter.format(date)
 }
 
 export function formatDateTime(date: Date | string): string {
