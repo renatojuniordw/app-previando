@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/auth'
-import prisma from '@/lib/prisma'
+import { prisma } from '@/lib/prisma'
 import { guardFeature } from '@/lib/plan-guard'
 import { generateCasePDF } from '@/lib/pdf-generator'
 import { logAudit } from '@/lib/audit'
@@ -19,15 +19,25 @@ export async function GET(
   const { caseId } = await params
 
   // Buscar dados do caso
-  const caso = await prisma.caso.findFirst({
+  const caso = await prisma.case.findFirst({
     where: {
       id: caseId,
       userId: session.user.id,
     },
     include: {
       client: true,
-      selectedCalculation: true,
-      opinion: true,
+      calculations: {
+        where: {
+          isSelected: true,
+        },
+        take: 1,
+      },
+      opinions: {
+        orderBy: {
+          createdAt: 'desc',
+        },
+        take: 1,
+      },
     },
   })
 
@@ -50,26 +60,32 @@ export async function GET(
     metadata: { watermark },
   })
 
+  const selectedCalc = caso.calculations[0]
+  const opinion = caso.opinions[0]
+
   // Gerar PDF binário
   const pdfBuffer = await generateCasePDF({
-    clientName: caso.client?.nome || '',
-    clientCpf: caso.client?.cpf || '',
-    clientBirthDate: caso.client?.dataNascimento || '',
-    clientDeathDate: caso.client?.dataObito || '',
-    clientMaritalStatus: caso.client?.estadoCivil || '',
-    clientSurvivors: caso.client?.dependentes || '',
-    selectedCalculation: caso.selectedCalculation ? {
-      type: caso.selectedCalculation.tipo || '',
-      value: caso.selectedCalculation.valor || '',
-      details: caso.selectedCalculation.detalhes || {},
+    clientName: caso.client?.name || '',
+    clientCpf: '',
+    clientBirthDate: caso.client?.birthDate ? caso.client.birthDate.toISOString().split('T')[0] : '',
+    clientDeathDate: '',
+    clientMaritalStatus: '',
+    clientSurvivors: '',
+    selectedCalculation: selectedCalc ? {
+      type: selectedCalc.modality || '',
+      value: selectedCalc.rmi ? Number(selectedCalc.rmi).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '—',
+      details: {
+        'Tempo de Contribuição': selectedCalc.contributionTime ? `${(selectedCalc.contributionTime / 12).toFixed(1)} anos` : '—',
+        'Idade no Cálculo': selectedCalc.ageAtCalculation ? `${selectedCalc.ageAtCalculation} anos` : '—',
+      },
     } : undefined,
-    opinion: caso.opinion?.texto,
+    opinion: opinion?.customizedContent || opinion?.generatedContent || undefined,
     caseStatus: caso.status,
     createdAt: caso.createdAt?.toISOString().split('T')[0],
     watermark,
   })
 
-  return new NextResponse(pdfBuffer, {
+  return new Response(new Uint8Array(pdfBuffer), {
     headers: {
       'Content-Type': 'application/pdf',
       'Content-Disposition': `attachment; filename="previando-caso-${caseId}.pdf"`,

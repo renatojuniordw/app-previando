@@ -102,7 +102,7 @@ export function ProcessCard({ caseData, checking, onCheck, onEditClick }: Props)
 
         {!processLastCheck && (
           <p className="font-sans text-sm text-slate-400 italic">
-            Ainda não consultado. Clique em "Consultar DataJud" para buscar as movimentações.
+            Ainda não consultado. Clique em &quot;Consultar DataJud&quot; para buscar as movimentações.
           </p>
         )}
       </div>

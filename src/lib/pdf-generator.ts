@@ -1,5 +1,6 @@
-/// <reference types="pdfkit" />
 import PDFDocument from 'pdfkit'
+
+type PDFDocType = InstanceType<typeof PDFDocument>
 
 const BRAND = {
   accent: '#d97706',
@@ -9,7 +10,7 @@ const BRAND = {
   border: '#e2e8f0',
 }
 
-function drawHeader(doc: PDFDocument, title: string) {
+function drawHeader(doc: PDFDocType, title: string) {
   // Logo text
   doc.font('Helvetica-Bold').fontSize(16).fill(BRAND.accent).text('PREVIANDO', 40, 30, {
     continued: true,
@@ -20,39 +21,62 @@ function drawHeader(doc: PDFDocument, title: string) {
   doc.font('Helvetica').fontSize(7).fill(BRAND.slate).text('app.previando.com.br', 40, 50)
 
   // Accent line
-  doc.stroke(BRAND.accent).lineWidth(2).line(40, 58, 550, 58)
+  doc.lineWidth(2).moveTo(40, 58).lineTo(550, 58).stroke(BRAND.accent)
 }
 
-function drawFooter(doc: PDFDocument, page: number, totalPages: number) {
+function drawFooter(doc: PDFDocType, page: number, totalPages: number) {
   // Border line
-  doc.stroke(BRAND.border).lineWidth(0.5).line(40, 260, 550, 260)
+  doc.lineWidth(0.5).moveTo(40, 260).lineTo(550, 260).stroke(BRAND.border)
 
   doc.fontSize(7).fill(BRAND.slate)
   doc.text('Gerado por Previando', 40, 265)
   doc.text(`Página ${page} de ${totalPages}`, 400, 265)
 }
 
-function drawSectionHeader(doc: PDFDocument, title: string, y: number) {
+function drawSectionHeader(doc: PDFDocType, title: string, y: number) {
   doc.font('Helvetica-Bold').fontSize(11).fill(BRAND.accent).text(title, 40, y)
-  doc.stroke(BRAND.border).lineWidth(0.5).line(40, y + 6, 550, y + 6)
+  doc.lineWidth(0.5).moveTo(40, y + 6).lineTo(550, y + 6).stroke(BRAND.border)
   return y + 14
 }
 
-function drawDataRow(doc: PDFDocument, label: string, value: string, y: number) {
+function drawDataRow(doc: PDFDocType, label: string, value: string, y: number) {
   doc.font('Helvetica-Bold').fontSize(9).fill(BRAND.dark).text(label, 40, y, { width: 120 })
   doc.font('Helvetica').fontSize(9).fill(BRAND.dark).text(value || '—', 170, y, { width: 340 })
-  doc.stroke(BRAND.border).lineWidth(0.3).line(40, y + 10, 550, y + 10)
+  doc.lineWidth(0.3).moveTo(40, y + 10).lineTo(550, y + 10).stroke(BRAND.border)
   return y + 16
 }
 
-function drawTableHeader(doc: PDFDocument, columns: { label: string; width: number }[], y: number) {
+function splitTextIntoLines(doc: PDFDocType, text: string, maxWidth: number): string[] {
+  const paragraphs = text.split('\n');
+  const lines: string[] = [];
+  for (const para of paragraphs) {
+    const words = para.split(' ');
+    let currentLine = '';
+    for (const word of words) {
+      const testLine = currentLine ? `${currentLine} ${word}` : word;
+      const width = doc.widthOfString(testLine);
+      if (width > maxWidth) {
+        lines.push(currentLine);
+        currentLine = word;
+      } else {
+        currentLine = testLine;
+      }
+    }
+    if (currentLine) {
+      lines.push(currentLine);
+    }
+  }
+  return lines;
+}
+
+function drawTableHeader(doc: PDFDocType, columns: { label: string; width: number }[], y: number) {
   let x = 40
   doc.font('Helvetica-Bold').fontSize(8).fill(BRAND.dark)
   for (const col of columns) {
     doc.text(col.label, x, y, { width: col.width })
     x += col.width
   }
-  doc.stroke(BRAND.border).lineWidth(0.5).line(40, y + 10, 550, y + 10)
+  doc.lineWidth(0.5).moveTo(40, y + 10).lineTo(550, y + 10).stroke(BRAND.border)
   return y + 14
 }
 
@@ -121,12 +145,12 @@ export async function generateCasePDF(data: CasePDFData): Promise<Buffer> {
   if (data.opinion) {
     y = drawSectionHeader(doc, 'Parecer Jurídico', y)
     doc.font('Helvetica').fontSize(9).fill(BRAND.dark)
-    const lines = doc.splitText(data.opinion, 510)
+    const lines = splitTextIntoLines(doc, data.opinion, 510)
     for (const line of lines) {
       if (y > 240) {
         doc.addPage()
         y = 40
-        drawFooter(doc, doc.pages.length, doc.pages.length)
+        drawFooter(doc, (doc as any)._pages.length, (doc as any)._pages.length)
       }
       doc.text(line, 40, y)
       y += 12
@@ -179,12 +203,12 @@ export async function generateBpcPDF(data: BpcPDFData): Promise<Buffer> {
 
   y = drawSectionHeader(doc, 'Resultado da Análise', y)
   doc.font('Helvetica').fontSize(9).fill(BRAND.dark)
-  const lines = doc.splitText(data.result, 510)
+  const lines = splitTextIntoLines(doc, data.result, 510)
   for (const line of lines) {
     if (y > 240) {
       doc.addPage()
       y = 40
-      drawFooter(doc, doc.pages.length, doc.pages.length)
+      drawFooter(doc, (doc as any)._pages.length, (doc as any)._pages.length)
     }
     doc.text(line, 40, y)
     y += 12
