@@ -1,5 +1,6 @@
 # 00 — REGRAS DE NEGÓCIO
 > Previando — Glossário, Fluxos, Casos de Uso e Regras para o Agente
+> Última atualização: 2026-06-27
 
 ---
 
@@ -71,12 +72,20 @@ Rascunho jurídico gerado com IA. Advogado sempre revisa antes de usar.
 ### Prontuário
 Histórico versionado e imutável de anotações de um caso. Cada entrada nunca é editada — só se cria novas.
 
+### DataJud
+API pública do CNJ (Conselho Nacional de Justiça) para consulta de andamento processual. Integrada via `/api/cases/[id]/process`.
+
+### Z-API / Meta WhatsApp
+Serviço de envio de mensagens WhatsApp. Provider configurável via `WHATSAPP_PROVIDER` (zapi | meta).
+
 ---
 
 ## 3. Entidades do Sistema
 
 ### 3.1 Usuário (Advogado)
 Profissional que usa o Previando. Tem plano (FREE/SOLO/PRO).
+
+**Recuperação de senha:** fluxo de forgot/reset via email SMTP com nodemailer.
 
 ---
 
@@ -92,10 +101,16 @@ Atendimento específico para um benefício. Um cliente pode ter múltiplos casos
 
 **Campos do processo:**
 - `processNumber`: Número do processo (administrativo ou judicial)
-- `processLastCheck`: Última data de consulta ao processo
+- `processLastCheck`: Última data de consulta ao processo via DataJud
 - `processLastMovDate`: Data do último movimento no processo
 - `processLastMovCount`: Contagem de movimentos desde a última consulta
 - `processLastSummary`: Resumo do último movimento
+
+**Consulta de processo (DataJud):**
+- Endpoint: `POST /api/cases/[id]/process`
+- Envia o `processNumber` para a API pública do CNJ
+- Retorna: tribunal, classe, assuntos, última movimentação
+- Atualiza os campos `processLastCheck`, `processLastMovDate`, `processLastMovCount`, `processLastSummary`
 
 **Tipos de benefício:**
 
@@ -124,7 +139,7 @@ Atendimento específico para um benefício. Um cliente pode ter múltiplos casos
 | `PROCESSING` | Pedido protocolado, aguardando |
 | `FINISHED` | Encerrado |
 
-**Status de processamento:**
+**Status de processamento do CNIS:**
 
 | Status | Significado |
 |---|---|
@@ -134,11 +149,6 @@ Atendimento específico para um benefício. Um cliente pode ter múltiplos casos
 | `PROCESSING_DETAILS` | Detalhes em processamento |
 | `COMPLETED` | Processamento concluído |
 | `FAILED` | Falhou |
-
-**Prioridade automática (job diário):**
-- 🔴 CRITICAL: prazo ≤ 7 dias
-- 🟡 ATTENTION: 8–30 dias
-- 🟢 NORMAL: >30 dias ou sem prazo
 
 ---
 
@@ -155,6 +165,7 @@ Histórico versionado de anotações. Imutável — nunca edita, só cria novas 
 | `INTERNAL` | 📝 | Observação interna do advogado |
 | `CALCULATION` | 🧮 | Estratégia de cálculo ou modalidade |
 | `PENDING_ISSUE` | ⚠️ | Algo que está faltando ou precisa resolver |
+| `BPC_ANALYSIS` | 🏛 | Análise gerada pelo módulo BPC/LOAS |
 
 **Regras:**
 - Imutável após criada
@@ -168,7 +179,7 @@ Histórico versionado de anotações. Imutável — nunca edita, só cria novas 
 ### 3.5 Documento CNIS
 PDF do CNIS. Cada caso tem no máximo um CNIS ativo.
 
-**Fluxo híbrido:** Upload → R2 → BullMQ → Parser programático (primeira tentativa) → Validação IA → Se falhar, fallback para processamento IA completo (`gpt-4.1-mini`) → markdown → banco.
+**Fluxo híbrido:** Upload → R2 → BullMQ → Parser programático (primeira tentativa) → Validação IA (gpt-4.1-nano) → Se falhar, fallback para processamento IA completo (gpt-4.1-mini) → markdown → banco.
 
 - Quando o parser programático consegue extrair os dados com sucesso e a validação IA confirma: processamento instantâneo.
 - Quando o parser programático falha ou a validação IA rejeita: fallback para processamento completo com IA (~1-2 min).
@@ -192,7 +203,7 @@ Cálculo de valores não recebidos no passado. INPC mês a mês.
 ---
 
 ### 3.9 Simulação de Cenário
-Projeção do benefício em data futura.
+Projeção do benefício em data futura com contribuições futuras simuladas.
 
 ---
 
@@ -202,7 +213,7 @@ Verificação automática dos requisitos. Lógica determinística — IA só exp
 ---
 
 ### 3.11 Parecer Preliminar
-Rascunho gerado pela IA. Advogado sempre revisa. Não substitui análise jurídica.
+Rascunho gerado pela IA (gpt-4.1-mini). Advogado sempre revisa. Não substitui análise jurídica.
 
 ---
 
@@ -212,14 +223,16 @@ Módulo de pré-análise de viabilidade para benefícios BPC/LOAS.
 **Campos:**
 - Análise de viabilidade do caso
 - Análise do laudo médico
-- Questões de avaliação social (domínios CIF)
-- Questões de exame médico
+- Relato Social (entrevista interativa por domínios CIF)
+- Perguntas para perícia médica (domínios CIF)
 - Checklist de documentação
+- Carrossel para Instagram (ferramenta avulsa)
 
 **Regras:**
 - Disponível apenas quando `benefitType === BPC_LOAS`
 - Exclusivo dos planos SOLO/PRO
 - Modelo de dados: `BpcAnalysis`
+- Relato social editável via `PATCH /api/cases/[id]/bpc/social`
 
 ---
 
@@ -237,7 +250,7 @@ PASSO 2 — CRIAR CASO
     Status: PROSPECTING → aparece no Kanban
 
 PASSO 3 — PRONTUÁRIO (durante todo o caso)
-    Aba "Prontuário" → + Nova Anotação
+    Aba "Visão Geral" → clicar no FAB ou usar ?drawer=notes
     Tipo + texto livre → salvo, imutável
 
 PASSO 4 — UPLOAD DO CNIS
@@ -255,6 +268,7 @@ PASSO 6 — AÇÕES OPCIONAIS
     → Checklist de elegibilidade
     → Gerar parecer com IA
     → Diagnóstico de caso (prontuário + IA)
+    → Consultar processo via DataJud (informar número CNJ)
     → Análise BPC/LOAS (quando benefitType === BPC_LOAS)
 
 PASSO 7 — PROTOCOLAR
@@ -264,7 +278,6 @@ PASSO 7 — PROTOCOLAR
 PASSO 8 — FINALIZAR
     Caso → FINISHED
     Anotação final no prontuário
-    PDF CNIS deletado do R2 após 90 dias
 ```
 
 ---
@@ -285,13 +298,14 @@ PASSO 8 — FINALIZAR
 | Cálculos/mês | 5 | Ilimitado | Ilimitado |
 | Pareceres IA/mês | 1 | 20 | Ilimitado |
 | Prontuário (entradas/caso) | 10 | Ilimitado | Ilimitado |
+| Análises BPC/mês | 0 | 50 | Ilimitado |
+| Carrosséis BPC/mês | 0 | 5 | Ilimitado |
 | Diagnóstico IA | ❌ | ✅ | ✅ |
 | Simulador | ❌ | ✅ | ✅ |
 | Retroativos | ❌ | ✅ | ✅ |
 | Export PDF | ❌ | ✅ | ✅ |
 | WhatsApp share | ❌ | ✅ | ✅ |
 | BPC/LOAS module | ❌ | ✅ | ✅ |
-| BPC Social Media/mês | ❌ | 5 | Ilimitado |
 | Marca d'água | ✅ | ❌ | ❌ |
 
 Todo limite verificado no banco via API — retorna 402.
@@ -306,13 +320,28 @@ Todo limite verificado no banco via API — retorna 402.
 - Hash HMAC-SHA256 com salt fixo — nunca plain text
 - Sempre mascarado na UI: `XXX.***.YYY-**` (primeiros 3 e últimos 3 dígitos visíveis)
 
-### 5.5 WhatsApp Share
-- Formato: `5511999999999`
-- Link: `https://wa.me/{phone}?text={mensagem}`
-- Rodapé: "Informação gerada via Previando"
+### 5.5 WhatsApp Share / Send
+- Formato telefone: `5511999999999`
+- **Provider Z-API**: `WHATSAPP_PROVIDER=zapi` (padrão) — envia via API Z-API
+- **Provider Meta**: `WHATSAPP_PROVIDER=meta` — envia via WhatsApp Cloud API
+- Link de compartilhamento: `https://wa.me/{phone}?text={mensagem}`
+- Rodapé: "Calculado via Previando (app.previando.com.br)"
 
 ### 5.6 PDF com Fallback OCR
 `pdf-parse` → se < 100 chars → `Tesseract.js` (lang: 'por')
+
+### 5.7 Recuperação de Senha
+- Rota pública `/forgot-password`: usuário informa email → sistema gera token → envia email com link
+- Rota pública `/reset-password`: token validado → usuário define nova senha
+- Email enviado via nodemailer (SMTP configurável)
+- Token expira em 1 hora
+
+### 5.8 Consulta de Processo (DataJud)
+- Endpoint: `POST /api/cases/[id]/process`
+- Aceita número CNJ (20 dígitos) em qualquer formato
+- Consulta API pública do CNJ
+- Suporta: STF (justiça 1), STJ (justiça 3), TRFs (justiça 4), TRTs (justiça 5), TJs (justiça 8, 27 tribunais)
+- Atualiza automaticamente os campos de processo no caso
 
 ---
 
@@ -365,17 +394,23 @@ npm install next react react-dom \
   next-auth @auth/prisma-adapter bcryptjs \
   prisma @prisma/client \
   bullmq ioredis \
-  pdf-parse tesseract.js \
+  pdf-parse tesseract.js pdfkit \
   @aws-sdk/client-s3 @aws-sdk/s3-request-presigner \
   openai mercadopago \
+  zod react-hook-form \
   isomorphic-dompurify \
   @dnd-kit/core @dnd-kit/sortable \
-  react-hook-form zod zustand recharts axios \
-  date-fns
+  react-markdown recharts \
+  zustand lucide-react \
+  date-fns date-fns-tz \
+  axios nodemailer \
+  clsx tailwind-merge
 
 # Dev
 npm install --save-dev \
   @types/node @types/react @types/react-dom \
-  @types/bcryptjs @types/pdf-parse \
-  typescript eslint prettier
+  @types/bcryptjs @types/pdf-parse @types/pdfkit \
+  typescript eslint prettier \
+  prettier-plugin-tailwindcss \
+  ts-node @playwright/test
 ```

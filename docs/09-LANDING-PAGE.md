@@ -1,5 +1,6 @@
 # 09 — LANDING PAGE
 > previando.com.br — Copy, Estrutura e Estratégia de Tráfego Pago
+> Última atualização: 2026-06-27
 
 ---
 
@@ -13,7 +14,6 @@
 | **Email** | contato@previando.com.br |
 | **Instagram** | @previando |
 | **Tagline** | Previdência inteligente para advogados |
-| **Repo** | previando-web |
 | **Stack LP** | React (Vite) — porta 60001 |
 
 ---
@@ -34,93 +34,30 @@ Anúncio (Meta/Google) → previando.com.br → CTA → app.previando.com.br/reg
 
 ### HERO
 **Headline:** Você ainda calcula aposentadoria de cliente no Excel?
-**Sub:** O Previando transforma o CNIS em cálculo completo — RMI, RMA, retroativos e parecer — em minutos. Sem planilha. Sem erro. Com IA.
-**CTA:** → Começar grátis — sem cartão de crédito → `app.previando.com.br/register`
+**Sub:** O Previando transforma o CNIS em cálculo completo — RMI, RMA, retroativos e parecer — em minutos.
+**CTA:** → Começar grátis — sem cartão de crédito
 **Trust:** ✓ Gratuito para começar · ✓ Login com Google · ✓ Dados criptografados
 
 ### PROBLEMA
-3 cards de dor que o advogado se identifica:
-- Horas perdidas em cálculo manual
-- Medo de erro que prejudica o cliente
-- Perda de controle dos casos e prazos
+3 cards de dor: horas perdidas, medo de erro, perda de controle.
 
 ### COMO FUNCIONA
 3 passos: Upload CNIS → Cálculo automático → Parecer e gestão
 
 ### FEATURES
-8 features com ícone, título e descrição objetiva
-
-### PROVA SOCIAL (sem depoimentos)
-- 14 modalidades de cálculo implementadas
-- 100% dos bloqueios verificados no servidor
-- 0 CPFs armazenados em texto puro
-- 3 cards: Legislação atualizada / Dados seguros / Feito com especialista
+8 features com ícone, título e descrição objetiva.
 
 ### PLANOS
-Tabela FREE / SOLO / PRO com âncora de custo de oportunidade:
-> "Um único caso de revisão pode valer R$ 5.000 a R$ 30.000 em honorários. O Previando Solo custa R$ 299/mês."
+Tabela FREE / SOLO / PRO com âncora de custo de oportunidade.
 
 ### FAQ
-6 perguntas: instalação, confiabilidade, segurança, cancelamento, atualizações, benefícios suportados
+6 perguntas: instalação, confiabilidade, segurança, cancelamento, atualizações, benefícios.
 
 ### CTA FINAL
 "Teste agora. Grátis. Sem cartão."
-CTA → `app.previando.com.br/register`
 
 ### RODAPÉ
 previando.com.br · contato@previando.com.br · @previando
-
----
-
-## Copy para Anúncios Meta Ads
-
-### Criativo 1 — Dor direta
-**Headline:** Ainda calcula aposentadoria no Excel?
-**Texto:**
-Advogados previdenciários perdem horas por semana em cálculos que um sistema resolve em minutos.
-
-O Previando lê o CNIS automaticamente, calcula RMI/RMA com todas as regras da EC 103/2019 e gera o parecer com IA.
-
-Comece grátis em previando.com.br
-
-### Criativo 2 — Custo de oportunidade
-**Headline:** Quanto você deixou de ganhar por erro de cálculo?
-**Texto:**
-Um cálculo errado de retroativo pode custar R$ 10.000+ ao seu cliente.
-
-O Previando calcula retroativos mês a mês com correção por INPC e memória de cálculo completa.
-
-14 modalidades. Sempre atualizado. Começa grátis.
-
-### Criativo 3 — Transformação
-**Headline:** De 2 horas para 10 minutos por caso previdenciário
-**Texto:**
-Upload do CNIS → cálculo automático → parecer com IA → resumo no WhatsApp do cliente.
-
-Feito com quem entende o dia a dia do advogado previdenciário.
-
-Grátis para começar em previando.com.br
-
----
-
-## Google Ads
-
-### Keywords
-```
-"calculadora previdenciária advogado"
-"calcular rmi inss"
-"cálculo aposentadoria ec 103 2019"
-"software previdenciário online"
-"sistema previdenciário advogado"
-"calculadora rmi rma"
-"cálculo retroativos previdenciários"
-```
-
-### Anúncio
-**H1:** Calculadora Previdenciária com IA
-**H2:** EC 103/2019 — Todas as Regras
-**H3:** Grátis para Começar | Previando
-**Descrição:** Calcule RMI, RMA e retroativos do CNIS automaticamente. Parecer com IA e CRM Kanban. Para advogados previdenciários.
 
 ---
 
@@ -143,28 +80,16 @@ Tom: Refinado e sério — escritório premium, não startup genérica
 
 ---
 
-## Métricas Alvo
-
-| Métrica | Meta |
-|---|---|
-| Conversão LP → Cadastro | > 8% |
-| Ativação (fez 1 cálculo) | > 60% |
-| Upgrade FREE → Pago (30 dias) | > 15% |
-| CAC (Meta Ads) | < R$ 80 |
-| LTV SOLO (18 meses) | R$ 5.382 |
-
----
-
 ## Checklist Pré-Launch
 
-- [ ] previando.com.br com SSL (Let's Encrypt no Contabo)
-- [ ] Pixel Meta instalado (rastrear cadastros em app.previando.com.br)
+- [ ] previando.com.br com SSL (Let's Encrypt)
+- [ ] Pixel Meta instalado
 - [ ] Google Tag Manager configurado
 - [ ] Evento de conversão: "Cadastro realizado"
-- [ ] Heatmap ativo (Microsoft Clarity — grátis)
+- [ ] Heatmap ativo (Microsoft Clarity)
 - [ ] Mobile testado (iOS + Android)
 - [ ] PageSpeed > 90
-- [ ] @previando no Instagram ativo com link para previando.com.br
+- [ ] @previando no Instagram ativo
 - [ ] contato@previando.com.br configurado
-- [ ] Termos de Uso e Política de Privacidade publicados (obrigatório para Meta Ads)
+- [ ] Termos de Uso e Política de Privacidade publicados
 - [ ] UTM parameters nos links dos anúncios
