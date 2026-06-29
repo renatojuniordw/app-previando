@@ -24,6 +24,7 @@ interface CaseHeader {
     simulatorEnabled: boolean
     retroativosEnabled: boolean
     bpcEnabled: boolean
+    peticaoEnabled: boolean
   }
 }
 

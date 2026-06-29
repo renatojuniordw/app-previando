@@ -12,6 +12,7 @@
 | Cálculos/mês | 5 | Ilimitado | Ilimitado |
 | Pareceres IA/mês | 1 | 20 | Ilimitado |
 | Notas por caso | 10 | Ilimitado | Ilimitado |
+| Petições Iniciais/mês | 0 | 5 | Ilimitado |
 | Análises BPC/mês | 0 | 50 | Ilimitado |
 | Carrosséis BPC/mês | 0 | 5 | Ilimitado |
 | Simulador | ❌ | ✅ | ✅ |
@@ -20,6 +21,8 @@
 | WhatsApp share | ❌ | ✅ | ✅ |
 | Diagnóstico IA | ❌ | ✅ | ✅ |
 | Módulo BPC/LOAS | ❌ | ✅ | ✅ |
+| Petição Inicial IA | ❌ | ✅ | ✅ |
+| Portal do Cliente | ❌ | ✅ (básico) | ✅ (c/ simulador) |
 | Marca d'água | ✅ | ❌ | ❌ |
 
 ---
@@ -34,6 +37,7 @@
 | `WHATSAPP_SHARE` | Compartilhar via WhatsApp | `whatsappEnabled` |
 | `DIAGNOSIS` | Diagnóstico IA | `diagnosisEnabled` |
 | `USE_BPC_MODULE` | Módulo BPC/LOAS | `bpcEnabled` |
+| `PETICAO` | Petição Inicial com IA | `peticaoEnabled` |
 
 > **Nota:** `BPC_SOCIAL_MEDIA` foi removido do PlanFeature. O carrossel BPC não é mais gerado via IA no backend.
 
