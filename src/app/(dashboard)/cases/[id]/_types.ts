@@ -25,4 +25,10 @@ export interface CaseDetail {
     peticaoEnabled: boolean
     processInterpretEnabled: boolean
   }
+  portalConfig?: {
+    showProcessTracking: boolean
+    showCalculations: boolean
+    showRetroactives: boolean
+    showInterpretation: boolean
+  }
 }

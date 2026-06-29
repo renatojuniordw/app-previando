@@ -1,6 +1,6 @@
 # 01 — DATABASE
 > PostgreSQL 16 + Prisma ORM — banco: previando_db
-> Última atualização: 2026-06-27
+> Última atualização: 2026-06-29
 
 ---
 
@@ -172,6 +172,8 @@ Tabela: `usage_records`
 | `usageMonthRef` | `DateTime @default(now())` | Referência do mês |
 | `updatedAt` | `DateTime @updatedAt` | Atualização |
 
+**Observação:** Os campos `peticoesThisMonth` e `processInterpretThisMonth` foram adicionados junto com a feature de interpretação de movimentações (Fase 3 TrackJud).
+
 **Relações:** `user -> User` (Cascade on delete)
 
 ---
@@ -234,8 +236,17 @@ Tabela: `cases`
 | `updatedAt` | `DateTime @updatedAt` | Atualização |
 
 **Relações:** `user -> User`, `client -> Client`, `cnisDocument?`, `calculations[]`, `retroactives[]`, `opinions[]`, `checklists[]`, `simulations[]`, `caseNotes[]`, `bpcAnalysis?`
-**Índices:** `@@index([userId])`, `@@index([clientId])`, `@@index([userId, status])`, `@@index([priority, deadlineDate])`, `@@index([processNumber])`
+**Índices:** `@@index([userId])`, `@@index([clientId])`, `@@index([userId, status])`, `@@index([priority, deadlineDate])`, `@@index([processNumber])`, `@@index([trackjudMonitorId])`
 
+**PortalConfig (JSON):**
+```json
+{
+  "showProcessTracking": true,
+  "showCalculations": true,
+  "showRetroactives": false,
+  "showInterpretation": false
+}
+```
 ---
 
 #### CaseStatus (Enum)

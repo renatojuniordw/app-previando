@@ -1,6 +1,6 @@
 # 04 — SECURITY
 > Auth, Middleware, Bloqueios Físicos, Sanitização e Rate Limiting
-> Última atualização: 2026-06-27
+> Última atualização: 2026-06-29
 
 ---
 
@@ -61,6 +61,7 @@ const ADMIN_ROUTES = ['/admin', '/api/admin']
 | Diagnósticos | 10 | 1 hora |
 | BPC (todas) | 15 | 1 hora |
 | Carrossel BPC | 15 | 1 hora |
+| Portal do Cliente (simulador) | 5 | 1 hora |
 
 ---
 
@@ -184,3 +185,33 @@ export async function requireAdmin(): Promise<{ error: NextResponse } | { userId
 - [ ] Ownership verificado em todos os endpoints com IDs
 - [ ] Seed de `PlanLimit` rodado
 - [ ] SMTP configurado para password reset
+
+---
+
+## Portal do Cliente — Segurança
+
+### Link Compartilhável
+
+- Token gerado via `cuid()` — imprevisível e único
+- Expira em 30 dias (`expiresAt`)
+- Advogado pode revogar a qualquer momento via `DELETE /api/cases/[id]/portal`
+- Rate limit: 5 req/hora para simulação (proteção contra brute force)
+
+### Controle de Dados Expostos
+
+O `portalConfig` (JSON no model `Case`) define exatamente quais informações o cliente pode ver:
+
+| Chave | Dados expostos | Risco LGPD |
+|---|---|---|
+| `showProcessTracking` | Nº processo + movimentações (dado público no CNJ) | Baixo |
+| `showCalculations` | RMI, RMA, modalidades | Médio |
+| `showRetroactives` | Valores financeiros | Médio |
+| `showInterpretation` | Análise textual da IA | Baixo |
+
+**Dados nunca expostos:** CPF, telefone, email, endereço, notas do prontuário.
+
+### Anti-abuso
+
+- Endpoint público (`/api/portal/[token]`) não permite pesquisa por processNumber — apenas por token
+- Token expirado retorna 410 Gone (não 404 — não vaza existência)
+- Token inválido retorna 404

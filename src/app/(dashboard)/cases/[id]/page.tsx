@@ -10,6 +10,7 @@ import { StatusModal } from './_components/StatusModal'
 import { EditCaseModal } from './_components/EditCaseModal'
 import { ProcessCard } from './_components/ProcessCard'
 import { SuccessAnalysisCard } from './_components/SuccessAnalysisCard'
+import { PortalConfigCard } from './_components/PortalConfigCard'
 
 export default function CaseOverviewPage() {
   const {
@@ -61,6 +62,12 @@ export default function CaseOverviewPage() {
       <SuccessAnalysisCard
         caseId={caseData.id}
         hasDiagnosis={caseData.planLimits?.diagnosisEnabled ?? false}
+      />
+
+      <PortalConfigCard
+        caseId={caseData.id}
+        portalConfig={caseData.portalConfig}
+        onUpdate={load}
       />
 
       <ProcessCard

@@ -220,6 +220,9 @@ model Case {
   trackjudMonitorId     String?
   trackjudRegisteredAt  DateTime?
 
+  // Configuração do Portal do Cliente — define quais abas o cliente pode ver
+  portalConfig Json @default("{\"showProcessTracking\":true,\"showCalculations\":true,\"showRetroactives\":false,\"showInterpretation\":false}")
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

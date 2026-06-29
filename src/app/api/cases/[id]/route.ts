@@ -54,6 +54,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     return NextResponse.json({
       case: {
         ...mapCaseToApi(caso),
+        portalConfig: caso.portalConfig,
         planLimits: {
           simulatorEnabled: planLimits.simulatorEnabled,
           retroativosEnabled: planLimits.retroactiveEnabled,

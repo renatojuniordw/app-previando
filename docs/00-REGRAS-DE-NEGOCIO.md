@@ -1,6 +1,6 @@
 # 00 — REGRAS DE NEGÓCIO
 > Previando — Glossário, Fluxos, Casos de Uso e Regras para o Agente
-> Última atualização: 2026-06-27
+> Última atualização: 2026-06-29
 
 ---
 
@@ -336,12 +336,50 @@ Todo limite verificado no banco via API — retorna 402.
 - Email enviado via nodemailer (SMTP configurável)
 - Token expira em 1 hora
 
-### 5.8 Consulta de Processo (DataJud)
+### 5.8 Consulta de Processo (TrackJud Vigilant)
 - Endpoint: `POST /api/cases/[id]/process`
 - Aceita número CNJ (20 dígitos) em qualquer formato
-- Consulta API pública do CNJ
-- Suporta: STF (justiça 1), STJ (justiça 3), TRFs (justiça 4), TRTs (justiça 5), TJs (justiça 8, 27 tribunais)
-- Atualiza automaticamente os campos de processo no caso
+- Antes de consultar, o tribunal é identificado via `cnj-parser.ts` e enviado junto com a requisição para evitar consultas desnecessárias
+- Monitoramento push via webhook: `POST /api/webhooks/trackjud`
+- Cooldown: 10 min entre consultas manuais
+- Notificação PROCESS_UPDATE criada automaticamente via webhook
+
+### 5.9 Portal do Cliente — Controle de Acesso
+O Portal do Cliente permite ao advogado compartilhar dados do caso de forma **granular e segura**:
+
+- **Link único**: token `cuid()` com validade de 30 dias
+- **Configurável via `portalConfig`**: o advogado ativa/desativa módulos individualmente
+- **Dados mínimos**: só expõe o que foi explicitamente autorizado
+- **Revogável**: link pode ser invalidado a qualquer momento
+
+**Módulos disponíveis:**
+| Módulo | O que expõe | Default |
+|---|---|---|
+| Acompanhamento processual | Nº processo + movimentações + tribunal | ✅ Ativo |
+| Cálculos | RMI, RMA, modalidades | ✅ Ativo |
+| Retroativos | Valores financeiros | ❌ Inativo |
+| Interpretação IA | Análise textual de urgência | ❌ Inativo |
+
+**Arquitetura:**
+```
+[Advogado] → PATCH /api/cases/[id]/portal/config → salva portalConfig (JSON no Case)
+[Advogado] → POST /api/cases/[id]/portal → gera link 30 dias
+[Cliente]  → GET /api/portal/[token] → dados filtrados por portalConfig
+```
+
+---
+
+## 6. Empty States Atualizados
+
+| Situação | Mensagem | Ação |
+|---|---|---|
+| Nenhum cliente | "Cadastre o primeiro segurado para começar." | Cadastrar Cliente |
+| Cliente sem caso | "Crie um caso para iniciar o atendimento." | Criar Caso |
+| Kanban vazio | "Nenhum caso ativo. Cadastre um cliente e crie um caso." | Ver Clientes |
+| CNIS não enviado | "Faça o upload do CNIS para habilitar a calculadora." | Upload CNIS |
+| Prontuário vazio | "Registre o primeiro contato com o cliente." | + Anotação |
+| Nenhum parecer | "Selecione um cálculo como definitivo para gerar o parecer." | — |
+| Portal inativo | "Nenhum link de portal ativo para este caso." | Gerar Link |
 
 ---
 
