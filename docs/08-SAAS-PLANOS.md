@@ -6,7 +6,7 @@
 
 ## Planos
 
-| | FREE | SOLO R$299/mês | PRO R$599/mês |
+| | FREE | SOLO R$97/mês | PRO R$197/mês |
 |---|---|---|---|
 | Clientes | 3 total | 30 total | Ilimitado |
 | Cálculos/mês | 5 | Ilimitado | Ilimitado |
@@ -64,7 +64,7 @@ export const MP_PLAN_IDS: Record<string, string> = {
   SOLO: process.env.MP_PLAN_ID_SOLO!,
   PRO: process.env.MP_PLAN_ID_PRO!,
 }
-export const PLAN_PRICES: Record<string, number> = { SOLO: 299, PRO: 599 }
+export const PLAN_PRICES: Record<string, number> = { SOLO: 97, PRO: 197 }
 ```
 
 ---
@@ -159,7 +159,7 @@ Feature bloqueada:
 
 ## Checklist de Pagamentos (pré-deploy)
 
-- [ ] Planos criados no painel Mercado Pago (SOLO R$299 e PRO R$599)
+- [ ] Planos criados no painel Mercado Pago (SOLO R$97 e PRO R$197)
 - [ ] IDs dos planos configurados nas env vars
 - [ ] Webhook configurado no MP: `https://app.previando.com.br/api/webhooks/mercadopago`
 - [ ] `MERCADOPAGO_WEBHOOK_SECRET` igual ao configurado no MP

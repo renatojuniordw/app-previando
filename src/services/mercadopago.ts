@@ -12,6 +12,6 @@ export const MP_PLAN_IDS: Record<string, string> = {
 }
 
 export const PLAN_PRICES: Record<string, number> = {
-  SOLO: 299,
-  PRO: 599,
+  SOLO: 97,
+  PRO: 197,
 }

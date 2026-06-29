@@ -370,7 +370,7 @@ PLANO FREE:
 
 PLANO SOLO (destaque):
   Badge:    "Mais Popular"
-  Preço:    R$ 299
+  Preço:    R$ 97
   Período:  /mês
   Features:
     ✓ 30 clientes
@@ -387,7 +387,7 @@ PLANO SOLO (destaque):
   URL: app.previando.com.br/register?plan=solo
 
 PLANO PRO:
-  Preço:    R$ 599
+  Preço:    R$ 197
   Período:  /mês
   Features:
     ✓ Clientes ilimitados
@@ -401,7 +401,7 @@ PLANO PRO:
 Âncora de valor:
   "Um único caso de revisão de benefício pode valer
    R$ 5.000 a R$ 30.000 em honorários.
-   O Previando Solo custa R$ 299/mês."
+   O Previando Solo custa R$ 97/mês."
 ```
 
 ---

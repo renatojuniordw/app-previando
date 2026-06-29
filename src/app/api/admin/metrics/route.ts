@@ -49,8 +49,8 @@ export async function GET() {
     byStatusMap[apiStatus] = row._count
   }
 
-  const soloMRR = (byPlanMap['SOLO'] ?? 0) * 299
-  const proMRR = (byPlanMap['PRO'] ?? 0) * 599
+  const soloMRR = (byPlanMap['SOLO'] ?? 0) * 97
+  const proMRR = (byPlanMap['PRO'] ?? 0) * 197
 
   return NextResponse.json({
     users: {

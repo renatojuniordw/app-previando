@@ -183,7 +183,7 @@ PDF Upload → Extração de Texto → Parser Programático (instantâneo)
 
 ### Mercado Pago
 - **Arquivo:** `src/services/mercadopago.ts`
-- **Preços:** SOLO: R$299, PRO: R$599
+- **Preços:** SOLO: R$97, PRO: R$197
 
 ---
 

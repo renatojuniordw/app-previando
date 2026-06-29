@@ -10,7 +10,7 @@ export async function GET() {
 
     const plans = limits.map((l: typeof limits[number]) => ({
       plan: l.plan,
-      price: l.plan === 'FREE' ? 0 : l.plan === 'SOLO' ? 299 : 599,
+      price: l.plan === 'FREE' ? 0 : l.plan === 'SOLO' ? 97 : 197,
       limits: l,
     }))
 
