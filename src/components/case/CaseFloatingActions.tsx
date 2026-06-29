@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { cn } from '@/lib/utils'
-import { MessageSquare, CheckSquare, Bot, Briefcase, X, Building2 } from 'lucide-react'
+import { MessageSquare, CheckSquare, Bot, Briefcase, X, Building2, FileText } from 'lucide-react'
 
 interface CaseFloatingActionsProps {
   activeDrawer: string | null
@@ -51,6 +51,12 @@ export function CaseFloatingActions({ activeDrawer, setDrawer, benefitType }: Ca
       id: 'opinions',
       label: 'Parecer IA',
       icon: Bot,
+      color: 'hover:text-amber-600 hover:border-amber-200 hover:bg-amber-50/50',
+    },
+    {
+      id: 'peticao',
+      label: 'Petição Inicial',
+      icon: FileText,
       color: 'hover:text-amber-600 hover:border-amber-200 hover:bg-amber-50/50',
     },
     ...(benefitType === 'BPC_LOAS'

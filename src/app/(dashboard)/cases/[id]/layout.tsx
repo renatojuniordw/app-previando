@@ -12,6 +12,7 @@ import { CaseChecklistDrawer } from '@/components/case/CaseChecklistDrawer'
 import { CaseOpinionsDrawer } from '@/components/case/CaseOpinionsDrawer'
 import { CaseBpcDrawer } from '@/components/case/CaseBpcDrawer'
 import { CaseFloatingActions } from '@/components/case/CaseFloatingActions'
+import { CasePeticaoModal } from '@/components/case/CasePeticaoModal'
 
 interface CaseHeader {
   id: string
@@ -147,6 +148,13 @@ export default function CaseLayout({ children }: { children: React.ReactNode }) 
       <div className="flex-1 max-w-7xl w-full mx-auto p-6 md:p-8">
         {children}
       </div>
+
+      {/* Petição Inicial Modal */}
+      <CasePeticaoModal
+        open={activeDrawer === 'peticao'}
+        onClose={() => setDrawer(null)}
+        caseId={params.id as string}
+      />
 
       {/* Slide-out Drawers */}
       <CaseNotesDrawer

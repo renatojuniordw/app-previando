@@ -6,8 +6,12 @@ import { guardClientLimit } from '@/lib/plan-guard'
 import { handleApiError } from '@/lib/api-error'
 import { rateLimit } from '@/lib/rate-limit'
 
-// Formato CSV esperado:
-// nome,cpf,data_nascimento,telefone,email,prioridade,notas
+// Formatos suportados:
+// CSV: nome,cpf,data_nascimento,telefone,email,prioridade,notas
+//   - prioridade: NORMAL|ATTENTION|CRITICAL
+//   - data_nascimento: YYYY-MM-DD ou DD/MM/YYYY
+// Excel (.xlsx): mesmas colunas (primeira linha = cabeçalho)
+// Astrea/ProJuris: mapeamento automático de colunas comuns
 // NORMAL|ATTENTION|CRITICAL para prioridade; data_nascimento: YYYY-MM-DD ou DD/MM/YYYY
 
 function parseCsvLine(line: string): string[] {

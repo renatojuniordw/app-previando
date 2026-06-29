@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import { Scale, FileText, Calculator, Clock, CheckCircle2, XCircle, AlertCircle } from 'lucide-react'
+import { PortalSimulator } from '@/components/portal/PortalSimulator'
 
 const BENEFIT_LABELS: Record<string, string> = {
   RETIREMENT_BY_AGE: 'Aposentadoria por Idade',
@@ -71,6 +72,7 @@ export default async function PortalPage({ params }: Props) {
   const { case: c } = access
   const hasWatermark = c.user.plan === 'FREE'
   const bestCalc = c.calculations[0]
+  const hasSimulator = c.user.plan === 'SOLO' || c.user.plan === 'PRO'
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -137,6 +139,11 @@ export default async function PortalPage({ params }: Props) {
             )}
           </div>
         </div>
+
+        {/* Simulador E se? - Apenas SOLO/PRO */}
+        {hasSimulator && (
+          <PortalSimulator token={params.token} />
+        )}
 
         {/* Cálculos selecionados */}
         {c.calculations.length > 0 && (
