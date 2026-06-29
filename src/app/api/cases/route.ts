@@ -15,6 +15,7 @@ import {
   ApiCaseStatus,
   ApiBenefitType,
 } from '@/lib/mappers'
+import { createCalendarEvent } from '@/services/google-calendar'
 
 const createSchema = z.object({
   clientId: z.string().cuid(),
@@ -132,6 +133,8 @@ export async function POST(req: NextRequest) {
 
     await verifyClientOwnership(parsed.data.clientId, session.user.id)
 
+    const deadlineDate = parsed.data.deadlineDate ? new Date(parsed.data.deadlineDate) : null
+
     const caso = await prisma.case.create({
       data: {
         userId: session.user.id,
@@ -139,7 +142,7 @@ export async function POST(req: NextRequest) {
         benefitType: mapBenefitTypeToDb(parsed.data.benefitType as ApiBenefitType),
         priority: parsed.data.priority,
         deadlineDays: parsed.data.deadlineDays ?? null,
-        deadlineDate: parsed.data.deadlineDate ? new Date(parsed.data.deadlineDate) : null,
+        deadlineDate,
         notes: parsed.data.notes ? sanitizeInput(parsed.data.notes) : null,
         status: DbCaseStatus.PROSPECTING,
       },
@@ -147,6 +150,20 @@ export async function POST(req: NextRequest) {
         client: { select: { id: true, name: true } },
       },
     })
+
+    if (deadlineDate) {
+      const calendarEventId = await createCalendarEvent(session.user.id, {
+        title: `Prazo: ${caso.client?.name ?? 'Cliente'} — ${caso.benefitType.replace(/_/g, ' ')}`,
+        description: parsed.data.notes ?? undefined,
+        date: deadlineDate,
+      })
+      if (calendarEventId) {
+        await prisma.case.update({
+          where: { id: caso.id },
+          data: { googleCalendarEventId: calendarEventId },
+        })
+      }
+    }
 
     await logAudit({
       userId: session.user.id,

@@ -8,6 +8,7 @@ import { handleApiError } from '@/lib/api-error'
 import { logAudit } from '@/lib/audit'
 import { getPlanLimit } from '@/lib/plan-guard'
 import { mapCaseStatusToDb, mapCaseToApi, ApiCaseStatus } from '@/lib/mappers'
+import { createCalendarEvent, updateCalendarEvent, deleteCalendarEvent } from '@/services/google-calendar'
 
 const CNJ_PROCESS_REGEX = /^\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4}$|^\d{20}$/
 
@@ -85,11 +86,36 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     if (parsed.data.processNumber !== undefined)
       data.processNumber = parsed.data.processNumber
 
+    const casoAntes = await prisma.case.findUnique({
+      where: { id: params.id },
+      select: { googleCalendarEventId: true, deadlineDate: true, benefitType: true, client: { select: { name: true } } },
+    })
+
     const caso = await prisma.case.update({
       where: { id: params.id },
       data,
       include: { client: { select: { name: true } } },
     })
+
+    if (parsed.data.deadlineDate !== undefined) {
+      const newDate = parsed.data.deadlineDate ? new Date(parsed.data.deadlineDate) : null
+      const existingEventId = casoAntes?.googleCalendarEventId ?? null
+      const clientName = caso.client?.name ?? 'Cliente'
+      const title = `Prazo: ${clientName} — ${caso.benefitType.replace(/_/g, ' ')}`
+      const description = (parsed.data.notes ?? undefined) as string | undefined
+
+      if (newDate && existingEventId) {
+        await updateCalendarEvent(session.user.id, existingEventId, { title, description, date: newDate })
+      } else if (newDate && !existingEventId) {
+        const calendarEventId = await createCalendarEvent(session.user.id, { title, description, date: newDate })
+        if (calendarEventId) {
+          await prisma.case.update({ where: { id: params.id }, data: { googleCalendarEventId: calendarEventId } })
+        }
+      } else if (!newDate && existingEventId) {
+        await deleteCalendarEvent(session.user.id, existingEventId)
+        await prisma.case.update({ where: { id: params.id }, data: { googleCalendarEventId: null } })
+      }
+    }
 
     const action = parsed.data.status ? 'case.status.changed' : 'case.updated'
     await logAudit({
@@ -119,8 +145,12 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
 
     const caso = await prisma.case.findUnique({
       where: { id: params.id },
-      select: { benefitType: true, client: { select: { name: true } }, clientId: true },
+      select: { benefitType: true, client: { select: { name: true } }, clientId: true, googleCalendarEventId: true },
     })
+
+    if (caso?.googleCalendarEventId) {
+      await deleteCalendarEvent(session.user.id, caso.googleCalendarEventId)
+    }
 
     await prisma.case.delete({ where: { id: params.id } })
 

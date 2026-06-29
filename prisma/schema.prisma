@@ -208,9 +208,10 @@ model Case {
   processLastMovDate DateTime?
   processLastMovCount Int?
   processLastSummary String?   @db.Text
-  deadlineDays Int?
-  deadlineDate DateTime?
-  notes        String?
+  deadlineDays           Int?
+  deadlineDate           DateTime?
+  googleCalendarEventId  String?
+  notes                  String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
