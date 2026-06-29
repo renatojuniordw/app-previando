@@ -111,3 +111,64 @@ export async function deleteCalendarEvent(
     return false
   }
 }
+
+/**
+ * Sincroniza os prazos de todos os casos ativos do usuário como eventos no Google Calendar.
+ * Cria eventos apenas para casos que ainda não possuem googleCalendarEventId.
+ * Retorna o número de eventos criados.
+ */
+export async function syncCaseDeadlinesToCalendar(userId: string): Promise<number> {
+  const calendar = await getCalendarClient(userId)
+  if (!calendar) return 0
+
+  const cases = await prisma.case.findMany({
+    where: {
+      userId,
+      deadlineDate: { not: null },
+      googleCalendarEventId: null,
+      status: { notIn: ['FINISHED'] },
+    },
+    select: {
+      id: true,
+      deadlineDate: true,
+      benefitType: true,
+      client: { select: { name: true } },
+    },
+  })
+
+  let created = 0
+
+  for (const c of cases) {
+    if (!c.deadlineDate) continue
+
+    try {
+      const res = await calendar.events.insert({
+        calendarId: 'primary',
+        requestBody: {
+          summary: `Prazo: ${c.client.name}`,
+          description: `Prazo do caso de ${c.client.name} — vence em ${c.deadlineDate.toLocaleDateString('pt-BR')}`,
+          start: { date: c.deadlineDate.toISOString().split('T')[0] },
+          end: { date: c.deadlineDate.toISOString().split('T')[0] },
+        },
+      })
+
+      if (res.data.id) {
+        await prisma.case.update({
+          where: { id: c.id },
+          data: { googleCalendarEventId: res.data.id },
+        })
+        created++
+      }
+    } catch {
+      // Falha silenciosa — não quebra o worker por um evento individual
+      continue
+    }
+  }
+
+  return created
+}
+
+export interface CalendarSyncResult {
+  created: number
+  total: number
+}

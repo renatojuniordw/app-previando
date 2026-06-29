@@ -1,9 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 import { createHmac, timingSafeEqual } from 'crypto'
 import { prisma } from '@/lib/prisma'
 import { rateLimit } from '@/lib/rate-limit'
 import { Logger } from '@/lib/logger'
-import type { TrackJudWebhookPayload } from '@/services/trackjud'
+
+const trackjudSchema = z.object({
+  monitorId: z.string().min(1),
+  processNumber: z.string().min(1),
+  movements: z.array(z.object({
+    date: z.string(),
+    description: z.string(),
+  })).optional(),
+  totalMovements: z.number().int().nonnegative(),
+  timestamp: z.string().optional(),
+})
 
 const logger = new Logger('WebhookTrackJud')
 
@@ -42,18 +53,20 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Assinatura inválida' }, { status: 401 })
   }
 
-  let payload: TrackJudWebhookPayload
+  let rawPayload: unknown
   try {
-    payload = JSON.parse(rawBody)
+    rawPayload = JSON.parse(rawBody)
   } catch {
     return NextResponse.json({ error: 'Payload inválido' }, { status: 400 })
   }
 
-  const { monitorId, processNumber, movements, totalMovements, timestamp } = payload
-
-  if (!monitorId || !processNumber) {
-    return NextResponse.json({ error: 'monitorId e processNumber são obrigatórios' }, { status: 400 })
+  const parsedPayload = trackjudSchema.safeParse(rawPayload)
+  if (!parsedPayload.success) {
+    logger.warn('Payload TrackJud com estrutura inválida', parsedPayload.error.flatten())
+    return NextResponse.json({ error: 'Payload inválido' }, { status: 400 })
   }
+
+  const { monitorId, processNumber, movements, totalMovements } = parsedPayload.data
 
   try {
     // Buscar caso pelo trackjudMonitorId — nunca por processNumber (previne abuso)

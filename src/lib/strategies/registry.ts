@@ -23,6 +23,11 @@ import {
   PensaoMorteStrategy,
   BpcLoasStrategy,
 } from './assistenciais'
+import {
+  RevisaoVidaTodaStrategy,
+  RevisaoArtigo29Strategy,
+  RevisaoBuracoNegroStrategy,
+} from './revision'
 
 /**
  * Default strategy used when no strategy is registered for a given modality.
@@ -46,7 +51,7 @@ const DEFAULT_STRATEGY = new DefaultStrategy()
  * Registry holding all strategy instances, keyed by modality code.
  * Add new strategies here — no switch statements needed.
  */
-const STRATEGIES: Map<string, ModalidadeStrategy> = new Map([
+const STRATEGIES: Map<string, ModalidadeStrategy> = new Map<string, ModalidadeStrategy>([
   ['APOSENTADORIA_IDADE', new AposentadoriaIdadeStrategy()],
   ['IDADE_MINIMA_65_62', new IdadeMinimaProgressivaStrategy()],
   ['TEMPO_CONTRIBUICAO', new TempoContribuicaoStrategy()],
@@ -61,6 +66,9 @@ const STRATEGIES: Map<string, ModalidadeStrategy> = new Map([
   ['AUXILIO_RECLUSAO', new AuxilioReclusaoStrategy()],
   ['PENSAO_MORTE', new PensaoMorteStrategy()],
   ['BPC_LOAS', new BpcLoasStrategy()],
+  ['REVISAO_VIDA_TODA', new RevisaoVidaTodaStrategy()],
+  ['REVISAO_ART_29', new RevisaoArtigo29Strategy()],
+  ['REVISAO_BURACO_NEGRO', new RevisaoBuracoNegroStrategy()],
 ])
 
 /**

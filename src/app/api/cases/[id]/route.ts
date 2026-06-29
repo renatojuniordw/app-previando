@@ -62,6 +62,9 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
           diagnosisEnabled: planLimits.diagnosisEnabled,
           peticaoEnabled: planLimits.peticaoEnabled,
           processInterpretEnabled: planLimits.processInterpretEnabled,
+          revisionEnabled: planLimits.revisionEnabled,
+          viabilityScoreEnabled: planLimits.viabilityScoreEnabled,
+          assinaturaEnabled: planLimits.assinaturaEnabled,
         },
       },
     })

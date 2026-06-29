@@ -1,0 +1,4 @@
+Nome,CPF,Data Nascimento,Telefone,Email,Prioridade,Observações
+João da Silva,12345678901,15/03/1985,(11) 99999-0001,joao@email.com,NORMAL,Cliente regular
+Maria Oliveira,98765432100,22/07/1990,(21) 98888-0002,maria@email.com,ATTENTION,Prioridade média
+Carlos Pereira,11122233344,10/11/1978,(31) 97777-0003,carlos@email.com,CRITICAL,Urgente

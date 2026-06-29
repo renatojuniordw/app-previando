@@ -133,6 +133,12 @@ model PlanLimit {
   processInterpretEnabled        Boolean @default(false)
   maxProcessInterpretPerMonth    Int     @default(0) // -1 = ilimitado | 0 = bloqueado
 
+  revisionEnabled                Boolean @default(false)
+  maxRevisionsPerMonth           Int     @default(0) // -1 = ilimitado | 0 = bloqueado
+  gpsEnabled                     Boolean @default(false)
+  viabilityScoreEnabled          Boolean @default(false)
+  assinaturaEnabled              Boolean @default(false)
+
   updatedAt DateTime @updatedAt
 
   @@map("plan_limits")
@@ -154,6 +160,7 @@ model UsageRecord {
   bpcSocialMediaThisMonth Int      @default(0)
   peticoesThisMonth              Int      @default(0)
   processInterpretThisMonth      Int      @default(0)
+  revisionsThisMonth             Int      @default(0)
   usageMonthRef                  DateTime @default(now())
 
   updatedAt DateTime @updatedAt
@@ -236,6 +243,9 @@ model Case {
   bpcAnalysis  BpcAnalysis?
   clientAccess ClientAccess?
   fees         Fee[]
+  revisions    Revision[]
+  gpsGuides    GpsGuide[]
+  assinaturas  Assinatura[]
 
   @@index([userId])
   @@index([clientId])
@@ -654,6 +664,7 @@ enum NotificationType {
   CNIS_PROCESSED
   CNIS_FAILED
   PROCESS_UPDATE
+  SIGNATURE_COMPLETED
 }
 
 // ─────────────────────────────────────────
@@ -720,6 +731,73 @@ model InpcIndex {
 
   @@index([competence])
   @@map("inpc_indices")
+}
+
+// ─────────────────────────────────────────
+// REVISÃO DE BENEFÍCIOS
+// ─────────────────────────────────────────
+
+model Revision {
+  id                String   @id @default(cuid())
+  caseId            String
+  case              Case     @relation(fields: [caseId], references: [id], onDelete: Cascade)
+
+  tipoRevisao       String   // REVISAO_VIDA_TODA | REVISAO_ART_29 | REVISAO_BURACO_NEGRO
+  rmiConcedido      Decimal  @db.Decimal(10, 2)
+  rmiRevisado       Decimal  @db.Decimal(10, 2)
+  diferencaMensal   Decimal  @db.Decimal(10, 2)
+  diferencaPercentual Float
+  retroativos5Anos  Decimal  @db.Decimal(12, 2)
+  elegivel          Boolean
+  pendencias        String[]
+  createdAt         DateTime @default(now())
+
+  @@index([caseId])
+  @@map("revisions")
+}
+
+// ─────────────────────────────────────────
+// GUIAS DE CONTRIBUIÇÃO (GPS/DAS)
+// ─────────────────────────────────────────
+
+model GpsGuide {
+  id                  String   @id @default(cuid())
+  caseId              String
+  case                Case     @relation(fields: [caseId], references: [id], onDelete: Cascade)
+
+  categoria           String   // CI, FACULTATIVO, MEI, SEGURADO_ESPECIAL
+  plano               String   // NORMAL, SIMPLIFICADO, BAIXA_RENDA
+  salarioContribuicao Decimal  @db.Decimal(10, 2)
+  valorCalculado      Decimal  @db.Decimal(10, 2)
+  aliquota            Float
+  codigoPagamento     String
+  competencia         String   // "YYYY-MM"
+  pdfUrl              String?
+  createdAt           DateTime @default(now())
+
+  @@index([caseId])
+  @@map("gps_guides")
+}
+
+// ─────────────────────────────────────────
+// ASSINATURA DIGITAL (Clicksign)
+// ─────────────────────────────────────────
+
+model Assinatura {
+  id              String   @id @default(cuid())
+  caseId          String
+  case            Case     @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  tipoDocumento   String   // PROCURACAO, PETICAO, CONTRATO
+  processoKey     String
+  signUrl         String?  // Link temporário do Clicksign para assinar
+  status          String   // PENDING, SIGNED, CANCELLED, EXPIRED
+  documentUrl     String?
+  signers         Json
+  createdAt       DateTime @default(now())
+  completedAt     DateTime?
+
+  @@index([caseId])
+  @@map("assinaturas")
 }
 
 // ─────────────────────────────────────────

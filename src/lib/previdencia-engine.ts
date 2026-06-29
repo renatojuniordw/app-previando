@@ -150,7 +150,7 @@ function calcularTempoContribuicao(extractedData: CnisExtractedData | null, dib:
     for (const p of extractedData.periodos) {
       const inicio = p.inicio
       const fim = p.fim || dib
-      const meses = Math.max(1, diffInMonths(inicio, fim))
+      const meses = Math.max(1, diffInMonths(inicio ?? dib, fim))
       tempoContribuicaoMeses += meses
     }
   }
@@ -386,7 +386,8 @@ export function projectSimulations(params: {
       empregador: 'PROJEÇÃO DE CONTRIBUIÇÃO FUTURA (SIMULADO)',
       inicio: salariosProjetados[0].competencia + '-01',
       fim: salariosProjetados[salariosProjetados.length - 1].competencia + '-28',
-      salarios: salariosProjetados
+      salarios: salariosProjetados,
+      gaps: [],
     })
   }
 

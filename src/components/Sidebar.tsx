@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { signOut } from 'next-auth/react'
 import { cn } from '@/lib/utils'
-import { LayoutDashboard, Users, Columns, CreditCard, Settings, LogOut, Activity, Calendar, FolderOpen, X, BookOpen, Files } from 'lucide-react'
+import { LayoutDashboard, Users, Columns, CreditCard, Settings, LogOut, Activity, Calendar, FolderOpen, X, BookOpen, Files, BarChart3 } from 'lucide-react'
 import { UsageBar } from '@/components/UsageBar'
 import { useSidebarStore } from '@/store/sidebar'
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock'
@@ -16,6 +16,7 @@ const NAV_ITEMS = [
   { href: '/clients/list', label: 'Clientes', icon: Users },
   { href: '/clients/kanban', label: 'Kanban', icon: Columns },
   { href: '/cases', label: 'Casos', icon: FolderOpen },
+  { href: '/reports', label: 'Relatórios', icon: BarChart3 },
   { href: '/deadlines', label: 'Prazos', icon: Calendar },
   { href: '/activity', label: 'Atividade', icon: Activity },
   { href: '/tools/pdf', label: 'Ferramentas de PDF', icon: Files },

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { calculatePrevidenciario } from '@/lib/previdencia-engine'
 import { getRegrasVigentes } from '@/lib/regras-aposentadoria'
@@ -6,6 +7,11 @@ import { getSalarioVigente } from '@/lib/salario-minimo'
 import { handleApiError } from '@/lib/api-error'
 import { rateLimit } from '@/lib/rate-limit'
 import type { CnisExtractedData } from '@/services/cnis/types'
+
+const simulateSchema = z.object({
+  dibProjetada: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Formato inválido (YYYY-MM-DD)'),
+  valorContribuicao: z.number().positive('Valor de contribuição deve ser positivo'),
+})
 
 /**
  * POST /api/portal/[token]/simulate
@@ -48,10 +54,12 @@ export async function POST(req: NextRequest, { params }: { params: { token: stri
       return NextResponse.json({ error: 'CNIS ainda não processado.' }, { status: 422 })
     }
 
-    const { dibProjetada, valorContribuicao } = await req.json()
-    if (!dibProjetada || !valorContribuicao) {
-      return NextResponse.json({ error: 'Informe a data pretendida e o valor de contribuição.' }, { status: 400 })
+    const body = await req.json()
+    const parsed = simulateSchema.safeParse(body)
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Dados inválidos.', detalhes: parsed.error.flatten().fieldErrors }, { status: 400 })
     }
+    const { dibProjetada, valorContribuicao } = parsed.data
 
     const birthDate = c.client.birthDate.toISOString().split('T')[0]
     const salario = await getSalarioVigente(dibProjetada)
@@ -94,6 +102,7 @@ export async function POST(req: NextRequest, { params }: { params: { token: stri
         inicio: salariosProjetados[0].competencia + '-01',
         fim: salariosProjetados[salariosProjetados.length - 1].competencia + '-28',
         salarios: salariosProjetados,
+        gaps: [],
       })
     }
 

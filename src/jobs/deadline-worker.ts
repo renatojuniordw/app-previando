@@ -2,6 +2,7 @@ import { Worker, Queue } from 'bullmq'
 import Redis from 'ioredis'
 import { prisma } from '../lib/prisma'
 import { Logger } from '../lib/logger'
+import { hasCalendarAccess, syncCaseDeadlinesToCalendar } from '../services/google-calendar'
 
 const logger = new Logger('DeadlineWorker')
 
@@ -53,6 +54,18 @@ export function createDeadlineWorker(redis: Redis): Worker {
               message: `Prazo do caso de ${c.client.name} vence em ${days} dia${days > 1 ? 's' : ''} (${dateStr}).`,
             },
           })
+        }
+        // Sincroniza prazos com Google Calendar
+        const syncUserIds = Array.from(new Set(cases.map((c: { userId: string }) => c.userId)))
+        for (const uid of syncUserIds) {
+          try {
+            const synced = await syncCaseDeadlinesToCalendar(uid)
+            if (synced > 0) {
+              logger.info(`Synced ${synced} deadlines to Google Calendar for user ${uid}`)
+            }
+          } catch {
+            logger.warn(`Failed to sync Google Calendar for user ${uid}`)
+          }
         }
       }
 

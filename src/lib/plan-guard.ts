@@ -33,6 +33,10 @@ export type PlanFeature =
   | 'USE_BPC_MODULE'
   | 'PETICAO'
   | 'PROCESS_INTERPRET'
+  | 'REVISION_MODULE'
+  | 'GPS_MODULE'
+  | 'VIABILITY_SCORE'
+  | 'ASSINATURA_DIGITAL'
 
 const FEATURE_MAP: Record<PlanFeature, keyof PlanLimit> = {
   SIMULATOR: 'simulatorEnabled',
@@ -43,6 +47,10 @@ const FEATURE_MAP: Record<PlanFeature, keyof PlanLimit> = {
   USE_BPC_MODULE: 'bpcEnabled',
   PETICAO: 'peticaoEnabled',
   PROCESS_INTERPRET: 'processInterpretEnabled',
+  REVISION_MODULE: 'revisionEnabled',
+  GPS_MODULE: 'gpsEnabled',
+  VIABILITY_SCORE: 'viabilityScoreEnabled',
+  ASSINATURA_DIGITAL: 'assinaturaEnabled',
 }
 
 const FEATURE_LABELS: Record<PlanFeature, string> = {
@@ -54,6 +62,10 @@ const FEATURE_LABELS: Record<PlanFeature, string> = {
   USE_BPC_MODULE: 'Módulo BPC/LOAS',
   PETICAO: 'Petição Inicial com IA',
   PROCESS_INTERPRET: 'Interpretação de movimentações com IA',
+  REVISION_MODULE: 'Revisão de Benefícios',
+  GPS_MODULE: 'Guias de Contribuição (GPS/DAS)',
+  VIABILITY_SCORE: 'Score de Viabilidade',
+  ASSINATURA_DIGITAL: 'Assinatura Digital',
 }
 
 const PLAN_LIMIT_TTL = 300 // 5 minutos
@@ -308,6 +320,48 @@ export async function incrementProcessInterpretUsage(userId: string): Promise<vo
     where: { userId },
     update: { processInterpretThisMonth: { increment: 1 } },
     create: { userId, processInterpretThisMonth: 1 },
+  })
+}
+
+export async function guardRevisionLimit(userId: string, plan: string): Promise<void> {
+  const limit = await getPlanLimit(plan)
+  if (!limit.revisionEnabled) {
+    throw new PlanLimitError(
+      'Revisão de Benefícios não está disponível no seu plano. Faça upgrade para PRO.',
+      'REVISION_MODULE',
+      'PRO'
+    )
+  }
+
+  if (limit.maxRevisionsPerMonth === -1) return
+
+  const record = await getOrResetUsageRecord(userId)
+  const currentCount = record?.revisionsThisMonth ?? 0
+
+  if (currentCount >= limit.maxRevisionsPerMonth) {
+    throw new PlanLimitError(
+      `Limite de ${limit.maxRevisionsPerMonth} revisões/mês atingido. Atualize para PRO para revisões ilimitadas.`,
+      'REVISION_MODULE',
+      'PRO'
+    )
+  }
+
+  if (
+    limit.maxRevisionsPerMonth > 0 &&
+    currentCount / limit.maxRevisionsPerMonth >= NEAR_LIMIT_THRESHOLD
+  ) {
+    notifyLimitNear(
+      userId,
+      `Você usou ${currentCount} de ${limit.maxRevisionsPerMonth} revisões de benefício disponíveis neste mês.`
+    )
+  }
+}
+
+export async function incrementRevisionUsage(userId: string): Promise<void> {
+  await prisma.usageRecord.upsert({
+    where: { userId },
+    update: { revisionsThisMonth: { increment: 1 } },
+    create: { userId, revisionsThisMonth: 1 },
   })
 }
 

@@ -11,7 +11,7 @@ describe('escapeHtml', () => {
   })
 
   it('deve retornar string vazia para null/undefined', () => {
-    expect(escapeHtml(null as unknown as string)).toBe('null')
+    expect(escapeHtml(null as unknown as string)).toBe('')
     expect(escapeHtml(undefined as unknown as string)).toBe('')
   })
 
@@ -22,7 +22,7 @@ describe('escapeHtml', () => {
 
 describe('sanitizeInput', () => {
   it('deve remover tags HTML', () => {
-    expect(sanitizeInput('<script>alert("xss")</script>')).toBe('alert(&quot;xss&quot;)')
+    expect(sanitizeInput('<script>alert("xss")</script>')).toBe('')
   })
 
   it('deve truncar acima de 10000 caracteres', () => {

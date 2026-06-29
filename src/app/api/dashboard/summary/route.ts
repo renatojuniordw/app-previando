@@ -3,6 +3,7 @@ import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
 import { handleApiError } from '@/lib/api-error'
 import { mapCaseStatusToApi, mapNoteTypeToApi } from '@/lib/mappers'
+import { getCalendarClient } from '@/services/google-calendar'
 
 export async function GET() {
   try {
@@ -23,6 +24,7 @@ export async function GET() {
       totalCalculations,
       selectedCalculations,
       upcomingDeadlines,
+      calendarEvents,
       clientsByPriority,
     ] = await Promise.all([
       prisma.client.count({ where: { userId } }),
@@ -95,6 +97,30 @@ export async function GET() {
         take: 10,
       }),
 
+      // Google Calendar events for next 7 days
+      (async () => {
+        const calendar = await getCalendarClient(userId)
+        if (!calendar) return []
+        try {
+          const endDate = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000)
+          const res = await calendar.events.list({
+            calendarId: 'primary',
+            timeMin: now.toISOString(),
+            timeMax: endDate.toISOString(),
+            singleEvents: true,
+            orderBy: 'startTime',
+            maxResults: 10,
+          })
+          return (res.data.items ?? []).map((ev) => ({
+            id: ev.id ?? '',
+            title: ev.summary ?? 'Evento',
+            date: ev.start?.date ?? ev.start?.dateTime?.split('T')[0] ?? '',
+          }))
+        } catch {
+          return []
+        }
+      })(),
+
       prisma.client.groupBy({
         by: ['priority'],
         where: { userId },
@@ -130,6 +156,10 @@ export async function GET() {
         totalRmiPotencial: Number(totalRmiPotencial.toFixed(2)),
       },
       upcomingDeadlines,
+      upcomingEvents: {
+        deadlines: upcomingDeadlines,
+        calendarEvents: calendarEvents as Array<{ id: string; title: string; date: string }>,
+      },
       clientsByPriority: Object.fromEntries(
         clientsByPriority.map((g) => [g.priority, g._count.priority])
       ),

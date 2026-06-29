@@ -47,6 +47,10 @@ interface DashboardData {
     benefitType: string
     client: { name: string }
   }>
+  upcomingEvents: {
+    deadlines: Array<{ id: string; deadlineDate: string; client: { name: string } }>
+    calendarEvents: Array<{ id: string; title: string; date: string }>
+  }
   clientsByPriority: Record<string, number>
   recentNotes: Array<{
     id: string; type: string; content: string; createdAt: string
@@ -153,7 +157,7 @@ export default function DashboardPage() {
         {/* Right Column */}
         <div className="space-y-6">
           {/* Prazos próximos */}
-          <DashboardDeadlines deadlines={data?.upcomingDeadlines ?? []} />
+          <DashboardDeadlines events={data?.upcomingEvents ?? { deadlines: [], calendarEvents: [] }} />
 
           {/* Atividade recente */}
           <DashboardActivityFeed notes={data?.recentNotes ?? []} />

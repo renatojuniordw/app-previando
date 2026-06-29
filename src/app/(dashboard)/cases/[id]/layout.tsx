@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useParams, usePathname, useRouter, useSearchParams } from 'next/navigation'
 import api from '@/lib/api'
 import { Badge } from '@/components/ui/Badge'
-import { ArrowLeft, LayoutDashboard, FileText, Calculator, BarChart3, History, Lock, Building2, GitCompareArrows, Files, ShieldAlert, Clock, DollarSign } from 'lucide-react'
+import { ArrowLeft, LayoutDashboard, FileText, Calculator, BarChart3, History, Lock, Building2, GitCompareArrows, Files, ShieldAlert, Clock, DollarSign, Scale, Receipt, FileSignature } from 'lucide-react'
 import { BENEFIT_SHORT_LABELS, STATUS_LABELS, PRIORITY_STYLES } from '@/lib/constants'
 import { CaseNotesDrawer } from '@/components/case/CaseNotesDrawer'
 import { CaseChecklistDrawer } from '@/components/case/CaseChecklistDrawer'
@@ -25,6 +25,9 @@ interface CaseHeader {
     retroativosEnabled: boolean
     bpcEnabled: boolean
     peticaoEnabled: boolean
+    revisionEnabled: boolean
+    viabilityScoreEnabled: boolean
+    assinaturaEnabled: boolean
   }
 }
 
@@ -66,8 +69,11 @@ export default function CaseLayout({ children }: { children: React.ReactNode }) 
     { id: 'compare', label: 'Comparar', icon: GitCompareArrows, path: '/compare' },
     { id: 'prescricao', label: 'Prescrição', icon: ShieldAlert, path: '/prescricao' },
     { id: 'honorarios', label: 'Honorários', icon: DollarSign, path: '/honorarios' },
+    { id: 'gps', label: 'GPS/DAS', icon: Receipt, path: '/gps' },
+    { id: 'revisao', label: 'Revisão', icon: Scale, path: '/revisao', locked: caseData ? !caseData.planLimits?.revisionEnabled : false },
     { id: 'timeline', label: 'Timeline', icon: Clock, path: '/timeline' },
     { id: 'pdf', label: 'Ferramentas PDF', icon: Files, path: '/pdf' },
+    { id: 'assinatura', label: 'Assinatura', icon: FileSignature, path: '/assinatura', locked: caseData ? !caseData.planLimits?.assinaturaEnabled : false },
     ...(caseData?.benefitType === 'BPC_LOAS'
       ? [{ id: 'bpc', label: 'BPC/LOAS', icon: Building2, path: '/bpc', locked: !caseData.planLimits?.bpcEnabled }]
       : []),

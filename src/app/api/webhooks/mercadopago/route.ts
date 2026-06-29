@@ -1,10 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 import { createHmac } from 'crypto'
 import { prisma } from '@/lib/prisma'
 import { redis } from '@/lib/redis'
 import { invalidatePlanLimitCache } from '@/lib/plan-guard'
 import { Logger } from '@/lib/logger'
 import type { PaymentStatus } from '@prisma/client'
+
+const webhookSchema = z.object({
+  type: z.string().min(1),
+  data: z.object({
+    id: z.string().optional(),
+  }).optional(),
+})
 
 const logger = new Logger('WebhookMercadoPago')
 
@@ -85,10 +93,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Payload inválido' }, { status: 400 })
   }
 
-  const type = payload.type as string
-  const data = payload.data as { id?: string } | undefined
+  const parsedPayload = webhookSchema.safeParse(payload)
+  if (!parsedPayload.success) {
+    logger.warn('Payload com estrutura inválida', parsedPayload.error.flatten())
+    return NextResponse.json({ received: true })
+  }
 
-  if (!data?.id) return NextResponse.json({ received: true })
+  const type = parsedPayload.data.type
+  const data = parsedPayload.data.data ?? { id: undefined }
 
   try {
     if (type === 'subscription_preapproval') {

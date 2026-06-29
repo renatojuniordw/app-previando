@@ -10,7 +10,8 @@
 import { Worker } from 'bullmq'
 import nodemailer from 'nodemailer'
 import { redis } from '@/lib/redis'
-import { logger } from '@/lib/logger'
+import { Logger } from '@/lib/logger'
+const logger = new Logger('email-worker')
 
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST,

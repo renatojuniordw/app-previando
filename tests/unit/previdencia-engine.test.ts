@@ -2,21 +2,27 @@ import { describe, it, expect } from 'vitest'
 import { calculatePrevidenciario, projectSimulations } from '@/lib/previdencia-engine'
 import type { CnisExtractedData } from '@/services/cnis/types'
 
+function buildSalarios(inicio: string, fim: string, valor: number): Array<{ competencia: string; valor: number }> {
+  const [anoI, mesI] = inicio.split('-').map(Number)
+  const [anoF, mesF] = fim.split('-').map(Number)
+  const salarios: Array<{ competencia: string; valor: number }> = []
+  let ano = anoI, mes = mesI
+  while (ano < anoF || (ano === anoF && mes <= mesF)) {
+    salarios.push({ competencia: `${ano}-${String(mes).padStart(2, '0')}`, valor })
+    mes++
+    if (mes > 12) { mes = 1; ano++ }
+  }
+  return salarios
+}
+
 const mockCnisData: CnisExtractedData = {
   periodos: [
     {
       empregador: 'Empresa ABC Ltda',
       inicio: '2010-01-01',
       fim: '2024-12-31',
-      salarios: [
-        { competencia: '2010-01', valor: 1500.00 },
-        { competencia: '2010-02', valor: 1500.00 },
-        { competencia: '2010-03', valor: 1500.00 },
-        { competencia: '2023-01', valor: 3500.00 },
-        { competencia: '2023-02', valor: 3500.00 },
-        { competencia: '2024-11', valor: 4200.00 },
-        { competencia: '2024-12', valor: 4200.00 },
-      ],
+      salarios: buildSalarios('2010-01', '2024-12', 3500.00),
+      gaps: [],
     },
   ],
 }
@@ -84,6 +90,7 @@ describe('calculatePrevidenciario', () => {
             competencia: `${2015 + Math.floor(i / 12)}-${String((i % 12) + 1).padStart(2, '0')}`,
             valor: 15000.00,
           })),
+          gaps: [],
         },
       ],
     }

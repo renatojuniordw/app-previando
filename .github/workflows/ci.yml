@@ -1,0 +1,114 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '20'
+  DATABASE_URL: postgresql://previando:previando@localhost:5432/previando
+  REDIS_URL: redis://localhost:6379
+  NEXTAUTH_SECRET: ci-secret-not-used-in-tests
+  NEXTAUTH_URL: http://localhost:60002
+  CPF_HASH_SALT: ci-test-salt-do-not-use-in-production
+  SALARIO_MINIMO_API: http://localhost:9999
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: app-previando/package-lock.json
+      - run: npm ci
+        working-directory: app-previando
+      - run: npm run lint
+        working-directory: app-previando
+
+  type-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: app-previando/package-lock.json
+      - run: npm ci
+        working-directory: app-previando
+      - run: npx prisma generate
+        working-directory: app-previando
+      - run: npx tsc --noEmit
+        working-directory: app-previando
+
+  unit-tests:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: previando
+          POSTGRES_PASSWORD: previando
+          POSTGRES_DB: previando
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: app-previando/package-lock.json
+      - run: npm ci
+        working-directory: app-previando
+      - run: npx prisma generate
+        working-directory: app-previando
+      - run: npx prisma migrate deploy
+        working-directory: app-previando
+        env:
+          DATABASE_URL: ${{ env.DATABASE_URL }}
+      - run: npx vitest run --reporter=verbose
+        working-directory: app-previando
+        env:
+          DATABASE_URL: ${{ env.DATABASE_URL }}
+          REDIS_URL: ${{ env.REDIS_URL }}
+
+  build:
+    runs-on: ubuntu-latest
+    needs: [lint, type-check, unit-tests]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: app-previando/package-lock.json
+      - run: npm ci
+        working-directory: app-previando
+      - run: npx prisma generate
+        working-directory: app-previando
+      - run: npm run build
+        working-directory: app-previando

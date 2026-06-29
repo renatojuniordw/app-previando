@@ -14,7 +14,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Input } from '@/components/ui/Input'
 import { useToast } from '@/store/toast'
-import { Search, Plus, User, FileText, Phone, Mail, AlertCircle, Share2 } from 'lucide-react'
+import { Search, Plus, User, FileText, Phone, Mail, AlertCircle, Share2, Upload } from 'lucide-react'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { ActionsDropdown } from '@/components/ui/ActionsDropdown'
 
@@ -159,6 +159,13 @@ export default function ClientsListPage() {
             <Plus className="w-4 h-4" />
             Novo Cliente
           </Button>
+          <Link
+            href="/clients/import"
+            className="shrink-0 inline-flex items-center justify-center gap-2 px-4 py-2 font-sans font-medium text-sm tracking-wide border rounded-md transition-colors duration-200 bg-white text-slate-900 border-slate-300 hover:bg-slate-50"
+          >
+            <Upload className="w-4 h-4" />
+            Importar
+          </Link>
         </div>
       </div>
 

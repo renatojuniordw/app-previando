@@ -76,6 +76,11 @@ async function main() {
       maxPeticoesPerMonth: 0,
       processInterpretEnabled: false,
       maxProcessInterpretPerMonth: 0,
+      revisionEnabled: false,
+      maxRevisionsPerMonth: 0,
+      gpsEnabled: false,
+      viabilityScoreEnabled: false,
+      assinaturaEnabled: false,
     },
     {
       plan: 'SOLO' as const,
@@ -96,6 +101,11 @@ async function main() {
       maxPeticoesPerMonth: 5,
       processInterpretEnabled: true,
       maxProcessInterpretPerMonth: 30,
+      revisionEnabled: true,
+      maxRevisionsPerMonth: 20,
+      gpsEnabled: true,
+      viabilityScoreEnabled: true,
+      assinaturaEnabled: true,
     },
     {
       plan: 'PRO' as const,
@@ -116,6 +126,11 @@ async function main() {
       maxPeticoesPerMonth: -1,
       processInterpretEnabled: true,
       maxProcessInterpretPerMonth: -1,
+      revisionEnabled: true,
+      maxRevisionsPerMonth: -1,
+      gpsEnabled: true,
+      viabilityScoreEnabled: true,
+      assinaturaEnabled: true,
     },
   ]
 

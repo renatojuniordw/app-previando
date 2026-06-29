@@ -8,7 +8,8 @@
 import nodemailer from 'nodemailer'
 import { Queue } from 'bullmq'
 import { redis } from '@/lib/redis'
-import { logger } from '@/lib/logger'
+import { Logger } from '@/lib/logger'
+const logger = new Logger('email-service')
 import {
   welcomeEmail,
   cnisProcessedEmail,
