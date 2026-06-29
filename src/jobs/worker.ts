@@ -31,8 +31,18 @@ createCnisWorker(redis)
 createAuditWorker(redis)
 createDeadlineWorker(redis)
 
+// Email worker (opcional — só inicia se SMTP estiver configurado)
+if (process.env.SMTP_HOST) {
+  Promise.resolve().then(() => {
+    import('./email-worker').then(({ createEmailWorker }) => {
+      createEmailWorker()
+      logger.info('Email worker started')
+    }).catch((err) => logger.warn('Email worker not available', err))
+  })
+}
+
 // ─── Schedule daily jobs ───────────────────────────────────────────────────
 
 scheduleDeadlineJob(redis).catch((err) => logger.error('Failed to schedule deadline job', err))
 
-logger.info('BullMQ workers started — CNIS processing + audit log + deadline notifications')
+logger.info('BullMQ workers started — CNIS processing + audit log + email + deadline notifications')

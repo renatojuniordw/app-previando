@@ -4,8 +4,11 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import api from '@/lib/api'
 import { useToast } from '@/store/toast'
-import { Users, ChevronRight, Columns } from 'lucide-react'
+import { Users, ChevronRight, Columns, TrendingUp } from 'lucide-react'
 import dynamic from 'next/dynamic'
+import { DashboardQuickActions } from '@/components/dashboard/DashboardQuickActions'
+import { Card } from '@/components/ui/Card'
+import { formatCurrency } from '@/lib/utils'
 
 const DashboardKpiGrid = dynamic(() => import('@/components/dashboard/DashboardKpiGrid').then((m) => ({ default: m.DashboardKpiGrid })), {
   loading: () => <div className="grid grid-cols-4 gap-4">{[...Array(4)].map((_, i) => <div key={i} className="h-24 bg-slate-100 rounded-xl animate-pulse" />)}</div>,
@@ -95,12 +98,15 @@ export default function DashboardPage() {
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6 lg:space-y-8">
       {/* Header */}
-      <div className="flex items-end justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
           <h1 className="font-serif font-bold text-3xl text-slate-900 tracking-tight">Visão Geral</h1>
           <p className="font-sans text-sm text-slate-500 mt-1 font-medium">Acompanhamento do escritório</p>
         </div>
+
+        {/* Quick Actions */}
         <div className="flex items-center gap-3">
+          <DashboardQuickActions />
           <Link
             href="/clients/list"
             className="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 shadow-sm transition-all flex items-center gap-2"

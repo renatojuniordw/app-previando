@@ -1,0 +1,41 @@
+{
+  "name": "Previando",
+  "short_name": "Previando",
+  "description": "Sistema de cálculos previdenciários para advogados",
+  "start_url": "/dashboard",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#ffffff",
+  "theme_color": "#d97706",
+  "lang": "pt-BR",
+  "categories": ["productivity", "business"],
+  "icons": [
+    {
+      "src": "/logo-previando.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Dashboard",
+      "short_name": "Dashboard",
+      "description": "Ir para o painel principal",
+      "url": "/dashboard"
+    },
+    {
+      "name": "Clientes",
+      "short_name": "Clientes",
+      "description": "Ver lista de clientes",
+      "url": "/clients/list"
+    },
+    {
+      "name": "Casos",
+      "short_name": "Casos",
+      "description": "Ver kanban de casos",
+      "url": "/clients/kanban"
+    }
+  ]
+}

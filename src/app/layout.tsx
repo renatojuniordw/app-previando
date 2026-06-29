@@ -25,6 +25,12 @@ export const metadata: Metadata = {
   description:
     'Calcule benefícios do INSS, gerencie casos e gere pareceres com IA. Para advogados previdenciários.',
   metadataBase: new URL('https://app.previando.com.br'),
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'Previando',
+  },
   openGraph: {
     title: 'Previando',
     description: 'Previdência inteligente para advogados',
@@ -37,6 +43,10 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="pt-BR" className={`${inter.variable} ${playfair.variable} ${jetbrainsMono.variable}`}>
+      <head>
+        <meta name="theme-color" content="#d97706" />
+        <link rel="apple-touch-icon" href="/logo-previando.svg" />
+      </head>
       <body className="font-sans">{children}</body>
     </html>
   )

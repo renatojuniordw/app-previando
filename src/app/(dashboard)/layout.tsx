@@ -5,6 +5,7 @@ import { Sidebar } from '@/components/Sidebar'
 import { Header } from '@/components/Header'
 import { UpgradeModal } from '@/components/UpgradeModal'
 import { ToastContainer } from '@/components/ToastContainer'
+import { DashboardLayoutClient } from './DashboardLayoutClient'
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const session = await auth()
@@ -16,9 +17,11 @@ export default async function DashboardLayout({ children }: { children: React.Re
         <Sidebar />
         <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
           <Header />
-          <main id="main-content" className="flex-1 overflow-auto bg-slate-50 outline-none" tabIndex={-1}>
-            {children}
-          </main>
+          <DashboardLayoutClient>
+            <main id="main-content" className="flex-1 overflow-auto bg-slate-50 outline-none" tabIndex={-1}>
+              {children}
+            </main>
+          </DashboardLayoutClient>
         </div>
       </div>
       <UpgradeModal />
