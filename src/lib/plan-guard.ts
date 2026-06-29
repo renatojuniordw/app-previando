@@ -31,6 +31,7 @@ export type PlanFeature =
   | 'WHATSAPP_SHARE'
   | 'DIAGNOSIS'
   | 'USE_BPC_MODULE'
+  | 'PETICAO'
 
 const FEATURE_MAP: Record<PlanFeature, keyof PlanLimit> = {
   SIMULATOR: 'simulatorEnabled',
@@ -39,6 +40,7 @@ const FEATURE_MAP: Record<PlanFeature, keyof PlanLimit> = {
   WHATSAPP_SHARE: 'whatsappEnabled',
   DIAGNOSIS: 'diagnosisEnabled',
   USE_BPC_MODULE: 'bpcEnabled',
+  PETICAO: 'peticaoEnabled',
 }
 
 const FEATURE_LABELS: Record<PlanFeature, string> = {
@@ -48,6 +50,7 @@ const FEATURE_LABELS: Record<PlanFeature, string> = {
   WHATSAPP_SHARE: 'Compartilhar via WhatsApp',
   DIAGNOSIS: 'Diagnóstico IA',
   USE_BPC_MODULE: 'Módulo BPC/LOAS',
+  PETICAO: 'Petição Inicial com IA',
 }
 
 const PLAN_LIMIT_TTL = 300 // 5 minutos
@@ -105,6 +108,7 @@ async function getOrResetUsageRecord(userId: string): Promise<UsageRecord | null
         opinionsThisMonth: 0,
         bpcAnalysesThisMonth: 0,
         bpcSocialMediaThisMonth: 0,
+        peticoesThisMonth: 0,
         usageMonthRef: now,
       },
     })
@@ -217,5 +221,47 @@ export async function guardBpcAnalysisLimit(userId: string, plan: string): Promi
       plan === 'FREE' ? 'SOLO' : 'PRO'
     )
   }
+}
+
+export async function guardPeticaoLimit(userId: string, plan: string): Promise<void> {
+  const limit = await getPlanLimit(plan)
+  if (!limit.peticaoEnabled) {
+    throw new PlanLimitError(
+      'Petição Inicial com IA não está disponível no plano gratuito. Faça upgrade para SOLO ou PRO.',
+      'PETICAO',
+      'SOLO'
+    )
+  }
+
+  if (limit.maxPeticoesPerMonth === -1) return
+
+  const record = await getOrResetUsageRecord(userId)
+  const currentCount = record?.peticoesThisMonth ?? 0
+
+  if (currentCount >= limit.maxPeticoesPerMonth) {
+    throw new PlanLimitError(
+      `Limite de ${limit.maxPeticoesPerMonth} petições/mês atingido. Atualize para PRO para petições ilimitadas.`,
+      'PETICAO',
+      'PRO'
+    )
+  }
+
+  if (
+    limit.maxPeticoesPerMonth > 0 &&
+    currentCount / limit.maxPeticoesPerMonth >= NEAR_LIMIT_THRESHOLD
+  ) {
+    notifyLimitNear(
+      userId,
+      `Você usou ${currentCount} de ${limit.maxPeticoesPerMonth} petições disponíveis neste mês.`
+    )
+  }
+}
+
+export async function incrementPeticaoUsage(userId: string): Promise<void> {
+  await prisma.usageRecord.upsert({
+    where: { userId },
+    update: { peticoesThisMonth: { increment: 1 } },
+    create: { userId, peticoesThisMonth: 1 },
+  })
 }
 

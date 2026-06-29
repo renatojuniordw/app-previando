@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { verifyCaseOwnership } from '@/lib/ownership'
 import { handleApiError } from '@/lib/api-error'
 import { rateLimit } from '@/lib/rate-limit'
+import { guardPeticaoLimit, incrementPeticaoUsage } from '@/lib/plan-guard'
 import { generatePeticao } from '@/services/peticao-generator'
 import { BENEFIT_LABELS } from '@/lib/constants'
 
@@ -13,6 +14,8 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     if (!session?.user?.id) return NextResponse.json({ error: 'Não autorizado.' }, { status: 401 })
 
     await verifyCaseOwnership(params.id, session.user.id)
+
+    await guardPeticaoLimit(session.user.id, session.user.plan)
 
     const limit = await rateLimit(`peticao:${session.user.id}`, 10, 3600)
     if (!limit.success) {
@@ -65,8 +68,10 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
         tempoContribuicao: calc.contributionTime ?? 0,
         idadeNaApuracao: calc.ageAtCalculation ?? 0,
       },
-      retroativoTotal: retroativo?.finalNetValue ?? undefined,
+      retroativoTotal: retroativo?.finalNetValue != null ? Number(retroativo.finalNetValue) : undefined,
     })
+
+    await incrementPeticaoUsage(session.user.id)
 
     return NextResponse.json({
       content: result.content,

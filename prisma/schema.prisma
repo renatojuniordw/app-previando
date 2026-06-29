@@ -127,6 +127,9 @@ model PlanLimit {
   bpcAnalysesPerMonth         Int     @default(0)
   bpcSocialMediaPerMonth      Int     @default(0)
 
+  peticaoEnabled              Boolean @default(false)
+  maxPeticoesPerMonth         Int     @default(0) // -1 = ilimitado | 0 = bloqueado
+
   updatedAt DateTime @updatedAt
 
   @@map("plan_limits")
@@ -144,9 +147,10 @@ model UsageRecord {
   totalClients          Int      @default(0)
   calculationsThisMonth Int      @default(0)
   opinionsThisMonth     Int      @default(0)
-  bpcAnalysesThisMonth  Int      @default(0)
-  bpcSocialMediaThisMonth Int    @default(0)
-  usageMonthRef         DateTime @default(now())
+  bpcAnalysesThisMonth    Int      @default(0)
+  bpcSocialMediaThisMonth Int      @default(0)
+  peticoesThisMonth       Int      @default(0)
+  usageMonthRef           DateTime @default(now())
 
   updatedAt DateTime @updatedAt
 
