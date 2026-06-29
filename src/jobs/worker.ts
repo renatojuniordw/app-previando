@@ -11,6 +11,7 @@ import { Logger } from '../lib/logger'
 import { createCnisWorker } from './cnis-worker'
 import { createAuditWorker } from './audit-worker'
 import { createDeadlineWorker, scheduleDeadlineJob } from './deadline-worker'
+import { createDatajudWorker, scheduleDatajudJob } from './datajud-worker'
 
 const logger = new Logger('Worker')
 
@@ -30,6 +31,7 @@ const redis = new Redis(process.env.REDIS_URL || 'redis://localhost:60004', {
 createCnisWorker(redis)
 createAuditWorker(redis)
 createDeadlineWorker(redis)
+createDatajudWorker(redis)
 
 // Email worker (opcional — só inicia se SMTP estiver configurado)
 if (process.env.SMTP_HOST) {
@@ -44,5 +46,6 @@ if (process.env.SMTP_HOST) {
 // ─── Schedule daily jobs ───────────────────────────────────────────────────
 
 scheduleDeadlineJob(redis).catch((err) => logger.error('Failed to schedule deadline job', err))
+scheduleDatajudJob(redis).catch((err) => logger.error('Failed to schedule DataJud job', err))
 
-logger.info('BullMQ workers started — CNIS processing + audit log + email + deadline notifications')
+logger.info('BullMQ workers started — CNIS processing + audit log + email + deadline notifications + DataJud monitor')

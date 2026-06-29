@@ -15,4 +15,11 @@ export interface CaseDetail {
   processLastMovDate: string | null
   processLastMovCount: number | null
   processLastSummary: string | null
+  planLimits?: {
+    simulatorEnabled: boolean
+    retroativosEnabled: boolean
+    bpcEnabled: boolean
+    diagnosisEnabled: boolean
+    peticaoEnabled: boolean
+  }
 }

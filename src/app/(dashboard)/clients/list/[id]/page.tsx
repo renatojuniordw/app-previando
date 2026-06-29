@@ -17,6 +17,7 @@ import { z } from 'zod'
 import { BENEFIT_SHORT_LABELS, STATUS_LABELS, PRIORITY_LABELS, BENEFIT_DB_LABELS } from '@/lib/constants'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { ClientFloatingActions } from '@/components/client/ClientFloatingActions'
+import { ClientPortalCard } from '@/components/client/ClientPortalCard'
 import { Briefcase, Clock, CheckCircle } from 'lucide-react'
 
 const getCaseStatusLabel = (status: string) => {
@@ -206,6 +207,12 @@ export default function ClientDetailPage() {
           </div>
         </Card>
       </div>
+
+      {/* Portal do Cliente */}
+      <ClientPortalCard
+        cases={client.cases}
+        clientPhone={client.phone}
+      />
 
       {/* Casos */}
       <Card variant="dark">

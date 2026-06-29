@@ -52,6 +52,8 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
           simulatorEnabled: planLimits.simulatorEnabled,
           retroativosEnabled: planLimits.retroactiveEnabled,
           bpcEnabled: planLimits.bpcEnabled,
+          diagnosisEnabled: planLimits.diagnosisEnabled,
+          peticaoEnabled: planLimits.peticaoEnabled,
         },
       },
     })

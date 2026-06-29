@@ -14,7 +14,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Input } from '@/components/ui/Input'
 import { useToast } from '@/store/toast'
-import { Search, Plus, User, FileText, Phone, Mail, AlertCircle } from 'lucide-react'
+import { Search, Plus, User, FileText, Phone, Mail, AlertCircle, Share2 } from 'lucide-react'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { ActionsDropdown } from '@/components/ui/ActionsDropdown'
 
@@ -250,6 +250,14 @@ export default function ClientsListPage() {
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-1">
+                        <Link
+                          href={`/clients/list/${client.id}#portal`}
+                          className="p-2 text-slate-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                          aria-label={`Portal do cliente ${client.name}`}
+                          title="Portal do Cliente"
+                        >
+                          <Share2 className="w-4 h-4" aria-hidden="true" />
+                        </Link>
                         <Link
                           href={`/clients/list/${client.id}`}
                           className="p-2 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"

@@ -7,6 +7,7 @@ import { useToast } from '@/store/toast'
 import { Users, ChevronRight, Columns, TrendingUp } from 'lucide-react'
 import dynamic from 'next/dynamic'
 import { DashboardQuickActions } from '@/components/dashboard/DashboardQuickActions'
+import { OnboardingBanner } from '@/components/dashboard/OnboardingBanner'
 import { Card } from '@/components/ui/Card'
 import { formatCurrency } from '@/lib/utils'
 
@@ -123,6 +124,9 @@ export default function DashboardPage() {
           </Link>
         </div>
       </div>
+
+      {/* Onboarding — só para usuários sem clientes */}
+      {!loading && data?.totalClients === 0 && <OnboardingBanner />}
 
       {/* KPIs + RMI Metrics */}
       {kpiData && <DashboardKpiGrid data={kpiData} />}

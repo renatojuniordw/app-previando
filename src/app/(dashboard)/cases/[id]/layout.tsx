@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useParams, usePathname, useRouter, useSearchParams } from 'next/navigation'
 import api from '@/lib/api'
 import { Badge } from '@/components/ui/Badge'
-import { ArrowLeft, LayoutDashboard, FileText, Calculator, BarChart3, History, Lock, Building2, GitCompareArrows, Files } from 'lucide-react'
+import { ArrowLeft, LayoutDashboard, FileText, Calculator, BarChart3, History, Lock, Building2, GitCompareArrows, Files, ShieldAlert, Clock, DollarSign } from 'lucide-react'
 import { BENEFIT_SHORT_LABELS, STATUS_LABELS, PRIORITY_STYLES } from '@/lib/constants'
 import { CaseNotesDrawer } from '@/components/case/CaseNotesDrawer'
 import { CaseChecklistDrawer } from '@/components/case/CaseChecklistDrawer'
@@ -64,6 +64,9 @@ export default function CaseLayout({ children }: { children: React.ReactNode }) 
     { id: 'simulator', label: 'Simulação', icon: BarChart3, path: '/simulator', locked: caseData ? !caseData.planLimits?.simulatorEnabled : false },
     { id: 'retroativos', label: 'Retroativos', icon: History, path: '/retroativos', locked: caseData ? !caseData.planLimits?.retroativosEnabled : false },
     { id: 'compare', label: 'Comparar', icon: GitCompareArrows, path: '/compare' },
+    { id: 'prescricao', label: 'Prescrição', icon: ShieldAlert, path: '/prescricao' },
+    { id: 'honorarios', label: 'Honorários', icon: DollarSign, path: '/honorarios' },
+    { id: 'timeline', label: 'Timeline', icon: Clock, path: '/timeline' },
     { id: 'pdf', label: 'Ferramentas PDF', icon: Files, path: '/pdf' },
     ...(caseData?.benefitType === 'BPC_LOAS'
       ? [{ id: 'bpc', label: 'BPC/LOAS', icon: Building2, path: '/bpc', locked: !caseData.planLimits?.bpcEnabled }]

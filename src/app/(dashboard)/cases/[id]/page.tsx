@@ -9,6 +9,7 @@ import { ActivitySummary } from './_components/ActivitySummary'
 import { StatusModal } from './_components/StatusModal'
 import { EditCaseModal } from './_components/EditCaseModal'
 import { ProcessCard } from './_components/ProcessCard'
+import { SuccessAnalysisCard } from './_components/SuccessAnalysisCard'
 
 export default function CaseOverviewPage() {
   const {
@@ -53,6 +54,11 @@ export default function CaseOverviewPage() {
       />
 
       <ActivitySummary counts={caseData._count} />
+
+      <SuccessAnalysisCard
+        caseId={caseData.id}
+        hasDiagnosis={caseData.planLimits?.diagnosisEnabled ?? false}
+      />
 
       <ProcessCard
         caseData={caseData}
