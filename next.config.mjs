@@ -20,7 +20,7 @@ const csp = [
 const nextConfig = {
   transpilePackages: ['@react-pdf/renderer'],
   experimental: {
-    serverComponentsExternalPackages: ['@prisma/client', 'prisma', 'pdf-parse', 'tesseract.js'],
+    serverComponentsExternalPackages: ['@prisma/client', 'prisma', 'pdf-parse', 'tesseract.js', 'bullmq', 'ioredis'],
   },
   images: {
     remotePatterns: [
