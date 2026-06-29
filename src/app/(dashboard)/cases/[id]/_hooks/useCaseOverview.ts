@@ -6,6 +6,7 @@ import api from '@/lib/api'
 import { useToast } from '@/store/toast'
 import { downloadPdf } from '@/lib/download-pdf'
 import type { CaseDetail } from '../_types'
+import type { InterpretOutput } from '@/app/api/cases/[id]/process/interpret/types'
 import { STATUS_OPTIONS } from '../_constants'
 
 export function useCaseOverview() {
@@ -21,6 +22,8 @@ export function useCaseOverview() {
   const [showEditModal, setShowEditModal] = useState(false)
   const [updatingCase, setUpdatingCase] = useState(false)
   const [checkingProcess, setCheckingProcess] = useState(false)
+  const [interpretingProcess, setInterpretingProcess] = useState(false)
+  const [interpretResult, setInterpretResult] = useState<InterpretOutput | null>(null)
 
   const load = useCallback(() => {
     api.get(`/cases/${params.id}`)
@@ -71,14 +74,15 @@ export function useCaseOverview() {
 
   const handleCheckProcess = async () => {
     setCheckingProcess(true)
+    setInterpretResult(null)
     try {
       const r = await api.post(`/cases/${params.id}/process`)
       if (r.data.error) {
-        addToast({ type: 'error', title: 'DataJud', message: r.data.error })
-      } else if (!r.data.datajud) {
-        addToast({ type: 'info', title: 'Processo não encontrado', message: 'Nenhum resultado retornado pelo DataJud.' })
+        addToast({ type: 'error', title: 'TrackJud', message: r.data.error })
+      } else if (!r.data.trackjud) {
+        addToast({ type: 'info', title: 'Processo não encontrado', message: 'Nenhum dado retornado pelo TrackJud.' })
       } else {
-        addToast({ type: 'success', title: 'Processo atualizado', message: 'Movimentações sincronizadas com o DataJud.' })
+        addToast({ type: 'success', title: 'Processo atualizado', message: 'Movimentações sincronizadas com o TrackJud.' })
       }
       load()
     } catch (err: unknown) {
@@ -86,6 +90,26 @@ export function useCaseOverview() {
       addToast({ type: 'error', title: 'Erro', message: msg ?? 'Não foi possível consultar o processo.' })
     } finally {
       setCheckingProcess(false)
+    }
+  }
+
+  const handleInterpretProcess = async () => {
+    setInterpretingProcess(true)
+    setInterpretResult(null)
+    try {
+      const r = await api.post(`/cases/${params.id}/process/interpret`)
+      if (r.data.interpretation) {
+        setInterpretResult(r.data.interpretation)
+      } else if (r.data.error) {
+        addToast({ type: 'error', title: 'Interpretação', message: r.data.error })
+      } else {
+        addToast({ type: 'error', title: 'Interpretação', message: 'Resposta inesperada. Tente novamente.' })
+      }
+    } catch (err: unknown) {
+      const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error
+      addToast({ type: 'error', title: 'Erro', message: msg ?? 'Não foi possível interpretar a movimentação.' })
+    } finally {
+      setInterpretingProcess(false)
     }
   }
 
@@ -104,6 +128,8 @@ export function useCaseOverview() {
     showEditModal,
     updatingCase,
     checkingProcess,
+    interpretingProcess,
+    interpretResult,
     load,
     setNewStatus,
     setShowStatusModal,
@@ -111,6 +137,7 @@ export function useCaseOverview() {
     handleStatusChange,
     handleEditSubmit,
     handleCheckProcess,
+    handleInterpretProcess,
     handleExportPDF,
   }
 }

@@ -74,6 +74,8 @@ async function main() {
       bpcSocialMediaPerMonth: 0,
       peticaoEnabled: false,
       maxPeticoesPerMonth: 0,
+      processInterpretEnabled: false,
+      maxProcessInterpretPerMonth: 0,
     },
     {
       plan: 'SOLO' as const,
@@ -92,6 +94,8 @@ async function main() {
       bpcSocialMediaPerMonth: 5,
       peticaoEnabled: true,
       maxPeticoesPerMonth: 5,
+      processInterpretEnabled: true,
+      maxProcessInterpretPerMonth: 30,
     },
     {
       plan: 'PRO' as const,
@@ -110,6 +114,8 @@ async function main() {
       bpcSocialMediaPerMonth: -1,
       peticaoEnabled: true,
       maxPeticoesPerMonth: -1,
+      processInterpretEnabled: true,
+      maxProcessInterpretPerMonth: -1,
     },
   ]
 

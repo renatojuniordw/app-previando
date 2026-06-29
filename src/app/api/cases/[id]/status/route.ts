@@ -5,6 +5,10 @@ import { prisma } from '@/lib/prisma'
 import { verifyCaseOwnership } from '@/lib/ownership'
 import { handleApiError } from '@/lib/api-error'
 import { mapCaseStatusToDb, mapCaseStatusToApi, ApiCaseStatus } from '@/lib/mappers'
+import { trackjud } from '@/services/trackjud'
+import { Logger } from '@/lib/logger'
+
+const logger = new Logger('CaseStatus')
 
 const schema = z.object({
   status: z.enum(['PROSPECCAO', 'ANALISE', 'PRONTO_PARA_REQUERER', 'EM_PROCESSAMENTO', 'FINALIZADO']),
@@ -22,11 +26,29 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       return NextResponse.json({ error: 'Status inválido.' }, { status: 400 })
     }
 
+    const newStatus = mapCaseStatusToDb(parsed.data.status as ApiCaseStatus)
+
+    const casoAntes = await prisma.case.findUnique({
+      where: { id: params.id },
+      select: { trackjudMonitorId: true },
+    })
+
     const caso = await prisma.case.update({
       where: { id: params.id },
-      data: { status: mapCaseStatusToDb(parsed.data.status as ApiCaseStatus) },
+      data: { status: newStatus },
       select: { id: true, status: true },
     })
+
+    // Se o caso foi finalizado, cancelar monitoramento TrackJud
+    if (newStatus === 'FINISHED' && casoAntes?.trackjudMonitorId) {
+      await trackjud.unregisterProcess(casoAntes.trackjudMonitorId).catch(() => {
+        logger.warn(`Falha ao cancelar monitoramento ${casoAntes.trackjudMonitorId} ao finalizar caso`)
+      })
+      await prisma.case.update({
+        where: { id: params.id },
+        data: { trackjudMonitorId: null, trackjudRegisteredAt: null },
+      })
+    }
 
     return NextResponse.json({
       case: {

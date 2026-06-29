@@ -23,7 +23,7 @@ export function Card({ children, className, variant = 'dark' }: CardProps) {
 }
 
 interface CardHeaderProps {
-  title: string
+  title: React.ReactNode
   subtitle?: string
   action?: React.ReactNode
 }

@@ -29,6 +29,10 @@ export async function PATCH(req: NextRequest, { params }: { params: { plan: stri
       bpcEnabled,
       bpcAnalysesPerMonth,
       bpcSocialMediaPerMonth,
+      peticaoEnabled,
+      maxPeticoesPerMonth,
+      processInterpretEnabled,
+      maxProcessInterpretPerMonth,
     } = body
 
     const existing = await prisma.planLimit.findUnique({ where: { plan: params.plan as never } })
@@ -50,6 +54,10 @@ export async function PATCH(req: NextRequest, { params }: { params: { plan: stri
         ...(bpcEnabled !== undefined && { bpcEnabled }),
         ...(bpcAnalysesPerMonth !== undefined && { bpcAnalysesPerMonth }),
         ...(bpcSocialMediaPerMonth !== undefined && { bpcSocialMediaPerMonth }),
+        ...(peticaoEnabled !== undefined && { peticaoEnabled }),
+        ...(maxPeticoesPerMonth !== undefined && { maxPeticoesPerMonth }),
+        ...(processInterpretEnabled !== undefined && { processInterpretEnabled }),
+        ...(maxProcessInterpretPerMonth !== undefined && { maxProcessInterpretPerMonth }),
       },
     })
 

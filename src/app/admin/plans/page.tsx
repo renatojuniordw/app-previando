@@ -19,6 +19,10 @@ interface PlanLimitData {
   bpcEnabled: boolean
   bpcAnalysesPerMonth: number
   bpcSocialMediaPerMonth: number
+  peticaoEnabled: boolean
+  maxPeticoesPerMonth: number
+  processInterpretEnabled: boolean
+  maxProcessInterpretPerMonth: number
 }
 
 function fmtUnlimited(value: number, suffix = ''): string {
@@ -33,6 +37,8 @@ const NUMERIC_FIELDS: { key: keyof PlanLimitData; label: string; suffix: string 
   { key: 'maxNotesPerCase', label: 'Max Anotações/caso', suffix: '' },
   { key: 'bpcAnalysesPerMonth', label: 'Análises BPC/mês', suffix: '' },
   { key: 'bpcSocialMediaPerMonth', label: 'Entrevistas Sociais BPC/mês', suffix: '' },
+  { key: 'maxPeticoesPerMonth', label: 'Petições IA/mês', suffix: '' },
+  { key: 'maxProcessInterpretPerMonth', label: 'Interpretações IA/mês', suffix: '' },
 ]
 
 const BOOLEAN_FIELDS: { key: keyof PlanLimitData; label: string }[] = [
@@ -43,6 +49,8 @@ const BOOLEAN_FIELDS: { key: keyof PlanLimitData; label: string }[] = [
   { key: 'watermarkEnabled', label: 'Marca d\'água' },
   { key: 'diagnosisEnabled', label: 'Diagnóstico IA' },
   { key: 'bpcEnabled', label: 'Módulo BPC/LOAS' },
+  { key: 'peticaoEnabled', label: 'Petição Inicial IA' },
+  { key: 'processInterpretEnabled', label: 'Interpretação de movimentações' },
 ]
 
 export default function AdminPlansPage() {

@@ -145,6 +145,10 @@ Tabela: `plan_limits`
 | `bpcEnabled` | `Boolean` | Módulo BPC |
 | `bpcAnalysesPerMonth` | `Int` | Análises BPC/mês |
 | `bpcSocialMediaPerMonth` | `Int` | Carrosséis BPC/mês |
+| `peticaoEnabled` | `Boolean` | Petição Inicial IA |
+| `maxPeticoesPerMonth` | `Int` | Máx. petições/mês |
+| `processInterpretEnabled` | `Boolean` | Interpretação de movimentações IA |
+| `maxProcessInterpretPerMonth` | `Int` | Máx. interpretações/mês |
 | `updatedAt` | `DateTime @updatedAt` | Atualização |
 
 ---
@@ -163,6 +167,8 @@ Tabela: `usage_records`
 | `opinionsThisMonth` | `Int @default(0)` | Pareceres este mês |
 | `bpcAnalysesThisMonth` | `Int @default(0)` | Análises BPC este mês |
 | `bpcSocialMediaThisMonth` | `Int @default(0)` | Posts BPC este mês |
+| `peticoesThisMonth` | `Int @default(0)` | Petições este mês |
+| `processInterpretThisMonth` | `Int @default(0)` | Interpretações de mov. este mês |
 | `usageMonthRef` | `DateTime @default(now())` | Referência do mês |
 | `updatedAt` | `DateTime @updatedAt` | Atualização |
 

@@ -32,6 +32,7 @@ export type PlanFeature =
   | 'DIAGNOSIS'
   | 'USE_BPC_MODULE'
   | 'PETICAO'
+  | 'PROCESS_INTERPRET'
 
 const FEATURE_MAP: Record<PlanFeature, keyof PlanLimit> = {
   SIMULATOR: 'simulatorEnabled',
@@ -41,6 +42,7 @@ const FEATURE_MAP: Record<PlanFeature, keyof PlanLimit> = {
   DIAGNOSIS: 'diagnosisEnabled',
   USE_BPC_MODULE: 'bpcEnabled',
   PETICAO: 'peticaoEnabled',
+  PROCESS_INTERPRET: 'processInterpretEnabled',
 }
 
 const FEATURE_LABELS: Record<PlanFeature, string> = {
@@ -51,6 +53,7 @@ const FEATURE_LABELS: Record<PlanFeature, string> = {
   DIAGNOSIS: 'Diagnóstico IA',
   USE_BPC_MODULE: 'Módulo BPC/LOAS',
   PETICAO: 'Petição Inicial com IA',
+  PROCESS_INTERPRET: 'Interpretação de movimentações com IA',
 }
 
 const PLAN_LIMIT_TTL = 300 // 5 minutos
@@ -109,6 +112,7 @@ async function getOrResetUsageRecord(userId: string): Promise<UsageRecord | null
         bpcAnalysesThisMonth: 0,
         bpcSocialMediaThisMonth: 0,
         peticoesThisMonth: 0,
+        processInterpretThisMonth: 0,
         usageMonthRef: now,
       },
     })
@@ -262,6 +266,48 @@ export async function incrementPeticaoUsage(userId: string): Promise<void> {
     where: { userId },
     update: { peticoesThisMonth: { increment: 1 } },
     create: { userId, peticoesThisMonth: 1 },
+  })
+}
+
+export async function guardProcessInterpretLimit(userId: string, plan: string): Promise<void> {
+  const limit = await getPlanLimit(plan)
+  if (!limit.processInterpretEnabled) {
+    throw new PlanLimitError(
+      'Interpretação de movimentações com IA não está disponível no seu plano. Faça upgrade para SOLO ou PRO.',
+      'PROCESS_INTERPRET',
+      'SOLO'
+    )
+  }
+
+  if (limit.maxProcessInterpretPerMonth === -1) return
+
+  const record = await getOrResetUsageRecord(userId)
+  const currentCount = record?.processInterpretThisMonth ?? 0
+
+  if (currentCount >= limit.maxProcessInterpretPerMonth) {
+    throw new PlanLimitError(
+      `Limite de ${limit.maxProcessInterpretPerMonth} interpretações/mês atingido. Atualize para PRO para interpretações ilimitadas.`,
+      'PROCESS_INTERPRET',
+      'PRO'
+    )
+  }
+
+  if (
+    limit.maxProcessInterpretPerMonth > 0 &&
+    currentCount / limit.maxProcessInterpretPerMonth >= NEAR_LIMIT_THRESHOLD
+  ) {
+    notifyLimitNear(
+      userId,
+      `Você usou ${currentCount} de ${limit.maxProcessInterpretPerMonth} interpretações de movimentações disponíveis neste mês.`
+    )
+  }
+}
+
+export async function incrementProcessInterpretUsage(userId: string): Promise<void> {
+  await prisma.usageRecord.upsert({
+    where: { userId },
+    update: { processInterpretThisMonth: { increment: 1 } },
+    create: { userId, processInterpretThisMonth: 1 },
   })
 }
 

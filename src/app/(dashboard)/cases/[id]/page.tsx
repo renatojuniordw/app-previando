@@ -21,6 +21,8 @@ export default function CaseOverviewPage() {
     showEditModal,
     updatingCase,
     checkingProcess,
+    interpretingProcess,
+    interpretResult,
     load,
     setNewStatus,
     setShowStatusModal,
@@ -28,6 +30,7 @@ export default function CaseOverviewPage() {
     handleStatusChange,
     handleEditSubmit,
     handleCheckProcess,
+    handleInterpretProcess,
     handleExportPDF,
   } = useCaseOverview()
 
@@ -63,7 +66,10 @@ export default function CaseOverviewPage() {
       <ProcessCard
         caseData={caseData}
         checking={checkingProcess}
+        interpreting={interpretingProcess}
+        interpretResult={interpretResult}
         onCheck={handleCheckProcess}
+        onInterpret={handleInterpretProcess}
         onEditClick={() => setShowEditModal(true)}
       />
 

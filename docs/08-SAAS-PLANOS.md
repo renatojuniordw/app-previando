@@ -15,6 +15,7 @@
 | Petições Iniciais/mês | 0 | 5 | Ilimitado |
 | Análises BPC/mês | 0 | 50 | Ilimitado |
 | Carrosséis BPC/mês | 0 | 5 | Ilimitado |
+| Interpretações de movimentações/mês | 0 | 30 | Ilimitado |
 | Simulador | ❌ | ✅ | ✅ |
 | Retroativos | ❌ | ✅ | ✅ |
 | Export PDF | ❌ | ✅ | ✅ |
@@ -22,6 +23,7 @@
 | Diagnóstico IA | ❌ | ✅ | ✅ |
 | Módulo BPC/LOAS | ❌ | ✅ | ✅ |
 | Petição Inicial IA | ❌ | ✅ | ✅ |
+| Interpretação de movimentações IA | ❌ | ✅ | ✅ |
 | Portal do Cliente | ❌ | ✅ (básico) | ✅ (c/ simulador) |
 | Marca d'água | ✅ | ❌ | ❌ |
 
@@ -38,6 +40,7 @@
 | `DIAGNOSIS` | Diagnóstico IA | `diagnosisEnabled` |
 | `USE_BPC_MODULE` | Módulo BPC/LOAS | `bpcEnabled` |
 | `PETICAO` | Petição Inicial com IA | `peticaoEnabled` |
+| `PROCESS_INTERPRET` | Interpretação de movimentações com IA | `processInterpretEnabled` |
 
 > **Nota:** `BPC_SOCIAL_MEDIA` foi removido do PlanFeature. O carrossel BPC não é mais gerado via IA no backend.
 
@@ -119,8 +122,19 @@ async function getOrResetUsageRecord(userId: string) {
 | `guardOpinionLimit()` | maxOpinionsPerMonth + diagnosisEnabled |
 | `guardBpcAnalysisLimit()` | bpcAnalysesPerMonth + bpcEnabled |
 | `guardBpcSocialMediaLimit()` | bpcSocialMediaPerMonth + bpcEnabled |
+| `guardProcessInterpretLimit()` | maxProcessInterpretPerMonth + processInterpretEnabled |
 
 ---
+
+## UsageRecord (Reset Mensal)
+
+Além dos campos existentes, `UsageRecord` agora inclui:
+
+```typescript
+processInterpretThisMonth: Int @default(0)  // Interpretações de movimentação este mês
+```
+
+O reset é automático via `getOrResetUsageRecord()` quando o mês de referência muda.
 
 ## Cache de PlanLimit
 
