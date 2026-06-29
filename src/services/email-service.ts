@@ -7,7 +7,7 @@
 
 import nodemailer from 'nodemailer'
 import { Queue } from 'bullmq'
-import { redis } from '@/lib/redis'
+import { bullmqConnection } from '@/lib/redis'
 import { Logger } from '@/lib/logger'
 const logger = new Logger('email-service')
 import {
@@ -37,7 +37,7 @@ let emailQueue: Queue | null = null
 function getEmailQueue(): Queue | null {
   if (emailQueue) return emailQueue
   try {
-    emailQueue = new Queue('email-notifications', { connection: redis })
+    emailQueue = new Queue('email-notifications', { connection: bullmqConnection })
     return emailQueue
   } catch {
     return null

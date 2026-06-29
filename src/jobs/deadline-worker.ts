@@ -1,4 +1,5 @@
 import { Worker, Queue } from 'bullmq'
+import type { ConnectionOptions } from 'bullmq'
 import Redis from 'ioredis'
 import { prisma } from '../lib/prisma'
 import { Logger } from '../lib/logger'
@@ -7,6 +8,7 @@ import { hasCalendarAccess, syncCaseDeadlinesToCalendar } from '../services/goog
 const logger = new Logger('DeadlineWorker')
 
 export function createDeadlineWorker(redis: Redis): Worker {
+  const conn = redis as unknown as ConnectionOptions
   const worker = new Worker(
     'deadline-notifications',
     async () => {
@@ -71,7 +73,7 @@ export function createDeadlineWorker(redis: Redis): Worker {
 
       logger.info('Deadline notification job completed')
     },
-    { connection: redis, concurrency: 1 }
+    { connection: conn, concurrency: 1 }
   )
 
   worker.on('failed', (job, err) => {
@@ -82,7 +84,8 @@ export function createDeadlineWorker(redis: Redis): Worker {
 }
 
 export async function scheduleDeadlineJob(redis: Redis): Promise<void> {
-  const deadlineQueue = new Queue('deadline-notifications', { connection: redis })
+  const conn = redis as unknown as ConnectionOptions
+  const deadlineQueue = new Queue('deadline-notifications', { connection: conn })
 
   const repeatableJobs = await deadlineQueue.getRepeatableJobs()
   const alreadyScheduled = repeatableJobs.some((j) => j.name === 'daily-deadline-check')

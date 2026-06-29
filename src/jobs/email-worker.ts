@@ -9,7 +9,7 @@
 
 import { Worker } from 'bullmq'
 import nodemailer from 'nodemailer'
-import { redis } from '@/lib/redis'
+import { bullmqConnection } from '@/lib/redis'
 import { Logger } from '@/lib/logger'
 const logger = new Logger('email-worker')
 
@@ -59,7 +59,7 @@ export function createEmailWorker(): Worker {
       }
     },
     {
-      connection: redis,
+      connection: bullmqConnection,
       concurrency: 3,
       maxStalledCount: 2,
       lockDuration: 30000,

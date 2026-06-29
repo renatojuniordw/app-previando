@@ -4,25 +4,10 @@ import { prisma } from '@/lib/prisma'
 import { verifyCaseOwnership } from '@/lib/ownership'
 import { handleApiError } from '@/lib/api-error'
 import { Logger } from '@/lib/logger'
+import type { PortalConfig } from '@/lib/portal-config'
+import { DEFAULT_PORTAL_CONFIG } from '@/lib/portal-config'
 
 const logger = new Logger('PortalConfig')
-
-export interface PortalConfig {
-  showProcessTracking: boolean
-  showCalculations: boolean
-  showRetroactives: boolean
-  showInterpretation: boolean
-  /** Se true, exige verificação de identidade (CPF parcial + data nasc.) para acessar módulos */
-  requireIdentity: boolean
-}
-
-export const DEFAULT_PORTAL_CONFIG: PortalConfig = {
-  showProcessTracking: true,
-  showCalculations: true,
-  showRetroactives: false,
-  showInterpretation: false,
-  requireIdentity: false,
-}
 
 /**
  * GET /api/cases/[id]/portal/config

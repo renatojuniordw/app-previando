@@ -3,11 +3,11 @@ import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
 import { verifyCaseOwnership } from '@/lib/ownership'
 import { Queue } from 'bullmq'
-import { redis } from '@/lib/redis'
+import { bullmqConnection } from '@/lib/redis'
 import { handleApiError } from '@/lib/api-error'
 import { logAudit } from '@/lib/audit'
 
-const cnisQueue = new Queue('cnis-processing', { connection: redis })
+const cnisQueue = new Queue('cnis-processing', { connection: bullmqConnection })
 
 export async function POST(req: NextRequest, { params }: { params: { caseId: string } }) {
   try {

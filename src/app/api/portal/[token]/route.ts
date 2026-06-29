@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { handleApiError } from '@/lib/api-error'
-import type { PortalConfig } from '@/app/api/cases/[id]/portal/config/route'
+import type { PortalConfig } from '@/lib/portal-config'
 
 /**
  * GET /api/portal/[token]

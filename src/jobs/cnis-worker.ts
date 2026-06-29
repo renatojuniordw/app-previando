@@ -1,4 +1,5 @@
 import { Worker } from 'bullmq'
+import type { ConnectionOptions } from 'bullmq'
 import Redis from 'ioredis'
 import { prisma } from '../lib/prisma'
 import { downloadPDF } from '../services/r2'
@@ -10,6 +11,7 @@ import type { Prisma } from '@prisma/client'
 const logger = new Logger('CnisWorker')
 
 export function createCnisWorker(redis: Redis): Worker {
+  const conn = redis as unknown as ConnectionOptions
   return new Worker(
     'cnis-processing',
     async (job) => {
@@ -188,7 +190,7 @@ export function createCnisWorker(redis: Redis): Worker {
       }
     },
     {
-      connection: redis,
+      connection: conn,
       concurrency: 2,
       limiter: { max: 5, duration: 60_000 },
       // attempt: 2, // Note: BullMQ v4 uses 'attempts' instead

@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server'
-import { redis } from '@/lib/redis'
+import { redis, bullmqConnection } from '@/lib/redis'
 import { Queue } from 'bullmq'
 
 const QUEUES = ['cnis-processing', 'audit-log', 'deadline-notifications', 'email-notifications']
 
 async function getQueueMetrics(name: string) {
   try {
-    const queue = new Queue(name, { connection: redis })
+    const queue = new Queue(name, { connection: bullmqConnection })
     const [waiting, active, completed, failed, delayed] = await Promise.all([
       queue.getWaitingCount(),
       queue.getActiveCount(),

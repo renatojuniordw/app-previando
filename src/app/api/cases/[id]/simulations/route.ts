@@ -92,7 +92,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 
               return {
                 ...sim,
-                scenarioParams: res.scenarioParams,
+                scenarioParams: res.scenarioParams as Prisma.JsonValue,
               }
             } catch {
               return sim

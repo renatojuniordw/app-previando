@@ -67,8 +67,8 @@ export default function AdminPlansPage() {
       const r = await fetch('/api/billing/plans')
       const data = await r.json()
       setPlans((data.plans ?? []).map((p: { plan: string; limits: PlanLimitData }) => ({
-        plan: p.plan,
         ...p.limits,
+        plan: p.plan,
       })))
     } catch {
       setPlans([])
@@ -195,8 +195,8 @@ export default function AdminPlansPage() {
                     <span className="text-slate-500">{label}</span>
                     <span className="font-semibold text-slate-900">
                       {key === 'maxCalculationsPerMonth' || key === 'maxOpinionsPerMonth' || key === 'bpcAnalysesPerMonth' || key === 'bpcSocialMediaPerMonth'
-                        ? fmtUnlimited(plan[key], '/mês')
-                        : fmtUnlimited(plan[key])}
+                        ? fmtUnlimited(plan[key] as number, '/mês')
+                        : fmtUnlimited(plan[key] as number)}
                     </span>
                   </div>
                 ))}

@@ -62,7 +62,7 @@ export class RetroativoOrchestrator {
         discountValue: result.valorDescontos,
         discountDescription: result.descricaoDescontos ?? null,
         finalNetValue: result.valorLiquidoFinal,
-        calculationMemory: result.memoriaCalculo as Prisma.InputJsonValue,
+        calculationMemory: result.memoriaCalculo as unknown as Prisma.InputJsonValue,
       },
     })
 

@@ -10,9 +10,9 @@ import { validatePDFUpload } from '@/lib/upload-validator'
 import { rateLimit } from '@/lib/rate-limit'
 import { handleApiError } from '@/lib/api-error'
 import { Queue } from 'bullmq'
-import { redis } from '@/lib/redis'
+import { bullmqConnection } from '@/lib/redis'
 
-const cnisQueue = new Queue('cnis-processing', { connection: redis })
+const cnisQueue = new Queue('cnis-processing', { connection: bullmqConnection })
 
 export async function POST(req: NextRequest) {
   try {

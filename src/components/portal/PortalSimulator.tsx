@@ -61,7 +61,7 @@ export function PortalSimulator({ token }: PortalSimulatorProps) {
       <div className="flex items-center gap-2 text-slate-500 mb-1">
         <TrendingUp className="w-4 h-4" aria-hidden="true" />
         <span className="font-sans text-sm font-medium uppercase tracking-wide">
-          Simulador "E se?"
+          Simulador &quot;E se?&quot;
         </span>
       </div>
 

@@ -81,7 +81,7 @@ Idade do cliente: ${ageYears != null ? `${ageYears} anos` : 'desconhecida'}
 CNIS: ${caso.cnisDocument ? `processado (${caso.cnisDocument.totalContributions ?? 'N/A'} contribuições)` : 'não enviado'}
 Modalidades elegíveis: ${eligible.length > 0 ? eligible.map((c) => c.modality).join(', ') : 'nenhuma identificada'}
 Pendências do checklist: ${pending.length > 0 ? pending.join('; ') : 'nenhuma'}
-Pendências dos cálculos: ${[...new Set(calcPending)].slice(0, 5).join('; ') || 'nenhuma'}
+Pendências dos cálculos: ${Array.from(new Set(calcPending)).slice(0, 5).join('; ') || 'nenhuma'}
 Processo judicial: ${caso.processNumber ? 'Sim (' + caso.processNumber + ')' : 'Não'}
 `.trim()
 

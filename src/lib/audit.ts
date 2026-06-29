@@ -3,7 +3,7 @@ import { prisma } from './prisma'
 import { NextRequest } from 'next/server'
 import { Logger } from './logger'
 import { Queue } from 'bullmq'
-import { redis } from './redis'
+import { bullmqConnection } from './redis'
 
 const logger = new Logger('AuditLog')
 
@@ -28,7 +28,7 @@ let auditQueue: Queue | null = null
 
 function getAuditQueue(): Queue {
   if (!auditQueue) {
-    auditQueue = new Queue('audit-log', { connection: redis })
+    auditQueue = new Queue('audit-log', { connection: bullmqConnection })
   }
   return auditQueue
 }

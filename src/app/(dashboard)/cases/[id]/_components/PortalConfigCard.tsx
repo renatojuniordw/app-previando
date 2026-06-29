@@ -12,6 +12,7 @@ import {
   ExternalLink,
   Eye,
   EyeOff,
+  Shield,
 } from 'lucide-react'
 import type { CaseDetail } from '../_types'
 

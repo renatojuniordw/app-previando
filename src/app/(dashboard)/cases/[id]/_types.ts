@@ -30,5 +30,6 @@ export interface CaseDetail {
     showCalculations: boolean
     showRetroactives: boolean
     showInterpretation: boolean
+    requireIdentity: boolean
   }
 }

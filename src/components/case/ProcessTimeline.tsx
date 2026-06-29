@@ -192,7 +192,7 @@ export function ProcessTimeline({
       {!hasMovements && (
         <div className="p-4">
           <p className="font-sans text-sm text-slate-500">
-            Nenhuma movimentação encontrada. Clique em "Consultar" para buscar os dados do processo.
+            Nenhuma movimentação encontrada. Clique em &quot;Consultar&quot; para buscar os dados do processo.
           </p>
         </div>
       )}

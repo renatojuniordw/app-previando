@@ -203,7 +203,7 @@ export default function BillingPage() {
 
       {/* Usage Section (only for paid plans with limits) */}
       {usageItems.length > 0 && (
-        <Card variant="default">
+        <Card>
           <CardHeader title="Uso do Plano" />
           <div className="space-y-3">
             {usageItems.map((item) => {
@@ -303,7 +303,7 @@ export default function BillingPage() {
 
       {/* Payment History */}
       {payments.length > 0 && (
-        <Card variant="default">
+        <Card>
           <CardHeader title="Histórico de Pagamentos" />
           <div className="overflow-x-auto">
             <table className="w-full text-left" role="table">
