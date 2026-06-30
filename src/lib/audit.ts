@@ -67,6 +67,8 @@ export async function writeAuditDirect(data: AuditJobData): Promise<void> {
       },
     })
   } catch (err) {
+    // P2003 = FK constraint — user was deleted after the job was enqueued; skip silently
+    if ((err as { code?: string })?.code === 'P2003') return
     logger.error('Failed to write audit log', err)
   }
 }
