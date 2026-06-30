@@ -1,12 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import api from '@/lib/api'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { Skeleton } from '@/components/ui/Skeleton'
-import { Receipt, Calculator, AlertCircle, CheckCircle, History } from 'lucide-react'
+import { Receipt, Calculator, AlertCircle, CheckCircle, History, Trash2 } from 'lucide-react'
 import type { CategoriaContribuinte, PlanoContribuicao, GpsResult } from '@/lib/gps-engine'
 
 interface CategoriaInfo {
@@ -33,6 +33,53 @@ const PLANO_LABELS: Record<PlanoContribuicao, string> = {
   BAIXA_RENDA: 'Baixa Renda',
 }
 
+const MESES = [
+  'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+  'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro',
+]
+
+function MonthPicker({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const currentYear = new Date().getFullYear()
+  const years = Array.from({ length: 30 }, (_, i) => currentYear - i)
+
+  const [year, month] = value ? value.split('-') : ['', '']
+
+  const handleMonth = (m: string) => {
+    if (m && year) onChange(`${year}-${m}`)
+    else if (m) onChange(`${currentYear}-${m}`)
+  }
+
+  const handleYear = (y: string) => {
+    if (y && month) onChange(`${y}-${month}`)
+    else if (y && !month) onChange('')
+  }
+
+  return (
+    <div className="flex gap-2">
+      <select
+        value={month || ''}
+        onChange={(e) => handleMonth(e.target.value)}
+        className="flex-1 px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white"
+      >
+        <option value="">Mês</option>
+        {MESES.map((m, i) => (
+          <option key={i} value={String(i + 1).padStart(2, '0')}>{m}</option>
+        ))}
+      </select>
+      <select
+        value={year || ''}
+        onChange={(e) => handleYear(e.target.value)}
+        className="w-28 px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white"
+      >
+        <option value="">Ano</option>
+        {years.map((y) => (
+          <option key={y} value={String(y)}>{y}</option>
+        ))}
+      </select>
+    </div>
+  )
+}
+
 export default function GpsPage() {
   const params = useParams()
   const caseId = params.id as string
@@ -46,9 +93,17 @@ export default function GpsPage() {
   const [result, setResult] = useState<GpsResult | null>(null)
   const [loading, setLoading] = useState(false)
   const [loadingInit, setLoadingInit] = useState(true)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
   const [error, setError] = useState('')
+  const [successMsg, setSuccessMsg] = useState('')
 
-  useState(() => {
+  const loadHistory = async () => {
+    const r = await api.get(`/cases/${caseId}/gps`)
+    setHistory(r.data.guias || [])
+    return r.data
+  }
+
+  useEffect(() => {
     api.get(`/cases/${caseId}/gps`)
       .then((r) => {
         setCategorias(r.data.categorias || [])
@@ -56,10 +111,11 @@ export default function GpsPage() {
       })
       .catch(() => null)
       .finally(() => setLoadingInit(false))
-  })
+  }, [caseId])
 
   const handleSubmit = async () => {
     setError('')
+    setSuccessMsg('')
     setResult(null)
 
     if (!selectedCat || !salario || !competencia) {
@@ -82,12 +138,26 @@ export default function GpsPage() {
         competencia,
       })
       setResult(res.data)
-      const hist = await api.get(`/cases/${caseId}/gps`)
-      setHistory(hist.data.guias || [])
+      setCompetencia('')
+      setSuccessMsg('Guia salva com sucesso!')
+      await loadHistory()
     } catch (err: unknown) {
       setError((err as { response?: { data?: { error?: string } } })?.response?.data?.error || 'Erro ao calcular contribuição.')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleDelete = async (guiaId: string) => {
+    setDeletingId(guiaId)
+    try {
+      await api.delete(`/cases/${caseId}/gps/${guiaId}`)
+      setHistory((prev) => prev.filter((g) => g.id !== guiaId))
+      if (result && (result as GpsResult & { id?: string }).id === guiaId) setResult(null)
+    } catch {
+      setError('Erro ao excluir guia.')
+    } finally {
+      setDeletingId(null)
     }
   }
 
@@ -127,7 +197,7 @@ export default function GpsPage() {
             {categorias.map((cat) => (
               <button
                 key={cat.categoria}
-                onClick={() => { setSelectedCat(cat.categoria); setResult(null) }}
+                onClick={() => { setSelectedCat(cat.categoria); setResult(null); setSuccessMsg('') }}
                 className={`p-3 rounded-lg border-2 text-left transition-all text-sm ${
                   selectedCat === cat.categoria
                     ? 'border-amber-500 bg-amber-50'
@@ -182,12 +252,7 @@ export default function GpsPage() {
           </div>
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Competência</label>
-            <input
-              type="month"
-              value={competencia}
-              onChange={(e) => setCompetencia(e.target.value)}
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
-            />
+            <MonthPicker value={competencia} onChange={setCompetencia} />
           </div>
         </div>
 
@@ -198,8 +263,15 @@ export default function GpsPage() {
           </div>
         )}
 
+        {successMsg && (
+          <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-lg mb-4">
+            <CheckCircle className="w-4 h-4 text-green-500 shrink-0" />
+            <span className="text-sm text-green-700">{successMsg}</span>
+          </div>
+        )}
+
         <Button onClick={handleSubmit} disabled={loading || !selectedCat} className="w-full md:w-auto">
-          {loading ? 'Calculando...' : 'Calcular e Salvar'}
+          {loading ? 'Salvando...' : 'Calcular e Salvar'}
         </Button>
       </Card>
 
@@ -259,6 +331,14 @@ export default function GpsPage() {
                 <div className="flex items-center gap-3">
                   <span className="font-medium text-slate-800">R$ {g.valorCalculado.toFixed(2)}</span>
                   <span className="text-xs text-slate-400">{new Date(g.createdAt).toLocaleDateString('pt-BR')}</span>
+                  <button
+                    onClick={() => handleDelete(g.id)}
+                    disabled={deletingId === g.id}
+                    className="p-1 text-slate-400 hover:text-red-500 transition-colors disabled:opacity-40"
+                    title="Excluir guia"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
                 </div>
               </div>
             ))}
