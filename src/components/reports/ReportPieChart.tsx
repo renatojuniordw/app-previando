@@ -53,7 +53,6 @@ const CustomTooltip = ({
 }
 
 const renderCustomLabel = ({
-  name,
   percent,
 }: {
   name: string

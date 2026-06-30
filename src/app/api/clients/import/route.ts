@@ -167,33 +167,6 @@ function parseExcelContent(buffer: ArrayBuffer): ParsedRow[] {
   return jsonData.map((row) => normalizeRow(row))
 }
 
-function validateRow(
-  row: ParsedRow,
-  rowIndex: number,
-  existingHashes: Set<string>
-): { valid: boolean; error?: string; isDuplicate?: boolean } {
-  if (!row.nome || !row.cpf || !row.dataNascimento) {
-    return { valid: false, error: 'Nome, CPF e Data de Nascimento são obrigatórios.' }
-  }
-
-  if (!parseBirthDate(row.dataNascimento)) {
-    return { valid: false, error: `Data de nascimento inválida: ${row.dataNascimento}` }
-  }
-
-  let cpfHash: string
-  try {
-    cpfHash = hashCPF(row.cpf)
-  } catch {
-    return { valid: false, error: 'CPF inválido.' }
-  }
-
-  if (existingHashes.has(cpfHash)) {
-    return { valid: false, isDuplicate: true, error: 'CPF duplicado no arquivo.' }
-  }
-
-  return { valid: true }
-}
-
 export async function POST(req: NextRequest) {
   try {
     const session = await auth()

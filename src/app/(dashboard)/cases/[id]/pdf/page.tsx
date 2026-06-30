@@ -1,9 +1,9 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { useParams, useRouter } from 'next/navigation'
+import { useParams } from 'next/navigation'
 import api from '@/lib/api'
-import { Files, UploadCloud, Trash2, Settings, Play, Check, Loader2, ArrowUp, ArrowDown, AlertCircle, FileText, Download, ShieldCheck } from 'lucide-react'
+import { UploadCloud, Trash2, Settings, Play, Check, Loader2, ArrowUp, ArrowDown, AlertCircle, FileText, Download, ShieldCheck } from 'lucide-react'
 import { useToast } from '@/store/toast'
 
 interface QueueItem {
@@ -27,7 +27,6 @@ const TOOLS = [
 
 export default function CasePdfToolsPage() {
   const params = useParams()
-  const router = useRouter()
   const caseId = params.id as string
   const { addToast } = useToast()
 

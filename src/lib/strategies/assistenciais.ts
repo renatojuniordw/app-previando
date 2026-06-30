@@ -7,8 +7,6 @@ import {
   CARENCIA_AUXILIO_DOENCA_MESES,
   CARENCIA_PENSAO_MORTE_MESES,
   COEFICIENTE_AUXILIO_DOENCA,
-  COEFICIENTE_BASE,
-  ACRESCIMO_ANUAL,
 } from '@/lib/previdenciario-constants'
 import type { ModalidadeStrategy, ModalidadeEvaluationInput, ModalidadeEvaluationResult } from './types'
 

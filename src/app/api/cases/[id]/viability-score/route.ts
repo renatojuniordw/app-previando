@@ -44,7 +44,7 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
       birthDate: caseData.client.birthDate.toISOString().slice(0, 10),
       gender: 'M',
       dib,
-      extractedData: caseData.cnisDocument?.extractedData as any ?? null,
+      extractedData: (caseData.cnisDocument?.extractedData ?? null) as Parameters<typeof calcularViabilityScore>[0]['extractedData'],
       salarioMinimo,
       tetoPrevidenciario: teto,
     })

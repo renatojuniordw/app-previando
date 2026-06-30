@@ -3,7 +3,7 @@ import type { ConnectionOptions } from 'bullmq'
 import Redis from 'ioredis'
 import { prisma } from '../lib/prisma'
 import { Logger } from '../lib/logger'
-import { hasCalendarAccess, syncCaseDeadlinesToCalendar } from '../services/google-calendar'
+import { syncCaseDeadlinesToCalendar } from '../services/google-calendar'
 
 const logger = new Logger('DeadlineWorker')
 

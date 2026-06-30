@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { TrendingUp, Loader2, ArrowRight, AlertCircle, Calendar, DollarSign, CheckCircle2 } from 'lucide-react'
+import { TrendingUp, Loader2, AlertCircle, Calendar, DollarSign, CheckCircle2 } from 'lucide-react'
 
 interface SimulacaoResult {
   atual: { rmi: number; elegivel: boolean; idade: number; tempoContribuicao: number }

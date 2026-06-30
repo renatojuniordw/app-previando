@@ -6,8 +6,7 @@
  */
 
 import { calculatePrevidenciario } from '@/lib/previdencia-engine'
-import { getRegisteredModalities, getStrategy } from '@/lib/strategies/registry'
-import { getSalarioVigente } from '@/lib/salario-minimo'
+import { getRegisteredModalities } from '@/lib/strategies/registry'
 import type { CnisExtractedData } from '@/services/cnis/types'
 import type { CalculationResult } from '@/lib/previdencia-engine'
 

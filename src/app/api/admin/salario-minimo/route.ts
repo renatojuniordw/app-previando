@@ -12,7 +12,7 @@ const createSchema = z.object({
   reajuste: z.number().nullable().optional(),
 })
 
-export async function GET(req: NextRequest) {
+export async function GET(_req: NextRequest) {
   try {
     const adminResult = await requireAdmin()
     if ('error' in adminResult) return adminResult.error

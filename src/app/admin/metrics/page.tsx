@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react'
 import { Card } from '@/components/ui/Card'
 import { STATUS_LABELS } from '@/lib/constants'
-import { TrendingUp, DollarSign, Users, Cpu, BarChart3 } from 'lucide-react'
+import { DollarSign, Users, Cpu, BarChart3 } from 'lucide-react'
 
 interface Metrics {
   users: { total: number; byPlan: Record<string, number>; newThisMonth: number }

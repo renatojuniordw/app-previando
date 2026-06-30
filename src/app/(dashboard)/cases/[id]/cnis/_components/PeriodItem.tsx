@@ -16,7 +16,6 @@ interface Props {
 
 export function PeriodItem({
   periodo,
-  idx,
   isExpanded,
   warnings,
   onToggle,

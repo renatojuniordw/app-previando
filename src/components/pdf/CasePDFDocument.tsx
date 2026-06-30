@@ -23,7 +23,7 @@ interface CasePDFDocumentProps {
 const Header: React.FC = () => (
   <View style={styles.header} fixed>
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-      <Image src={LOGO_BASE64} style={{ width: 60, height: 18 }} />
+      <Image src={LOGO_BASE64} style={{ width: 60, height: 18 }} alt="" />
       <View>
         <Text style={styles.headerTitle}>Relatório do Caso</Text>
         <Text style={styles.headerSubtitle}>Previando — Simulador Previdenciário</Text>

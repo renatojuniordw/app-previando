@@ -6,7 +6,7 @@ import api from '@/lib/api'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { Skeleton } from '@/components/ui/Skeleton'
-import { Receipt, Calculator, AlertCircle, CheckCircle, History, Download } from 'lucide-react'
+import { Receipt, Calculator, AlertCircle, CheckCircle, History } from 'lucide-react'
 import type { CategoriaContribuinte, PlanoContribuicao, GpsResult } from '@/lib/gps-engine'
 
 interface CategoriaInfo {
@@ -84,8 +84,8 @@ export default function GpsPage() {
       setResult(res.data)
       const hist = await api.get(`/cases/${caseId}/gps`)
       setHistory(hist.data.guias || [])
-    } catch (err: any) {
-      setError(err?.response?.data?.error || 'Erro ao calcular contribuição.')
+    } catch (err: unknown) {
+      setError((err as { response?: { data?: { error?: string } } })?.response?.data?.error || 'Erro ao calcular contribuição.')
     } finally {
       setLoading(false)
     }

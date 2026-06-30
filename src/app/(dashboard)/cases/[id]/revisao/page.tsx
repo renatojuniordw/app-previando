@@ -6,7 +6,7 @@ import api from '@/lib/api'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { Skeleton } from '@/components/ui/Skeleton'
-import { Scale, TrendingUp, TrendingDown, AlertCircle, CheckCircle, Clock, DollarSign, Percent, FileText } from 'lucide-react'
+import { Scale, TrendingUp, AlertCircle, CheckCircle, Clock, DollarSign, Percent, FileText } from 'lucide-react'
 import { REVISION_LABELS, REVISION_DESCRIPTIONS } from '@/lib/strategies/revision-types'
 import type { RevisionType, RevisionResult } from '@/lib/strategies/revision-types'
 
@@ -76,8 +76,8 @@ export default function RevisaoPage() {
       // Atualiza histórico
       const hist = await api.get(`/cases/${caseId}/revisions`)
       setHistory(hist.data.revisions)
-    } catch (err: any) {
-      setError(err?.response?.data?.error || 'Erro ao calcular revisão.')
+    } catch (err: unknown) {
+      setError((err as { response?: { data?: { error?: string } } })?.response?.data?.error || 'Erro ao calcular revisão.')
     } finally {
       setLoading(false)
     }

@@ -7,7 +7,6 @@ import { prisma } from '@/lib/prisma'
 import { calcularRevisao } from '@/lib/revision-engine'
 import { getSalarioVigente } from '@/lib/salario-minimo'
 import { logAudit } from '@/lib/audit'
-import { handleApiError } from '@/lib/api-error'
 import type { RevisionInput, RevisionResult } from '@/lib/strategies/revision-types'
 
 export interface RunRevisionInput {
@@ -44,7 +43,7 @@ export async function runAndSaveRevision(input: RunRevisionInput): Promise<Revis
     dibConcedido,
     birthDate: caso.client.birthDate.toISOString().slice(0, 10),
     gender: 'M',
-    extractedData: caso.cnisDocument?.extractedData as any ?? null,
+    extractedData: (caso.cnisDocument?.extractedData ?? null) as Parameters<typeof calcularRevisao>[0]['extractedData'],
     salarioMinimo,
     tetoPrevidenciario: teto,
   })

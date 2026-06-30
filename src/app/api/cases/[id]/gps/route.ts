@@ -6,7 +6,7 @@ import { verifyCaseOwnership } from '@/lib/ownership'
 import { guardFeature } from '@/lib/plan-guard'
 import { rateLimit } from '@/lib/rate-limit'
 import { handleApiError } from '@/lib/api-error'
-import { calcularContribuicao, getAliquotasDisponiveis, getCategorias } from '@/lib/gps-engine'
+import { calcularContribuicao, getCategorias } from '@/lib/gps-engine'
 import { getSalarioVigente } from '@/lib/salario-minimo'
 
 const gpsSchema = z.object({

@@ -4,7 +4,6 @@
  * Suporta: Contribuinte Individual, Facultativo, MEI, Segurado Especial
  */
 
-import { FALLBACK_INPC_MENSAL as FALLBACK } from '@/lib/previdenciario-constants'
 
 // ─── Tipos ───────────────────────────────────────────────────────────────
 

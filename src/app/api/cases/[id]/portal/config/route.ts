@@ -5,7 +5,6 @@ import { verifyCaseOwnership } from '@/lib/ownership'
 import { handleApiError } from '@/lib/api-error'
 import { Logger } from '@/lib/logger'
 import type { PortalConfig } from '@/lib/portal-config'
-import { DEFAULT_PORTAL_CONFIG } from '@/lib/portal-config'
 
 const logger = new Logger('PortalConfig')
 

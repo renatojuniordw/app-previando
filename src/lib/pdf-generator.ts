@@ -75,16 +75,6 @@ function splitTextIntoLines(doc: PDFDocType, text: string, maxWidth: number): st
   return lines;
 }
 
-function drawTableHeader(doc: PDFDocType, columns: { label: string; width: number }[], y: number) {
-  let x = 40
-  doc.font('Helvetica-Bold').fontSize(8).fill(BRAND.dark)
-  for (const col of columns) {
-    doc.text(col.label, x, y, { width: col.width })
-    x += col.width
-  }
-  doc.lineWidth(0.5).moveTo(40, y + 10).lineTo(550, y + 10).stroke(BRAND.border)
-  return y + 14
-}
 
 export interface CasePDFData {
   clientName?: string

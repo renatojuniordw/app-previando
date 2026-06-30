@@ -13,7 +13,6 @@ import {
   TrendingUp,
   Scale,
   Calendar,
-  User,
   ShieldAlert,
   Loader2,
   Trash2,

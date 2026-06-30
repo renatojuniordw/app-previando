@@ -17,7 +17,7 @@ const createSchema = z.object({
   observacoes:          z.string().nullable().optional(),
 })
 
-export async function GET(req: NextRequest) {
+export async function GET(_req: NextRequest) {
   try {
     const adminResult = await requireAdmin()
     if ('error' in adminResult) return adminResult.error

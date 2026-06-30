@@ -7,7 +7,6 @@ import {
   AlertTriangle,
   ChevronDown,
   ChevronUp,
-  ExternalLink,
   RefreshCw,
 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'

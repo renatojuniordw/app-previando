@@ -7,7 +7,7 @@
 
 import { calculatePrevidenciario } from './previdencia-engine'
 import { DATA_LIMITE_94, FALLBACK_INPC_MENSAL } from './previdenciario-constants'
-import type { RevisionInput, RevisionResult, RevisionType } from './strategies/revision-types'
+import type { RevisionInput, RevisionResult } from './strategies/revision-types'
 import type { CnisExtractedData } from '@/services/cnis/types'
 
 /**

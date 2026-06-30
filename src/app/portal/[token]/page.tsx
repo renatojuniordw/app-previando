@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
-import { formatCurrency, formatDate } from '@/lib/utils'
-import { Scale, FileText, Calculator, Clock, CheckCircle2, XCircle, AlertCircle } from 'lucide-react'
+import { formatDate } from '@/lib/utils'
+import { Scale, FileText } from 'lucide-react'
 import { PortalSimulator } from '@/components/portal/PortalSimulator'
 import { PortalContent } from './PortalContent'
 
@@ -20,28 +20,11 @@ const BENEFIT_LABELS: Record<string, string> = {
   BENEFIT_REVIEW: 'Revisão de Benefício',
 }
 
-const MODALITY_LABELS: Record<string, string> = {
-  POINTS_86_96: 'Regra de Transição — Pontos (86/96)',
-  TOLL_50: 'Regra de Transição — Pedágio 50%',
-  TOLL_100: 'Regra de Transição — Pedágio 100%',
-  MINIMUM_AGE_65_62: 'Regra de Transição — Idade Mínima',
-  CONTRIBUTION_TIME: 'Aposentadoria por Tempo de Contribuição',
-  RETIREMENT_BY_AGE: 'Aposentadoria por Idade',
-  SPECIAL_RETIREMENT: 'Aposentadoria Especial',
-  HYBRID: 'Aposentadoria Híbrida',
-  SICKNESS_BENEFIT_B31: 'Auxílio-Doença Previdenciário (B31)',
-  SICKNESS_BENEFIT_B91: 'Auxílio-Doença Acidentário (B91)',
-  MATERNITY_PAY: 'Salário-Maternidade',
-  PRISONER_BENEFIT: 'Auxílio-Reclusão',
-  DEATH_PENSION: 'Pensão por Morte',
-  BPC_LOAS: 'BPC/LOAS',
-}
-
 interface Props {
   params: { token: string }
 }
 
-export async function generateMetadata({ params }: Props) {
+export async function generateMetadata(_params: Props) {
   return {
     title: 'Portal do Cliente — Previando',
     robots: 'noindex',
@@ -72,7 +55,6 @@ export default async function PortalPage({ params }: Props) {
 
   const { case: c } = access
   const hasWatermark = c.user.plan === 'FREE'
-  const bestCalc = c.calculations[0]
   const hasSimulator = c.user.plan === 'SOLO' || c.user.plan === 'PRO'
 
   // Lê portalConfig para saber se precisa de verificação

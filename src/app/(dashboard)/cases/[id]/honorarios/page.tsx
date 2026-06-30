@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useParams } from 'next/navigation'
 import api from '@/lib/api'
 import { Card } from '@/components/ui/Card'
@@ -9,7 +9,6 @@ import {
   CheckCircle2, Clock, XCircle, AlertTriangle, TrendingUp,
 } from 'lucide-react'
 import { format, parseISO } from 'date-fns'
-import { ptBR } from 'date-fns/locale'
 
 interface Fee {
   id: string
@@ -61,15 +60,15 @@ export default function HonorariosPage() {
   const [saving, setSaving] = useState(false)
   const [deletingId, setDeletingId] = useState<string | null>(null)
 
-  function load() {
+  const load = useCallback(() => {
     setLoading(true)
     api.get(`/cases/${id}/fees`)
       .then((r) => { setFees(r.data.fees); setSummary(r.data.summary) })
       .catch((e) => setError(e?.response?.data?.error ?? 'Erro ao carregar honorários.'))
       .finally(() => setLoading(false))
-  }
+  }, [id])
 
-  useEffect(() => { load() }, [id])
+  useEffect(() => { load() }, [load])
 
   function openCreate() {
     setEditingFee(null)

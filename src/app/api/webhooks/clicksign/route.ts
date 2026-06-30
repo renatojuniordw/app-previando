@@ -107,7 +107,7 @@ async function atualizarAssinatura(processoKey: string, status: string, statusAt
     where: { id: assinatura.id },
     data: {
       status,
-      signers: signers as any,
+      signers: signers as Parameters<typeof prisma.assinatura.update>[0]['data']['signers'],
       completedAt: status === 'SIGNED' ? new Date() : undefined,
     },
   })

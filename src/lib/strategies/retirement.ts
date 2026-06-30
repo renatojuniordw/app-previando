@@ -14,10 +14,6 @@ import {
 } from '@/lib/previdenciario-constants'
 import type { ModalidadeStrategy, ModalidadeEvaluationInput, ModalidadeEvaluationResult } from './types'
 
-function buildPendencies(pends: string[]): string[] {
-  return pends
-}
-
 function getAnosExcedentes(gender: 'M' | 'F', tempoContribuicaoAnos: number): number {
   const anosBase = gender === 'F' ? ANOS_BASE_EXCEDENTE_F : ANOS_BASE_EXCEDENTE_M
   return Math.max(0, tempoContribuicaoAnos - anosBase)

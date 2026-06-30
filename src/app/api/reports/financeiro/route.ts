@@ -29,7 +29,7 @@ async function fetchFinanceiro(
   const now = new Date()
   const periodStart = new Date(now.getTime() - days * 24 * 60 * 60 * 1000)
 
-  const [totalCases, finishedCases, selectedCalcs, feesRaw, countsByStatus] =
+  const [totalCases, finishedCases, selectedCalcs, feesRaw] =
     await Promise.all([
       prisma.case.count({ where: { userId } }),
 

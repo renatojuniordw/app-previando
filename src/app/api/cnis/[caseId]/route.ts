@@ -77,7 +77,7 @@ export async function PUT(req: NextRequest, { params }: { params: { caseId: stri
     const nit = extractedData.nit || null
     const totalContributions = typeof extractedData.totalContribuicoes === 'number'
       ? extractedData.totalContribuicoes
-      : (extractedData.periodos?.reduce((acc: number, p: any) => acc + (p.salarios?.length || 0), 0) ?? null)
+      : (extractedData.periodos?.reduce((acc: number, p: { salarios?: unknown[] }) => acc + (p.salarios?.length || 0), 0) ?? null)
 
     const firstContribution = extractedData.primeiraContribuicao ? new Date(extractedData.primeiraContribuicao) : null
     const lastContribution = extractedData.ultimaContribuicao ? new Date(extractedData.ultimaContribuicao) : null

@@ -24,14 +24,14 @@ interface BpcFormSectionProps {
     perguntasMedicas: string | null
     checklist: string | null
   } | null
-  onSave: (data: any) => Promise<void>
+  onSave: (data: Record<string, unknown>) => Promise<void>
 }
 
 export function BpcFormSection({ caseId, clientBirthDate, analysis, onSave }: BpcFormSectionProps) {
   const [saving, setSaving] = useState(false)
   const [showForm, setShowForm] = useState(false)
 
-  const handleSave = async (data: any) => {
+  const handleSave = async (data: Record<string, unknown>) => {
     setSaving(true)
     try {
       await onSave(data)

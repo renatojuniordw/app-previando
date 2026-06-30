@@ -2,7 +2,6 @@
 import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
-import { Check, X } from 'lucide-react'
 
 interface PlanLimitData {
   plan: string

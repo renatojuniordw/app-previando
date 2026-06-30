@@ -49,12 +49,7 @@ const CONFIG_ITEMS: Array<{
   },
 ]
 
-const SENSITIVE_KEYS: Array<keyof NonNullable<CaseDetail['portalConfig']>> = [
-  'showRetroactives',
-  'showCalculations',
-]
-
-export function PortalConfigCard({ caseId, portalConfig, onUpdate }: Props) {
+export function PortalConfigCard({ caseId, portalConfig, onUpdate: _onUpdate }: Props) {
   const [config, setConfig] = useState<NonNullable<CaseDetail['portalConfig']>>(
     portalConfig ?? {
       showProcessTracking: true,

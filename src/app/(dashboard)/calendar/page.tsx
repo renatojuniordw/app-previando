@@ -180,7 +180,6 @@ export default function CalendarPage() {
       <div className="flex flex-wrap items-center gap-2">
         <Filter className="w-4 h-4 text-slate-400" />
         {FILTER_OPTIONS.map((opt) => {
-          const isActive = activeFilters.has(opt.value) || activeFilters.size === 0
           const showActive = activeFilters.size === 0 || activeFilters.has(opt.value)
           return (
             <button

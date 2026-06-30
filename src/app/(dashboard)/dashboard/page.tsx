@@ -4,12 +4,10 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import api from '@/lib/api'
 import { useToast } from '@/store/toast'
-import { Users, ChevronRight, Columns, TrendingUp } from 'lucide-react'
+import { Users, ChevronRight, Columns } from 'lucide-react'
 import dynamic from 'next/dynamic'
 import { DashboardQuickActions } from '@/components/dashboard/DashboardQuickActions'
 import { OnboardingBanner } from '@/components/dashboard/OnboardingBanner'
-import { Card } from '@/components/ui/Card'
-import { formatCurrency } from '@/lib/utils'
 
 const DashboardKpiGrid = dynamic(() => import('@/components/dashboard/DashboardKpiGrid').then((m) => ({ default: m.DashboardKpiGrid })), {
   loading: () => <div className="grid grid-cols-4 gap-4">{[...Array(4)].map((_, i) => <div key={i} className="h-24 bg-slate-100 rounded-xl animate-pulse" />)}</div>,
