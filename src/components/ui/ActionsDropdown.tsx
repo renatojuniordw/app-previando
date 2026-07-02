@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import { MoreHorizontal, Pencil, Trash2 } from 'lucide-react'
 
 interface ActionItem {
@@ -18,11 +19,35 @@ interface ActionsDropdownProps {
 export function ActionsDropdown({ actions, ariaLabel = 'Abrir menu de ações' }: ActionsDropdownProps) {
   const [open, setOpen] = useState(false)
   const [activeIndex, setActiveIndex] = useState(-1)
+  const [pos, setPos] = useState({ top: 0, right: 0 })
   const ref = useRef<HTMLDivElement>(null)
+  const menuRef = useRef<HTMLDivElement>(null)
+
+  const updatePos = useCallback(() => {
+    if (ref.current) {
+      const rect = ref.current.getBoundingClientRect()
+      setPos({ top: rect.bottom + 4, right: window.innerWidth - rect.right })
+    }
+  }, [])
+
+  useEffect(() => {
+    if (open) {
+      updatePos()
+      window.addEventListener('scroll', updatePos, true)
+      window.addEventListener('resize', updatePos)
+    }
+    return () => {
+      window.removeEventListener('scroll', updatePos, true)
+      window.removeEventListener('resize', updatePos)
+    }
+  }, [open, updatePos])
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
+      if (
+        ref.current && !ref.current.contains(e.target as Node) &&
+        menuRef.current && !menuRef.current.contains(e.target as Node)
+      ) {
         setOpen(false)
       }
     }
@@ -88,9 +113,11 @@ export function ActionsDropdown({ actions, ariaLabel = 'Abrir menu de ações' }
         <MoreHorizontal className="w-5 h-5" aria-hidden="true" />
       </button>
 
-      {open && (
+      {open && createPortal(
         <div
-          className="absolute right-0 top-full mt-1 w-44 bg-white border border-slate-200 rounded-lg shadow-lg z-50 py-1 overflow-hidden"
+          ref={menuRef}
+          className="fixed w-44 bg-white border border-slate-200 rounded-lg shadow-lg py-1"
+          style={{ top: pos.top, right: pos.right, zIndex: 9999 }}
           role="menu"
           aria-label={ariaLabel}
         >
@@ -117,7 +144,8 @@ export function ActionsDropdown({ actions, ariaLabel = 'Abrir menu de ações' }
               {action.label}
             </button>
           ))}
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   )
