@@ -111,7 +111,7 @@ export default function CasesPage() {
       console.error('Fetch cases error:', err)
     }
     setLoading(false)
-  }, [debouncedSearch, statusFilter, priority, benefitType, rmiMin, rmiMax, createdFrom, createdTo, page, sortField, sortDir])
+  }, [addToast, debouncedSearch, statusFilter, priority, benefitType, rmiMin, rmiMax, createdFrom, createdTo, page, sortField, sortDir])
 
   useEffect(() => { fetchCases() }, [fetchCases])
 

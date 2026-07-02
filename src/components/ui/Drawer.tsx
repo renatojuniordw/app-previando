@@ -47,6 +47,7 @@ export function Drawer({ open, onClose, title, description, children, className 
       {/* Drawer content sliding in from right */}
       <div
         ref={drawerRef}
+        tabIndex={-1}
         className={cn(
           'relative w-full max-w-md md:max-w-xl bg-white h-full shadow-2xl flex flex-col z-10 border-l border-slate-200 animate-slide-in',
           className
@@ -66,7 +67,7 @@ export function Drawer({ open, onClose, title, description, children, className 
           </div>
           <button
             onClick={onClose}
-            className="p-1 rounded-lg text-slate-400 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+            className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-900 hover:bg-slate-100 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/50"
             aria-label="Fechar gaveta"
           >
             <X className="w-5 h-5" />

@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { BpcForm } from '@/components/bpc/BpcForm'
 import { Card } from '@/components/ui/Card'
+import type { BpcSavePayload } from '@/components/bpc/BpcForm'
 
 interface BpcFormSectionProps {
   caseId: string
@@ -24,14 +25,14 @@ interface BpcFormSectionProps {
     perguntasMedicas: string | null
     checklist: string | null
   } | null
-  onSave: (data: Record<string, unknown>) => Promise<void>
+  onSave: (data: BpcSavePayload) => Promise<void>
 }
 
 export function BpcFormSection({ caseId, clientBirthDate, analysis, onSave }: BpcFormSectionProps) {
   const [saving, setSaving] = useState(false)
   const [showForm, setShowForm] = useState(false)
 
-  const handleSave = async (data: Record<string, unknown>) => {
+  const handleSave = async (data: BpcSavePayload) => {
     setSaving(true)
     try {
       await onSave(data)

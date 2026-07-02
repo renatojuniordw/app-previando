@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { Plus, Pencil, Trash2, Check, X } from 'lucide-react'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 interface Modalidade {
   id?: string
   codigo: string
@@ -24,6 +25,7 @@ export default function ModalidadesPage() {
   const [form, setForm] = useState(EMPTY_FORM)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
   const load = async () => {
     setLoading(true)
     const r = await fetch('/api/admin/modalidades')
@@ -82,11 +84,12 @@ export default function ModalidadesPage() {
     setShowForm(true)
     setError('')
   }
-  const handleDelete = async (id?: string) => {
-    if (!id || !confirm('Confirma a exclusão desta modalidade?')) return
-    await fetch(`/api/admin/modalidades/${id}`, {
+  const handleDeleteConfirm = async () => {
+    if (!confirmDeleteId) return
+    await fetch(`/api/admin/modalidades/${confirmDeleteId}`, {
       method: 'DELETE',
     })
+    setConfirmDeleteId(null)
     await load()
   }
   const handleCancel = () => {
@@ -226,7 +229,7 @@ export default function ModalidadesPage() {
                   <Pencil className="w-3.5 h-3.5" />
                 </button>
                 <button
-                  onClick={() => handleDelete(modalidade.id)}
+                  onClick={() => modalidade.id && setConfirmDeleteId(modalidade.id)}
                   disabled={!modalidade.id}
                   className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors disabled:opacity-40"
                   title="Excluir"
@@ -241,6 +244,16 @@ export default function ModalidadesPage() {
       <p className="font-sans text-xs text-slate-400">
         O app usa esta tabela para montar selects e exibir nomes legíveis das modalidades. Inative uma modalidade para escondê-la do uso diário sem perder o histórico.
       </p>
+
+      <ConfirmDialog
+        open={confirmDeleteId !== null}
+        onConfirm={handleDeleteConfirm}
+        onCancel={() => setConfirmDeleteId(null)}
+        title="Excluir Modalidade"
+        message="Tem certeza que deseja excluir esta modalidade? Esta ação não pode ser desfeita."
+        confirmLabel="Excluir"
+        variant="danger"
+      />
     </div>
   )
 }

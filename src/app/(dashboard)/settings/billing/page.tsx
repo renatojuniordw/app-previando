@@ -7,6 +7,7 @@ import api from '@/lib/api'
 import { useToast } from '@/store/toast'
 import { Card, CardHeader } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import { Calendar, TrendingUp, CheckCircle2, XCircle, AlertCircle } from 'lucide-react'
@@ -76,6 +77,7 @@ export default function BillingPage() {
   const [loading, setLoading] = useState(true)
   const [subscribing, setSubscribing] = useState<string | null>(null)
   const [cancelling, setCancelling] = useState(false)
+  const [confirmCancel, setConfirmCancel] = useState(false)
   const { addToast } = useToast()
 
   const successStatus = searchParams.get('status')
@@ -102,8 +104,12 @@ export default function BillingPage() {
     }
   }
 
-  const handleCancel = async () => {
-    if (!confirm('Deseja cancelar sua assinatura? Seu plano permanece ativo até o fim do período já pago.')) return
+  const handleCancel = () => {
+    setConfirmCancel(true)
+  }
+
+  const confirmCancelAction = async () => {
+    setConfirmCancel(false)
     setCancelling(true)
     try {
       await api.post('/billing/cancel')
@@ -372,6 +378,17 @@ export default function BillingPage() {
         </div>
       </details>
     </div>
+
+      <ConfirmDialog
+        open={confirmCancel}
+        onConfirm={confirmCancelAction}
+        onCancel={() => setConfirmCancel(false)}
+        title="Cancelar assinatura?"
+        message="Deseja cancelar sua assinatura? Seu plano permanece ativo até o fim do período já pago."
+        confirmLabel="Sim, Cancelar"
+        variant="warning"
+        loading={cancelling}
+      />
     </ErrorBoundary>
   )
 }

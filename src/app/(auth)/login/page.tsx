@@ -67,7 +67,7 @@ export default function LoginPage() {
       </div>
 
       {error && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg font-sans font-medium text-sm text-red-600 flex items-start gap-2">
+        <div role="alert" className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg font-sans font-medium text-sm text-red-600 flex items-start gap-2">
           <AlertCircle className="w-5 h-5 shrink-0" />
           <p>{error}</p>
         </div>
@@ -76,7 +76,7 @@ export default function LoginPage() {
       <button
         onClick={handleGoogle}
         disabled={googleLoading}
-        className="w-full flex items-center justify-center gap-3 px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-slate-700 font-sans font-medium hover:bg-slate-50 hover:text-slate-900 shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-amber-500/50 mb-6"
+        className="w-full flex items-center justify-center gap-3 px-4 min-h-[44px] bg-white border border-slate-200 rounded-lg text-slate-700 font-sans font-medium hover:bg-slate-50 hover:text-slate-900 shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-amber-500/50 mb-6"
       >
         {googleLoading ? (
           <span className="flex items-center gap-2">
@@ -124,7 +124,7 @@ export default function LoginPage() {
           disabled={loading}
         />
 
-        <div>
+        <div className="relative">
           <Input
             label="Senha"
             type={showPassword ? 'text' : 'password'}
@@ -136,8 +136,8 @@ export default function LoginPage() {
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-3 top-[34px] text-slate-400 hover:text-slate-600 transition-colors"
-            aria-label={showPassword ? 'Esconder senha' : 'Mostrar senha'}
+          className="absolute right-3 top-[30px] min-w-[44px] min-h-[44px] flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors"
+          aria-label={showPassword ? 'Esconder senha' : 'Mostrar senha'}
           >
             {showPassword ? (
               <EyeOff className="w-4 h-4" />
@@ -155,7 +155,7 @@ export default function LoginPage() {
 
         <button
           type="submit"
-          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-sm font-semibold shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:ring-offset-2 mt-2"
+          className="w-full flex items-center justify-center gap-2 px-4 min-h-[44px] bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-sm font-semibold shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:ring-offset-2 mt-2"
           disabled={loading}
         >
           {loading ? (

@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { Scale, TrendingUp, AlertCircle, CheckCircle, Clock, DollarSign, Percent, FileText } from 'lucide-react'
+import { HelpText } from '@/components/ui/HelpText'
 import { CurrencyInput } from '@/components/ui/CurrencyInput'
 import { REVISION_LABELS, REVISION_DESCRIPTIONS } from '@/lib/strategies/revision-types'
 import type { RevisionType, RevisionResult } from '@/lib/strategies/revision-types'
@@ -103,6 +104,12 @@ export default function RevisaoPage() {
           Histórico ({history.length})
         </Button>
       </div>
+
+      <HelpText title="Sobre revisão de benefícios" variant="info">
+        <p>Calcule o impacto de diferentes tipos de revisão no benefício já concedido. Preencha os dados
+        originais da concessão (RMI, DIB, SB) e selecione o tipo de revisão desejado. O resultado mostra
+        a diferença mensal e o impacto retroativo estimado.</p>
+      </HelpText>
 
       {/* Histórico */}
       {showHistory && (

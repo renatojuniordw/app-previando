@@ -131,11 +131,12 @@ export default function CaseLayout({ children }: { children: React.ReactNode }) 
                 return (
                   <Link
                     key={tab.id}
-                    href={tab.locked ? '#' : fullPath}
+                    href={tab.locked ? '' : fullPath}
                     role="tab"
                     aria-selected={isActive}
                     aria-disabled={tab.locked || undefined}
                     tabIndex={tab.locked ? -1 : 0}
+                    onClick={tab.locked ? (e) => e.preventDefault() : undefined}
                     className={`
                       flex items-center gap-2 px-4 py-3 font-sans font-medium text-sm whitespace-nowrap border-b-2 transition-all
                       ${isActive
@@ -159,7 +160,7 @@ export default function CaseLayout({ children }: { children: React.ReactNode }) 
       </div>
 
       {/* Content Area */}
-      <div className="flex-1 max-w-7xl w-full mx-auto p-6 md:p-8">
+      <div className="flex-1 max-w-7xl w-full mx-auto p-6 md:p-8" role="tabpanel" aria-labelledby="tab-content">
         {children}
       </div>
 

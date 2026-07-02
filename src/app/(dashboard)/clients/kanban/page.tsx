@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef, memo } from 'react'
 import Link from 'next/link'
 import {
   DndContext,
@@ -9,6 +9,7 @@ import {
   DragOverlay,
   DragStartEvent,
   PointerSensor,
+  KeyboardSensor,
   useSensor,
   useSensors,
   closestCorners,
@@ -22,7 +23,8 @@ import { CSS } from '@dnd-kit/utilities'
 import api from '@/lib/api'
 import { Badge } from '@/components/ui/Badge'
 import { ClientSwitcher } from '@/components/ClientSwitcher'
-import { Clock, FileText, LayoutTemplate } from 'lucide-react'
+import { useToast } from '@/store/toast'
+import { Clock, FileText, LayoutTemplate, AlertTriangle } from 'lucide-react'
 import { BENEFIT_SHORT_LABELS, PRIORITY_STYLES } from '@/lib/constants'
 
 interface KanbanCase {
@@ -49,7 +51,7 @@ function getInitials(name: string) {
   return name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()
 }
 
-function CaseCard({ caso, isDragging }: { caso: KanbanCase; isDragging?: boolean }) {
+const CaseCard = memo(function CaseCard({ caso, isDragging }: { caso: KanbanCase; isDragging?: boolean }) {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: caso.id })
 
   const style = {
@@ -82,11 +84,11 @@ function CaseCard({ caso, isDragging }: { caso: KanbanCase; isDragging?: boolean
 
           <div className="flex items-center justify-between pt-3 border-t border-slate-50">
             <div className="flex items-center gap-1.5 text-slate-400">
-              <FileText className="w-3.5 h-3.5" />
+              <FileText className="w-3.5 h-3.5" aria-hidden="true" />
               <span className="font-sans text-xs font-medium">Docs</span>
             </div>
             <div className="flex items-center gap-1.5 text-slate-400">
-              <Clock className="w-3.5 h-3.5" />
+              <Clock className="w-3.5 h-3.5" aria-hidden="true" />
               <span className="font-sans text-[10px] uppercase font-semibold tracking-wider">
                 {new Date(caso.createdAt).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}
               </span>
@@ -96,7 +98,7 @@ function CaseCard({ caso, isDragging }: { caso: KanbanCase; isDragging?: boolean
       </Link>
     </div>
   )
-}
+})
 
 function DragOverlayCard({ caso }: { caso: KanbanCase }) {
   const badgeConfig = PRIORITY_STYLES[caso.priority] || PRIORITY_STYLES.NORMAL
@@ -121,10 +123,10 @@ function DragOverlayCard({ caso }: { caso: KanbanCase }) {
 
       <div className="flex items-center justify-between pt-3 border-t border-slate-50">
         <div className="flex items-center gap-1.5 text-slate-400">
-          <FileText className="w-3.5 h-3.5" />
+          <FileText className="w-3.5 h-3.5" aria-hidden="true" />
         </div>
         <div className="flex items-center gap-1.5 text-slate-400">
-          <Clock className="w-3.5 h-3.5" />
+          <Clock className="w-3.5 h-3.5" aria-hidden="true" />
         </div>
       </div>
     </div>
@@ -136,9 +138,15 @@ export default function ClientsKanbanPage() {
   const [loading, setLoading] = useState(true)
   const [activeDragCase, setActiveDragCase] = useState<KanbanCase | null>(null)
   const [totalActive, setTotalActive] = useState(0)
+  const [confirmFinalize, setConfirmFinalize] = useState<KanbanCase | null>(null)
+  const { addToast } = useToast()
+
+  const casesRef = useRef(casesByStatus)
+  casesRef.current = casesByStatus
 
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor)
   )
 
   const load = useCallback(() => {
@@ -155,31 +163,31 @@ export default function ClientsKanbanPage() {
         }
         setCasesByStatus(grouped)
       })
-      .catch(() => null)
+      .catch(() => addToast({ type: 'error', title: 'Erro ao carregar quadro' }))
       .finally(() => setLoading(false))
-  }, [])
+  }, [addToast])
 
   useEffect(() => { load() }, [load])
 
-  const findCaseById = (id: string): KanbanCase | undefined => {
-    for (const cases of Object.values(casesByStatus)) {
+  const findCaseById = useCallback((id: string): KanbanCase | undefined => {
+    for (const cases of Object.values(casesRef.current)) {
       const found = cases.find((c) => c.id === id)
       if (found) return found
     }
-  }
+  }, [])
 
-  const findColumnForCase = (id: string): string | undefined => {
-    for (const [col, cases] of Object.entries(casesByStatus)) {
+  const findColumnForCase = useCallback((id: string): string | undefined => {
+    for (const [col, cases] of Object.entries(casesRef.current)) {
       if (cases.find((c) => c.id === id)) return col
     }
-  }
+  }, [])
 
-  const handleDragStart = (event: DragStartEvent) => {
+  const handleDragStart = useCallback((event: DragStartEvent) => {
     const found = findCaseById(event.active.id as string)
     if (found) setActiveDragCase(found)
-  }
+  }, [findCaseById])
 
-  const handleDragOver = (event: DragOverEvent) => {
+  const handleDragOver = useCallback((event: DragOverEvent) => {
     const { active, over } = event
     if (!over) return
 
@@ -197,9 +205,30 @@ export default function ClientsKanbanPage() {
       const toCases = [...prev[toCol], { ...movedCase, status: toCol }]
       return { ...prev, [fromCol]: fromCases, [toCol]: toCases }
     })
-  }
+  }, [findColumnForCase])
 
-  const handleDragEnd = async (event: DragEndEvent) => {
+  const persistMove = useCallback(async (activeId: string, newCol: string) => {
+    try {
+      await api.patch(`/cases/${activeId}/status`, { status: newCol })
+      addToast({ type: 'success', title: 'Status atualizado' })
+    } catch {
+      setCasesByStatus((prev) => {
+        const current = { ...prev }
+        const card = Object.values(current).flat().find((c) => c.id === activeId)
+        if (!card) return prev
+        const oldCol = Object.entries(current).find(([, cases]) =>
+          cases.find((c) => c.id === activeId)
+        )?.[0]
+        if (!oldCol) return prev
+        current[oldCol] = [...current[oldCol], card]
+        current[newCol] = current[newCol].filter((c) => c.id !== activeId)
+        return current
+      })
+      addToast({ type: 'error', title: 'Erro ao atualizar', message: 'Tente novamente.' })
+    }
+  }, [addToast])
+
+  const handleDragEnd = useCallback((event: DragEndEvent) => {
     const { active, over } = event
     setActiveDragCase(null)
 
@@ -211,14 +240,23 @@ export default function ClientsKanbanPage() {
 
     if (!newCol) return
 
-    const previousState = { ...casesByStatus }
-
-    try {
-      await api.patch(`/cases/${activeId}/status`, { status: newCol })
-    } catch {
-      setCasesByStatus(previousState)
+    if (newCol === 'FINALIZADO') {
+      const card = findCaseById(activeId)
+      if (card) {
+        setConfirmFinalize(card)
+        return
+      }
     }
-  }
+
+    persistMove(activeId, newCol)
+  }, [findColumnForCase, findCaseById, persistMove])
+
+  const confirmFinalization = useCallback(() => {
+    if (!confirmFinalize) return
+    const card = confirmFinalize
+    setConfirmFinalize(null)
+    persistMove(card.id, 'FINALIZADO')
+  }, [confirmFinalize, persistMove])
 
   if (loading) {
     return (
@@ -226,7 +264,7 @@ export default function ClientsKanbanPage() {
         <ClientSwitcher />
         <div className="flex-1 flex items-center justify-center">
           <div className="flex flex-col items-center gap-4">
-            <div className="w-8 h-8 border-4 border-amber-500 border-t-transparent animate-spin rounded-full"></div>
+            <div className="w-8 h-8 border-4 border-amber-500 border-t-transparent animate-spin rounded-full" role="status" aria-label="Carregando" />
             <p className="font-sans font-medium text-slate-500 animate-pulse">Carregando quadro...</p>
           </div>
         </div>
@@ -249,6 +287,34 @@ export default function ClientsKanbanPage() {
         </div>
       </div>
 
+      {/* Confirmation dialog for finalization */}
+      {confirmFinalize && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="finalize-title">
+          <div className="bg-white rounded-lg shadow-elevation-md max-w-sm w-full p-6">
+            <div className="flex items-start gap-3 mb-4">
+              <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center shrink-0">
+                <AlertTriangle className="w-5 h-5 text-red-600" />
+              </div>
+              <div>
+                <h2 id="finalize-title" className="font-serif font-bold text-lg text-slate-900">Finalizar caso?</h2>
+                <p className="font-sans text-sm text-slate-600 mt-1 leading-relaxed">
+                  {BENEFIT_SHORT_LABELS[confirmFinalize.benefitType] ?? confirmFinalize.benefitType} — {confirmFinalize.client.name}
+                </p>
+                <p className="font-sans text-xs text-slate-500 mt-2">Esta ação não pode ser desfeita. O monitoramento TrackJud será cancelado.</p>
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <button onClick={() => setConfirmFinalize(null)} className="flex-1 inline-flex items-center justify-center px-4 py-2.5 font-sans font-medium text-sm rounded-md border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2">
+                Cancelar
+              </button>
+              <button onClick={confirmFinalization} className="flex-1 inline-flex items-center justify-center px-4 py-2.5 font-sans font-medium text-sm rounded-md bg-red-600 text-white hover:bg-red-700 transition-colors shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2">
+                Sim, Finalizar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Kanban Board Area */}
       <div className="flex-1 overflow-x-auto overflow-y-hidden pb-4">
         <DndContext
@@ -257,6 +323,17 @@ export default function ClientsKanbanPage() {
           onDragStart={handleDragStart}
           onDragOver={handleDragOver}
           onDragEnd={handleDragEnd}
+          accessibility={{
+            announcements: {
+              onDragStart: ({ active }) => `Iniciou arrasto do card ${active.id}`,
+              onDragOver: ({ active, over }) => over ? `Card ${active.id} movido sobre ${over.id}` : 'Card não está mais sobre uma coluna',
+              onDragEnd: ({ active, over }) => over ? `Card ${active.id} solto em ${over.id}` : 'Card solto fora da área',
+              onDragCancel: ({ active }) => `Arrasto do card ${active.id} cancelado`,
+            },
+            screenReaderInstructions: {
+              draggable: 'Para arrastar um card, pressione Espaço. Use as setas para mover entre colunas. Pressione Espaço novamente para soltar.',
+            },
+          }}
         >
           <div className="flex gap-6 h-full min-w-max">
             {COLUMNS.map((col) => {
@@ -274,7 +351,7 @@ export default function ClientsKanbanPage() {
                   </div>
 
                   {/* Column Body */}
-                  <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
+                  <div className="flex-1 overflow-y-auto p-4 neo-scroll" role="list" aria-label={`Coluna ${col.label}`}>
                     <SortableContext
                       id={col.id}
                       items={cases.map((c) => c.id)}
@@ -283,7 +360,7 @@ export default function ClientsKanbanPage() {
                       <div data-column-id={col.id} className="min-h-full space-y-4">
                         {cases.length === 0 ? (
                           <div className="h-full flex flex-col items-center justify-center text-center opacity-50 py-10">
-                            <LayoutTemplate className="w-8 h-8 text-slate-400 mb-2" />
+                            <LayoutTemplate className="w-8 h-8 text-slate-400 mb-2" aria-hidden="true" />
                             <span className="font-sans font-medium text-sm text-slate-500">Arraste casos para cá</span>
                           </div>
                         ) : (
@@ -305,7 +382,7 @@ export default function ClientsKanbanPage() {
 
           <DragOverlay>
             {activeDragCase && (
-              <div className="w-[288px]"> {/* Width matches CaseCard container minus padding approx */}
+              <div className="w-[288px]">
                 <DragOverlayCard caso={activeDragCase} />
               </div>
             )}

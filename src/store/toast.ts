@@ -13,15 +13,25 @@ interface ToastState {
   removeToast: (id: string) => void
 }
 
+const timeouts = new Map<string, ReturnType<typeof setTimeout>>()
+
 export const useToast = create<ToastState>((set) => ({
   toasts: [],
   addToast: (toast) => {
     const id = crypto.randomUUID()
     set((state) => ({ toasts: [...state.toasts, { ...toast, id }] }))
-    // Auto-remove after 4 seconds
-    setTimeout(() => {
+    const timeout = setTimeout(() => {
+      timeouts.delete(id)
       set((state) => ({ toasts: state.toasts.filter((t) => t.id !== id) }))
     }, 4000)
+    timeouts.set(id, timeout)
   },
-  removeToast: (id) => set((state) => ({ toasts: state.toasts.filter((t) => t.id !== id) })),
+  removeToast: (id) => {
+    const timeout = timeouts.get(id)
+    if (timeout) {
+      clearTimeout(timeout)
+      timeouts.delete(id)
+    }
+    set((state) => ({ toasts: state.toasts.filter((t) => t.id !== id) }))
+  },
 }))

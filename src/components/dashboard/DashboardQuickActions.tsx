@@ -50,7 +50,7 @@ export function DashboardQuickActions() {
           key={action.label}
           onClick={() => router.push(action.href)}
           className={cn(
-            'inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all shadow-sm',
+            'inline-flex items-center gap-1.5 px-3 min-h-[44px] rounded-lg text-sm font-medium transition-all shadow-sm',
             action.primary
               ? 'bg-amber-600 text-white hover:bg-amber-700'
               : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'

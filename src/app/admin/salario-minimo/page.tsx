@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { Plus, Pencil, Trash2, Check, X } from 'lucide-react'
 import { DatePicker } from '@/components/ui/DatePicker'
 import { CurrencyInput } from '@/components/ui/CurrencyInput'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 interface SalarioMinimo {
   id: string
   vigencia: string
@@ -26,6 +27,7 @@ export default function SalarioMinimoPage() {
   const [form, setForm] = useState(EMPTY_FORM)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
   const load = async () => {
     setLoading(true)
     const r = await fetch('/api/admin/salario-minimo')
@@ -84,11 +86,12 @@ export default function SalarioMinimoPage() {
     setShowForm(true)
     setError('')
   }
-  const handleDelete = async (id: string) => {
-    if (!confirm('Confirma a exclusão deste registro?')) return
-    await fetch(`/api/admin/salario-minimo/${id}`, {
+  const handleDeleteConfirm = async () => {
+    if (!confirmDeleteId) return
+    await fetch(`/api/admin/salario-minimo/${confirmDeleteId}`, {
       method: 'DELETE',
     })
+    setConfirmDeleteId(null)
     await load()
   }
   const handleCancel = () => {
@@ -226,7 +229,7 @@ export default function SalarioMinimoPage() {
                   <Pencil className="w-3.5 h-3.5" />
                 </button>
                 <button
-                  onClick={() => handleDelete(r.id)}
+                  onClick={() => setConfirmDeleteId(r.id)}
                   className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors"
                   title="Excluir"
                 >
@@ -240,6 +243,16 @@ export default function SalarioMinimoPage() {
       <p className="font-sans text-xs text-slate-400">
         Total: {registros.length} registros · O sistema sempre usa o registro com vigência mais recente anterior à DIB do cálculo.
       </p>
+
+      <ConfirmDialog
+        open={confirmDeleteId !== null}
+        onConfirm={handleDeleteConfirm}
+        onCancel={() => setConfirmDeleteId(null)}
+        title="Excluir Registro"
+        message="Tem certeza que deseja excluir este registro de salário mínimo? Esta ação não pode ser desfeita."
+        confirmLabel="Excluir"
+        variant="danger"
+      />
     </div>
   )
 }

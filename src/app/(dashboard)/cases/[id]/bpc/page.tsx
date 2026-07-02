@@ -8,6 +8,7 @@ import { Modal } from '@/components/ui/Modal'
 import { PDFDownloadLink } from '@react-pdf/renderer'
 
 import { BpcForm } from '@/components/bpc/BpcForm'
+import { HelpText } from '@/components/ui/HelpText'
 import { BpcResult } from '@/components/bpc/BpcResult'
 import { BpcSocialInterview } from '@/components/bpc/BpcSocialInterview'
 import { BpcConsolidatedPDFDocument } from '@/components/pdf/BpcConsolidatedPDFDocument'
@@ -199,6 +200,12 @@ export default function BpcPage() {
           <h2 className="font-serif font-semibold text-2xl text-slate-900 tracking-tight">BPC/LOAS</h2>
           <p className="font-sans text-sm text-slate-500 mt-1">Análise técnica e documental com Inteligência Artificial</p>
         </div>
+
+        <HelpText title="Sobre o BPC/LOAS" variant="info" collapsible>
+          <p>O Benefício de Prestação Continuada (BPC/LOAS) é um benefício assistencial no valor de um
+          salário mínimo. Utilize esta ferramenta para analisar requisitos de miserabilidade, deficiência
+          ou idade, e gerar pareceres técnicos completos com apoio de IA.</p>
+        </HelpText>
         
         <div className="flex items-center gap-3 flex-wrap shrink-0">
           {/* PDF consolidado — aparece quando há ao menos 1 análise concluída */}

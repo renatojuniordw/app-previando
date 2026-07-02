@@ -19,7 +19,7 @@ interface BpcAnalysis {
   resumoLaudos: string | null
 }
 
-interface BpcSavePayload {
+export interface BpcSavePayload {
   patologia: string
   cid?: string
   idade: number

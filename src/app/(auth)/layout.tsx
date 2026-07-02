@@ -3,6 +3,14 @@ import { Scale } from 'lucide-react'
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row">
+      {/* Skip-to-content link */}
+      <a
+        href="#auth-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[60] focus:px-4 focus:py-2 focus:bg-amber-600 focus:text-white focus:rounded-lg focus:text-sm focus:font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500/50"
+      >
+        Pular para conteúdo principal
+      </a>
+
       {/* Left Panel - Branding */}
       <div className="hidden md:flex md:w-1/2 lg:w-5/12 bg-slate-900 text-white flex-col justify-between p-12 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-amber-900/20 via-transparent to-slate-900/50" />

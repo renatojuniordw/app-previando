@@ -5,6 +5,8 @@ import { useParams } from 'next/navigation'
 import api from '@/lib/api'
 import { Button } from '@/components/ui/Button'
 import { Modal } from '@/components/ui/Modal'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
+import { HelpText } from '@/components/ui/HelpText'
 import { DatePicker } from '@/components/ui/DatePicker'
 import { formatDate } from '@/lib/utils'
 import { MODALIDADES_PADRAO } from '@/lib/modalidade-labels'
@@ -116,6 +118,7 @@ export default function CalculatorPage() {
   const { addToast } = useToast()
   const [expandedCalc, setExpandedCalc] = useState<string | null>(null)
   const [errorMessage, setErrorMessage] = useState('')
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
 
   const load = useCallback(async () => {
     try {
@@ -269,11 +272,15 @@ export default function CalculatorPage() {
   }
 
   const handleDelete = async (calcId: string) => {
-    if (!window.confirm('Tem certeza que deseja excluir este cálculo? Esta ação não pode ser desfeita.')) {
-      return
-    }
+    setConfirmDelete(calcId)
+  }
+
+  const confirmDeleteCalc = async () => {
+    if (!confirmDelete) return
+    const id = confirmDelete
+    setConfirmDelete(null)
     try {
-      await api.delete(`/cases/${params.id}/calculations/${calcId}`)
+      await api.delete(`/cases/${params.id}/calculations/${id}`)
       addToast({ type: 'success', title: 'Cálculo excluído' })
       load()
     } catch {
@@ -294,6 +301,12 @@ export default function CalculatorPage() {
 
   return (
     <div className="mx-auto max-w-4xl space-y-6">
+      <HelpText title="Como usar a calculadora">
+        Selecione a modalidade de aposentadoria e preencha os parâmetros para calcular o valor do benefício (RMI).
+        As modalidades disponíveis dependem do perfil do cliente. Use a aba <strong>Comparar</strong> para ver
+        modalidades lado a lado antes de decidir.
+      </HelpText>
+
       <div className="flex items-center justify-between">
         <div>
           <h2 className="font-serif text-2xl font-bold tracking-tight text-slate-900">
@@ -751,6 +764,16 @@ export default function CalculatorPage() {
           </div>
         </div>
       </Modal>
+
+      <ConfirmDialog
+        open={confirmDelete !== null}
+        onConfirm={confirmDeleteCalc}
+        onCancel={() => setConfirmDelete(null)}
+        title="Excluir cálculo?"
+        message="Tem certeza que deseja excluir este cálculo? Esta ação não pode ser desfeita."
+        confirmLabel="Sim, Excluir"
+        variant="danger"
+      />
     </div>
   )
 }

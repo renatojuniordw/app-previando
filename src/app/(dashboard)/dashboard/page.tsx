@@ -112,14 +112,14 @@ export default function DashboardPage() {
           <DashboardQuickActions />
           <Link
             href="/clients/list"
-            className="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 shadow-sm transition-all flex items-center gap-2"
+            className="px-4 min-h-[44px] bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 shadow-sm transition-all flex items-center gap-2"
             aria-label="Ver lista de clientes"
           >
             <Users className="w-4 h-4" aria-hidden="true" /> <span className="hidden sm:inline">Clientes</span>
           </Link>
           <Link
             href="/clients/kanban"
-            className="px-4 py-2 bg-amber-600 text-white rounded-lg text-sm font-medium hover:bg-amber-700 shadow-sm transition-all flex items-center gap-2"
+            className="px-4 min-h-[44px] bg-amber-600 text-white rounded-lg text-sm font-medium hover:bg-amber-700 shadow-sm transition-all flex items-center gap-2"
             aria-label="Kanban de casos"
           >
             <Columns className="w-4 h-4" aria-hidden="true" /> <span className="hidden sm:inline">Kanban</span>

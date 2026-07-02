@@ -10,6 +10,8 @@ import {
   CheckCircle2, Clock, XCircle, AlertTriangle, TrendingUp,
 } from 'lucide-react'
 import { DatePicker } from '@/components/ui/DatePicker'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
+import { useToast } from '@/store/toast'
 import { format, parseISO } from 'date-fns'
 
 interface Fee {
@@ -61,6 +63,8 @@ export default function HonorariosPage() {
   const [form, setForm] = useState(EMPTY_FORM)
   const [saving, setSaving] = useState(false)
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
+  const { addToast } = useToast()
 
   const load = useCallback(() => {
     setLoading(true)
@@ -110,20 +114,32 @@ export default function HonorariosPage() {
       }
 
       setShowForm(false)
+      setEditingFee(null)
+      setForm(EMPTY_FORM)
       load()
+      addToast({ type: 'success', title: editingFee ? 'Honorário atualizado' : 'Honorário registrado' })
     } catch {
-      // erro silencioso — toast seria ideal
+      addToast({ type: 'error', title: 'Erro', message: 'Não foi possível salvar o honorário.' })
     } finally {
       setSaving(false)
     }
   }
 
   async function handleDelete(feeId: string) {
-    if (!confirm('Remover este honorário?')) return
+    setConfirmDelete(feeId)
+  }
+
+  async function confirmDeleteFee() {
+    if (!confirmDelete) return
+    const feeId = confirmDelete
+    setConfirmDelete(null)
     setDeletingId(feeId)
     try {
       await api.delete(`/cases/${id}/fees/${feeId}`)
+      addToast({ type: 'success', title: 'Honorário removido' })
       load()
+    } catch {
+      addToast({ type: 'error', title: 'Erro ao remover honorário' })
     } finally {
       setDeletingId(null)
     }
@@ -350,6 +366,16 @@ export default function HonorariosPage() {
           </div>
         </div>
       )}
+
+      <ConfirmDialog
+        open={confirmDelete !== null}
+        onConfirm={confirmDeleteFee}
+        onCancel={() => setConfirmDelete(null)}
+        title="Remover honorário?"
+        message="Tem certeza que deseja remover este honorário? Esta ação não pode ser desfeita."
+        confirmLabel="Sim, Remover"
+        variant="danger"
+      />
     </div>
   )
 }

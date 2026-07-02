@@ -9,6 +9,7 @@ import { Skeleton } from '@/components/ui/Skeleton'
 import { Receipt, Calculator, AlertCircle, CheckCircle, History, Trash2 } from 'lucide-react'
 import { CurrencyInput } from '@/components/ui/CurrencyInput'
 import { MonthPicker } from '@/components/ui/MonthPicker'
+import { HelpText } from '@/components/ui/HelpText'
 import type { CategoriaContribuinte, PlanoContribuicao, GpsResult } from '@/lib/gps-engine'
 
 interface CategoriaInfo {
@@ -137,6 +138,12 @@ export default function GpsPage() {
           Calcule contribuições previdenciárias para Contribuinte Individual, Facultativo, MEI e Segurado Especial.
         </p>
       </div>
+
+      <HelpText title="Sobre guias GPS/DAS" variant="info" collapsible>
+        <p>Calcule o valor da contribuição previdenciária e gere guias GPS/DAS para recolhimento.
+        Selecione a categoria do contribuinte e o plano desejado. O histórico de guias geradas fica
+        salvo no caso para consulta futura.</p>
+      </HelpText>
 
       {/* Formulário */}
       <Card className="p-6">

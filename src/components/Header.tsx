@@ -95,7 +95,7 @@ export function Header() {
             if (window.innerWidth < 1024) toggleSidebar()
             else useSidebarStore.getState().toggleDesktop()
           }}
-          className="w-10 h-10 flex items-center justify-center rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors -ml-1.5"
+          className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors -ml-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/50"
           aria-label="Alternar menu de navegação"
           aria-expanded={mounted && window.innerWidth >= 1024 ? isDesktopOpen : sidebarOpen}
         >
@@ -121,7 +121,7 @@ export function Header() {
               onClick={() => {
                 router.push(`/cases?search=${encodeURIComponent(searchQuery.trim())}`)
               }}
-              className="absolute right-1.5 top-1/2 -translate-y-1/2 w-7 h-7 flex items-center justify-center bg-amber-600 hover:bg-amber-700 text-white rounded-full transition-colors"
+              className="absolute right-1.5 top-1/2 -translate-y-1/2 min-w-[44px] min-h-[44px] flex items-center justify-center bg-amber-600 hover:bg-amber-700 text-white rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/50"
               aria-label={`Pesquisar por "${searchQuery.trim()}"`}
             >
               <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
@@ -134,7 +134,7 @@ export function Header() {
         <div className="relative" ref={dropdownRef}>
           <button
             onClick={() => setOpen((o) => !o)}
-            className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-slate-50 text-slate-500 transition-colors relative"
+            className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full hover:bg-slate-50 text-slate-500 transition-colors relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/50"
             aria-label={`Notificações${unreadCount > 0 ? ` (${unreadCount} não lidas)` : ''}`}
           >
             <Bell className="w-5 h-5" aria-hidden="true" />
@@ -149,7 +149,7 @@ export function Header() {
             <div className="absolute right-0 top-12 w-80 bg-white border border-slate-200 rounded-xl shadow-lg z-50 overflow-hidden" role="listbox" aria-label="Notificações">
               <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
                 <span className="font-semibold text-sm text-slate-900">Notificações</span>
-                <button onClick={() => setOpen(false)} className="text-slate-400 hover:text-slate-600" aria-label="Fechar notificações">
+                <button onClick={() => setOpen(false)} className="min-w-[44px] min-h-[44px] flex items-center justify-center text-slate-400 hover:text-slate-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/50 rounded-lg" aria-label="Fechar notificações">
                   <X className="w-4 h-4" />
                 </button>
               </div>
@@ -194,7 +194,7 @@ export function Header() {
 
         <div className="h-8 w-px bg-slate-200"></div>
         <button
-          className="flex items-center gap-3 hover:bg-slate-50 py-1.5 px-3 rounded-full transition-colors"
+          className="flex items-center gap-3 hover:bg-slate-50 min-h-[44px] py-1.5 px-3 rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/50"
           aria-label="Perfil do usuário"
           onClick={() => router.push('/settings/profile')}
         >

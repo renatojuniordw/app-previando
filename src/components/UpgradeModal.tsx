@@ -22,6 +22,7 @@ export function UpgradeModal() {
     >
       <div
         ref={dialogRef}
+        tabIndex={-1}
         className="bg-white text-slate-900 border border-slate-200 rounded-lg shadow-elevation-md max-w-md w-full p-6"
         onClick={(e) => e.stopPropagation()}
         onKeyDown={(e) => {

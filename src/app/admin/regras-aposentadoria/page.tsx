@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import { Plus, Pencil, Trash2, Check, X, ChevronDown, ChevronUp } from 'lucide-react'
 import { DatePicker } from '@/components/ui/DatePicker'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 interface RegraAposentadoria {
   id: string
   modalidade: string
@@ -58,6 +59,7 @@ export default function RegrasAposentadoriaPage() {
   const [form, setForm] = useState(EMPTY_FORM)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({})
   const load = async () => {
     setLoading(true)
@@ -137,11 +139,12 @@ export default function RegrasAposentadoriaPage() {
     setShowForm(true)
     setError('')
   }
-  const handleDelete = async (id: string) => {
-    if (!confirm('Confirma a exclusão deste registro?')) return
-    await fetch(`/api/admin/regras-aposentadoria/${id}`, {
+  const handleDeleteConfirm = async () => {
+    if (!confirmDeleteId) return
+    await fetch(`/api/admin/regras-aposentadoria/${confirmDeleteId}`, {
       method: 'DELETE',
     })
+    setConfirmDeleteId(null)
     await load()
   }
   const handleCancel = () => {
@@ -371,7 +374,7 @@ export default function RegrasAposentadoriaPage() {
                             <Pencil className="w-3.5 h-3.5" />
                           </button>
                           <button
-                            onClick={() => handleDelete(r.id)}
+                            onClick={() => setConfirmDeleteId(r.id)}
                             className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors"
                             title="Excluir"
                           >
@@ -390,6 +393,16 @@ export default function RegrasAposentadoriaPage() {
       <p className="font-sans text-xs text-slate-400">
         Total: {registros.length} registros · Para atualizar uma regra, adicione um novo registro com a mesma modalidade/gênero e uma vigência futura.
       </p>
+
+      <ConfirmDialog
+        open={confirmDeleteId !== null}
+        onConfirm={handleDeleteConfirm}
+        onCancel={() => setConfirmDeleteId(null)}
+        title="Excluir Registro"
+        message="Tem certeza que deseja excluir esta regra de aposentadoria? Esta ação não pode ser desfeita."
+        confirmLabel="Excluir"
+        variant="danger"
+      />
     </div>
   )
 }

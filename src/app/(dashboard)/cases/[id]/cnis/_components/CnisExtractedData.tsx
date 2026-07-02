@@ -1,9 +1,12 @@
+'use client'
+
 import { useState } from 'react'
 import { Briefcase, Edit3, FileSpreadsheet, Plus, Search, User } from 'lucide-react'
 import { CnisExtractedData as ExtractedData } from '../_types'
 import { formatDateString, getPeriodWarnings } from '../_utils'
 import { PeriodItem } from './PeriodItem'
 import { EditFieldModal } from './modals/EditFieldModal'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 
 interface Props {
   data: ExtractedData
@@ -20,6 +23,7 @@ export function CnisExtractedDataView({
 }: Props) {
   const [searchQuery, setSearchQuery] = useState('')
   const [expandedPeriods, setExpandedPeriods] = useState<Record<number, boolean>>({})
+  const [confirmDeleteIdx, setConfirmDeleteIdx] = useState<number | null>(null)
   const [editFieldState, setEditFieldState] = useState<{
     label: string
     currentValue: string
@@ -134,16 +138,25 @@ export function CnisExtractedDataView({
                 onToggle={() => togglePeriod(idx)}
                 onEdit={() => onEditPeriod(idx)}
                 onEditSalaries={() => onEditSalaries(idx)}
-                onDelete={() => {
-                  if (confirm(`Excluir o vínculo da empresa "${periodo.empregador || 'Não informado'}"?`)) {
-                    onDeletePeriod(idx)
-                  }
-                }}
+                onDelete={() => setConfirmDeleteIdx(idx)}
               />
             ))}
           </div>
         )}
       </div>
+
+      <ConfirmDialog
+        open={confirmDeleteIdx !== null}
+        onConfirm={() => {
+          if (confirmDeleteIdx !== null) onDeletePeriod(confirmDeleteIdx)
+          setConfirmDeleteIdx(null)
+        }}
+        onCancel={() => setConfirmDeleteIdx(null)}
+        title="Excluir Vínculo"
+        message={confirmDeleteIdx !== null && data.periodos ? `Excluir o vínculo da empresa "${data.periodos[confirmDeleteIdx]?.empregador || 'Não informado'}"?` : ''}
+        confirmLabel="Excluir"
+        variant="danger"
+      />
 
       <EditFieldModal
         open={!!editFieldState}

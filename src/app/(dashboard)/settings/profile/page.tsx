@@ -41,12 +41,13 @@ export default function ProfilePage() {
   const [zipCode, setZipCode] = useState(session?.user?.zipCode ?? '')
   const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
-  const [saving, setSaving] = useState(false)
+  const [savingProfile, setSavingProfile] = useState(false)
+  const [savingPassword, setSavingPassword] = useState(false)
 
   const { addToast } = useToast()
 
   const handleSaveProfile = async () => {
-    setSaving(true)
+    setSavingProfile(true)
     try {
       const payload: Record<string, unknown> = { name }
       if (oabNumber) payload.oabNumber = oabNumber
@@ -67,14 +68,14 @@ export default function ProfilePage() {
     } catch {
       addToast({ type: 'error', title: 'Erro', message: 'Não foi possível atualizar o perfil.' })
     } finally {
-      setSaving(false)
+      setSavingProfile(false)
     }
   }
 
   const handleChangePassword = async () => {
     if (!currentPassword || !newPassword) { addToast({ type: 'error', title: 'Campos obrigatórios', message: 'Preencha a senha atual e a nova senha.' }); return }
     if (newPassword.length < 8) { addToast({ type: 'error', title: 'Senha inválida', message: 'Mínimo de 8 caracteres.' }); return }
-    setSaving(true)
+    setSavingPassword(true)
     try {
       await api.put('/users/password', { currentPassword, newPassword })
       addToast({ type: 'success', title: 'Senha alterada' })
@@ -83,7 +84,7 @@ export default function ProfilePage() {
     } catch (err: unknown) {
       addToast({ type: 'error', title: 'Erro', message: (err as { response?: { data?: { error?: string } } })?.response?.data?.error ?? 'Erro ao alterar senha.' })
     } finally {
-      setSaving(false)
+      setSavingPassword(false)
     }
   }
 
@@ -164,7 +165,7 @@ export default function ProfilePage() {
             </div>
             <Input label="CEP" value={zipCode} onChange={(e) => setZipCode(e.target.value)} placeholder="00000-000" />
           </div>
-          <Button onClick={handleSaveProfile} loading={saving}>Salvar Perfil</Button>
+          <Button onClick={handleSaveProfile} loading={savingProfile}>Salvar Perfil</Button>
         </div>
       </Card>
 
@@ -184,7 +185,7 @@ export default function ProfilePage() {
             onChange={(e) => setNewPassword(e.target.value)}
             hint="Mínimo 8 caracteres, com maiúscula e número"
           />
-          <Button onClick={handleChangePassword} loading={saving} variant="outline">
+          <Button onClick={handleChangePassword} loading={savingPassword} variant="outline">
             Alterar Senha
           </Button>
         </div>
