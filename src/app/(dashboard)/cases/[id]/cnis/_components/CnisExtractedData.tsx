@@ -1,8 +1,9 @@
 import { useState } from 'react'
-import { Briefcase, Download, Edit3, Plus, Search, User } from 'lucide-react'
+import { Briefcase, Edit3, FileSpreadsheet, Plus, Search, User } from 'lucide-react'
 import { CnisExtractedData as ExtractedData } from '../_types'
 import { formatDateString, getPeriodWarnings } from '../_utils'
 import { PeriodItem } from './PeriodItem'
+import { EditFieldModal } from './modals/EditFieldModal'
 
 interface Props {
   data: ExtractedData
@@ -19,6 +20,11 @@ export function CnisExtractedDataView({
 }: Props) {
   const [searchQuery, setSearchQuery] = useState('')
   const [expandedPeriods, setExpandedPeriods] = useState<Record<number, boolean>>({})
+  const [editFieldState, setEditFieldState] = useState<{
+    label: string
+    currentValue: string
+    onSave: (v: string) => void
+  } | null>(null)
 
   const togglePeriod = (idx: number) => setExpandedPeriods(prev => ({ ...prev, [idx]: !prev[idx] }))
   const expandAll = () => {
@@ -28,6 +34,10 @@ export function CnisExtractedDataView({
   }
   const collapseAll = () => setExpandedPeriods({})
 
+  const openEditField = (label: string, currentValue: string, onSave: (v: string) => void) => {
+    setEditFieldState({ label, currentValue, onSave })
+  }
+
   const filteredPeriodos = data.periodos?.filter(p => {
     const q = searchQuery.toLowerCase()
     return (p.empregador || '').toLowerCase().includes(q) || (p.inicio || '').includes(q) || (p.fim || '').includes(q)
@@ -36,7 +46,7 @@ export function CnisExtractedDataView({
   return (
     <div className="space-y-8 mt-6">
       {/* Dados do Segurado */}
-      <div className="border-t border-slate-150 pt-6">
+      <div className="border-t border-slate-200 pt-6">
         <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
           <h4 className="font-serif font-bold text-lg text-slate-900 flex items-center gap-2">
             <User className="w-5 h-5 text-amber-600" aria-hidden="true" />
@@ -44,17 +54,17 @@ export function CnisExtractedDataView({
           </h4>
           <button
             onClick={onExportCSV}
-            className="text-xs font-semibold text-amber-700 hover:text-amber-800 bg-amber-50 hover:bg-amber-100 border border-amber-100 px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:outline-none"
+            className="bg-amber-600 hover:bg-amber-700 text-white font-sans font-semibold text-xs px-3 py-1.5 rounded-lg shadow-sm flex items-center gap-1.5 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:outline-none"
           >
-            <Download className="w-3.5 h-3.5" />
+            <FileSpreadsheet className="w-3.5 h-3.5" />
             Exportar para CSV
           </button>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 2xl:grid-cols-3 gap-4">
-          <EditableField label="Nome Completo" value={data.nome ?? 'Não identificado'} prompt="Editar Nome Completo:" currentValue={data.nome || ''} onSave={v => onEditField('nome', v)} />
-          <EditableField label="NIT / PIS" value={data.nit ?? 'Não identificado'} prompt="Editar NIT/PIS:" currentValue={data.nit || ''} onSave={v => onEditField('nit', v)} />
-          <EditableField label="Data de Nascimento" value={formatDateString(data.dataNascimento ?? '')} prompt="Editar Data Nascimento (formato AAAA-MM-DD):" currentValue={data.dataNascimento || ''} onSave={v => onEditField('dataNascimento', v)} />
+          <EditableField label="Nome Completo" value={data.nome ?? 'Não identificado'} currentValue={data.nome || ''} onSave={v => onEditField('nome', v)} onOpenEdit={openEditField} />
+          <EditableField label="NIT / PIS" value={data.nit ?? 'Não identificado'} currentValue={data.nit || ''} onSave={v => onEditField('nit', v)} onOpenEdit={openEditField} />
+          <EditableField label="Data de Nascimento" value={formatDateString(data.dataNascimento ?? '')} currentValue={data.dataNascimento || ''} onSave={v => onEditField('dataNascimento', v)} onOpenEdit={openEditField} />
 
           <div className="bg-slate-50 border border-slate-100 rounded-xl p-4">
             <span className="font-sans text-[10px] uppercase font-bold tracking-wider text-slate-400 block mb-1">Total de Contribuições</span>
@@ -109,7 +119,7 @@ export function CnisExtractedDataView({
         </div>
 
         {filteredPeriodos.length === 0 ? (
-          <div className="text-center py-12 bg-slate-50 border border-slate-150 rounded-xl">
+          <div className="text-center py-12 bg-slate-50 border border-slate-200 rounded-xl">
             <p className="font-sans text-slate-500 text-sm">Nenhum vínculo corresponde aos filtros aplicados.</p>
           </div>
         ) : (
@@ -134,12 +144,23 @@ export function CnisExtractedDataView({
           </div>
         )}
       </div>
+
+      <EditFieldModal
+        open={!!editFieldState}
+        label={editFieldState?.label ?? ''}
+        currentValue={editFieldState?.currentValue ?? ''}
+        onClose={() => setEditFieldState(null)}
+        onSave={(v) => {
+          editFieldState?.onSave(v)
+          setEditFieldState(null)
+        }}
+      />
     </div>
   )
 }
 
-function EditableField({ label, value, prompt, currentValue, onSave }: {
-  label: string; value: string; prompt: string; currentValue: string; onSave: (v: string) => void
+function EditableField({ label, value, currentValue, onSave, onOpenEdit }: {
+  label: string; value: string; currentValue: string; onSave: (v: string) => void; onOpenEdit: (label: string, currentValue: string, onSave: (v: string) => void) => void
 }) {
   return (
     <div className="bg-amber-50/20 border border-amber-100/30 rounded-xl p-4 relative group">
@@ -147,10 +168,7 @@ function EditableField({ label, value, prompt, currentValue, onSave }: {
       <div className="flex items-center justify-between gap-2">
         <span className="font-sans font-bold text-slate-800 text-sm truncate">{value}</span>
         <button
-          onClick={() => {
-            const result = window.prompt(prompt, currentValue)
-            if (result !== null) onSave(result)
-          }}
+          onClick={() => onOpenEdit(label, currentValue, onSave)}
           className="opacity-0 group-hover:opacity-100 hover:text-amber-600 transition-opacity p-0.5"
           title={`Editar ${label.toLowerCase()}`}
         >

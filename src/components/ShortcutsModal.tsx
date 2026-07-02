@@ -1,8 +1,9 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { Keyboard, X } from 'lucide-react'
 import { SHORTCUTS_LIST } from '@/hooks/useKeyboardShortcuts'
+import { useFocusTrap } from '@/hooks/useFocusTrap'
 
 interface ShortcutsModalProps {
   open: boolean
@@ -10,6 +11,9 @@ interface ShortcutsModalProps {
 }
 
 export function ShortcutsModal({ open, onClose }: ShortcutsModalProps) {
+  const dialogRef = useRef<HTMLDivElement>(null)
+  useFocusTrap(open, dialogRef)
+
   // Close on Escape
   useEffect(() => {
     if (!open) return
@@ -31,6 +35,7 @@ export function ShortcutsModal({ open, onClose }: ShortcutsModalProps) {
       aria-label="Atalhos de teclado"
     >
       <div
+        ref={dialogRef}
         className="bg-white text-slate-900 border border-slate-200 rounded-lg shadow-elevation-md max-w-md w-full p-6"
         onClick={(e) => e.stopPropagation()}
       >

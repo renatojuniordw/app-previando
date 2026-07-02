@@ -7,6 +7,8 @@ import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { Receipt, Calculator, AlertCircle, CheckCircle, History, Trash2 } from 'lucide-react'
+import { CurrencyInput } from '@/components/ui/CurrencyInput'
+import { MonthPicker } from '@/components/ui/MonthPicker'
 import type { CategoriaContribuinte, PlanoContribuicao, GpsResult } from '@/lib/gps-engine'
 
 interface CategoriaInfo {
@@ -31,53 +33,6 @@ const PLANO_LABELS: Record<PlanoContribuicao, string> = {
   NORMAL: 'Plano Normal',
   SIMPLIFICADO: 'Plano Simplificado',
   BAIXA_RENDA: 'Baixa Renda',
-}
-
-const MESES = [
-  'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
-  'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro',
-]
-
-function MonthPicker({ value, onChange }: { value: string; onChange: (v: string) => void }) {
-  const currentYear = new Date().getFullYear()
-  const years = Array.from({ length: 30 }, (_, i) => currentYear - i)
-
-  const [year, month] = value ? value.split('-') : ['', '']
-
-  const handleMonth = (m: string) => {
-    if (m && year) onChange(`${year}-${m}`)
-    else if (m) onChange(`${currentYear}-${m}`)
-  }
-
-  const handleYear = (y: string) => {
-    if (y && month) onChange(`${y}-${month}`)
-    else if (y && !month) onChange('')
-  }
-
-  return (
-    <div className="flex gap-2">
-      <select
-        value={month || ''}
-        onChange={(e) => handleMonth(e.target.value)}
-        className="flex-1 px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white"
-      >
-        <option value="">Mês</option>
-        {MESES.map((m, i) => (
-          <option key={i} value={String(i + 1).padStart(2, '0')}>{m}</option>
-        ))}
-      </select>
-      <select
-        value={year || ''}
-        onChange={(e) => handleYear(e.target.value)}
-        className="w-28 px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white"
-      >
-        <option value="">Ano</option>
-        {years.map((y) => (
-          <option key={y} value={String(y)}>{y}</option>
-        ))}
-      </select>
-    </div>
-  )
 }
 
 export default function GpsPage() {
@@ -236,18 +191,12 @@ export default function GpsPage() {
         {/* Campos */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
-              {selectedCat === 'MEI' ? 'Salário de Contribuição (fixo = SM)' : 'Salário de Contribuição (R$)'}
-            </label>
-            <input
-              type="number"
-              step="0.01"
-              min="0"
-              value={salario}
-              onChange={(e) => setSalario(e.target.value)}
+            <CurrencyInput
+              value={salario ? parseFloat(salario) : ''}
+              onChange={(val) => setSalario(String(val))}
+              label={selectedCat === 'MEI' ? 'Salário de Contribuição (fixo = SM)' : 'Salário de Contribuição (R$)'}
               disabled={selectedCat === 'MEI'}
-              placeholder="Ex: 1518.00"
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-amber-500 focus:border-amber-500 disabled:bg-slate-100 disabled:text-slate-400"
+              placeholder="Ex: 1.518,00"
             />
           </div>
           <div>

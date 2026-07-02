@@ -4,10 +4,12 @@ import { useEffect, useState, useCallback } from 'react'
 import { useParams } from 'next/navigation'
 import api from '@/lib/api'
 import { Card } from '@/components/ui/Card'
+import { CurrencyInput } from '@/components/ui/CurrencyInput'
 import {
   DollarSign, Plus, Pencil, Trash2, Loader2, AlertCircle,
   CheckCircle2, Clock, XCircle, AlertTriangle, TrendingUp,
 } from 'lucide-react'
+import { DatePicker } from '@/components/ui/DatePicker'
 import { format, parseISO } from 'date-fns'
 
 interface Fee {
@@ -280,40 +282,30 @@ export default function HonorariosPage() {
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Valor total (R$)</label>
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={form.totalAmount}
-                    onChange={(e) => setForm((f) => ({ ...f, totalAmount: e.target.value }))}
-                    className="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Valor recebido (R$)</label>
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={form.paidAmount}
-                    onChange={(e) => setForm((f) => ({ ...f, paidAmount: e.target.value }))}
-                    className="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
-                  />
-                </div>
+                <CurrencyInput
+                  value={form.totalAmount ? parseFloat(form.totalAmount) : ''}
+                  onChange={(val) => setForm((f) => ({ ...f, totalAmount: String(val) }))}
+                  label="Valor total (R$)"
+                  placeholder="0,00"
+                  wrapperClassName="flex-1"
+                />
+                <CurrencyInput
+                  value={form.paidAmount ? parseFloat(form.paidAmount) : ''}
+                  onChange={(val) => setForm((f) => ({ ...f, paidAmount: String(val) }))}
+                  label="Valor recebido (R$)"
+                  placeholder="0,00"
+                  wrapperClassName="flex-1"
+                />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Vencimento</label>
-                  <input
-                    type="date"
-                    value={form.dueDate}
-                    onChange={(e) => setForm((f) => ({ ...f, dueDate: e.target.value }))}
-                    className="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
-                  />
-                </div>
+                <DatePicker
+                  label="Vencimento"
+                  value={form.dueDate}
+                  onChange={(d) => setForm((f) => ({ ...f, dueDate: d ? d.toISOString().split('T')[0] : '' }))}
+                />
+              </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Status</label>
                   <select

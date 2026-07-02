@@ -19,12 +19,15 @@ interface AppNotification {
 export function Header() {
   const { data: session } = useSession()
   const router = useRouter()
-  const { toggle: toggleSidebar } = useSidebarStore()
+  const { toggle: toggleSidebar, isOpen: sidebarOpen, isDesktopOpen } = useSidebarStore()
   const [notifications, setNotifications] = useState<AppNotification[]>([])
   const [unreadCount, setUnreadCount] = useState(0)
   const [open, setOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  const [mounted, setMounted] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => { setMounted(true) }, [])
 
   useEffect(() => {
     fetchNotifications()
@@ -94,6 +97,7 @@ export function Header() {
           }}
           className="w-10 h-10 flex items-center justify-center rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors -ml-1.5"
           aria-label="Alternar menu de navegação"
+          aria-expanded={mounted && window.innerWidth >= 1024 ? isDesktopOpen : sidebarOpen}
         >
           <Menu className="w-5 h-5" />
         </button>
@@ -142,7 +146,7 @@ export function Header() {
           </button>
 
           {open && (
-            <div className="absolute right-0 top-12 w-80 bg-white border border-slate-200 rounded-xl shadow-lg z-50 overflow-hidden">
+            <div className="absolute right-0 top-12 w-80 bg-white border border-slate-200 rounded-xl shadow-lg z-50 overflow-hidden" role="listbox" aria-label="Notificações">
               <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
                 <span className="font-semibold text-sm text-slate-900">Notificações</span>
                 <button onClick={() => setOpen(false)} className="text-slate-400 hover:text-slate-600" aria-label="Fechar notificações">
@@ -159,6 +163,10 @@ export function Header() {
                       key={n.id}
                       className={`px-4 py-3 flex gap-3 items-start cursor-pointer hover:bg-slate-50 transition-colors ${n.read ? 'opacity-60' : ''}`}
                       onClick={() => !n.read && markAsRead(n.id)}
+                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (!n.read) markAsRead(n.id) } }}
+                      role="option"
+                      aria-selected={n.read}
+                      tabIndex={0}
                     >
                       <div className={`mt-1 w-2 h-2 rounded-full shrink-0 ${n.read ? 'bg-slate-300' : 'bg-amber-500'}`} />
                       <div className="flex-1 min-w-0">
@@ -185,12 +193,16 @@ export function Header() {
         </div>
 
         <div className="h-8 w-px bg-slate-200"></div>
-        <button className="flex items-center gap-3 hover:bg-slate-50 py-1.5 px-3 rounded-full transition-colors" aria-label="Perfil do usuário">
+        <button
+          className="flex items-center gap-3 hover:bg-slate-50 py-1.5 px-3 rounded-full transition-colors"
+          aria-label="Perfil do usuário"
+          onClick={() => router.push('/settings/profile')}
+        >
           <div className="flex flex-col items-end">
             <span className="font-sans font-semibold text-sm text-slate-900 leading-none">
               {session?.user?.name || 'Usuário'}
             </span>
-            <span className="font-sans text-xs text-slate-500 mt-1">Advogado</span>
+            <span className="font-sans text-xs text-slate-500 mt-1">{session?.user?.isAdmin ? 'Administrador' : 'Advogado'}</span>
           </div>
           <div className="w-9 h-9 rounded-full bg-amber-100 flex items-center justify-center border border-amber-200 text-amber-700 font-serif font-bold text-sm">
             {session?.user?.name?.charAt(0).toUpperCase() || 'U'}

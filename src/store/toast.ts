@@ -16,7 +16,7 @@ interface ToastState {
 export const useToast = create<ToastState>((set) => ({
   toasts: [],
   addToast: (toast) => {
-    const id = Math.random().toString(36).slice(2)
+    const id = crypto.randomUUID()
     set((state) => ({ toasts: [...state.toasts, { ...toast, id }] }))
     // Auto-remove after 4 seconds
     setTimeout(() => {

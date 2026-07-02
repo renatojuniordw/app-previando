@@ -332,7 +332,7 @@ export default function CasePdfToolsPage() {
             {/* Error Message */}
             {error && (
               <div className="p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">
-                <AlertCircle className="w-4 h-4 text-red-650 shrink-0 mt-0.5" />
+                <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
                 <p className="font-sans text-xs text-red-700 leading-normal">{error}</p>
               </div>
             )}
@@ -379,7 +379,7 @@ export default function CasePdfToolsPage() {
                   {selectedTool.multiple && (
                     <button
                       onClick={() => setFiles([])}
-                      className="text-xs font-semibold text-red-650 hover:text-red-800 transition-colors"
+                      className="text-xs font-semibold text-red-600 hover:text-red-800 transition-colors"
                     >
                       Remover Todos
                     </button>
@@ -393,7 +393,7 @@ export default function CasePdfToolsPage() {
                       className="flex items-center justify-between gap-3 p-3 bg-slate-50 border border-slate-200 rounded-lg hover:border-slate-300 transition-all"
                     >
                       <div className="flex items-center gap-2.5 min-w-0">
-                        <div className="w-7 h-7 rounded bg-white border border-slate-200 flex items-center justify-center text-slate-450 shrink-0">
+                        <div className="w-7 h-7 rounded bg-white border border-slate-200 flex items-center justify-center text-slate-400 shrink-0">
                           <FileText className="w-4 h-4" />
                         </div>
                         <div className="min-w-0">
@@ -468,7 +468,7 @@ export default function CasePdfToolsPage() {
                 <h3 className="font-serif font-bold text-sm text-slate-900 flex items-center gap-2">
                   Histórico deste Caso
                 </h3>
-                <p className="font-sans text-[10px] text-slate-450 mt-0.5">Acompanhe os arquivos vinculados a este prontuário.</p>
+                <p className="font-sans text-[10px] text-slate-400 mt-0.5">Acompanhe os arquivos vinculados a este prontuário.</p>
               </div>
 
               {queue.length === 0 ? (
@@ -505,7 +505,7 @@ export default function CasePdfToolsPage() {
 
                       {/* Progresso ou Erro */}
                       {item.status === 'failed' && item.error && (
-                        <p className="font-sans text-[9px] text-red-650 bg-red-50/20 p-2 border border-red-150/40 rounded leading-normal">
+                        <p className="font-sans text-[9px] text-red-600 bg-red-50/20 p-2 border border-red-200/40 rounded leading-normal">
                           {item.error}
                         </p>
                       )}

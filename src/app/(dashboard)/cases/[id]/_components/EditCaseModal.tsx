@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react'
 import { Modal } from '@/components/ui/Modal'
 import { Button } from '@/components/ui/Button'
+import { DatePicker } from '@/components/ui/DatePicker'
 import { PRIORITY_OPTIONS } from '../_constants'
 import type { CaseDetail } from '../_types'
+import { formatCNJ, stripNonDigits } from '@/lib/masks'
 
 interface Props {
   open: boolean
@@ -48,12 +50,10 @@ export function EditCaseModal({ open, caseData, loading, onClose, onSave }: Prop
         </div>
         
         <div>
-          <label className="block font-sans font-medium text-sm text-slate-700 mb-1">Prazo (opcional)</label>
-          <input
-            type="date"
+          <DatePicker
+            label="Prazo (opcional)"
             value={deadlineDate}
-            onChange={(e) => setDeadlineDate(e.target.value)}
-            className="w-full px-3 py-2 font-sans text-sm rounded-md bg-white text-slate-900 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-600 focus:border-transparent"
+            onChange={(d) => setDeadlineDate(d ? d.toISOString().split('T')[0] : '')}
           />
         </div>
 
@@ -63,9 +63,10 @@ export function EditCaseModal({ open, caseData, loading, onClose, onSave }: Prop
           </label>
           <input
             type="text"
-            value={processNumber}
-            onChange={(e) => setProcessNumber(e.target.value)}
+            value={formatCNJ(processNumber)}
+            onChange={(e) => setProcessNumber(stripNonDigits(e.target.value).slice(0, 20))}
             placeholder="0000000-00.0000.0.00.0000"
+            maxLength={25}
             className="w-full px-3 py-2 font-sans text-sm rounded-md bg-white text-slate-900 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-600 focus:border-transparent"
           />
           <p className="mt-1 text-xs text-slate-400">Formato CNJ: NNNNNNN-DD.AAAA.J.TT.OOOO</p>

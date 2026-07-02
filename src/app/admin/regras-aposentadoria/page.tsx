@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { Plus, Pencil, Trash2, Check, X, ChevronDown, ChevronUp } from 'lucide-react'
+import { DatePicker } from '@/components/ui/DatePicker'
 interface RegraAposentadoria {
   id: string
   modalidade: string
@@ -204,13 +205,11 @@ export default function RegrasAposentadoriaPage() {
               </select>
             </div>
             <div>
-              <label className="block font-sans text-xs font-bold text-slate-600 mb-1">Vigência (início) *</label>
-              <input
-                type="date"
+              <DatePicker
+                label="Vigência (início) *"
                 value={form.vigencia}
-                onChange={e => setForm(f => ({ ...f, vigencia: e.target.value }))}
+                onChange={(d) => setForm(f => ({ ...f, vigencia: d ? d.toISOString().split('T')[0] : '' }))}
                 disabled={!!editingId}
-                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm font-sans focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 outline-none disabled:bg-slate-50 disabled:text-slate-400"
               />
             </div>
             <div>

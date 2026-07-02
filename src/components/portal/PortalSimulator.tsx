@@ -1,7 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { TrendingUp, Loader2, AlertCircle, Calendar, DollarSign, CheckCircle2 } from 'lucide-react'
+import { TrendingUp, Loader2, AlertCircle, CheckCircle2 } from 'lucide-react'
+import { DatePicker } from '@/components/ui/DatePicker'
+import { CurrencyInput } from '@/components/ui/CurrencyInput'
 
 interface SimulacaoResult {
   atual: { rmi: number; elegivel: boolean; idade: number; tempoContribuicao: number }
@@ -71,30 +73,20 @@ export function PortalSimulator({ token }: PortalSimulatorProps) {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
-          <label className="font-sans text-xs font-medium text-slate-600 block mb-1">
-            <Calendar className="w-3 h-3 inline mr-1" />
-            Data pretendida
-          </label>
-          <input
-            type="date"
+          <DatePicker
+            label="Data pretendida"
             value={dibProjetada}
-            onChange={(e) => setDibProjetada(e.target.value)}
-            className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm font-sans focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 outline-none"
-            min={new Date().toISOString().split('T')[0]}
+            onChange={(d) => setDibProjetada(d ? d.toISOString().split('T')[0] : '')}
+            minDate={new Date().toISOString().split('T')[0]}
           />
         </div>
         <div>
-          <label className="font-sans text-xs font-medium text-slate-600 block mb-1">
-            <DollarSign className="w-3 h-3 inline mr-1" />
-            Contribuição mensal (R$)
-          </label>
-          <input
-            type="number"
+          <CurrencyInput
             value={valorContribuicao}
-            onChange={(e) => setValorContribuicao(Number(e.target.value))}
-            className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm font-sans focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 outline-none"
-            min="0"
-            step="100"
+            onChange={(val) => setValorContribuicao(val)}
+            label="Contribuição mensal (R$)"
+            min={0}
+            placeholder="Ex: 1.621,00"
           />
         </div>
       </div>

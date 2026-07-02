@@ -87,7 +87,7 @@ export function CnisStatusCard({
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-2 pt-1 border-t border-red-150">
+            <div className="flex items-center gap-2 pt-1 border-t border-red-200">
               <button onClick={onReprocessClick} className="bg-red-600 hover:bg-red-700 text-white font-sans font-semibold text-xs px-3.5 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:outline-none">
                 <RefreshCw className="w-3.5 h-3.5" />
                 Reprocessar sem Reupload

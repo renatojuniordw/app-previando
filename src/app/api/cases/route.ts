@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/auth'
 import { z } from 'zod'
+import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { verifyClientOwnership } from '@/lib/ownership'
 import { sanitizeInput } from '@/lib/sanitize'
@@ -16,6 +17,26 @@ import {
   ApiBenefitType,
 } from '@/lib/mappers'
 import { createCalendarEvent } from '@/services/google-calendar'
+
+function buildOrderBy(sortField: string | null, sortDir: 'asc' | 'desc'): Prisma.CaseOrderByWithRelationInput[] {
+  if (!sortField) {
+    return [{ priority: 'asc' }, { deadlineDate: { sort: 'asc', nulls: 'last' } }, { createdAt: 'desc' }]
+  }
+  switch (sortField) {
+    case 'client':
+      return [{ client: { name: sortDir } }]
+    case 'status':
+      return [{ status: sortDir }]
+    case 'priority':
+      return [{ priority: sortDir }]
+    case 'deadlineDate':
+      return [{ deadlineDate: { sort: sortDir, nulls: 'last' } }]
+    case 'createdAt':
+      return [{ createdAt: sortDir }]
+    default:
+      return [{ createdAt: 'desc' }]
+  }
+}
 
 const createSchema = z.object({
   clientId: z.string().cuid(),
@@ -57,6 +78,8 @@ export async function GET(req: NextRequest) {
     const page = parseInt(searchParams.get('page') ?? '1')
     const limit = Math.min(parseInt(searchParams.get('limit') ?? '50'), 100)
     const skip = (page - 1) * limit
+    const sortField = searchParams.get('sortField')
+    const sortDir = searchParams.get('sortDir') === 'asc' ? 'asc' : 'desc'
 
     const where: Record<string, unknown> = { userId: session.user.id }
     if (status) where.status = mapCaseStatusToDb(status as ApiCaseStatus)
@@ -85,10 +108,12 @@ export async function GET(req: NextRequest) {
       }
     }
 
+    const orderBy = buildOrderBy(sortField, sortDir)
+
     const [cases, total] = await prisma.$transaction([
       prisma.case.findMany({
         where,
-        orderBy: [{ priority: 'asc' }, { deadlineDate: 'asc' }, { createdAt: 'desc' }],
+        orderBy,
         skip,
         take: limit,
         include: {

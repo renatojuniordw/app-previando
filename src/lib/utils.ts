@@ -44,6 +44,30 @@ export function formatDate(date: Date | string): string {
   return formatter.format(date)
 }
 
+export function daysBetween(date1: Date | string, date2: Date | string): number {
+  const d1 = typeof date1 === 'string' ? new Date(date1.split('T')[0]) : new Date(date1)
+  const d2 = typeof date2 === 'string' ? new Date(date2.split('T')[0]) : new Date(date2)
+  return Math.ceil(Math.abs(d2.getTime() - d1.getTime()) / (1000 * 60 * 60 * 24))
+}
+
+export function daysUntil(date: Date | string): number {
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const target = typeof date === 'string' ? new Date(date.split('T')[0]) : new Date(date)
+  return Math.ceil((target.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
+}
+
+export function addYears(date: Date | string, years: number): Date {
+  const d = typeof date === 'string' ? new Date(date.split('T')[0]) : new Date(date)
+  d.setFullYear(d.getFullYear() + years)
+  return d
+}
+
+export function isValidDate(date: Date | string): boolean {
+  const d = typeof date === 'string' ? new Date(date) : date
+  return d instanceof Date && !isNaN(d.getTime())
+}
+
 export function formatDateTime(date: Date | string): string {
   const formatter = new Intl.DateTimeFormat('pt-BR', {
     day: '2-digit',

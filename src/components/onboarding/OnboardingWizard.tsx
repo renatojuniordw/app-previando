@@ -1,10 +1,11 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { ArrowRight, Users, FileText, Calculator, CheckCircle2, Sparkles } from 'lucide-react'
 import api from '@/lib/api'
 import { Button } from '@/components/ui/Button'
+import { useFocusTrap } from '@/hooks/useFocusTrap'
 
 interface OnboardingStep {
   id: string
@@ -27,6 +28,8 @@ export function OnboardingWizard({ open, onClose, onComplete }: OnboardingWizard
   const [boasVindas, setBoasVindas] = useState<string | null>(null)
   const [loadingDica, setLoadingDica] = useState(false)
   const router = useRouter()
+  const dialogRef = useRef<HTMLDivElement>(null)
+  useFocusTrap(open, dialogRef)
 
   // Gera dica personalizada com IA na abertura
   useEffect(() => {
@@ -122,6 +125,7 @@ export function OnboardingWizard({ open, onClose, onComplete }: OnboardingWizard
       aria-describedby="onboarding-desc"
     >
       <div
+        ref={dialogRef}
         className="bg-white border border-slate-200 rounded-2xl shadow-elevation-lg max-w-lg w-full p-8"
         onClick={(e) => e.stopPropagation()}
       >

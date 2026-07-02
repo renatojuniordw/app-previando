@@ -3,6 +3,7 @@
 import { useEffect, useRef } from 'react'
 import { cn } from '@/lib/utils'
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock'
+import { useFocusTrap } from '@/hooks/useFocusTrap'
 import { X } from 'lucide-react'
 
 interface DrawerProps {
@@ -17,6 +18,7 @@ interface DrawerProps {
 export function Drawer({ open, onClose, title, description, children, className }: DrawerProps) {
   const drawerRef = useRef<HTMLDivElement>(null)
   useBodyScrollLock(open)
+  useFocusTrap(open, drawerRef)
 
   // Esc key closure
   useEffect(() => {
@@ -34,7 +36,7 @@ export function Drawer({ open, onClose, title, description, children, className 
   if (!open) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end" role="dialog" aria-modal="true">
+    <div className="fixed inset-0 z-50 flex justify-end" role="dialog" aria-modal="true" aria-labelledby="drawer-title">
       {/* Backdrop with fade-in and blur */}
       <div
         className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs transition-opacity duration-300 ease-out animate-fade-in"
@@ -53,7 +55,7 @@ export function Drawer({ open, onClose, title, description, children, className 
         {/* Header */}
         <div className="px-6 py-5 border-b border-slate-200 bg-slate-50 flex items-start justify-between gap-4">
           <div className="space-y-1">
-            <h2 className="font-serif font-bold text-lg text-slate-900 tracking-tight leading-none">
+            <h2 id="drawer-title" className="font-serif font-bold text-lg text-slate-900 tracking-tight leading-none">
               {title}
             </h2>
             {description && (

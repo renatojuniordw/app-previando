@@ -5,6 +5,8 @@ import { useParams } from 'next/navigation'
 import api from '@/lib/api'
 import { Button } from '@/components/ui/Button'
 import { Modal } from '@/components/ui/Modal'
+import { DatePicker } from '@/components/ui/DatePicker'
+import { CurrencyInput } from '@/components/ui/CurrencyInput'
 import { formatDate } from '@/lib/utils'
 import { MODALIDADES_PADRAO } from '@/lib/modalidade-labels'
 import { useToast } from '@/store/toast'
@@ -70,8 +72,8 @@ export default function SimulatorPage() {
   
   // Valor padrão de contribuição futura (ex: Salário Mínimo ou customizado)
   const [tipoContribuicao, setTipoContribuicao] = useState<'MINIMO' | 'TETO' | 'CUSTOM'>('MINIMO')
-  const [valorCustomContribuicao, setValorCustomContribuicao] = useState(1621.00)
-  const [salarioVigente, setSalarioVigente] = useState({ valor: 1621.00, teto: 8157.41 })
+  const [valorCustomContribuicao, setValorCustomContribuicao] = useState(0)
+  const [salarioVigente, setSalarioVigente] = useState({ valor: 0, teto: 0 })
   
   const { addToast } = useToast()
   const [errorMessage, setErrorMessage] = useState('')
@@ -189,7 +191,7 @@ export default function SimulatorPage() {
           <Button
             onClick={() => {
               if (!cnisDocument) {
-                alert('Por favor, primeiro envie e processe o documento CNIS deste caso.')
+                addToast({ type: 'error', title: 'CNIS necessário', message: 'Faça upload do CNIS para realizar as simulações.' })
                 return
               }
               setShowModal(true)
@@ -214,7 +216,7 @@ export default function SimulatorPage() {
           <Button
             onClick={() => {
               if (!cnisDocument) {
-                alert('Por favor, primeiro envie e processe o documento CNIS deste caso.')
+                addToast({ type: 'error', title: 'CNIS necessário', message: 'Faça upload do CNIS para realizar as simulações.' })
                 return
               }
               setShowModal(true)
@@ -457,12 +459,10 @@ export default function SimulatorPage() {
             </div>
 
             <div>
-              <label className="font-sans font-bold text-xs text-slate-600 block mb-1">Data Pretendida de Aposentadoria</label>
-              <input
-                type="date"
+              <DatePicker
+                label="Data Pretendida de Aposentadoria"
                 value={dibProjetada}
-                onChange={(e) => setDibProjetada(e.target.value)}
-                className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm font-sans focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 outline-none"
+                onChange={(d) => setDibProjetada(d ? d.toISOString().split('T')[0] : '')}
               />
             </div>
 
@@ -508,21 +508,14 @@ export default function SimulatorPage() {
 
             {tipoContribuicao === 'CUSTOM' && (
               <div className="animate-slide-down">
-                <label className="font-sans font-bold text-xs text-slate-600 block mb-1">Salário de Contribuição Mensal Planejado (BRL)</label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 text-sm">
-                    R$
-                  </div>
-                  <input
-                    type="number"
-                    min={String(salarioVigente.valor)}
-                    max="10000"
-                    value={valorCustomContribuicao}
-                    onChange={(e) => setValorCustomContribuicao(Number(e.target.value))}
-                    className="w-full bg-white border border-slate-300 rounded-lg pl-9 pr-3 py-2 text-sm font-sans focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 outline-none"
-                    placeholder="Ex: 3000"
-                  />
-                </div>
+                <CurrencyInput
+                  value={valorCustomContribuicao}
+                  onChange={(val) => setValorCustomContribuicao(val)}
+                  label="Salário de Contribuição Mensal Planejado (R$)"
+                  placeholder="Ex: 3.000,00"
+                  min={salarioVigente.valor}
+                  max={10000}
+                />
               </div>
             )}
           </div>

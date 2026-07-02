@@ -17,6 +17,7 @@ interface ActionsDropdownProps {
 
 export function ActionsDropdown({ actions, ariaLabel = 'Abrir menu de ações' }: ActionsDropdownProps) {
   const [open, setOpen] = useState(false)
+  const [activeIndex, setActiveIndex] = useState(-1)
   const ref = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -38,8 +39,45 @@ export function ActionsDropdown({ actions, ariaLabel = 'Abrir menu de ações' }
     }
   }, [open])
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (!open && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
+      e.preventDefault()
+      setOpen(true)
+      setActiveIndex(0)
+      return
+    }
+    if (!open) return
+
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault()
+        setActiveIndex((prev) => (prev + 1) % actions.length)
+        break
+      case 'ArrowUp':
+        e.preventDefault()
+        setActiveIndex((prev) => (prev - 1 + actions.length) % actions.length)
+        break
+      case 'Home':
+        e.preventDefault()
+        setActiveIndex(0)
+        break
+      case 'End':
+        e.preventDefault()
+        setActiveIndex(actions.length - 1)
+        break
+      case 'Enter':
+      case ' ':
+        e.preventDefault()
+        if (activeIndex >= 0 && activeIndex < actions.length) {
+          actions[activeIndex].onClick()
+          setOpen(false)
+        }
+        break
+    }
+  }
+
   return (
-    <div className="relative inline-block text-left" ref={ref}>
+    <div className="relative inline-block text-left" ref={ref} onKeyDown={handleKeyDown}>
       <button
         onClick={(e) => { e.preventDefault(); setOpen(!open) }}
         className="p-2 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
@@ -64,8 +102,12 @@ export function ActionsDropdown({ actions, ariaLabel = 'Abrir menu de ações' }
                 action.variant === 'danger'
                   ? 'text-red-600 hover:bg-red-50'
                   : 'text-slate-700 hover:bg-slate-50'
-              }`}
+              } ${idx === activeIndex ? 'bg-slate-50' : ''}`}
               role="menuitem"
+              tabIndex={idx === activeIndex ? 0 : -1}
+              ref={(el) => {
+                if (idx === activeIndex && el) el.focus()
+              }}
             >
               {action.icon ?? (
                 action.variant === 'danger'

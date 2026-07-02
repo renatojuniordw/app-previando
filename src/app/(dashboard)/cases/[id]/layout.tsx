@@ -65,10 +65,10 @@ export default function CaseLayout({ children }: { children: React.ReactNode }) 
     { id: 'cnis', label: 'Análise CNIS', icon: FileText, path: '/cnis' },
     { id: 'calculator', label: 'Cálculos', icon: Calculator, path: '/calculator' },
     { id: 'simulator', label: 'Simulação', icon: BarChart3, path: '/simulator', locked: caseData ? !caseData.planLimits?.simulatorEnabled : false },
-    { id: 'retroativos', label: 'Retroativos', icon: History, path: '/retroativos', locked: caseData ? !caseData.planLimits?.retroativosEnabled : false },
-    { id: 'compare', label: 'Comparar', icon: GitCompareArrows, path: '/compare' },
     { id: 'prescricao', label: 'Prescrição', icon: ShieldAlert, path: '/prescricao' },
+    { id: 'retroativos', label: 'Retroativos', icon: History, path: '/retroativos', locked: caseData ? !caseData.planLimits?.retroativosEnabled : false },
     { id: 'honorarios', label: 'Honorários', icon: DollarSign, path: '/honorarios' },
+    { id: 'compare', label: 'Comparar', icon: GitCompareArrows, path: '/compare' },
     { id: 'gps', label: 'GPS/DAS', icon: Receipt, path: '/gps' },
     { id: 'revisao', label: 'Revisão', icon: Scale, path: '/revisao', locked: caseData ? !caseData.planLimits?.revisionEnabled : false },
     { id: 'timeline', label: 'Timeline', icon: Clock, path: '/timeline' },
@@ -120,7 +120,7 @@ export default function CaseLayout({ children }: { children: React.ReactNode }) 
 
           {/* Tabs Navigation */}
           <div className="border-b border-slate-200">
-            <div className="flex gap-1 overflow-x-auto custom-scrollbar no-scrollbar-on-mobile -mb-px">
+            <div className="flex gap-1 overflow-x-auto custom-scrollbar no-scrollbar-on-mobile -mb-px" role="tablist" aria-label="Navegação do caso">
               {tabs.map((tab) => {
                 const fullPath = `${basePath}${tab.path}`
                 const isActive = tab.path === ''
@@ -132,6 +132,10 @@ export default function CaseLayout({ children }: { children: React.ReactNode }) 
                   <Link
                     key={tab.id}
                     href={tab.locked ? '#' : fullPath}
+                    role="tab"
+                    aria-selected={isActive}
+                    aria-disabled={tab.locked || undefined}
+                    tabIndex={tab.locked ? -1 : 0}
                     className={`
                       flex items-center gap-2 px-4 py-3 font-sans font-medium text-sm whitespace-nowrap border-b-2 transition-all
                       ${isActive

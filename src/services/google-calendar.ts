@@ -51,19 +51,14 @@ export async function createCalendarEvent(
   const calendar = await getCalendarClient(userId)
   if (!calendar) return null
 
-  const start = new Date(event.date)
-  start.setHours(9, 0, 0, 0)
-  const end = new Date(event.date)
-  end.setHours(10, 0, 0, 0)
-
   try {
     const res = await calendar.events.insert({
       calendarId: 'primary',
       requestBody: {
         summary: event.title,
         description: event.description,
-        start: { date: event.date.toISOString().split('T')[0] },
-        end: { date: event.date.toISOString().split('T')[0] },
+        start: { date: event.date.toISOString().split('T')[0], timeZone: 'America/Sao_Paulo' },
+        end: { date: event.date.toISOString().split('T')[0], timeZone: 'America/Sao_Paulo' },
       },
     })
     return res.data.id ?? null
@@ -87,8 +82,8 @@ export async function updateCalendarEvent(
       requestBody: {
         summary: event.title,
         description: event.description,
-        start: { date: event.date.toISOString().split('T')[0] },
-        end: { date: event.date.toISOString().split('T')[0] },
+        start: { date: event.date.toISOString().split('T')[0], timeZone: 'America/Sao_Paulo' },
+        end: { date: event.date.toISOString().split('T')[0], timeZone: 'America/Sao_Paulo' },
       },
     })
     return true

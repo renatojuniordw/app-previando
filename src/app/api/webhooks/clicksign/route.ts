@@ -3,8 +3,21 @@ import { prisma } from '@/lib/prisma'
 import { handleApiError } from '@/lib/api-error'
 import { Logger } from '@/lib/logger'
 import { verificarStatus } from '@/services/assinatura-digital'
+import crypto from 'crypto'
 
 const logger = new Logger('WebhookClicksign')
+
+/**
+ * Verifica a assinatura HMAC-SHA256 do webhook do Clicksign.
+ */
+function verifySignature(payload: string, signature: string, secret: string): boolean {
+  try {
+    const hmac = crypto.createHmac('sha256', secret).update(payload).digest('hex')
+    return crypto.timingSafeEqual(Buffer.from(hmac), Buffer.from(signature))
+  } catch {
+    return false
+  }
+}
 
 /**
  * POST /api/webhooks/clicksign
@@ -22,16 +35,24 @@ export async function POST(req: NextRequest) {
 
     // Validar assinatura do webhook (se configurada)
     const clicksignSecret = process.env.CLICKSIGN_WEBHOOK_SECRET
+    let body: { event?: string; data?: { list?: { key?: string }; document?: { key?: string } } }
+
     if (clicksignSecret) {
       const signature = req.headers.get('x-clicksign-signature')
       if (!signature) {
         logger.warn('Webhook sem assinatura, ignorando')
         return NextResponse.json({ error: 'Assinatura ausente.' }, { status: 401 })
       }
-      // Validação simples — em produção, usar HMAC conforme documentação do Clicksign
+      const bodyText = await req.text()
+      if (!verifySignature(bodyText, signature, clicksignSecret)) {
+        logger.warn('Assinatura inválida do webhook Clicksign')
+        return NextResponse.json({ error: 'Assinatura inválida.' }, { status: 401 })
+      }
+      body = JSON.parse(bodyText)
+    } else {
+      body = await req.json().catch(() => null)
     }
 
-    const body = await req.json().catch(() => null)
     if (!body || !body.event || !body.data) {
       logger.warn('Payload inválido do webhook Clicksign')
       return NextResponse.json({ error: 'Payload inválido.' }, { status: 400 })

@@ -1,5 +1,6 @@
 import { Plus, X } from 'lucide-react'
 import { Modal } from '@/components/ui/Modal'
+import { CurrencyInput } from '@/components/ui/CurrencyInput'
 import { formatCompetencia, formatCurrency } from '../../_utils'
 
 interface Props {
@@ -22,7 +23,7 @@ export function EditSalariesModal({
   return (
     <Modal open={open} onClose={onClose} title="GERENCIAR CONTRIBUIÇÕES / SALÁRIOS">
       <div className="space-y-4 font-sans text-sm">
-        <div className="bg-slate-50 border border-slate-150 rounded-xl p-4 space-y-3">
+        <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3">
           <h6 className="font-bold text-slate-700 text-xs uppercase tracking-wide">Adicionar Salário de Contribuição</h6>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
@@ -37,14 +38,11 @@ export function EditSalariesModal({
               />
             </div>
             <div className="space-y-1">
-              <label htmlFor="new-valor" className="text-xs font-semibold text-slate-600 block">Valor do Salário (R$)</label>
-              <input
-                id="new-valor"
-                type="text"
-                value={newValor}
-                onChange={e => onChangeValor(e.target.value)}
-                placeholder="Ex: 2500,00"
-                className="w-full border border-slate-200 rounded-lg p-2 text-xs"
+              <CurrencyInput
+                value={newValor ? parseFloat(newValor) : ''}
+                onChange={(val) => onChangeValor(String(val))}
+                label="Valor do Salário (R$)"
+                placeholder="Ex: 2.500,00"
               />
             </div>
           </div>
@@ -61,9 +59,9 @@ export function EditSalariesModal({
         <div className="space-y-2">
           <h6 className="font-bold text-slate-700 text-xs uppercase tracking-wide">Salários Registrados ({salarios.length})</h6>
           {salarios.length === 0 ? (
-            <p className="text-slate-450 italic text-center py-4 text-xs">Nenhum salário cadastrado para este vínculo.</p>
+            <p className="text-slate-400 italic text-center py-4 text-xs">Nenhum salário cadastrado para este vínculo.</p>
           ) : (
-            <div className="border border-slate-150 rounded-xl overflow-hidden max-h-60 overflow-y-auto divide-y divide-slate-150">
+            <div className="border border-slate-200 rounded-xl overflow-hidden max-h-60 overflow-y-auto divide-y divide-slate-200">
               {salarios.map((sal, sIdx) => (
                 <div key={sIdx} className="px-4 py-2 flex items-center justify-between gap-4 hover:bg-slate-50 transition-colors">
                   <div>

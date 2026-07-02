@@ -1,6 +1,8 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { Plus, Pencil, Trash2, Check, X } from 'lucide-react'
+import { DatePicker } from '@/components/ui/DatePicker'
+import { CurrencyInput } from '@/components/ui/CurrencyInput'
 interface SalarioMinimo {
   id: string
   vigencia: string
@@ -121,35 +123,27 @@ export default function SalarioMinimoPage() {
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <div>
-              <label className="block font-sans text-xs font-bold text-slate-600 mb-1">Vigência (início) *</label>
-              <input
-                type="date"
+              <DatePicker
+                label="Vigência (início) *"
                 value={form.vigencia}
-                onChange={e => setForm(f => ({ ...f, vigencia: e.target.value }))}
+                onChange={(d) => setForm(f => ({ ...f, vigencia: d ? d.toISOString().split('T')[0] : '' }))}
                 disabled={!!editingId}
-                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm font-sans focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 outline-none disabled:bg-slate-50 disabled:text-slate-400"
               />
             </div>
             <div>
-              <label className="block font-sans text-xs font-bold text-slate-600 mb-1">Salário Mínimo (R$) *</label>
-              <input
-                type="number"
-                step="0.01"
-                value={form.valor}
-                onChange={e => setForm(f => ({ ...f, valor: e.target.value }))}
-                placeholder="Ex: 1621.00"
-                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm font-sans focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 outline-none"
+              <CurrencyInput
+                value={form.valor ? parseFloat(form.valor) : ''}
+                onChange={(val) => setForm(f => ({ ...f, valor: String(val) }))}
+                label="Salário Mínimo (R$) *"
+                placeholder="Ex: 1.621,00"
               />
             </div>
             <div>
-              <label className="block font-sans text-xs font-bold text-slate-600 mb-1">Teto Previdenciário (R$) *</label>
-              <input
-                type="number"
-                step="0.01"
-                value={form.teto}
-                onChange={e => setForm(f => ({ ...f, teto: e.target.value }))}
-                placeholder="Ex: 8157.41"
-                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm font-sans focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 outline-none"
+              <CurrencyInput
+                value={form.teto ? parseFloat(form.teto) : ''}
+                onChange={(val) => setForm(f => ({ ...f, teto: String(val) }))}
+                label="Teto Previdenciário (R$) *"
+                placeholder="Ex: 8.157,41"
               />
             </div>
             <div className="sm:col-span-2">

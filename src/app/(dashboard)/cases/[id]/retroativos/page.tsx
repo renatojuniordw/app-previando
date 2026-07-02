@@ -5,8 +5,10 @@ import { useParams } from 'next/navigation'
 import api from '@/lib/api'
 import { Button } from '@/components/ui/Button'
 import { Modal } from '@/components/ui/Modal'
+import { DatePicker } from '@/components/ui/DatePicker'
 import { formatDate } from '@/lib/utils'
 import { useToast } from '@/store/toast'
+import { CurrencyInput } from '@/components/ui/CurrencyInput'
 import {
   History,
   Calendar,
@@ -71,6 +73,8 @@ export default function RetroativosPage() {
   const { addToast } = useToast()
   const [expandedRetro, setExpandedRetro] = useState<string | null>(null)
   const [errorMessage, setErrorMessage] = useState('')
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null)
 
   const load = useCallback(async () => {
     try {
@@ -167,10 +171,17 @@ export default function RetroativosPage() {
   }
 
   const handleDelete = async (retroId: string) => {
-    if (!confirm('Deseja realmente excluir este cálculo de retroativos?')) return
+    setDeleteTarget(retroId)
+    setShowDeleteConfirm(true)
+  }
+
+  const confirmDelete = async () => {
+    if (!deleteTarget) return
     try {
-      await api.delete(`/cases/${params.id}/retroativos/${retroId}`)
+      await api.delete(`/cases/${params.id}/retroativos/${deleteTarget}`)
       addToast({ type: 'success', title: 'Retroativos excluídos' })
+      setShowDeleteConfirm(false)
+      setDeleteTarget(null)
       load()
     } catch {
       addToast({ type: 'error', title: 'Erro', message: 'Não foi possível excluir o cálculo.' })
@@ -321,7 +332,7 @@ export default function RetroativosPage() {
 
                 {/* Seção Expansível da Memória de Cálculo */}
                 {isExpanded && retro.memoriaCalculo?.parcelas && (
-                  <div className="p-6 border-t border-slate-150 bg-slate-50/20 space-y-4 animate-slide-down">
+                  <div className="p-6 border-t border-slate-200 bg-slate-50/20 space-y-4 animate-slide-down">
                     <div className="flex items-center gap-2 text-xs font-bold text-slate-500 uppercase tracking-wider">
                       <FileSpreadsheet className="w-4.5 h-4.5 text-slate-400" />
                       Memória de Cálculo Discriminada Mês a Mês
@@ -387,58 +398,40 @@ export default function RetroativosPage() {
           <div className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="font-sans font-bold text-xs text-slate-600 block mb-1">Data Início do Direito (DIB)</label>
-                <input
-                  type="date"
+                <DatePicker
+                  label="Data Início do Direito (DIB)"
                   value={dataInicioDireito}
-                  onChange={(e) => setDataInicioDireito(e.target.value)}
-                  className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm font-sans focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 outline-none"
+                  onChange={(d) => setDataInicioDireito(d ? d.toISOString().split('T')[0] : '')}
                 />
               </div>
 
               <div>
-                <label className="font-sans font-bold text-xs text-slate-600 block mb-1">Data de Cálculo / Requerimento</label>
-                <input
-                  type="date"
+                <DatePicker
+                  label="Data de Cálculo / Requerimento"
                   value={dataRequerimento}
-                  onChange={(e) => setDataRequerimento(e.target.value)}
-                  className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm font-sans focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 outline-none"
+                  onChange={(d) => setDataRequerimento(d ? d.toISOString().split('T')[0] : '')}
                 />
               </div>
             </div>
 
             <div>
-              <label className="font-sans font-bold text-xs text-slate-600 block mb-1">Valor Mensal Devido (R$)</label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 text-sm">
-                  R$
-                </div>
-                <input
-                  type="text"
-                  value={valorMensalBruto}
-                  onChange={(e) => setValorMensalBruto(e.target.value)}
-                  className="w-full bg-white border border-slate-300 rounded-lg pl-9 pr-3 py-2 text-sm font-sans focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 outline-none"
-                  placeholder="Ex: 3500,00"
-                />
-              </div>
-              <span className="font-sans text-[10px] text-slate-400 mt-1 block">O valor correspondente ao benefício mensal não recebido.</span>
+              <CurrencyInput
+                value={valorMensalBruto ? parseFloat(valorMensalBruto) : ''}
+                onChange={(val) => setValorMensalBruto(String(val))}
+                label="Valor Mensal Devido (R$)"
+                placeholder="Ex: 3.500,00"
+                hint="O valor correspondente ao benefício mensal não recebido."
+              />
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="font-sans font-bold text-xs text-slate-600 block mb-1">Descontos Opcionais (R$)</label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 text-sm">
-                    R$
-                  </div>
-                  <input
-                    type="text"
-                    value={valorDescontos}
-                    onChange={(e) => setValorDescontos(e.target.value)}
-                    className="w-full bg-white border border-slate-300 rounded-lg pl-9 pr-3 py-2 text-sm font-sans focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 outline-none"
-                    placeholder="Ex: 500,00"
-                  />
-                </div>
+                <CurrencyInput
+                  value={valorDescontos ? parseFloat(valorDescontos) : ''}
+                  onChange={(val) => setValorDescontos(String(val))}
+                  label="Descontos Opcionais (R$)"
+                  placeholder="Ex: 500,00"
+                />
               </div>
 
               <div>
@@ -465,6 +458,30 @@ export default function RetroativosPage() {
             <Button
               variant="outline"
               onClick={() => setShowModal(false)}
+              className="flex-1 border-slate-300 text-slate-700 font-semibold"
+            >
+              Cancelar
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Modal de Confirmação de Exclusão */}
+      <Modal open={showDeleteConfirm} onClose={() => { setShowDeleteConfirm(false); setDeleteTarget(null) }} title="CONFIRMAR EXCLUSÃO">
+        <div className="space-y-4">
+          <p className="font-sans text-sm text-slate-600">
+            Deseja realmente excluir este cálculo de retroativos? Esta ação não pode ser desfeita.
+          </p>
+          <div className="flex gap-3 pt-3 border-t border-slate-100">
+            <Button
+              onClick={confirmDelete}
+              className="flex-1 bg-red-600 hover:bg-red-700 text-white font-semibold"
+            >
+              Sim, Excluir
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => { setShowDeleteConfirm(false); setDeleteTarget(null) }}
               className="flex-1 border-slate-300 text-slate-700 font-semibold"
             >
               Cancelar

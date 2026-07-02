@@ -56,7 +56,7 @@ export function CnisProcessingStepper({ processingStatus, stuckWarning }: Props)
 
   return (
     <div className="space-y-4">
-      <div className="bg-slate-50 border border-slate-150 rounded-xl p-5 space-y-4">
+      <div className="bg-slate-50 border border-slate-200 rounded-xl p-5 space-y-4">
         <h4 className="font-sans font-bold text-xs text-slate-700 tracking-wide uppercase">Progresso de Extração do CNIS</h4>
 
         <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">

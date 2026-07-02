@@ -14,6 +14,7 @@ import { downloadPdf } from '@/lib/download-pdf'
 import { Search, SlidersHorizontal, X, ChevronLeft, ChevronRight } from 'lucide-react'
 import { formatDate } from '@/lib/utils'
 import { BENEFIT_SHORT_LABELS, STATUS_LABELS } from '@/lib/constants'
+import { DatePicker } from '@/components/ui/DatePicker'
 
 const STATUS_OPTIONS = [
   { value: 'PROSPECCAO', label: 'Prospecção' },
@@ -99,13 +100,18 @@ export default function CasesPage() {
       if (rmiMax) params.rmiMax = rmiMax
       if (createdFrom) params.createdFrom = createdFrom
       if (createdTo) params.createdTo = createdTo
+      params.sortField = sortField
+      params.sortDir = sortDir
 
       const res = await api.get('/cases', { params })
       setCases(res.data.cases ?? [])
       setTotal(res.data.total ?? 0)
-    } catch { /* noop */ }
+    } catch (err) {
+      addToast({ type: 'error', title: 'Erro', message: 'Erro ao carregar casos. Tente novamente.' })
+      console.error('Fetch cases error:', err)
+    }
     setLoading(false)
-  }, [debouncedSearch, statusFilter, priority, benefitType, rmiMin, rmiMax, createdFrom, createdTo, page])
+  }, [debouncedSearch, statusFilter, priority, benefitType, rmiMin, rmiMax, createdFrom, createdTo, page, sortField, sortDir])
 
   useEffect(() => { fetchCases() }, [fetchCases])
 
@@ -138,24 +144,8 @@ export default function CasesPage() {
   const handleSort = (field: typeof sortField) => {
     if (sortField === field) setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'))
     else { setSortField(field); setSortDir('asc') }
+    setPage(1)
   }
-
-  const sortedCases = [...cases].sort((a, b) => {
-    let cmp = 0
-    if (sortField === 'client') cmp = a.client.name.localeCompare(b.client.name, 'pt-BR')
-    else if (sortField === 'status') cmp = a.status.localeCompare(b.status)
-    else if (sortField === 'priority') {
-      const order = { CRITICAL: 0, ATTENTION: 1, NORMAL: 2 }
-      cmp = (order[a.priority as keyof typeof order] ?? 3) - (order[b.priority as keyof typeof order] ?? 3)
-    }
-    else if (sortField === 'deadlineDate') {
-      const da = a.deadlineDate ? new Date(a.deadlineDate).getTime() : Infinity
-      const db = b.deadlineDate ? new Date(b.deadlineDate).getTime() : Infinity
-      cmp = da - db
-    }
-    else if (sortField === 'createdAt') cmp = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-    return sortDir === 'asc' ? cmp : -cmp
-  })
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6">
@@ -171,11 +161,13 @@ export default function CasesPage() {
               value={search}
               onChange={(e) => { setSearch(e.target.value); setPage(1) }}
               placeholder="Buscar por cliente..."
-              className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-sans focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all placeholder:text-slate-400 text-slate-900 shadow-sm"
+              aria-label="Buscar casos por nome do cliente"
+              className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-sans focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-slate-400 transition-all placeholder:text-slate-400 text-slate-900 shadow-sm"
             />
           </div>
           <button
             onClick={() => setShowFilters(!showFilters)}
+            aria-expanded={showFilters}
             className={`flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg border transition-colors shrink-0 ${hasActiveFilters ? 'bg-amber-50 border-amber-300 text-amber-700' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'}`}
           >
             <SlidersHorizontal className="w-4 h-4" />
@@ -190,8 +182,8 @@ export default function CasesPage() {
         <Card variant="light" className="p-5">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Status</label>
-              <select value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setPage(1) }} className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500">
+              <label htmlFor="filter-status" className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Status</label>
+              <select id="filter-status" value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setPage(1) }} className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-slate-400">
                 <option value="">Todos</option>
                 {STATUS_OPTIONS.map((s) => (
                   <option key={s.value} value={s.value}>{s.label}</option>
@@ -199,8 +191,8 @@ export default function CasesPage() {
               </select>
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Prioridade</label>
-              <select value={priority} onChange={(e) => { setPriority(e.target.value); setPage(1) }} className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500">
+              <label htmlFor="filter-priority" className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Prioridade</label>
+              <select id="filter-priority" value={priority} onChange={(e) => { setPriority(e.target.value); setPage(1) }} className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-slate-400">
                 <option value="">Todas</option>
                 <option value="CRITICAL">Crítico</option>
                 <option value="ATTENTION">Atenção</option>
@@ -208,8 +200,8 @@ export default function CasesPage() {
               </select>
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Tipo de Benefício</label>
-              <select value={benefitType} onChange={(e) => { setBenefitType(e.target.value); setPage(1) }} className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500">
+              <label htmlFor="filter-benefit" className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Tipo de Benefício</label>
+              <select id="filter-benefit" value={benefitType} onChange={(e) => { setBenefitType(e.target.value); setPage(1) }} className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-slate-400">
                 <option value="">Todos</option>
                 {ALL_BENEFIT_TYPES.map((t) => (
                   <option key={t} value={t}>{BENEFIT_SHORT_LABELS[t]}</option>
@@ -217,20 +209,20 @@ export default function CasesPage() {
               </select>
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">RMI mínima (R$)</label>
-              <input type="number" value={rmiMin} onChange={(e) => { setRmiMin(e.target.value); setPage(1) }} placeholder="0,00" className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500" />
+              <label htmlFor="filter-rmi-min" className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">RMI mínima (R$)</label>
+              <input id="filter-rmi-min" type="number" value={rmiMin} onChange={(e) => { setRmiMin(e.target.value); setPage(1) }} placeholder="0,00" className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-slate-400" />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">RMI máxima (R$)</label>
-              <input type="number" value={rmiMax} onChange={(e) => { setRmiMax(e.target.value); setPage(1) }} placeholder="99999,00" className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500" />
+              <label htmlFor="filter-rmi-max" className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">RMI máxima (R$)</label>
+              <input id="filter-rmi-max" type="number" value={rmiMax} onChange={(e) => { setRmiMax(e.target.value); setPage(1) }} placeholder="99999,00" className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-slate-400" />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Criado a partir de</label>
-              <input type="date" value={createdFrom} onChange={(e) => { setCreatedFrom(e.target.value); setPage(1) }} className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500" />
+              <label htmlFor="filter-created-from" className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Criado a partir de</label>
+              <DatePicker value={createdFrom} onChange={(d) => { setCreatedFrom(d ? d.toISOString().split('T')[0] : ''); setPage(1) }} />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Criado até</label>
-              <input type="date" value={createdTo} onChange={(e) => { setCreatedTo(e.target.value); setPage(1) }} className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500" />
+              <label htmlFor="filter-created-to" className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Criado até</label>
+              <DatePicker value={createdTo} onChange={(d) => { setCreatedTo(d ? d.toISOString().split('T')[0] : ''); setPage(1) }} />
             </div>
             <div className="col-span-2 flex items-end">
               {hasActiveFilters && (
@@ -287,7 +279,7 @@ export default function CasesPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {sortedCases.map((c) => (
+                {cases.map((c) => (
                   <tr key={c.id} className="hover:bg-slate-50 transition-colors">
                     <td className="px-5 py-4">
                       <Link href={`/cases/${c.id}`} className="font-semibold text-sm text-slate-900 hover:text-amber-600 transition-colors">

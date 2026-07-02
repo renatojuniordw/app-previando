@@ -135,7 +135,7 @@ export function PeriodItem({
       )}
 
       {isExpanded && (
-        <div className="border-slate-150 animate-slide-down border-t bg-slate-50/30 px-5 py-5">
+        <div className="border-slate-200 animate-slide-down border-t bg-slate-50/30 px-5 py-5">
           {periodo.salarios && periodo.salarios.length > 0 ? (
             <div className="space-y-3">
               <span className="block font-sans text-[10px] font-bold uppercase tracking-wider text-slate-400">
@@ -145,7 +145,7 @@ export function PeriodItem({
                 {periodo.salarios.map((sal, sIdx) => (
                   <div
                     key={sIdx}
-                    className="border-slate-150 hover:border-slate-350 group/sal relative flex flex-col justify-between rounded-xl border bg-white p-3 shadow-sm transition-all"
+                    className="border-slate-200 hover:border-slate-350 group/sal relative flex flex-col justify-between rounded-xl border bg-white p-3 shadow-sm transition-all"
                   >
                     <div className="flex w-full items-center justify-between gap-1">
                       <span className="font-sans text-[10px] font-bold text-slate-400">
@@ -161,8 +161,8 @@ export function PeriodItem({
                                 title={`${ind}: ${details.descricao}`}
                                 className={`cursor-help rounded-sm px-1 text-[8px] font-extrabold ${
                                   details.critico
-                                    ? 'border-red-150 border bg-red-50 text-red-700'
-                                    : 'border-amber-150 border bg-amber-50 text-amber-700'
+                                    ? 'border-red-200 border bg-red-50 text-red-700'
+                                    : 'border-amber-200 border bg-amber-50 text-amber-700'
                                 }`}
                               >
                                 {ind}
@@ -181,7 +181,7 @@ export function PeriodItem({
             </div>
           ) : (
             <div className="flex items-center gap-2 py-2 text-xs text-slate-500 sm:text-sm">
-              <AlertCircle className="text-slate-450 h-4 w-4 shrink-0" aria-hidden="true" />
+              <AlertCircle className="text-slate-400 h-4 w-4 shrink-0" aria-hidden="true" />
               <span>
                 Nenhum salário de contribuição registrado ou extraído para este período. Adicione
                 salários clicando no botão de &quot;+&quot; acima.

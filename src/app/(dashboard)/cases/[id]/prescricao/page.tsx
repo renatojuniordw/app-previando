@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { Card } from '@/components/ui/Card'
+import { DatePicker } from '@/components/ui/DatePicker'
 import { AlertTriangle, CheckCircle2, XCircle, Clock, Info, Calculator } from 'lucide-react'
 import { differenceInDays, addYears, format, parseISO, isValid } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
@@ -131,15 +132,11 @@ export default function PrescricaoPage() {
           </div>
 
           <div className="space-y-1.5">
-            <label className="font-sans text-sm font-medium text-slate-700">
-              Data do evento
-            </label>
-            <input
-              type="date"
+            <DatePicker
+              label="Data do evento"
               value={dataEvento}
-              max={format(TODAY, 'yyyy-MM-dd')}
-              onChange={(e) => setDataEvento(e.target.value)}
-              className="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-amber-400"
+              maxDate={format(TODAY, 'yyyy-MM-dd')}
+              onChange={(d) => setDataEvento(d ? d.toISOString().split('T')[0] : '')}
             />
           </div>
         </div>

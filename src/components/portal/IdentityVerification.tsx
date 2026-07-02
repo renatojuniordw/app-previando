@@ -2,6 +2,8 @@
 
 import { useState } from 'react'
 import { Shield, ShieldCheck, Loader2, AlertCircle, Eye, EyeOff } from 'lucide-react'
+import { formatCPF, stripNonDigits } from '@/lib/masks'
+import { DatePicker } from '@/components/ui/DatePicker'
 
 interface Props {
   token: string
@@ -27,14 +29,6 @@ export function IdentityVerification({ token, onVerified }: Props) {
   // Se já verificou nesta sessão, nem renderiza
   if (typeof window !== 'undefined' && sessionStorage.getItem(VERIFIED_KEY) === token) {
     return null
-  }
-
-  const formatCpf = (value: string) => {
-    const digits = value.replace(/\D/g, '').slice(0, 11)
-    return digits
-      .replace(/(\d{3})(\d)/, '$1.$2')
-      .replace(/(\d{3})(\d)/, '$1.$2')
-      .replace(/(\d{3})(\d{1,2})$/, '$1-$2')
   }
 
   const handleVerify = async () => {
@@ -96,8 +90,8 @@ export function IdentityVerification({ token, onVerified }: Props) {
           <div className="relative">
             <input
               type={showCpf ? 'text' : 'password'}
-              value={formatCpf(cpf)}
-              onChange={(e) => setCpf(e.target.value)}
+              value={formatCPF(cpf)}
+              onChange={(e) => setCpf(stripNonDigits(e.target.value).slice(0, 11))}
               placeholder="000.000.000-00"
               className="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm font-sans focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 outline-none pr-10"
               maxLength={14}
@@ -114,15 +108,10 @@ export function IdentityVerification({ token, onVerified }: Props) {
           </div>
         </div>
         <div>
-          <label className="font-sans text-xs font-medium text-slate-600 block mb-1">
-            Data de Nascimento
-          </label>
-          <input
-            type="date"
+          <DatePicker
+            label="Data de Nascimento"
             value={birthDate}
-            onChange={(e) => setBirthDate(e.target.value)}
-            className="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm font-sans focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 outline-none"
-            autoComplete="off"
+            onChange={(d) => setBirthDate(d ? d.toISOString().split('T')[0] : '')}
           />
         </div>
       </div>
@@ -136,7 +125,7 @@ export function IdentityVerification({ token, onVerified }: Props) {
 
       <button
         onClick={handleVerify}
-        disabled={loading || cpf.replace(/\D/g, '').length !== 11 || !birthDate}
+        disabled={loading || cpf.length !== 11 || !birthDate}
         className="w-full py-2.5 bg-amber-600 hover:bg-amber-700 disabled:bg-slate-300 text-white font-semibold text-sm rounded-lg transition-colors flex items-center justify-center gap-2"
       >
         {loading ? (

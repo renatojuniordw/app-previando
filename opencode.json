@@ -1,0 +1,27 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "instructions": ["AGENTS.md"],
+  "references": {
+    "docs": {
+      "path": "docs",
+      "description": "Business rules, database schema, security, AI architecture, design system, and project context"
+    },
+    "prisma": {
+      "path": "prisma/schema.prisma",
+      "description": "Complete database schema with 25+ models"
+    }
+  },
+  "command": {
+    "dev": { "template": "npm run dev", "description": "Start dev server on port 60002" },
+    "build": { "template": "npm run build", "description": "Build for production" },
+    "test": { "template": "npm run test", "description": "Run vitest tests" },
+    "test:watch": { "template": "npm run test:watch", "description": "Run vitest in watch mode" },
+    "lint": { "template": "npm run lint", "description": "Run next lint" },
+    "typecheck": { "template": "npx tsc --noEmit", "description": "TypeScript type check" },
+    "db:studio": { "template": "npm run db:studio", "description": "Open Prisma Studio" },
+    "db:generate": { "template": "npm run db:generate", "description": "Generate Prisma client" },
+    "db:migrate": { "template": "npm run db:migrate", "description": "Run Prisma migrations" },
+    "db:seed": { "template": "npm run db:seed", "description": "Seed database" },
+    "worker": { "template": "npm run worker", "description": "Start BullMQ worker" }
+  }
+}

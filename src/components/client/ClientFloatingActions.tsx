@@ -28,8 +28,17 @@ export function ClientFloatingActions({ clientId, phone, email, cpf, onEdit, onC
         if (sendState !== 'composing' && sendState !== 'sending') setIsOpen(false)
       }
     }
-    if (isOpen) document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && sendState !== 'composing' && sendState !== 'sending') setIsOpen(false)
+    }
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside)
+      document.addEventListener('keydown', handleEscape)
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+      document.removeEventListener('keydown', handleEscape)
+    }
   }, [isOpen, sendState])
 
   const cleanPhone = phone ? phone.replace(/\D/g, '') : ''

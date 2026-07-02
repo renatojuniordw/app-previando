@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation'
 import api from '@/lib/api'
 import { Button } from '@/components/ui/Button'
 import { Modal } from '@/components/ui/Modal'
+import { DatePicker } from '@/components/ui/DatePicker'
 import { formatDate } from '@/lib/utils'
 import { MODALIDADES_PADRAO } from '@/lib/modalidade-labels'
 import { useToast } from '@/store/toast'
@@ -276,19 +277,21 @@ export default function CalculatorPage() {
           <h2 className="font-serif font-bold text-2xl text-slate-900 tracking-tight">Painel de Cálculos</h2>
           <p className="font-sans text-sm text-slate-500 mt-1">Realize cálculos de benefícios com base no CNIS.</p>
         </div>
-        <Button
-          onClick={() => {
-            if (!cnisDocument) {
-              alert('Por favor, primeiro envie e processe o documento CNIS deste caso.')
-              return
-            }
-            setShowModal(true)
-          }}
-          className="bg-amber-600 hover:bg-amber-700 text-white flex items-center gap-2 shadow-sm font-semibold"
-        >
-          <Scale className="w-4 h-4" />
-          Novo Cálculo
-        </Button>
+        {calculations.length > 0 && (
+          <Button
+            onClick={() => {
+              if (!cnisDocument) {
+                addToast({ type: 'error', title: 'CNIS necessário', message: 'Faça upload do CNIS para realizar os cálculos.' })
+                return
+              }
+              setShowModal(true)
+            }}
+            className="bg-amber-600 hover:bg-amber-700 text-white flex items-center gap-2 shadow-sm font-semibold"
+          >
+            <Scale className="w-4 h-4" />
+            Novo Cálculo
+          </Button>
+        )}
       </div>
 
       {calculations.length === 0 ? (
@@ -303,7 +306,7 @@ export default function CalculatorPage() {
           <Button
             onClick={() => {
               if (!cnisDocument) {
-                alert('Por favor, primeiro envie e processe o documento CNIS deste caso.')
+                addToast({ type: 'error', title: 'CNIS necessário', message: 'Faça upload do CNIS para realizar os cálculos.' })
                 return
               }
               setShowModal(true)
@@ -434,7 +437,7 @@ export default function CalculatorPage() {
 
                 {/* Detalhamento Acordeão */}
                 {isExpanded && (
-                  <div className="p-6 border-t border-slate-150 bg-slate-50/20 space-y-6 animate-slide-down">
+                  <div className="p-6 border-t border-slate-200 bg-slate-50/20 space-y-6 animate-slide-down">
                     {/* Exibição de Pendências */}
                     {!isCalcElegivel && calc.pendingIssues && calc.pendingIssues.length > 0 && (
                       <div className="border border-rose-200 bg-rose-50/50 rounded-xl p-5 space-y-2">
@@ -504,11 +507,11 @@ export default function CalculatorPage() {
                               </div>
                               <div>
                                 <p className="text-slate-500">Piso Nacional (Salário Mínimo):</p>
-                                <p className="font-bold text-slate-800">{formatCurrency(calc.calculationMemory.pisoNacional || 1621)}</p>
+                                <p className="font-bold text-slate-800">{calc.calculationMemory.pisoNacional ? formatCurrency(calc.calculationMemory.pisoNacional) : 'N/A'}</p>
                               </div>
                               <div>
                                 <p className="text-slate-500">Teto da Previdência:</p>
-                                <p className="font-bold text-slate-800">{formatCurrency(calc.calculationMemory.tetoPrevidenciario || 8157.41)}</p>
+                                <p className="font-bold text-slate-800">{calc.calculationMemory.tetoPrevidenciario ? formatCurrency(calc.calculationMemory.tetoPrevidenciario) : 'N/A'}</p>
                               </div>
                             </div>
 
@@ -569,12 +572,10 @@ export default function CalculatorPage() {
             </div>
 
             <div>
-              <label className="font-sans font-bold text-xs text-slate-600 block mb-1">DIB Pretendida (Início Benefício)</label>
-              <input
-                type="date"
+              <DatePicker
+                label="DIB Pretendida (Início Benefício)"
                 value={dib}
-                onChange={(e) => setDib(e.target.value)}
-                className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm font-sans focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 outline-none"
+                onChange={(d) => setDib(d ? d.toISOString().split('T')[0] : '')}
               />
             </div>
 

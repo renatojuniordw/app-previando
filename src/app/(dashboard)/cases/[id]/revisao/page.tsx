@@ -3,10 +3,12 @@
 import { useState } from 'react'
 import { useParams } from 'next/navigation'
 import api from '@/lib/api'
+import { DatePicker } from '@/components/ui/DatePicker'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { Scale, TrendingUp, AlertCircle, CheckCircle, Clock, DollarSign, Percent, FileText } from 'lucide-react'
+import { CurrencyInput } from '@/components/ui/CurrencyInput'
 import { REVISION_LABELS, REVISION_DESCRIPTIONS } from '@/lib/strategies/revision-types'
 import type { RevisionType, RevisionResult } from '@/lib/strategies/revision-types'
 
@@ -160,24 +162,18 @@ export default function RevisaoPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">RMI Concedido (R$)</label>
-            <input
-              type="number"
-              step="0.01"
-              min="0"
-              value={form.rmiConcedido}
-              onChange={(e) => setForm({ ...form, rmiConcedido: e.target.value })}
-              placeholder="Ex: 1518.00"
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+            <CurrencyInput
+              value={form.rmiConcedido ? parseFloat(form.rmiConcedido) : ''}
+              onChange={(val) => setForm({ ...form, rmiConcedido: String(val) })}
+              label="RMI Concedido (R$)"
+              placeholder="Ex: 1.518,00"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">DIB Concedida</label>
-            <input
-              type="date"
+            <DatePicker
+              label="DIB Concedida"
               value={form.dibConcedido}
-              onChange={(e) => setForm({ ...form, dibConcedido: e.target.value })}
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+              onChange={(d) => setForm({ ...form, dibConcedido: d ? d.toISOString().split('T')[0] : '' })}
             />
           </div>
         </div>

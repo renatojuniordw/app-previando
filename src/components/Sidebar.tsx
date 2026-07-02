@@ -2,31 +2,67 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { signOut } from 'next-auth/react'
+import { signOut, useSession } from 'next-auth/react'
 import { cn } from '@/lib/utils'
-import { LayoutDashboard, Users, Columns, CreditCard, Settings, LogOut, Activity, Calendar, FolderOpen, X, BookOpen, Files, BarChart3 } from 'lucide-react'
+import { LayoutDashboard, Users, Columns, CreditCard, Settings, LogOut, Activity, Calendar, FolderOpen, X, BookOpen, Files, BarChart3, DollarSign, Tags, Package } from 'lucide-react'
 import { UsageBar } from '@/components/UsageBar'
 import { useSidebarStore } from '@/store/sidebar'
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock'
 import { useUrgentDeadlines } from '@/hooks/useUrgentDeadlines'
 import { useEffect, useCallback } from 'react'
 
-const NAV_ITEMS = [
-  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/clients/list', label: 'Clientes', icon: Users },
-  { href: '/clients/kanban', label: 'Kanban', icon: Columns },
-  { href: '/cases', label: 'Casos', icon: FolderOpen },
-  { href: '/reports', label: 'Relatórios', icon: BarChart3 },
-  { href: '/deadlines', label: 'Prazos', icon: Calendar },
-  { href: '/activity', label: 'Atividade', icon: Activity },
-  { href: '/tools/pdf', label: 'Ferramentas de PDF', icon: Files },
-  { href: '/tools/cnis-indicators', label: 'Dicionário CNIS', icon: BookOpen },
-  { href: '/settings/billing', label: 'Plano', icon: CreditCard },
-  { href: '/settings/profile', label: 'Perfil', icon: Settings },
+const NAV_SECTIONS = [
+  {
+    label: 'Principal',
+    items: [
+      { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+      { href: '/clients/list', label: 'Clientes', icon: Users },
+      { href: '/clients/kanban', label: 'Kanban', icon: Columns },
+      { href: '/cases', label: 'Casos', icon: FolderOpen },
+    ],
+  },
+  {
+    label: 'Acompanhamento',
+    items: [
+      { href: '/reports', label: 'Relatórios', icon: BarChart3 },
+      { href: '/deadlines', label: 'Prazos', icon: Calendar },
+      { href: '/activity', label: 'Atividade', icon: Activity },
+    ],
+  },
+  {
+    label: 'Ferramentas',
+    items: [
+      { href: '/tools/pdf', label: 'Ferramentas de PDF', icon: Files },
+      { href: '/tools/cnis-indicators', label: 'Dicionário CNIS', icon: BookOpen },
+    ],
+  },
+  {
+    label: 'Configurações',
+    items: [
+      { href: '/settings/billing', label: 'Plano', icon: CreditCard },
+      { href: '/settings/profile', label: 'Perfil', icon: Settings },
+    ],
+  },
 ]
+
+const ADMIN_SECTION = {
+  label: 'Administração',
+  items: [
+    { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { href: '/admin/users', label: 'Usuários', icon: Users },
+    { href: '/admin/payments', label: 'Pagamentos', icon: CreditCard },
+    { href: '/admin/metrics', label: 'Métricas', icon: Activity },
+    { href: '/admin/plans', label: 'Planos', icon: Package },
+    { href: '/admin/salario-minimo', label: 'Salário Mínimo', icon: DollarSign },
+    { href: '/admin/modalidades', label: 'Modalidades', icon: Tags },
+    { href: '/admin/regras-aposentadoria', label: 'Regras Previdenciárias', icon: BookOpen },
+  ],
+}
 
 export function Sidebar() {
   const pathname = usePathname()
+  const { data: session } = useSession()
+  const isAdmin = session?.user?.isAdmin
   const { isOpen, close, isDesktopOpen } = useSidebarStore()
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 1024
   useBodyScrollLock(isOpen && isMobile)
@@ -90,35 +126,77 @@ export function Sidebar() {
           </button>
         </div>
 
-        <nav className="flex-1 p-3 space-y-1" aria-label="Seções do sistema">
+        <nav className="flex-1 p-3 overflow-y-auto" aria-label="Seções do sistema">
           <ul role="list" className="space-y-1">
-            {NAV_ITEMS.map((item) => {
-              const active = pathname.startsWith(item.href)
-              const Icon = item.icon
-              return (
-                <li key={item.href}>
-                  <Link
-                    href={item.href}
-                    aria-label={item.label}
-                    aria-current={active ? 'page' : undefined}
-                    className={cn(
-                      'flex items-center gap-3 px-3 py-2.5 font-sans font-medium text-sm transition-all rounded-lg',
-                      active
-                        ? 'bg-amber-50 text-amber-700'
-                        : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-                    )}
-                  >
-                    <Icon className={cn('w-5 h-5 shrink-0', active ? 'text-amber-600' : 'text-slate-400')} aria-hidden="true" />
-                    <span className="flex-1">{item.label}</span>
-                    {item.href === '/deadlines' && urgentDeadlines > 0 && (
-                      <span className="ml-auto min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-red-500 text-white text-[10px] font-bold px-1">
-                        {urgentDeadlines > 9 ? '9+' : urgentDeadlines}
-                      </span>
-                    )}
-                  </Link>
-                </li>
-              )
-            })}
+            {NAV_SECTIONS.map((section) => (
+              <li key={section.label}>
+                <p className="px-3 py-2 text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                  {section.label}
+                </p>
+                <ul role="list" className="space-y-0.5 ml-0">
+                  {section.items.map((item) => {
+                    const active = pathname.startsWith(item.href)
+                    const Icon = item.icon
+                    return (
+                      <li key={item.href}>
+                        <Link
+                          href={item.href}
+                          aria-label={item.label}
+                          aria-current={active ? 'page' : undefined}
+                          className={cn(
+                            'flex items-center gap-3 px-3 py-2 font-sans font-medium text-sm transition-all rounded-lg',
+                            active
+                              ? 'bg-amber-50 text-amber-700'
+                              : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                          )}
+                        >
+                          <Icon className={cn('w-5 h-5 shrink-0', active ? 'text-amber-600' : 'text-slate-400')} aria-hidden="true" />
+                          <span className="flex-1">{item.label}</span>
+                          {item.href === '/deadlines' && urgentDeadlines > 0 && (
+                            <span className="ml-auto min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-red-500 text-white text-[10px] font-bold px-1">
+                              {urgentDeadlines > 9 ? '9+' : urgentDeadlines}
+                            </span>
+                          )}
+                        </Link>
+                      </li>
+                    )
+                  })}
+                </ul>
+              </li>
+            ))}
+
+            {isAdmin && (
+              <li>
+                <hr className="my-2 border-slate-200" />
+                <p className="px-3 py-2 text-xs font-semibold text-amber-700 uppercase tracking-wider">
+                  {ADMIN_SECTION.label}
+                </p>
+                <ul role="list" className="space-y-0.5 ml-0">
+                  {ADMIN_SECTION.items.map((item) => {
+                    const active = pathname.startsWith(item.href)
+                    const Icon = item.icon
+                    return (
+                      <li key={item.href}>
+                        <Link
+                          href={item.href}
+                          aria-label={item.label}
+                          aria-current={active ? 'page' : undefined}
+                          className={cn(
+                            'flex items-center gap-3 px-3 py-2 font-sans font-medium text-sm transition-all rounded-lg',
+                            active
+                              ? 'bg-amber-50 text-amber-700'
+                              : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                          )}
+                        >
+                          <Icon className={cn('w-5 h-5 shrink-0', active ? 'text-amber-600' : 'text-slate-400')} aria-hidden="true" />
+                          <span className="flex-1">{item.label}</span>
+                        </Link>
+                      </li>
+                    )
+                  })}
+                </ul>
+              </li>
+            )}
           </ul>
         </nav>
 

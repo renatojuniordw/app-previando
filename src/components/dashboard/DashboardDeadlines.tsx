@@ -2,6 +2,7 @@ import { memo } from 'react'
 import { Card } from '@/components/ui/Card'
 import { Clock, Calendar } from 'lucide-react'
 import Link from 'next/link'
+import { daysUntil } from '@/lib/utils'
 
 interface Deadline {
   id: string
@@ -24,10 +25,6 @@ export const DashboardDeadlines = memo(function DashboardDeadlines({ events }: {
   const total = events.deadlines.length + events.calendarEvents.length
   if (!total) return null
 
-  function deadlineDays(date: string) {
-    return Math.ceil((new Date(date).getTime() - Date.now()) / 86400000)
-  }
-
   return (
     <Card variant="light" className="p-0 overflow-hidden">
       <div className="p-4 border-b border-slate-100 flex items-center gap-2">
@@ -37,7 +34,7 @@ export const DashboardDeadlines = memo(function DashboardDeadlines({ events }: {
       </div>
       <div className="divide-y divide-slate-50">
         {events.deadlines.map((d) => {
-          const days = deadlineDays(d.deadlineDate)
+          const days = daysUntil(d.deadlineDate)
           return (
             <Link
               key={`dl-${d.id}`}
@@ -68,7 +65,7 @@ export const DashboardDeadlines = memo(function DashboardDeadlines({ events }: {
           )
         })}
         {events.calendarEvents.map((ev) => {
-          const days = deadlineDays(ev.date)
+          const days = daysUntil(ev.date)
           return (
             <div
               key={`cal-${ev.id}`}

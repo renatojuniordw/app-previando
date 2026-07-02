@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(wc:*)",
+      "Bash(python3:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npx prisma:*)",
+      "Bash(psql:*)",
+      "Bash(docker exec:*)",
+      "Bash(echo \"EXIT: $?\")",
+      "Bash(npm run:*)",
+      "Bash(cat:*)",
+      "Bash(grep -o \"\"verdict\"\"[^,}]* /Users/renatobezerra/.claude/projects/-Users-renatobezerra-Library-Mobile-Documents-com-apple-CloudDocs-Reposit-rios-app-previando/0f6635df-41a2-4d64-a58f-cc63d43ac2ac/tool-results/bj8rz0i4o.txt)",
+      "Bash(grep -o \"\"verdict\"\":\"\"[^\"\"]*\"\" /Users/renatobezerra/.claude/projects/-Users-renatobezerra-Library-Mobile-Documents-com-apple-CloudDocs-Reposit-rios-app-previando/0f6635df-41a2-4d64-a58f-cc63d43ac2ac/tool-results/b8qnvr7mi.txt)",
+      "WebSearch",
+      "WebFetch(domain:react-pdf.org)",
+      "WebFetch(domain:www.npmjs.com)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:benhur-martins.medium.com)",
+      "Bash(grep -E \"^public$\")"
+    ]
+  }
+}

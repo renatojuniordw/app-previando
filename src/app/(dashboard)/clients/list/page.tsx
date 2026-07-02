@@ -7,6 +7,7 @@ import { ClientSwitcher } from '@/components/ClientSwitcher'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { maskCPF } from '@/lib/sanitize'
+import { formatCPF, formatPhone, stripNonDigits } from '@/lib/masks'
 import { formatDate } from '@/lib/utils'
 import { Modal } from '@/components/ui/Modal'
 import { useForm } from 'react-hook-form'
@@ -17,6 +18,7 @@ import { useToast } from '@/store/toast'
 import { Search, Plus, User, FileText, Phone, Mail, AlertCircle, Share2, Upload } from 'lucide-react'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { ActionsDropdown } from '@/components/ui/ActionsDropdown'
+import { DatePicker } from '@/components/ui/DatePicker'
 
 interface Client {
   id: string
@@ -65,12 +67,16 @@ export default function ClientsListPage() {
   const [creating, setCreating] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [error, setError] = useState('')
+  const [cpfRaw, setCpfRaw] = useState('')
+  const [phoneRaw, setPhoneRaw] = useState('')
   const { addToast } = useToast()
 
   const {
     register,
     handleSubmit,
     reset,
+    setValue,
+    watch,
     formState: { errors },
   } = useForm<CreateForm>({ resolver: zodResolver(createSchema) })
 
@@ -100,10 +106,13 @@ export default function ClientsListPage() {
     try {
       await api.post('/clients', {
         ...data,
+        cpf: stripNonDigits(data.cpf),
         birthDate: new Date(data.birthDate).toISOString(),
       })
       setShowModal(false)
       reset()
+      setCpfRaw('')
+      setPhoneRaw('')
       addToast({ type: 'success', title: 'Cliente cadastrado', message: `${data.name} foi adicionado à sua base.` })
       load()
     } catch (err: unknown) {
@@ -315,7 +324,7 @@ export default function ClientsListPage() {
             />
             <Input
               label="Telefone"
-              value={editingClient?.phone ?? ''}
+              value={formatPhone(stripNonDigits(editingClient?.phone ?? ''))}
               onChange={(e) => setEditingClient((prev) => prev ? { ...prev, phone: e.target.value } : null)}
             />
           </div>
@@ -386,14 +395,19 @@ export default function ClientsListPage() {
           <div className="grid grid-cols-2 gap-4">
             <Input
               label="CPF"
-              {...register('cpf')}
+              value={formatCPF(cpfRaw)}
+              onChange={(e) => {
+                const raw = stripNonDigits(e.target.value).slice(0, 11)
+                setCpfRaw(raw)
+                setValue('cpf', formatCPF(raw))
+              }}
               error={errors.cpf?.message}
               placeholder="000.000.000-00"
             />
-            <Input
+            <DatePicker
               label="Data de nascimento"
-              type="date"
-              {...register('birthDate')}
+              value={watch('birthDate') ?? ''}
+              onChange={(d: Date | null) => setValue('birthDate', d ? d.toISOString().split('T')[0] : '', { shouldValidate: true })}
               error={errors.birthDate?.message}
             />
           </div>
@@ -401,7 +415,12 @@ export default function ClientsListPage() {
           <div className="grid grid-cols-2 gap-4">
             <Input
               label="WhatsApp / Telefone"
-              {...register('phone')}
+              value={formatPhone(phoneRaw)}
+              onChange={(e) => {
+                const raw = stripNonDigits(e.target.value).slice(0, 11)
+                setPhoneRaw(raw)
+                setValue('phone', formatPhone(raw))
+              }}
               placeholder="(11) 99999-9999"
             />
             <Input

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
+import { CurrencyInput } from '@/components/ui/CurrencyInput'
 import api from '@/lib/api'
 
 interface BpcAnalysis {
@@ -176,13 +177,10 @@ export function BpcForm({ caseId, analysis, clientBirthDate, onSave, saving }: B
           <div className="md:col-span-1 hidden md:block" />
 
           <div>
-            <label className="neo-label">Renda Familiar (R$)</label>
-            <input
-              type="number"
-              step="0.01"
-              value={rendaFamiliar}
-              onChange={(e) => setRendaFamiliar(e.target.value)}
-              className="w-full neo-input font-sans text-sm"
+            <CurrencyInput
+              value={rendaFamiliar ? parseFloat(rendaFamiliar) : ''}
+              onChange={(val) => setRendaFamiliar(String(val))}
+              label="Renda Familiar (R$)"
               placeholder="Renda total da família"
             />
           </div>

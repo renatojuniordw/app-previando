@@ -76,7 +76,7 @@ export default function LoginPage() {
       <button
         onClick={handleGoogle}
         disabled={googleLoading}
-        className="w-full flex items-center justify-center gap-3 px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-slate-700 font-sans font-medium hover:bg-slate-50 hover:text-slate-900 shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-slate-200 mb-6"
+        className="w-full flex items-center justify-center gap-3 px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-slate-700 font-sans font-medium hover:bg-slate-50 hover:text-slate-900 shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-amber-500/50 mb-6"
       >
         {googleLoading ? (
           <span className="flex items-center gap-2">
@@ -148,14 +148,14 @@ export default function LoginPage() {
         </div>
 
         <div className="flex justify-end">
-          <Link href="/forgot-password" className="font-sans text-sm text-amber-600 hover:text-amber-700 font-medium transition-colors">
+          <Link href="/forgot-password" className="font-sans text-sm text-amber-700 hover:text-amber-800 font-medium transition-colors">
             Esqueci minha senha
           </Link>
         </div>
 
         <button
           type="submit"
-          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-sm font-semibold shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-amber-500/20 mt-2"
+          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-sm font-semibold shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:ring-offset-2 mt-2"
           disabled={loading}
         >
           {loading ? (
@@ -174,7 +174,7 @@ export default function LoginPage() {
 
       <p className="text-center font-sans text-sm text-slate-600 mt-8">
         Ainda não tem uma conta?{' '}
-        <Link href="/register" className="text-amber-600 font-semibold hover:text-amber-700 transition-colors">
+        <Link href="/register" className="text-amber-700 font-semibold hover:text-amber-800 transition-colors">
           Cadastre-se grátis
         </Link>
       </p>
