@@ -5,20 +5,14 @@ import Link from 'next/link'
 import api from '@/lib/api'
 import { ClientSwitcher } from '@/components/ClientSwitcher'
 import { Badge } from '@/components/ui/Badge'
-import { Button } from '@/components/ui/Button'
+
 import { maskCPF } from '@/lib/sanitize'
-import { formatCPF, formatPhone, stripNonDigits } from '@/lib/masks'
 import { formatDate } from '@/lib/utils'
-import { Modal } from '@/components/ui/Modal'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
-import { Input } from '@/components/ui/Input'
-import { useToast } from '@/store/toast'
-import { Search, Plus, User, FileText, Phone, Mail, AlertCircle, Share2, Upload } from 'lucide-react'
+
+import { Search, Plus, User, FileText, Phone, Mail, Share2, Upload } from 'lucide-react'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { ActionsDropdown } from '@/components/ui/ActionsDropdown'
-import { DatePicker } from '@/components/ui/DatePicker'
+import { DeleteClientModal } from '@/components/client/DeleteClientModal'
 
 interface Client {
   id: string
@@ -26,15 +20,6 @@ interface Client {
   cpf: string
   phone: string | null
   email: string | null
-  maritalStatus: string | null
-  profession: string | null
-  street: string | null
-  streetNumber: string | null
-  complement: string | null
-  neighborhood: string | null
-  city: string | null
-  state: string | null
-  zipCode: string | null
   priority: 'CRITICAL' | 'ATTENTION' | 'NORMAL'
   cases: Array<{ id: string; status: string; benefitType: string }>
   createdAt: string
@@ -52,65 +37,13 @@ const PRIORITY_LABELS: Record<string, string> = {
   NORMAL: 'Normal',
 }
 
-const ESTADOS = [
-  'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO',
-  'MA', 'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI',
-  'RJ', 'RN', 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO',
-]
-
-const ESTADO_CIVIL = [
-  { value: 'solteiro(a)', label: 'Solteiro(a)' },
-  { value: 'casado(a)', label: 'Casado(a)' },
-  { value: 'divorciado(a)', label: 'Divorciado(a)' },
-  { value: 'viuvo(a)', label: 'Viúvo(a)' },
-  { value: 'uniao estavel', label: 'União Estável' },
-]
-
-const createSchema = z.object({
-  name: z.string().min(2, 'Mínimo 2 caracteres').max(100),
-  cpf: z.string().min(11, 'CPF inválido').max(14, 'CPF inválido'),
-  birthDate: z.string().min(1, 'Data obrigatória'),
-  phone: z.string().optional(),
-  email: z.string().email('Email inválido').optional().or(z.literal('')),
-  maritalStatus: z.string().optional().nullable(),
-  profession: z.string().optional().nullable(),
-  street: z.string().optional().nullable(),
-  streetNumber: z.string().optional().nullable(),
-  complement: z.string().optional().nullable(),
-  neighborhood: z.string().optional().nullable(),
-  city: z.string().optional().nullable(),
-  state: z.string().optional().nullable(),
-  zipCode: z.string().optional().nullable(),
-  priority: z.enum(['CRITICAL', 'ATTENTION', 'NORMAL']).default('NORMAL'),
-})
-
-type CreateForm = z.infer<typeof createSchema>
-
 export default function ClientsListPage() {
   const [clients, setClients] = useState<Client[]>([])
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
-  const [showModal, setShowModal] = useState(false)
-  const [showEditModal, setShowEditModal] = useState(false)
-  const [editingClient, setEditingClient] = useState<Client | null>(null)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [deletingClient, setDeletingClient] = useState<Client | null>(null)
-  const [creating, setCreating] = useState(false)
-  const [deleting, setDeleting] = useState(false)
-  const [error, setError] = useState('')
-  const [cpfRaw, setCpfRaw] = useState('')
-  const [phoneRaw, setPhoneRaw] = useState('')
-  const { addToast } = useToast()
-
-  const {
-    register,
-    handleSubmit,
-    reset,
-    setValue,
-    watch,
-    formState: { errors },
-  } = useForm<CreateForm>({ resolver: zodResolver(createSchema) })
 
   const load = (q?: string) => {
     setLoading(true)
@@ -130,59 +63,6 @@ export default function ClientsListPage() {
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(e.target.value)
     load(e.target.value)
-  }
-
-  const onSubmit = async (data: CreateForm) => {
-    setCreating(true)
-    setError('')
-    try {
-      await api.post('/clients', {
-        ...data,
-        cpf: stripNonDigits(data.cpf),
-        birthDate: new Date(data.birthDate).toISOString(),
-        maritalStatus: data.maritalStatus || null,
-        profession: data.profession || null,
-        street: data.street || null,
-        streetNumber: data.streetNumber || null,
-        complement: data.complement || null,
-        neighborhood: data.neighborhood || null,
-        city: data.city || null,
-        state: data.state || null,
-        zipCode: data.zipCode || null,
-      })
-      setShowModal(false)
-      reset()
-      setCpfRaw('')
-      setPhoneRaw('')
-      addToast({ type: 'success', title: 'Cliente cadastrado', message: `${data.name} foi adicionado à sua base.` })
-      load()
-    } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error ?? 'Erro ao criar cliente.'
-      setError(msg)
-    } finally {
-      setCreating(false)
-    }
-  }
-
-  const handleEdit = (client: Client) => {
-    setEditingClient(client)
-    setShowEditModal(true)
-  }
-
-  const handleDeleteConfirm = async () => {
-    if (!deletingClient) return
-    setDeleting(true)
-    try {
-      await api.delete(`/clients/${deletingClient.id}`)
-      addToast({ type: 'success', title: 'Cliente excluído', message: `${deletingClient.name} foi removido.` })
-      setShowDeleteModal(false)
-      setDeletingClient(null)
-      load()
-    } catch {
-      addToast({ type: 'error', title: 'Erro', message: 'Não foi possível excluir o cliente.' })
-    } finally {
-      setDeleting(false)
-    }
   }
 
   return (
@@ -205,10 +85,10 @@ export default function ClientsListPage() {
               className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-sans focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all placeholder:text-slate-400 text-slate-900 shadow-sm"
             />
           </div>
-          <Button onClick={() => setShowModal(true)} className="shrink-0 flex items-center gap-2 bg-amber-600 hover:bg-amber-700 text-white border-amber-600">
+          <Link href="/clients/new" className="shrink-0 inline-flex items-center justify-center gap-2 px-4 py-2 font-sans font-medium text-sm tracking-wide border rounded-md transition-colors duration-200 bg-amber-600 hover:bg-amber-700 text-white border-amber-600">
             <Plus className="w-4 h-4" />
             Novo Cliente
-          </Button>
+          </Link>
           <Link
             href="/clients/import"
             className="shrink-0 inline-flex items-center justify-center gap-2 px-4 py-2 font-sans font-medium text-sm tracking-wide border rounded-md transition-colors duration-200 bg-white text-slate-900 border-slate-300 hover:bg-slate-50"
@@ -239,10 +119,10 @@ export default function ClientsListPage() {
             <p className="font-sans text-slate-500 text-sm mt-1 max-w-sm">
               Comece adicionando seu primeiro cliente para gerenciar casos e documentos.
             </p>
-            <Button onClick={() => setShowModal(true)} className="mt-6 flex items-center gap-2 bg-amber-600 hover:bg-amber-700 text-white border-amber-600">
+            <Link href="/clients/new" className="mt-6 inline-flex items-center justify-center gap-2 px-6 py-2.5 font-sans font-medium text-sm tracking-wide border rounded-md transition-colors duration-200 bg-amber-600 hover:bg-amber-700 text-white border-amber-600">
               <Plus className="w-4 h-4" />
               Cadastrar Primeiro Cliente
-            </Button>
+            </Link>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -327,7 +207,7 @@ export default function ClientsListPage() {
                           actions={[
                             {
                               label: 'Editar cliente',
-                              onClick: () => handleEdit(client),
+                              onClick: () => window.location.href = `/clients/list/${client.id}/edit`,
                             },
                             {
                               label: 'Excluir cliente',
@@ -349,270 +229,12 @@ export default function ClientsListPage() {
         )}
       </div>
 
-      {/* Modal de Editar Cliente */}
-      <Modal open={showEditModal} onClose={() => { setShowEditModal(false); setEditingClient(null) }} title="Editar Cliente">
-        <form className="space-y-5">
-          <Input
-            label="Nome completo"
-            value={editingClient?.name ?? ''}
-            onChange={(e) => setEditingClient((prev) => prev ? { ...prev, name: e.target.value } : null)}
-          />
-          <div className="grid grid-cols-2 gap-4">
-            <Input
-              label="CPF"
-              value={editingClient?.cpf ?? ''}
-              disabled
-            />
-            <Input
-              label="Telefone"
-              value={formatPhone(stripNonDigits(editingClient?.phone ?? ''))}
-              onChange={(e) => setEditingClient((prev) => prev ? { ...prev, phone: e.target.value } : null)}
-            />
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="neo-label">Estado Civil</label>
-              <select
-                value={editingClient?.maritalStatus ?? ''}
-                onChange={(e) => setEditingClient((prev) => prev ? { ...prev, maritalStatus: e.target.value } : null)}
-                className="neo-input"
-              >
-                <option value="">Selecione...</option>
-                {ESTADO_CIVIL.map((e) => (
-                  <option key={e.value} value={e.value}>{e.label}</option>
-                ))}
-              </select>
-            </div>
-            <Input
-              label="Profissão"
-              value={editingClient?.profession ?? ''}
-              onChange={(e) => setEditingClient((prev) => prev ? { ...prev, profession: e.target.value } : null)}
-            />
-          </div>
-          <div className="border-t border-slate-100 pt-4">
-            <p className="font-sans text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">Endereço</p>
-            <div className="grid grid-cols-[1fr_100px] gap-4">
-              <Input
-                label="Logradouro"
-                value={editingClient?.street ?? ''}
-                onChange={(e) => setEditingClient((prev) => prev ? { ...prev, street: e.target.value } : null)}
-              />
-              <Input
-                label="Número"
-                value={editingClient?.streetNumber ?? ''}
-                onChange={(e) => setEditingClient((prev) => prev ? { ...prev, streetNumber: e.target.value } : null)}
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4 mt-4">
-              <Input
-                label="Complemento"
-                value={editingClient?.complement ?? ''}
-                onChange={(e) => setEditingClient((prev) => prev ? { ...prev, complement: e.target.value } : null)}
-              />
-              <Input
-                label="Bairro"
-                value={editingClient?.neighborhood ?? ''}
-                onChange={(e) => setEditingClient((prev) => prev ? { ...prev, neighborhood: e.target.value } : null)}
-              />
-            </div>
-            <div className="grid grid-cols-[1fr_100px_120px] gap-4 mt-4">
-              <Input
-                label="Cidade"
-                value={editingClient?.city ?? ''}
-                onChange={(e) => setEditingClient((prev) => prev ? { ...prev, city: e.target.value } : null)}
-              />
-              <div>
-                <label className="neo-label">UF</label>
-                <select
-                  value={editingClient?.state ?? ''}
-                  onChange={(e) => setEditingClient((prev) => prev ? { ...prev, state: e.target.value } : null)}
-                  className="neo-input"
-                >
-                  <option value="">UF</option>
-                  {ESTADOS.map((e) => (
-                    <option key={e} value={e}>{e}</option>
-                  ))}
-                </select>
-              </div>
-              <Input
-                label="CEP"
-                value={editingClient?.zipCode ?? ''}
-                onChange={(e) => setEditingClient((prev) => prev ? { ...prev, zipCode: e.target.value } : null)}
-              />
-            </div>
-          </div>
-          <div className="flex gap-3">
-            <Button type="button" variant="outline" onClick={() => { setShowEditModal(false); setEditingClient(null) }} className="flex-1">
-              Cancelar
-            </Button>
-            <Button type="button" className="flex-1 bg-amber-600 text-white" onClick={async () => {
-              if (!editingClient) return
-              if (!editingClient.name.trim()) {
-                addToast({ type: 'error', title: 'Validação', message: 'O nome do cliente é obrigatório.' });
-                return
-              }
-              try {
-                await api.put(`/clients/${editingClient.id}`, {
-                  name: editingClient.name,
-                  phone: editingClient.phone,
-                  maritalStatus: editingClient.maritalStatus || null,
-                  profession: editingClient.profession || null,
-                  street: editingClient.street || null,
-                  streetNumber: editingClient.streetNumber || null,
-                  complement: editingClient.complement || null,
-                  neighborhood: editingClient.neighborhood || null,
-                  city: editingClient.city || null,
-                  state: editingClient.state || null,
-                  zipCode: editingClient.zipCode || null,
-                })
-                addToast({ type: 'success', title: 'Cliente atualizado' })
-                setShowEditModal(false)
-                setEditingClient(null)
-                load()
-              } catch {
-                addToast({ type: 'error', title: 'Erro', message: 'Não foi possível atualizar o cliente.' })
-              }
-            }}>
-              Salvar Alterações
-            </Button>
-          </div>
-        </form>
-      </Modal>
-
-      {/* Modal de Excluir Cliente */}
-      <Modal open={showDeleteModal} onClose={() => { setShowDeleteModal(false); setDeletingClient(null) }} title="Excluir Cliente?">
-        <div className="space-y-4">
-          <div className="border border-red-200 bg-red-50 rounded-xl p-4 flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
-            <div>
-              <p className="font-sans text-sm font-bold text-red-800">Atenção: Esta ação é irreversível!</p>
-              <p className="font-sans text-sm text-red-700 mt-1">
-                Todos os dados de <strong>{deletingClient?.name}</strong>, incluindo casos, cálculos e documentos, serão excluídos permanentemente.
-              </p>
-            </div>
-          </div>
-          <div className="flex gap-3">
-            <Button onClick={handleDeleteConfirm} loading={deleting} variant="danger" className="flex-1">
-              Sim, Excluir Tudo
-            </Button>
-            <Button variant="outline" onClick={() => { setShowDeleteModal(false); setDeletingClient(null) }} className="flex-1">
-              Cancelar
-            </Button>
-          </div>
-        </div>
-      </Modal>
-
-      <Modal open={showModal} onClose={() => setShowModal(false)} title="Novo Cliente">
-        {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg font-sans font-medium text-sm text-red-600 flex items-start gap-2">
-            <AlertCircle className="w-5 h-5 shrink-0" />
-            <p>{error}</p>
-          </div>
-        )}
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-          <Input
-            label="Nome completo"
-            {...register('name')}
-            error={errors.name?.message}
-            placeholder="Ex: João da Silva"
-          />
-          
-          <div className="grid grid-cols-2 gap-4">
-            <Input
-              label="CPF"
-              value={formatCPF(cpfRaw)}
-              onChange={(e) => {
-                const raw = stripNonDigits(e.target.value).slice(0, 11)
-                setCpfRaw(raw)
-                setValue('cpf', formatCPF(raw))
-              }}
-              error={errors.cpf?.message}
-              placeholder="000.000.000-00"
-            />
-            <DatePicker
-              label="Data de nascimento"
-              value={watch('birthDate') ?? ''}
-              onChange={(d: Date | null) => setValue('birthDate', d ? d.toISOString().split('T')[0] : '', { shouldValidate: true })}
-              error={errors.birthDate?.message}
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <Input
-              label="WhatsApp / Telefone"
-              value={formatPhone(phoneRaw)}
-              onChange={(e) => {
-                const raw = stripNonDigits(e.target.value).slice(0, 11)
-                setPhoneRaw(raw)
-                setValue('phone', formatPhone(raw))
-              }}
-              placeholder="(11) 99999-9999"
-            />
-            <Input
-              label="Email (opcional)"
-              type="email"
-              {...register('email')}
-              error={errors.email?.message}
-              placeholder="email@exemplo.com"
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="neo-label">Estado Civil</label>
-              <select {...register('maritalStatus')} className="neo-input">
-                <option value="">Selecione...</option>
-                {ESTADO_CIVIL.map((e) => (
-                  <option key={e.value} value={e.value}>{e.label}</option>
-                ))}
-              </select>
-            </div>
-            <Input label="Profissão" {...register('profession')} placeholder="Ex: Aposentado" />
-          </div>
-
-          <div className="border-t border-slate-100 pt-4">
-            <p className="font-sans text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">Endereço</p>
-            <div className="grid grid-cols-[1fr_100px] gap-4">
-              <Input label="Logradouro" {...register('street')} placeholder="Rua, Avenida..." />
-              <Input label="Número" {...register('streetNumber')} placeholder="S/N" />
-            </div>
-            <div className="grid grid-cols-2 gap-4 mt-4">
-              <Input label="Complemento" {...register('complement')} placeholder="Apto, Bloco..." />
-              <Input label="Bairro" {...register('neighborhood')} placeholder="Bairro" />
-            </div>
-            <div className="grid grid-cols-[1fr_100px_120px] gap-4 mt-4">
-              <Input label="Cidade" {...register('city')} placeholder="Cidade" />
-              <div>
-                <label className="neo-label">UF</label>
-                <select {...register('state')} className="neo-input">
-                  <option value="">UF</option>
-                  {ESTADOS.map((e) => (
-                    <option key={e} value={e}>{e}</option>
-                  ))}
-                </select>
-              </div>
-              <Input label="CEP" {...register('zipCode')} placeholder="00000-000" />
-            </div>
-          </div>
-
-          <div>
-            <label className="neo-label">Prioridade de Atendimento</label>
-            <select {...register('priority')} className="neo-input mt-1">
-              <option value="NORMAL">Normal - Padrão</option>
-              <option value="ATTENTION">Atenção - Prioridade Média</option>
-              <option value="CRITICAL">Crítico - Prioridade Alta (Urgente)</option>
-            </select>
-          </div>
-          <div className="flex gap-3 pt-4 mt-6 border-t border-slate-100">
-            <Button type="button" variant="outline" onClick={() => setShowModal(false)} className="flex-1 border-slate-300 text-slate-700">
-              Cancelar
-            </Button>
-            <Button type="submit" loading={creating} className="flex-1 bg-amber-600 hover:bg-amber-700 border-amber-600 text-white">
-              Cadastrar Cliente
-            </Button>
-          </div>
-        </form>
-      </Modal>
+      <DeleteClientModal
+        open={showDeleteModal}
+        onClose={() => { setShowDeleteModal(false); setDeletingClient(null) }}
+        client={deletingClient}
+        onDeleted={load}
+      />
     </div>
     </ErrorBoundary>
   )

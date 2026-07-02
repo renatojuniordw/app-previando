@@ -46,7 +46,8 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 
     const safe = { ...client } as Record<string, unknown>
     delete safe.cpfHash
-    return NextResponse.json({ client: { ...safe, cpf: '***.***.**-**' } })
+    const maskCpf = req.nextUrl.searchParams.get('mask') !== 'false'
+    return NextResponse.json({ client: { ...safe, cpf: maskCpf ? '***.***.**-**' : (client as Record<string, unknown>).cpf } })
   } catch (err) {
     return handleApiError(err)
   }
