@@ -13,6 +13,15 @@ const createSchema = z.object({
   birthDate: z.string().datetime(),
   phone: z.string().optional(),
   email: z.string().email().optional().or(z.literal('')),
+  maritalStatus: z.string().optional().nullable(),
+  profession: z.string().optional().nullable(),
+  street: z.string().optional().nullable(),
+  streetNumber: z.string().optional().nullable(),
+  complement: z.string().optional().nullable(),
+  neighborhood: z.string().optional().nullable(),
+  city: z.string().optional().nullable(),
+  state: z.string().optional().nullable(),
+  zipCode: z.string().optional().nullable(),
   priority: z.enum(['CRITICAL', 'ATTENTION', 'NORMAL']).default('NORMAL'),
   notes: z.string().max(2000).optional(),
 })
@@ -86,7 +95,7 @@ export async function POST(req: NextRequest) {
 
     await guardClientLimit(session.user.id, session.user.plan)
 
-    const { name, cpf, birthDate, phone, email, priority, notes } = parsed.data
+    const { name, cpf, birthDate, phone, email, maritalStatus, profession, street, streetNumber, complement, neighborhood, city, state, zipCode, priority, notes } = parsed.data
 
     const cpfHash = hashCPF(cpf)
 
@@ -107,6 +116,15 @@ export async function POST(req: NextRequest) {
         birthDate: new Date(birthDate),
         phone: phone ? sanitizePhone(phone) : null,
         email: email || null,
+        maritalStatus: maritalStatus || null,
+        profession: profession || null,
+        street: street || null,
+        streetNumber: streetNumber || null,
+        complement: complement || null,
+        neighborhood: neighborhood || null,
+        city: city || null,
+        state: state || null,
+        zipCode: zipCode || null,
         priority,
         notes: notes ? sanitizeInput(notes) : null,
       },

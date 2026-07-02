@@ -63,7 +63,17 @@ model User {
   image         String?
   password      String?
   oabNumber     String?
+  cpf           String?
   phone         String?
+  maritalStatus String?
+  profession    String?
+  street        String?
+  streetNumber  String?
+  complement    String?
+  neighborhood  String?
+  city          String?
+  state         String?
+  zipCode       String?
   plan          Plan       @default(FREE)
   planStatus    PlanStatus @default(ACTIVE)
 
@@ -177,13 +187,22 @@ model Client {
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  name      String
-  cpfHash   String // HMAC-SHA256 — nunca plain text
-  birthDate DateTime
-  phone     String? // Formato: 5511999999999 (DDI sem +)
-  email     String?
-  priority  Priority @default(NORMAL)
-  notes     String?
+  name          String
+  cpfHash       String // HMAC-SHA256 — nunca plain text
+  birthDate     DateTime
+  phone         String? // Formato: 5511999999999 (DDI sem +)
+  email         String?
+  maritalStatus String?
+  profession    String?
+  street        String?
+  streetNumber  String?
+  complement    String?
+  neighborhood  String?
+  city          String?
+  state         String?
+  zipCode       String?
+  priority      Priority @default(NORMAL)
+  notes         String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

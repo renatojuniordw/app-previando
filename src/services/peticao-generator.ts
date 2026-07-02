@@ -10,10 +10,16 @@ interface PeticaoInput {
   clientName: string
   clientCpf: string
   clientBirthDate: string
-  benefitType: string
-  benefitTypeLabel: string
+  clientMaritalStatus?: string | null
+  clientProfession?: string | null
+  clientCity?: string | null
   lawyerName: string
   lawyerOab: string | null
+  lawyerMaritalStatus?: string | null
+  lawyerProfession?: string | null
+  lawyerCity?: string | null
+  benefitType: string
+  benefitTypeLabel: string
   cnisSummary?: string
   calculation?: {
     modalidade: string
@@ -68,16 +74,27 @@ CÁLCULO REALIZADO:
     ? `\nRESUMO DO CNIS:\n${sanitizeForAI(input.cnisSummary, 5000)}`
     : ''
 
+  const clientQual = [
+    `Nome: ${sanitizeForAI(input.clientName)}`,
+    input.clientMaritalStatus ? `Estado Civil: ${input.clientMaritalStatus}` : null,
+    input.clientProfession ? `Profissão: ${input.clientProfession}` : null,
+    `CPF: ${input.clientCpf}`,
+    `Data de Nascimento: ${input.clientBirthDate}`,
+    input.clientCity ? `Residente em: ${sanitizeForAI(input.clientCity)}` : null,
+  ].filter(Boolean).join('\n')
+
+  const lawyerQual = [
+    `Nome: ${sanitizeForAI(input.lawyerName)}`,
+    input.lawyerOab ? `OAB: ${input.lawyerOab}` : null,
+  ].filter(Boolean).join('\n')
+
   const userPrompt = `Gere uma petição inicial completa com os dados abaixo:
 
 QUALIFICAÇÃO DO SEGURADO:
-Nome: ${sanitizeForAI(input.clientName)}
-CPF: ${input.clientCpf}
-Data de Nascimento: ${input.clientBirthDate}
+${clientQual}
 
 ADVOGADO:
-Nome: ${sanitizeForAI(input.lawyerName)}
-OAB: ${input.lawyerOab ?? 'N/A'}
+${lawyerQual}
 
 TIPO DE BENEFÍCIO: ${input.benefitTypeLabel} (${input.benefitType})
 ${calcText}

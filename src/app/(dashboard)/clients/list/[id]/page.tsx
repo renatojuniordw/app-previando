@@ -38,6 +38,15 @@ interface ClientDetail {
   birthDate: string
   phone: string | null
   email: string | null
+  maritalStatus: string | null
+  profession: string | null
+  street: string | null
+  streetNumber: string | null
+  complement: string | null
+  neighborhood: string | null
+  city: string | null
+  state: string | null
+  zipCode: string | null
   priority: string
   notes: string | null
   cases: Array<{
@@ -160,6 +169,26 @@ export default function ClientDetailPage() {
           <div>
             <span className="text-slate-500 text-xs font-medium uppercase tracking-wide">Email</span>
             <p className="text-slate-900 font-medium">{client.email ?? '—'}</p>
+          </div>
+          <div>
+            <span className="text-slate-500 text-xs font-medium uppercase tracking-wide">Estado Civil</span>
+            <p className="text-slate-900 font-medium">{client.maritalStatus ? client.maritalStatus.charAt(0).toUpperCase() + client.maritalStatus.slice(1) : '—'}</p>
+          </div>
+          <div>
+            <span className="text-slate-500 text-xs font-medium uppercase tracking-wide">Profissão</span>
+            <p className="text-slate-900 font-medium">{client.profession ?? '—'}</p>
+          </div>
+          <div>
+            <span className="text-slate-500 text-xs font-medium uppercase tracking-wide">Endereço</span>
+            <p className="text-slate-900 font-medium">
+              {[client.street, client.streetNumber].filter(Boolean).join(', ')}
+              {client.complement ? ` - ${client.complement}` : ''}
+              {client.neighborhood ? `, ${client.neighborhood}` : ''}
+              {client.city ? `, ${client.city}` : ''}
+              {client.state ? ` - ${client.state}` : ''}
+              {client.zipCode ? `, CEP ${client.zipCode}` : ''}
+              {![client.street, client.city].some(Boolean) && '—'}
+            </p>
           </div>
           <div>
             <span className="text-slate-500 text-xs font-medium uppercase tracking-wide">Prioridade</span>

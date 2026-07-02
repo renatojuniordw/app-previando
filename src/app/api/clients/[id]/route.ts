@@ -12,6 +12,15 @@ const updateSchema = z.object({
   birthDate: z.string().datetime().optional(),
   phone: z.string().optional(),
   email: z.string().email().optional().or(z.literal('')),
+  maritalStatus: z.string().optional().nullable(),
+  profession: z.string().optional().nullable(),
+  street: z.string().optional().nullable(),
+  streetNumber: z.string().optional().nullable(),
+  complement: z.string().optional().nullable(),
+  neighborhood: z.string().optional().nullable(),
+  city: z.string().optional().nullable(),
+  state: z.string().optional().nullable(),
+  zipCode: z.string().optional().nullable(),
   priority: z.enum(['CRITICAL', 'ATTENTION', 'NORMAL']).optional(),
   notes: z.string().max(2000).optional(),
 })
@@ -67,6 +76,15 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     if (parsed.data.birthDate) data.birthDate = new Date(parsed.data.birthDate)
     if (parsed.data.phone !== undefined) data.phone = parsed.data.phone ? sanitizePhone(parsed.data.phone) : null
     if (parsed.data.email !== undefined) data.email = parsed.data.email || null
+    if (parsed.data.maritalStatus !== undefined) data.maritalStatus = parsed.data.maritalStatus || null
+    if (parsed.data.profession !== undefined) data.profession = parsed.data.profession || null
+    if (parsed.data.street !== undefined) data.street = parsed.data.street || null
+    if (parsed.data.streetNumber !== undefined) data.streetNumber = parsed.data.streetNumber || null
+    if (parsed.data.complement !== undefined) data.complement = parsed.data.complement || null
+    if (parsed.data.neighborhood !== undefined) data.neighborhood = parsed.data.neighborhood || null
+    if (parsed.data.city !== undefined) data.city = parsed.data.city || null
+    if (parsed.data.state !== undefined) data.state = parsed.data.state || null
+    if (parsed.data.zipCode !== undefined) data.zipCode = parsed.data.zipCode || null
     if (parsed.data.priority) data.priority = parsed.data.priority
     if (parsed.data.notes !== undefined) data.notes = parsed.data.notes ? sanitizeInput(parsed.data.notes) : null
 
