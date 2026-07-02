@@ -20,7 +20,7 @@ import {
   Trash2,
   ChevronDown,
   ChevronUp,
-  Loader2
+  Loader2,
 } from 'lucide-react'
 
 interface InputParams {
@@ -82,7 +82,9 @@ const formatCurrency = (val: string | number) => {
 
 const formatPercentage = (val: string | number | undefined | null) => {
   if (val === undefined || val === null) return 'N/A'
-  return new Intl.NumberFormat('pt-BR', { style: 'percent', minimumFractionDigits: 2 }).format(Number(val))
+  return new Intl.NumberFormat('pt-BR', { style: 'percent', minimumFractionDigits: 2 }).format(
+    Number(val)
+  )
 }
 
 export default function CalculatorPage() {
@@ -103,14 +105,14 @@ export default function CalculatorPage() {
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const [creating, setCreating] = useState(false)
-  
+
   // Parâmetros de Entrada Visual
   const [modalidade, setModalidade] = useState('APOSENTADORIA_IDADE')
   const [gender, setGender] = useState<'M' | 'F'>('F')
   const [dib, setDib] = useState(new Date().toISOString().split('T')[0])
   const [tempoEspecialAnos, setTempoEspecialAnos] = useState(0)
   const [dependentesPensao, setDependentesPensao] = useState(1)
-  
+
   const { addToast } = useToast()
   const [expandedCalc, setExpandedCalc] = useState<string | null>(null)
   const [errorMessage, setErrorMessage] = useState('')
@@ -125,7 +127,10 @@ export default function CalculatorPage() {
       setCalculations(rCalc.data.calculations ?? [])
       setModalidades(rModalidades.data.modalidades ?? [])
 
-      if (rCnis.data?.cnisDocument?.processingStatus === 'COMPLETED' || rCnis.data?.cnisDocument?.processingStatus === 'SUMMARY_READY') {
+      if (
+        rCnis.data?.cnisDocument?.processingStatus === 'COMPLETED' ||
+        rCnis.data?.cnisDocument?.processingStatus === 'SUMMARY_READY'
+      ) {
         setCnisDocument(rCnis.data.cnisDocument)
       }
     } catch {
@@ -140,7 +145,10 @@ export default function CalculatorPage() {
   }, [load])
 
   const modalidadeLabels = Object.fromEntries(
-    (modalidades.length > 0 ? modalidades : MODALIDADES_PADRAO).map(({ codigo, label }) => [codigo, label])
+    (modalidades.length > 0 ? modalidades : MODALIDADES_PADRAO).map(({ codigo, label }) => [
+      codigo,
+      label,
+    ])
   )
 
   const mapEnglishToPortugueseModality = (code: string): string => {
@@ -199,20 +207,21 @@ export default function CalculatorPage() {
 
   const uniqueModalidades = Array.from(
     new Map(
-      (modalidades.length > 0 ? modalidades : MODALIDADES_PADRAO)
-        .map((item) => {
-          const apiCode = mapEnglishToPortugueseModality(item.codigo)
-          return [apiCode, { ...item, codigo: apiCode }]
-        })
+      (modalidades.length > 0 ? modalidades : MODALIDADES_PADRAO).map((item) => {
+        const apiCode = mapEnglishToPortugueseModality(item.codigo)
+        return [apiCode, { ...item, codigo: apiCode }]
+      })
     ).values()
   )
 
   const handleCreate = async () => {
     setErrorMessage('')
-    
+
     // Validações básicas
     if (!cnisDocument) {
-      setErrorMessage('Para realizar o cálculo, primeiro envie e processe o extrato do CNIS do cliente na aba CNIS.')
+      setErrorMessage(
+        'Para realizar o cálculo, primeiro envie e processe o extrato do CNIS do cliente na aba CNIS.'
+      )
       return
     }
 
@@ -231,7 +240,11 @@ export default function CalculatorPage() {
       // Reseta formulários
       setTempoEspecialAnos(0)
       setDependentesPensao(1)
-      addToast({ type: 'success', title: 'Cálculo criado', message: 'O benefício foi calculado com sucesso.' })
+      addToast({
+        type: 'success',
+        title: 'Cálculo criado',
+        message: 'O benefício foi calculado com sucesso.',
+      })
       load()
     } catch (err) {
       const apiError = err as { response?: { data?: { error?: string } } }
@@ -244,7 +257,11 @@ export default function CalculatorPage() {
   const handleSelect = async (calcId: string) => {
     try {
       await api.patch(`/cases/${params.id}/calculations/${calcId}/select`)
-      addToast({ type: 'info', title: 'Cálculo selecionado', message: 'Usado como referência para relatórios.' })
+      addToast({
+        type: 'info',
+        title: 'Cálculo selecionado',
+        message: 'Usado como referência para relatórios.',
+      })
       load()
     } catch {
       addToast({ type: 'error', title: 'Erro', message: 'Não foi possível selecionar o cálculo.' })
@@ -252,6 +269,9 @@ export default function CalculatorPage() {
   }
 
   const handleDelete = async (calcId: string) => {
+    if (!window.confirm('Tem certeza que deseja excluir este cálculo? Esta ação não pode ser desfeita.')) {
+      return
+    }
     try {
       await api.delete(`/cases/${params.id}/calculations/${calcId}`)
       addToast({ type: 'success', title: 'Cálculo excluído' })
@@ -264,61 +284,78 @@ export default function CalculatorPage() {
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center py-20">
-        <Loader2 className="w-8 h-8 text-amber-500 animate-spin" />
-        <p className="font-sans font-medium text-slate-500 mt-4">Carregando painel de cálculos...</p>
+        <Loader2 className="h-8 w-8 animate-spin text-amber-500" />
+        <p className="mt-4 font-sans font-medium text-slate-500">
+          Carregando painel de cálculos...
+        </p>
       </div>
     )
   }
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto">
+    <div className="mx-auto max-w-4xl space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="font-serif font-bold text-2xl text-slate-900 tracking-tight">Painel de Cálculos</h2>
-          <p className="font-sans text-sm text-slate-500 mt-1">Realize cálculos de benefícios com base no CNIS.</p>
+          <h2 className="font-serif text-2xl font-bold tracking-tight text-slate-900">
+            Painel de Cálculos
+          </h2>
+          <p className="mt-1 font-sans text-sm text-slate-500">
+            Realize cálculos de benefícios com base no CNIS.
+          </p>
         </div>
         {calculations.length > 0 && (
           <Button
             onClick={() => {
               if (!cnisDocument) {
-                addToast({ type: 'error', title: 'CNIS necessário', message: 'Faça upload do CNIS para realizar os cálculos.' })
+                addToast({
+                  type: 'error',
+                  title: 'CNIS necessário',
+                  message: 'Faça upload do CNIS para realizar os cálculos.',
+                })
                 return
               }
               setShowModal(true)
             }}
-            className="bg-amber-600 hover:bg-amber-700 text-white flex items-center gap-2 shadow-sm font-semibold"
+            className="flex items-center gap-2 bg-amber-600 font-semibold text-white shadow-sm hover:bg-amber-700"
           >
-            <Scale className="w-4 h-4" />
+            <Scale className="h-4 w-4" />
             Novo Cálculo
           </Button>
         )}
       </div>
 
       {calculations.length === 0 ? (
-        <div className="py-20 flex flex-col items-center justify-center border border-dashed border-slate-300 bg-slate-50 rounded-2xl text-center">
-          <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center mb-4 border border-slate-200 shadow-sm">
-            <Scale className="w-8 h-8 text-slate-400" />
+        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-slate-50 py-20 text-center">
+          <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-slate-200 bg-white shadow-sm">
+            <Scale className="h-8 w-8 text-slate-400" />
           </div>
-          <h3 className="font-serif font-bold text-lg text-slate-900 mb-2">Nenhum Cálculo Realizado</h3>
-          <p className="font-sans text-sm text-slate-500 mb-6 max-w-md mx-auto">
-            Gere relatórios completos de RMI, RMA e elegibilidade jurídica para o cliente de forma visual e simples.
+          <h3 className="mb-2 font-serif text-lg font-bold text-slate-900">
+            Nenhum Cálculo Realizado
+          </h3>
+          <p className="mx-auto mb-6 max-w-md font-sans text-sm text-slate-500">
+            Gere relatórios completos de RMI, RMA e elegibilidade jurídica para o cliente de forma
+            visual e simples.
           </p>
           <Button
             onClick={() => {
               if (!cnisDocument) {
-                addToast({ type: 'error', title: 'CNIS necessário', message: 'Faça upload do CNIS para realizar os cálculos.' })
+                addToast({
+                  type: 'error',
+                  title: 'CNIS necessário',
+                  message: 'Faça upload do CNIS para realizar os cálculos.',
+                })
                 return
               }
               setShowModal(true)
             }}
-            className="bg-amber-600 hover:bg-amber-700 text-white flex items-center gap-2 shadow-sm"
+            className="flex items-center gap-2 bg-amber-600 text-white shadow-sm hover:bg-amber-700"
           >
-            <Scale className="w-4 h-4" />
+            <Scale className="h-4 w-4" />
             Iniciar Primeiro Cálculo
           </Button>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-4" aria-live="polite" aria-label="Lista de cálculos">
           {calculations.map((calc) => {
             const isExpanded = expandedCalc === calc.id
             const parsedInput = calc.inputParams
@@ -327,50 +364,50 @@ export default function CalculatorPage() {
             return (
               <div
                 key={calc.id}
-                className={`border rounded-xl shadow-sm overflow-hidden transition-all bg-white ${
+                className={`overflow-hidden rounded-xl border bg-white shadow-sm transition-all ${
                   calc.isSelected ? 'border-amber-500 ring-1 ring-amber-500/30' : 'border-slate-200'
                 }`}
               >
                 {/* Cabeçalho do Card */}
-                <div className="px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-50/50">
+                <div className="flex flex-col justify-between gap-4 bg-slate-50/50 px-6 py-4 sm:flex-row sm:items-center">
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
-                      <span className="font-sans font-bold text-slate-800 text-base sm:text-lg">
+                      <span className="font-sans text-base font-bold text-slate-800 sm:text-lg">
                         {getModalityLabel(calc.modality)}
                       </span>
                       {calc.isSelected && (
-                        <span className="bg-amber-50 text-amber-700 border border-amber-200 text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full shrink-0">
+                        <span className="shrink-0 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-700">
                           Selecionado p/ Relatório
                         </span>
                       )}
                     </div>
-                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500 font-medium">
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-medium text-slate-500">
                       <span className="flex items-center gap-1">
-                        <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                        <Calendar className="h-3.5 w-3.5 text-slate-400" />
                         DIB: {formatDate(calc.expectedDib || calc.createdAt)}
                       </span>
                       <span className="flex items-center gap-1">
-                        <User className="w-3.5 h-3.5 text-slate-400" />
+                        <User className="h-3.5 w-3.5 text-slate-400" />
                         Gênero: {parsedInput?.gender === 'M' ? 'Masculino' : 'Feminino'}
                       </span>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2 shrink-0">
+                  <div className="flex shrink-0 items-center gap-2">
                     <button
                       type="button"
                       onClick={() => setExpandedCalc(isExpanded ? null : calc.id)}
-                      className="font-sans font-semibold text-xs text-slate-600 bg-white border border-slate-200 px-3 py-2 rounded-lg hover:bg-slate-50 transition-colors flex items-center gap-1.5"
+                      className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 font-sans text-xs font-semibold text-slate-600 transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
                     >
                       {isExpanded ? (
                         <>
                           Recolher Detalhes
-                          <ChevronUp className="w-4 h-4" />
+                          <ChevronUp className="h-4 w-4" />
                         </>
                       ) : (
                         <>
                           Ver Detalhes
-                          <ChevronDown className="w-4 h-4" />
+                          <ChevronDown className="h-4 w-4" />
                         </>
                       )}
                     </button>
@@ -378,7 +415,7 @@ export default function CalculatorPage() {
                     {!calc.isSelected && (
                       <button
                         onClick={() => handleSelect(calc.id)}
-                        className="font-sans font-semibold text-xs text-amber-700 bg-amber-50 border border-amber-200 px-3 py-2 rounded-lg hover:bg-amber-100 transition-colors"
+                        className="cursor-pointer rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 font-sans text-xs font-semibold text-amber-700 transition-colors hover:bg-amber-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
                         aria-label="Selecionar este cálculo como referência"
                       >
                         Selecionar
@@ -387,47 +424,47 @@ export default function CalculatorPage() {
 
                     <button
                       onClick={() => handleDelete(calc.id)}
-                      className="p-2 border border-red-200 text-red-600 rounded-lg hover:bg-red-50 hover:text-red-700 transition-colors"
+                      className="cursor-pointer rounded-lg border border-red-200 p-2 text-red-600 transition-colors hover:bg-red-50 hover:text-red-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400"
                       aria-label="Excluir este cálculo"
                     >
-                      <Trash2 className="w-4 h-4" aria-hidden="true" />
+                      <Trash2 className="h-4 w-4" aria-hidden="true" />
                     </button>
                   </div>
                 </div>
 
                 {/* Exibição Visual dos Ganhos Principais */}
-                <div className="p-4 sm:p-6 grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 border-t border-slate-100">
-                  <div className="bg-slate-50 border border-slate-100 rounded-xl p-4 flex flex-col justify-between">
-                    <span className="font-sans text-[10px] uppercase font-bold tracking-wider text-slate-400 block mb-1">
+                <div className="grid grid-cols-1 gap-3 border-t border-slate-100 p-4 sm:grid-cols-3 sm:gap-4 sm:p-6">
+                  <div className="flex flex-col justify-between rounded-xl border border-slate-100 bg-slate-50 p-4">
+                    <span className="mb-1 block font-sans text-[10px] font-bold uppercase tracking-wider text-slate-400">
                       RMI (Inicial)
                     </span>
-                    <span className="font-sans font-bold text-slate-900 text-xl tracking-tight">
+                    <span className="font-sans text-xl font-bold tracking-tight text-slate-900">
                       {formatCurrency(calc.rmi)}
                     </span>
                   </div>
 
-                  <div className="bg-slate-50 border border-slate-100 rounded-xl p-4 flex flex-col justify-between">
-                    <span className="font-sans text-[10px] uppercase font-bold tracking-wider text-slate-400 block mb-1">
+                  <div className="flex flex-col justify-between rounded-xl border border-slate-100 bg-slate-50 p-4">
+                    <span className="mb-1 block font-sans text-[10px] font-bold uppercase tracking-wider text-slate-400">
                       Salário de Benefício (Média)
                     </span>
-                    <span className="font-sans font-bold text-slate-900 text-xl tracking-tight">
+                    <span className="font-sans text-xl font-bold tracking-tight text-slate-900">
                       {formatCurrency(calc.benefitSalary)}
                     </span>
                   </div>
 
-                  <div className="bg-slate-50 border border-slate-100 rounded-xl p-4 flex flex-col justify-between">
-                    <span className="font-sans text-[10px] uppercase font-bold tracking-wider text-slate-400 block mb-1">
+                  <div className="flex flex-col justify-between rounded-xl border border-slate-100 bg-slate-50 p-4">
+                    <span className="mb-1 block font-sans text-[10px] font-bold uppercase tracking-wider text-slate-400">
                       Elegibilidade Previdenciária
                     </span>
-                    <div className="flex items-center gap-2 mt-1">
+                    <div className="mt-1 flex items-center gap-2">
                       {isCalcElegivel ? (
-                        <div className="bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5">
-                          <ShieldCheck className="w-4 h-4" />
+                        <div className="flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-700">
+                          <ShieldCheck className="h-4 w-4" />
                           Elegível
                         </div>
                       ) : (
-                        <div className="bg-rose-50 text-rose-700 border border-rose-200 text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5">
-                          <ShieldAlert className="w-4 h-4" />
+                        <div className="flex items-center gap-1.5 rounded-lg border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs font-bold text-rose-700">
+                          <ShieldAlert className="h-4 w-4" />
                           Requisitos Pendentes
                         </div>
                       )}
@@ -437,15 +474,15 @@ export default function CalculatorPage() {
 
                 {/* Detalhamento Acordeão */}
                 {isExpanded && (
-                  <div className="p-6 border-t border-slate-200 bg-slate-50/20 space-y-6 animate-slide-down">
+                  <div className="animate-fade-in space-y-6 border-t border-slate-200 bg-slate-50/20 p-6">
                     {/* Exibição de Pendências */}
                     {!isCalcElegivel && calc.pendingIssues && calc.pendingIssues.length > 0 && (
-                      <div className="border border-rose-200 bg-rose-50/50 rounded-xl p-5 space-y-2">
-                        <span className="font-sans text-xs uppercase font-bold tracking-wider text-rose-700 flex items-center gap-1.5">
-                          <ShieldAlert className="w-4.5 h-4.5" />
-                          O que falta para conceder o benefício?
+                      <div className="space-y-2 rounded-xl border border-rose-200 bg-rose-50/50 p-5">
+                        <span className="flex items-center gap-1.5 font-sans text-xs font-bold uppercase tracking-wider text-rose-700">
+                          <ShieldAlert className="h-4 w-4 shrink-0" aria-hidden="true" />O que falta para conceder o
+                          benefício?
                         </span>
-                        <ul className="list-disc pl-5 font-sans text-sm text-rose-800 space-y-1">
+                        <ul className="list-disc space-y-1 pl-5 font-sans text-sm text-rose-800">
                           {calc.pendingIssues.map((pend, pIdx) => (
                             <li key={pIdx}>{pend}</li>
                           ))}
@@ -454,28 +491,37 @@ export default function CalculatorPage() {
                     )}
 
                     {/* Resumo de Dados Previdenciários */}
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-                      <div className="bg-white border border-slate-200 rounded-xl p-4">
-                        <span className="font-sans text-[10px] text-slate-400 font-bold block mb-1">Tempo Contribuição</span>
-                        <span className="font-sans font-bold text-slate-800 text-sm">
-                          {calc.contributionTime ? (calc.contributionTime / 12).toFixed(1) : '0'} anos
+                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
+                      <div className="rounded-xl border border-slate-200 bg-white p-4">
+                        <span className="mb-1 block font-sans text-[10px] font-bold text-slate-400">
+                          Tempo Contribuição
+                        </span>
+                        <span className="font-sans text-sm font-bold text-slate-800">
+                          {calc.contributionTime ? (calc.contributionTime / 12).toFixed(1) : '0'}{' '}
+                          anos
                         </span>
                       </div>
-                      <div className="bg-white border border-slate-200 rounded-xl p-4">
-                        <span className="font-sans text-[10px] text-slate-400 font-bold block mb-1">Carência Apurada</span>
-                        <span className="font-sans font-bold text-slate-800 text-sm">
+                      <div className="rounded-xl border border-slate-200 bg-white p-4">
+                        <span className="mb-1 block font-sans text-[10px] font-bold text-slate-400">
+                          Carência Apurada
+                        </span>
+                        <span className="font-sans text-sm font-bold text-slate-800">
                           {calc.gracePeriodMet ? 'Atendida' : 'Não Atendida'}
                         </span>
                       </div>
-                      <div className="bg-white border border-slate-200 rounded-xl p-4">
-                        <span className="font-sans text-[10px] text-slate-400 font-bold block mb-1">Alíquota / Coeficiente</span>
-                        <span className="font-sans font-bold text-slate-800 text-sm">
+                      <div className="rounded-xl border border-slate-200 bg-white p-4">
+                        <span className="mb-1 block font-sans text-[10px] font-bold text-slate-400">
+                          Alíquota / Coeficiente
+                        </span>
+                        <span className="font-sans text-sm font-bold text-slate-800">
                           {formatPercentage(calc.coefficient)}
                         </span>
                       </div>
-                      <div className="bg-white border border-slate-200 rounded-xl p-4">
-                        <span className="font-sans text-[10px] text-slate-400 font-bold block mb-1">Idade na Apuração</span>
-                        <span className="font-sans font-bold text-slate-800 text-sm">
+                      <div className="rounded-xl border border-slate-200 bg-white p-4">
+                        <span className="mb-1 block font-sans text-[10px] font-bold text-slate-400">
+                          Idade na Apuração
+                        </span>
+                        <span className="font-sans text-sm font-bold text-slate-800">
                           {calc.ageAtCalculation ?? 'N/A'} anos
                         </span>
                       </div>
@@ -484,56 +530,85 @@ export default function CalculatorPage() {
                     {/* Memória de Cálculo Expansível */}
                     {calc.calculationMemory && (
                       <div className="space-y-3">
-                        <span className="font-sans text-xs uppercase font-bold tracking-wider text-slate-500 flex items-center gap-1.5">
-                          <FileSpreadsheet className="w-4 h-4 text-slate-400" />
+                        <span className="flex items-center gap-1.5 font-sans text-xs font-bold uppercase tracking-wider text-slate-500">
+                          <FileSpreadsheet className="h-4 w-4 text-slate-400" />
                           Memória de Cálculo (Detalhamento da Média)
                         </span>
 
-                        <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
-                          <div className="px-4 py-3 border-b border-slate-200 bg-slate-50 flex items-center justify-between text-xs font-bold text-slate-500">
+                        <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+                          <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-4 py-3 text-xs font-bold text-slate-500">
                             <span>FÓRMULA PREVIDENCIÁRIA</span>
                             <span>MÉDIA POŚ-1994 (100% DAS CONTRIBUIÇÕES)</span>
                           </div>
-                          
-                          <div className="p-4 space-y-4">
-                            <div className="flex flex-col sm:flex-row justify-between gap-4 font-sans text-sm pb-4 border-b border-slate-100">
+
+                          <div className="space-y-4 p-4">
+                            <div className="flex flex-col justify-between gap-4 border-b border-slate-100 pb-4 font-sans text-sm sm:flex-row">
                               <div>
                                 <p className="text-slate-500">Contribuições computadas:</p>
-                                <p className="font-bold text-slate-800">{calc.calculationMemory.contribuicoesConsideradas ?? 'N/A'} competências</p>
+                                <p className="font-bold text-slate-800">
+                                  {calc.calculationMemory.contribuicoesConsideradas ?? 'N/A'}{' '}
+                                  competências
+                                </p>
                               </div>
                               <div>
                                 <p className="text-slate-500">Gênero utilizado:</p>
-                                <p className="font-bold text-slate-800">{calc.calculationMemory.genero ?? 'N/A'}</p>
+                                <p className="font-bold text-slate-800">
+                                  {calc.calculationMemory.genero ?? 'N/A'}
+                                </p>
                               </div>
                               <div>
                                 <p className="text-slate-500">Piso Nacional (Salário Mínimo):</p>
-                                <p className="font-bold text-slate-800">{calc.calculationMemory.pisoNacional ? formatCurrency(calc.calculationMemory.pisoNacional) : 'N/A'}</p>
+                                <p className="font-bold text-slate-800">
+                                  {calc.calculationMemory.pisoNacional
+                                    ? formatCurrency(calc.calculationMemory.pisoNacional)
+                                    : 'N/A'}
+                                </p>
                               </div>
                               <div>
                                 <p className="text-slate-500">Teto da Previdência:</p>
-                                <p className="font-bold text-slate-800">{calc.calculationMemory.tetoPrevidenciario ? formatCurrency(calc.calculationMemory.tetoPrevidenciario) : 'N/A'}</p>
+                                <p className="font-bold text-slate-800">
+                                  {calc.calculationMemory.tetoPrevidenciario
+                                    ? formatCurrency(calc.calculationMemory.tetoPrevidenciario)
+                                    : 'N/A'}
+                                </p>
                               </div>
                             </div>
 
                             {/* Tabela Parcial de Salários */}
-                            {calc.calculationMemory.detalhamentoMedia && calc.calculationMemory.detalhamentoMedia.length > 0 && (
-                              <div className="space-y-2">
-                                <span className="font-sans text-[10px] text-slate-400 font-bold block">Primeiros Salários do Período de Cálculo:</span>
-                                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
-                                  {calc.calculationMemory.detalhamentoMedia.map((sal, sIdx) => {
-                                    const parts = sal.competencia.split('-')
-                                    const compFormat = parts.length === 2 ? `${parts[1]}/${parts[0]}` : sal.competencia
-                                    return (
-                                      <div key={sIdx} className="bg-slate-50 border border-slate-200 rounded-lg p-2.5 flex flex-col justify-between">
-                                        <span className="font-sans text-[10px] text-slate-400 font-bold">{compFormat}</span>
-                                        <span className="font-sans font-bold text-slate-800 text-xs mt-0.5">{formatCurrency(sal.valorAjustado)}</span>
-                                      </div>
-                                    )
-                                  })}
+                            {calc.calculationMemory.detalhamentoMedia &&
+                              calc.calculationMemory.detalhamentoMedia.length > 0 && (
+                                <div className="space-y-2">
+                                  <span className="block font-sans text-[10px] font-bold text-slate-400">
+                                    Primeiros Salários do Período de Cálculo:
+                                  </span>
+                                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-5">
+                                    {calc.calculationMemory.detalhamentoMedia.map((sal, sIdx) => {
+                                      const parts = sal.competencia.split('-')
+                                      const compFormat =
+                                        parts.length === 2
+                                          ? `${parts[1]}/${parts[0]}`
+                                          : sal.competencia
+                                      return (
+                                        <div
+                                          key={sIdx}
+                                          className="flex flex-col justify-between rounded-lg border border-slate-200 bg-slate-50 p-2.5"
+                                        >
+                                          <span className="font-sans text-[10px] font-bold text-slate-400">
+                                            {compFormat}
+                                          </span>
+                                          <span className="mt-0.5 font-sans text-xs font-bold text-slate-800">
+                                            {formatCurrency(sal.valorAjustado)}
+                                          </span>
+                                        </div>
+                                      )
+                                    })}
+                                  </div>
+                                  <p className="mt-1 font-sans text-[10px] italic text-slate-400">
+                                    * Mostrando as primeiras competências utilizadas para
+                                    verificação do piso/teto.
+                                  </p>
                                 </div>
-                                <p className="font-sans text-[10px] text-slate-400 italic mt-1">* Mostrando as primeiras competências utilizadas para verificação do piso/teto.</p>
-                              </div>
-                            )}
+                              )}
                           </div>
                         </div>
                       </div>
@@ -547,11 +622,16 @@ export default function CalculatorPage() {
       )}
 
       {/* Modal Visual de Novo Cálculo */}
-      <Modal open={showModal} onClose={() => setShowModal(false)} title="CONFIGURAR NOVO CÁLCULO" size="lg">
+      <Modal
+        open={showModal}
+        onClose={() => setShowModal(false)}
+        title="Configurar novo cálculo"
+        size="lg"
+      >
         <div className="space-y-5">
           {errorMessage && (
-            <div className="border border-red-200 bg-red-50 rounded-xl p-4 flex items-start gap-3">
-              <ShieldAlert className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
+            <div role="alert" className="flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-4">
+              <ShieldAlert className="mt-0.5 h-5 w-5 shrink-0 text-red-500" aria-hidden="true" />
               <p className="font-sans text-sm font-medium text-red-700">{errorMessage}</p>
             </div>
           )}
@@ -560,83 +640,111 @@ export default function CalculatorPage() {
 
           <div className="space-y-4">
             <div>
-              <label className="font-sans font-bold text-xs text-slate-600 block mb-1">Gênero Jurídico do Segurado</label>
+              <label htmlFor="genero" className="neo-label">
+                Gênero jurídico do segurado
+              </label>
               <select
+                id="genero"
                 value={gender}
                 onChange={(e) => setGender(e.target.value as 'M' | 'F')}
-                className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm font-sans focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 outline-none"
+                className="neo-input"
+                aria-describedby="genero-hint"
               >
                 <option value="F">Feminino (Regra Geral 62 Anos / 15 TC)</option>
                 <option value="M">Masculino (Regra Geral 65 Anos / 20 TC)</option>
               </select>
+              <p id="genero-hint" className="mt-1 font-sans text-[10px] text-slate-400">
+                Define as regras de idade e tempo de contribuição aplicáveis
+              </p>
             </div>
 
             <div>
               <DatePicker
-                label="DIB Pretendida (Início Benefício)"
+                label="DIB pretendida (início do benefício)"
                 value={dib}
                 onChange={(d) => setDib(d ? d.toISOString().split('T')[0] : '')}
               />
             </div>
 
             <div>
-              <label className="font-sans font-bold text-xs text-slate-600 block mb-1">Regra / Modalidade Previdenciária</label>
+              <label htmlFor="modalidade" className="neo-label">
+                Regra / modalidade previdenciária
+              </label>
               <select
+                id="modalidade"
                 value={modalidade}
                 onChange={(e) => setModalidade(e.target.value)}
-                className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm font-sans focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 outline-none"
+                className="neo-input"
+                aria-describedby="modalidade-hint"
               >
                 {uniqueModalidades.map((item) => (
-                  <option key={item.codigo} value={item.codigo}>{item.label}</option>
+                  <option key={item.codigo} value={item.codigo}>
+                    {item.label}
+                  </option>
                 ))}
               </select>
+              <p id="modalidade-hint" className="mt-1 font-sans text-[10px] text-slate-400">
+                Escolha a modalidade que melhor se enquadra ao perfil do segurado
+              </p>
             </div>
 
             {/* Parâmetros Avançados baseados na Modalidade */}
             {modalidade === 'APOSENTADORIA_ESPECIAL' && (
-              <div className="animate-slide-down">
-                <label className="font-sans font-bold text-xs text-slate-600 block mb-1">Conversão de Atividade Especial (Anos já comprovados)</label>
+              <div className="animate-fade-in">
+                <label htmlFor="tempo-especial" className="neo-label">
+                  Conversão de atividade especial (anos já comprovados)
+                </label>
                 <input
+                  id="tempo-especial"
                   type="number"
                   min="0"
                   max="40"
                   value={tempoEspecialAnos}
                   onChange={(e) => setTempoEspecialAnos(Number(e.target.value))}
-                  className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm font-sans focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 outline-none"
+                  className="neo-input"
                   placeholder="Ex: 5"
+                  aria-describedby="tempo-especial-hint"
                 />
-                <span className="font-sans text-[10px] text-slate-400 mt-1 block">Será adicionado o multiplicador de atividade insalubre correspondente ao gênero.</span>
+                <p id="tempo-especial-hint" className="mt-1 font-sans text-[10px] text-slate-400">
+                  Será adicionado o multiplicador de atividade insalubre correspondente ao gênero
+                </p>
               </div>
             )}
 
             {modalidade === 'PENSAO_MORTE' && (
-              <div className="animate-slide-down">
-                <label className="font-sans font-bold text-xs text-slate-600 block mb-1">Número de Dependentes Habilitados</label>
+              <div className="animate-fade-in">
+                <label htmlFor="dependentes" className="neo-label">
+                  Número de dependentes habilitados
+                </label>
                 <input
+                  id="dependentes"
                   type="number"
                   min="1"
                   max="10"
                   value={dependentesPensao}
                   onChange={(e) => setDependentesPensao(Number(e.target.value))}
-                  className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm font-sans focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 outline-none"
+                  className="neo-input"
+                  aria-describedby="dependentes-hint"
                 />
-                <span className="font-sans text-[10px] text-slate-400 mt-1 block">A cota é acrescida de 10% por dependente (partindo de 50% base até 100%).</span>
+                <p id="dependentes-hint" className="mt-1 font-sans text-[10px] text-slate-400">
+                  A cota é acrescida de 10% por dependente (partindo de 50% base até 100%)
+                </p>
               </div>
             )}
           </div>
 
-          <div className="flex gap-3 pt-3 border-t border-slate-100">
+          <div className="flex gap-3 border-t border-slate-100 pt-3">
             <Button
               onClick={handleCreate}
               loading={creating}
-              className="flex-1 bg-amber-600 hover:bg-amber-700 text-white font-semibold"
+              className="flex-1 bg-amber-600 font-semibold text-white hover:bg-amber-700"
             >
               Calcular Benefício
             </Button>
             <Button
               variant="outline"
               onClick={() => setShowModal(false)}
-              className="flex-1 border-slate-300 text-slate-700 font-semibold"
+              className="flex-1 border-slate-300 font-semibold text-slate-700"
             >
               Cancelar
             </Button>

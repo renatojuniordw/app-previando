@@ -3,6 +3,7 @@
 import { useEffect, useRef } from 'react'
 import { cn } from '@/lib/utils'
 import { useFocusTrap } from '@/hooks/useFocusTrap'
+import { X } from 'lucide-react'
 
 interface ModalProps {
   open: boolean
@@ -48,10 +49,10 @@ export function Modal({ open, onClose, title, children, className, size = 'md' }
           </h2>
           <button
             onClick={onClose}
-            className="font-sans text-slate-500 hover:text-slate-900 text-lg leading-none"
+            className="flex items-center justify-center rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
             aria-label="Fechar"
           >
-            ✕
+            <X className="h-5 w-5" />
           </button>
         </div>
         <div className="p-6">{children}</div>

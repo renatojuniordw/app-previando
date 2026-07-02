@@ -332,9 +332,9 @@ export default function RetroativosPage() {
 
                 {/* Seção Expansível da Memória de Cálculo */}
                 {isExpanded && retro.memoriaCalculo?.parcelas && (
-                  <div className="p-6 border-t border-slate-200 bg-slate-50/20 space-y-4 animate-slide-down">
+                  <div className="animate-fade-in space-y-4 border-t border-slate-200 bg-slate-50/20 p-6">
                     <div className="flex items-center gap-2 text-xs font-bold text-slate-500 uppercase tracking-wider">
-                      <FileSpreadsheet className="w-4.5 h-4.5 text-slate-400" />
+                      <FileSpreadsheet className="h-4 w-4 text-slate-400" aria-hidden="true" />
                       Memória de Cálculo Discriminada Mês a Mês
                     </div>
 

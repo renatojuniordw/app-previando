@@ -507,7 +507,7 @@ export default function SimulatorPage() {
             </div>
 
             {tipoContribuicao === 'CUSTOM' && (
-              <div className="animate-slide-down">
+              <div className="animate-fade-in">
                 <CurrencyInput
                   value={valorCustomContribuicao}
                   onChange={(val) => setValorCustomContribuicao(val)}
