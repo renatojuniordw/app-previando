@@ -142,9 +142,6 @@ model PlanLimit {
   peticaoEnabled              Boolean @default(false)
   maxPeticoesPerMonth         Int     @default(0) // -1 = ilimitado | 0 = bloqueado
 
-  processInterpretEnabled        Boolean @default(false)
-  maxProcessInterpretPerMonth    Int     @default(0) // -1 = ilimitado | 0 = bloqueado
-
   revisionEnabled                Boolean @default(false)
   maxRevisionsPerMonth           Int     @default(0) // -1 = ilimitado | 0 = bloqueado
   gpsEnabled                     Boolean @default(false)
@@ -171,7 +168,6 @@ model UsageRecord {
   bpcAnalysesThisMonth    Int      @default(0)
   bpcSocialMediaThisMonth Int      @default(0)
   peticoesThisMonth              Int      @default(0)
-  processInterpretThisMonth      Int      @default(0)
   revisionsThisMonth             Int      @default(0)
   usageMonthRef                  DateTime @default(now())
 
@@ -235,18 +231,13 @@ model Case {
   status       CaseStatus  @default(PROSPECTING)
   priority     Priority    @default(NORMAL)
   benefitType  BenefitType
-  processNumber      String?
-  processLastCheck   DateTime?
-  processLastMovDate DateTime?
-  processLastMovCount Int?
-  processLastSummary String?   @db.Text
   deadlineDays           Int?
   deadlineDate           DateTime?
   googleCalendarEventId  String?
   notes                  String?
 
   // Configuração do Portal do Cliente — define quais abas o cliente pode ver
-  portalConfig Json @default("{\"showProcessTracking\":true,\"showCalculations\":true,\"showRetroactives\":false,\"showInterpretation\":false}")
+  portalConfig Json @default("{\"showCalculations\":true,\"showRetroactives\":false,\"showInterpretation\":false}")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -269,7 +260,6 @@ model Case {
   @@index([clientId])
   @@index([userId, status])
   @@index([priority, deadlineDate])
-  @@index([processNumber])
   @@map("cases")
 }
 

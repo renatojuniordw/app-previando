@@ -45,7 +45,6 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 
     const body = await req.json()
     const {
-      showProcessTracking,
       showCalculations,
       showRetroactives,
       showInterpretation,
@@ -54,7 +53,6 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 
     // Validação: todos os campos devem ser booleanos se fornecidos
     const updates: Partial<PortalConfig> = {}
-    if (typeof showProcessTracking === 'boolean') updates.showProcessTracking = showProcessTracking
     if (typeof showCalculations === 'boolean') updates.showCalculations = showCalculations
     if (typeof showRetroactives === 'boolean') updates.showRetroactives = showRetroactives
     if (typeof showInterpretation === 'boolean') updates.showInterpretation = showInterpretation

@@ -9,11 +9,6 @@ import { logAudit } from '@/lib/audit'
 import { getPlanLimit } from '@/lib/plan-guard'
 import { mapCaseStatusToDb, mapCaseToApi, ApiCaseStatus } from '@/lib/mappers'
 import { createCalendarEvent, updateCalendarEvent, deleteCalendarEvent } from '@/services/google-calendar'
-import { Logger } from '@/lib/logger'
-
-const logger = new Logger('CaseUpdate')
-
-const CNJ_PROCESS_REGEX = /^\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4}$|^\d{20}$/
 
 const updateSchema = z.object({
   status: z.enum(['PROSPECCAO', 'ANALISE', 'PRONTO_PARA_REQUERER', 'EM_PROCESSAMENTO', 'FINALIZADO']).optional(),
@@ -21,7 +16,6 @@ const updateSchema = z.object({
   deadlineDays: z.number().int().positive().nullable().optional(),
   deadlineDate: z.string().datetime().nullable().optional(),
   notes: z.string().max(5000).nullable().optional(),
-  processNumber: z.string().regex(CNJ_PROCESS_REGEX, 'Formato inválido. Use NNNNNNN-DD.AAAA.J.TT.OOOO').nullable().optional(),
 })
 
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
@@ -59,7 +53,6 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
           bpcEnabled: planLimits.bpcEnabled,
           diagnosisEnabled: planLimits.diagnosisEnabled,
           peticaoEnabled: planLimits.peticaoEnabled,
-          processInterpretEnabled: planLimits.processInterpretEnabled,
           revisionEnabled: planLimits.revisionEnabled,
           viabilityScoreEnabled: planLimits.viabilityScoreEnabled,
 
@@ -91,8 +84,6 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
       data.deadlineDate = parsed.data.deadlineDate ? new Date(parsed.data.deadlineDate) : null
     if (parsed.data.notes !== undefined)
       data.notes = parsed.data.notes ? sanitizeInput(parsed.data.notes) : null
-    if (parsed.data.processNumber !== undefined)
-      data.processNumber = parsed.data.processNumber
 
     const casoAntes = await prisma.case.findUnique({
       where: { id: params.id },
@@ -100,7 +91,6 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
         googleCalendarEventId: true,
         deadlineDate: true,
         benefitType: true,
-        processNumber: true,
         client: { select: { name: true } },
       },
     })

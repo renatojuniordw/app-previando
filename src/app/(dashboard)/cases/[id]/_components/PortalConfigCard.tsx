@@ -28,11 +28,6 @@ const CONFIG_ITEMS: Array<{
   description: string
 }> = [
   {
-    key: 'showProcessTracking',
-    label: 'Acompanhamento processual',
-    description: 'Número do processo, últimas movimentações e resumo',
-  },
-  {
     key: 'showCalculations',
     label: 'Meus cálculos',
     description: 'RMI, RMA e modalidades selecionadas',
@@ -52,7 +47,6 @@ const CONFIG_ITEMS: Array<{
 export function PortalConfigCard({ caseId, portalConfig, onUpdate: _onUpdate }: Props) {
   const [config, setConfig] = useState<NonNullable<CaseDetail['portalConfig']>>(
     portalConfig ?? {
-      showProcessTracking: true,
       showCalculations: true,
       showRetroactives: false,
       showInterpretation: false,

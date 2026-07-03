@@ -38,7 +38,6 @@ const mockPlanLimitFree = {
   maxNotesPerCase: 10,
   bpcAnalysesPerMonth: 0,
   maxPeticoesPerMonth: 0,
-  maxProcessInterpretPerMonth: 0,
   simulatorEnabled: false,
   retroactiveEnabled: false,
   exportPdfEnabled: true,
@@ -47,7 +46,6 @@ const mockPlanLimitFree = {
   diagnosisEnabled: false,
   bpcEnabled: false,
   peticaoEnabled: false,
-  processInterpretEnabled: false,
 }
 
 const mockPlanLimitSolo = {
@@ -69,7 +67,6 @@ const mockUsageRecord = {
   bpcAnalysesThisMonth: 5,
   bpcSocialMediaThisMonth: 0,
   peticoesThisMonth: 0,
-  processInterpretThisMonth: 0,
   usageMonthRef: new Date(),
 }
 

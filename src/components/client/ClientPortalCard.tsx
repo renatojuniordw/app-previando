@@ -34,7 +34,7 @@ function daysLeft(expiresAt: string): number {
 
 function buildWhatsAppLink(phone: string, link: string, benefitLabel: string): string {
   const msg = encodeURIComponent(
-    `Olá! Aqui está o link do seu portal de acompanhamento processual referente ao benefício *${benefitLabel}*:\n\n${link}\n\nO link é válido por 30 dias.`
+    `Olá! Aqui está o link do seu portal referente ao benefício *${benefitLabel}*:\n\n${link}\n\nO link é válido por 30 dias.`
   )
   const clean = phone.replace(/\D/g, '')
   return `https://wa.me/${clean}?text=${msg}`
@@ -119,7 +119,7 @@ export function ClientPortalCard({ cases, clientPhone }: Props) {
     <Card variant="dark">
       <CardHeader
         title="Portal do Cliente"
-        subtitle="Compartilhe um link para o cliente acompanhar os dados do processo"
+        subtitle="Compartilhe um link para o cliente acompanhar os dados do caso"
       />
 
       <div className="space-y-3 mt-1">

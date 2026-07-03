@@ -82,7 +82,6 @@ CNIS: ${caso.cnisDocument ? `processado (${caso.cnisDocument.totalContributions 
 Modalidades elegíveis: ${eligible.length > 0 ? eligible.map((c) => c.modality).join(', ') : 'nenhuma identificada'}
 Pendências do checklist: ${pending.length > 0 ? pending.join('; ') : 'nenhuma'}
 Pendências dos cálculos: ${Array.from(new Set(calcPending)).slice(0, 5).join('; ') || 'nenhuma'}
-Processo judicial: ${caso.processNumber ? 'Sim (' + caso.processNumber + ')' : 'Não'}
 `.trim()
 
     const prompt = `Você é um especialista em direito previdenciário brasileiro com 20 anos de experiência.

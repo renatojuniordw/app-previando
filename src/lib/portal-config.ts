@@ -1,5 +1,4 @@
 export interface PortalConfig {
-  showProcessTracking: boolean
   showCalculations: boolean
   showRetroactives: boolean
   showInterpretation: boolean
@@ -7,7 +6,6 @@ export interface PortalConfig {
 }
 
 export const DEFAULT_PORTAL_CONFIG: PortalConfig = {
-  showProcessTracking: true,
   showCalculations: true,
   showRetroactives: false,
   showInterpretation: false,

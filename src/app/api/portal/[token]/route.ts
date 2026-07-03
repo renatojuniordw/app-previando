@@ -60,7 +60,6 @@ export async function GET(req: NextRequest, { params }: { params: { token: strin
     // Lê a config do portal — o advogado decide o que o cliente vê
     const caso = c as unknown as { portalConfig: PortalConfig }
     const portalConfig = caso.portalConfig ?? {
-      showProcessTracking: true,
       showCalculations: true,
       showRetroactives: false,
       showInterpretation: false,
@@ -83,17 +82,7 @@ export async function GET(req: NextRequest, { params }: { params: { token: strin
         status: c.status,
         benefitType: c.benefitType,
         createdAt: c.createdAt,
-        ...(portalConfig.showProcessTracking && { processNumber: c.processNumber }),
       },
-      ...(portalConfig.showProcessTracking && {
-        processTracking: {
-          processNumber: c.processNumber,
-          processLastCheck: c.processLastCheck?.toISOString() ?? null,
-          processLastMovDate: c.processLastMovDate?.toISOString() ?? null,
-          processLastMovCount: c.processLastMovCount,
-          processLastSummary: c.processLastSummary,
-        },
-      }),
       ...(portalConfig.showCalculations && { calculations: c.calculations }),
       ...(portalConfig.showRetroactives && { retroactives: c.retroactives }),
       expiresAt: access.expiresAt,

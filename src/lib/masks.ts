@@ -37,20 +37,6 @@ export function formatPhone(value: string): string {
 }
 
 /**
- * Format raw digits as CNJ process number: NNNNNNN-DD.AAAA.J.TR.OOOO
- * Accepts up to 20 digits.
- */
-export function formatCNJ(value: string): string {
-  const digits = stripNonDigits(value).slice(0, 20)
-  return digits
-    .replace(/^(\d{7})(\d)/, '$1-$2')
-    .replace(/^(.{10})(\d)/, '$1.$2')
-    .replace(/^(.{13})(\d)/, '$1.$2')
-    .replace(/^(.{15})(\d)/, '$1.$2')
-    .replace(/^(.{17})(\d)/, '$1.$2')
-}
-
-/**
  * Format raw digits as BRL currency value for display.
  * Returns a string like "1.234,56" (without the R$ symbol).
  * The value is in cents — e.g., "123456" → "1.234,56".
@@ -80,11 +66,4 @@ export function parseCurrency(value: string): number {
   return Number(cleaned)
 }
 
-/**
- * Mask a CNJ process number for display: NNNNNNN-DD.AAAA.J.TR.OOOO
- */
-export function displayCNJ(value: string): string {
-  const cleaned = value.replace(/[^\dA-Za-z]/g, '')
-  if (cleaned.length !== 20) return value
-  return `${cleaned.slice(0, 7)}-${cleaned.slice(7, 9)}.${cleaned.slice(9, 13)}.${cleaned.slice(13, 14)}.${cleaned.slice(14, 16)}.${cleaned.slice(16, 20)}`
-}
+

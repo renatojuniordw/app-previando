@@ -8,7 +8,6 @@ import { CaseInfoCard } from './_components/CaseInfoCard'
 import { ActivitySummary } from './_components/ActivitySummary'
 import { StatusModal } from './_components/StatusModal'
 import { EditCaseModal } from './_components/EditCaseModal'
-import { ProcessCard } from './_components/ProcessCard'
 import { SuccessAnalysisCard } from './_components/SuccessAnalysisCard'
 import { PortalConfigCard } from './_components/PortalConfigCard'
 
@@ -21,17 +20,12 @@ export default function CaseOverviewPage() {
     updatingStatus,
     showEditModal,
     updatingCase,
-    checkingProcess,
-    interpretingProcess,
-    interpretResult,
     load,
     setNewStatus,
     setShowStatusModal,
     setShowEditModal,
     handleStatusChange,
     handleEditSubmit,
-    handleCheckProcess,
-    handleInterpretProcess,
     handleExportPDF,
   } = useCaseOverview()
 
@@ -68,16 +62,6 @@ export default function CaseOverviewPage() {
         caseId={caseData.id}
         portalConfig={caseData.portalConfig}
         onUpdate={load}
-      />
-
-      <ProcessCard
-        caseData={caseData}
-        checking={checkingProcess}
-        interpreting={interpretingProcess}
-        interpretResult={interpretResult}
-        onCheck={handleCheckProcess}
-        onInterpret={handleInterpretProcess}
-        onEditClick={() => setShowEditModal(true)}
       />
 
       <StatusModal

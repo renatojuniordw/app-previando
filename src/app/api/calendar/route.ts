@@ -6,7 +6,7 @@ import { getCalendarClient } from '@/services/google-calendar'
 
 interface CalendarEvent {
   id: string
-  type: 'deadline' | 'google_event' | 'prescription'
+  type: 'deadline' | 'google_event'
   title: string
   description?: string
   date: string
@@ -96,41 +96,10 @@ export async function GET() {
       }
     }
 
-    // 3. Datas de prescrição calculadas (do campo deadlineDate quando existir processo)
-    const casesWithProcess = await prisma.case.findMany({
-      where: {
-        userId,
-        processNumber: { not: null },
-        deadlineDate: { gte: now, lte: end },
-      },
-      select: {
-        id: true,
-        deadlineDate: true,
-        client: { select: { name: true } },
-      },
-    })
-
-    for (const c of casesWithProcess) {
-      if (!c.deadlineDate) continue
-      const dateKey = c.deadlineDate.toISOString().split('T')[0]
-      // Se já existe um evento de prazo para este caso nesta data, não duplica
-      if (eventsByDate[dateKey]?.some((e) => e.type === 'prescription' && e.caseId === c.id)) continue
-      if (eventsByDate[dateKey]?.some((e) => e.type === 'deadline' && e.caseId === c.id)) continue
-
-      addEvent(dateKey, {
-        id: `prescription-${c.id}`,
-        type: 'prescription',
-        title: `Prescrição: ${c.client.name}`,
-        date: dateKey,
-        caseId: c.id,
-        clientName: c.client.name,
-      })
-    }
-
     // Ordena eventos dentro de cada data
     for (const dateKey of Object.keys(eventsByDate)) {
       eventsByDate[dateKey].sort((a, b) => {
-        const typeOrder = { deadline: 0, prescription: 1, google_event: 2 }
+        const typeOrder = { deadline: 0, google_event: 1 }
         return (typeOrder[a.type] ?? 99) - (typeOrder[b.type] ?? 99)
       })
     }

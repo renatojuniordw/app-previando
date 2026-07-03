@@ -160,7 +160,6 @@ export async function GET() {
         status: c.status,
         priority: c.priority,
         benefitType: c.benefitType,
-        processNumber: c.processNumber,
         deadlineDays: c.deadlineDays,
         deadlineDate: c.deadlineDate,
         notes: c.notes,

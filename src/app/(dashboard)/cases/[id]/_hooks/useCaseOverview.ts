@@ -6,7 +6,6 @@ import api from '@/lib/api'
 import { useToast } from '@/store/toast'
 import { downloadPdf } from '@/lib/download-pdf'
 import type { CaseDetail } from '../_types'
-import type { InterpretOutput } from '@/app/api/cases/[id]/process/interpret/types'
 import { STATUS_OPTIONS } from '../_constants'
 
 export function useCaseOverview() {
@@ -21,9 +20,6 @@ export function useCaseOverview() {
 
   const [showEditModal, setShowEditModal] = useState(false)
   const [updatingCase, setUpdatingCase] = useState(false)
-  const [checkingProcess, setCheckingProcess] = useState(false)
-  const [interpretingProcess, setInterpretingProcess] = useState(false)
-  const [interpretResult, setInterpretResult] = useState<InterpretOutput | null>(null)
 
   const load = useCallback(() => {
     api.get(`/cases/${params.id}`)
@@ -53,14 +49,13 @@ export function useCaseOverview() {
     }
   }
 
-  const handleEditSubmit = async (data: { priority: string; deadlineDate: string; notes: string; processNumber: string }) => {
+  const handleEditSubmit = async (data: { priority: string; deadlineDate: string; notes: string }) => {
     setUpdatingCase(true)
     try {
       await api.put(`/cases/${params.id}`, {
         priority: data.priority,
         deadlineDate: data.deadlineDate ? new Date(data.deadlineDate).toISOString() : null,
         notes: data.notes || null,
-        processNumber: data.processNumber || null,
       })
       setShowEditModal(false)
       addToast({ type: 'success', title: 'Sucesso', message: 'Caso atualizado com sucesso.' })
@@ -69,45 +64,6 @@ export function useCaseOverview() {
       addToast({ type: 'error', title: 'Erro', message: 'Não foi possível atualizar o caso.' })
     } finally {
       setUpdatingCase(false)
-    }
-  }
-
-  const handleCheckProcess = async () => {
-    setCheckingProcess(true)
-    setInterpretResult(null)
-    try {
-      const r = await api.post(`/cases/${params.id}/process`)
-      if (r.data.error) {
-        addToast({ type: 'error', title: 'Erro', message: r.data.error })
-      } else {
-        addToast({ type: 'success', title: 'Processo atualizado', message: 'Consulta realizada com sucesso.' })
-      }
-      load()
-    } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error
-      addToast({ type: 'error', title: 'Erro', message: msg ?? 'Não foi possível consultar o processo.' })
-    } finally {
-      setCheckingProcess(false)
-    }
-  }
-
-  const handleInterpretProcess = async () => {
-    setInterpretingProcess(true)
-    setInterpretResult(null)
-    try {
-      const r = await api.post(`/cases/${params.id}/process/interpret`)
-      if (r.data.interpretation) {
-        setInterpretResult(r.data.interpretation)
-      } else if (r.data.error) {
-        addToast({ type: 'error', title: 'Interpretação', message: r.data.error })
-      } else {
-        addToast({ type: 'error', title: 'Interpretação', message: 'Resposta inesperada. Tente novamente.' })
-      }
-    } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error
-      addToast({ type: 'error', title: 'Erro', message: msg ?? 'Não foi possível interpretar a movimentação.' })
-    } finally {
-      setInterpretingProcess(false)
     }
   }
 
@@ -125,17 +81,12 @@ export function useCaseOverview() {
     updatingStatus,
     showEditModal,
     updatingCase,
-    checkingProcess,
-    interpretingProcess,
-    interpretResult,
     load,
     setNewStatus,
     setShowStatusModal,
     setShowEditModal,
     handleStatusChange,
     handleEditSubmit,
-    handleCheckProcess,
-    handleInterpretProcess,
     handleExportPDF,
   }
 }

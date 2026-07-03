@@ -112,12 +112,6 @@ export default async function PortalPage({ params }: Props) {
                 {BENEFIT_LABELS[c.benefitType] ?? c.benefitType}
               </p>
             </div>
-            {c.processNumber && (
-              <div>
-                <p className="font-sans text-xs text-slate-400">Processo</p>
-                <p className="font-sans font-semibold text-slate-900">{c.processNumber}</p>
-              </div>
-            )}
           </div>
 
           <div className="border-t border-slate-100 pt-4">
