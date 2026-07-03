@@ -1344,6 +1344,22 @@ export const CNIS_INDICATORS: Record<string, IndicatorInfo> = {
     acao: "Indicador informativo. Enquadramento específico ou processamento já concluído. Geralmente não impede o direito.",
     critico: false
   },
+  'BLOQ-EC103': {
+    sigla: 'BLOQ-EC103',
+    tipo: 'Pendência',
+    grupo: 'AJUSTES EC103 - OUTROS INDICADORES',
+    descricao: 'Remuneração pós-vínculo com bloqueio por competência posterior à EC 103/2019. Indica que o salário da competência não deve ser considerado para cálculo.',
+    acao: 'Competência bloqueada. Verificar se a remuneração foi informada indevidamente ou se há necessidade de ajuste manual no cálculo.',
+    critico: true
+  },
+  'NB': {
+    sigla: 'NB',
+    tipo: 'Informativo',
+    grupo: 'BENEFÍCIO',
+    descricao: 'Indica que a competência integrou o cálculo de um Número de Benefício (NB) já concedido pelo INSS, como aposentadoria, pensão ou auxílio.',
+    acao: 'Indicador informativo. A competência já foi utilizada para concessão de benefício. Verifique se o NB correspondente consta no sistema.',
+    critico: false
+  },
 }
 
 export function getIndicatorDetails(sigla: string): IndicatorInfo {

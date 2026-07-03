@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useParams } from 'next/navigation'
+import { useParams, useSearchParams, useRouter, usePathname } from 'next/navigation'
 import { ExternalLink, FileText } from 'lucide-react'
 import { useCnis } from './_hooks/useCnis'
 import { useCnisUpload } from './_hooks/useCnisUpload'
@@ -29,7 +29,22 @@ export default function CnisCasePage() {
 
   const [showPdfViewer, setShowPdfViewer] = useState(false)
   const [pdfBlobUrl, setPdfBlobUrl] = useState<string | null>(null)
-  const [showIndicatorsDrawer, setShowIndicatorsDrawer] = useState(false)
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const pathname = usePathname()
+  const showIndicatorsDrawer = searchParams.get('drawer') === 'dictionary'
+
+  const openDictionary = () => {
+    const next = new URLSearchParams(searchParams.toString())
+    next.set('drawer', 'dictionary')
+    router.replace(`${pathname}?${next.toString()}`)
+  }
+
+  const closeDictionary = () => {
+    const next = new URLSearchParams(searchParams.toString())
+    next.delete('drawer')
+    router.replace(`${pathname}?${next.toString()}`)
+  }
 
   useEffect(() => {
     if (!cnis?.downloadUrl) return
@@ -87,7 +102,7 @@ export default function CnisCasePage() {
         onUploadClick={() => fileRef.current?.click()}
         fileRef={fileRef}
         onFileChange={handleUpload}
-        onOpenDictionary={() => setShowIndicatorsDrawer(true)}
+        onOpenDictionary={openDictionary}
       />
 
       <CnisBanners
@@ -204,7 +219,7 @@ export default function CnisCasePage() {
 
       <CnisIndicatorsDrawer
         open={showIndicatorsDrawer}
-        onClose={() => setShowIndicatorsDrawer(false)}
+        onClose={closeDictionary}
       />
     </div>
   )

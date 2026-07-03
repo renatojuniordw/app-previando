@@ -36,14 +36,16 @@ export function PeriodItem({
           <h5 className="flex items-center gap-2 truncate font-sans text-sm font-bold tracking-tight text-slate-800 sm:text-base">
             {periodo.empregador || 'EMPREGADOR NÃO INFORMADO'}
             {warnings.length > 0 && (
-              <span className="flex shrink-0 gap-1">
-                {warnings.map((w, wIdx) => (
-                  <span
-                    key={wIdx}
-                    title={w.message}
-                    className={`h-2 w-2 cursor-help rounded-full ${w.type === 'warning' ? 'bg-red-500' : 'bg-amber-500'}`}
-                  />
-                ))}
+              <span
+                className={`rounded-full px-2 py-0.5 text-[10px] font-bold cursor-help shrink-0 ${
+                  warnings.some(w => w.type === 'warning')
+                    ? 'border border-red-100 bg-red-50 text-red-700'
+                    : 'border border-amber-100 bg-amber-50 text-amber-700'
+                }`}
+                title={warnings.map(w => w.message).join(' · ')}
+              >
+                {warnings.length} {warnings.some(w => w.type === 'warning') ? 'pendência' : 'aviso'}
+                {warnings.length > 1 ? 's' : ''}
               </span>
             )}
           </h5>

@@ -1,8 +1,13 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
-import { MessageSquare, CheckSquare, Bot, Briefcase, X, Building2, FileText } from 'lucide-react'
+import { MessageSquare, CheckSquare, Bot, Briefcase, X, Building2, FileText, BookOpen } from 'lucide-react'
+
+const HINT_DURATION = 5000
+const HINT_DELAY = 2500
+const LS_KEY = 'fab-has-interacted'
 
 interface CaseFloatingActionsProps {
   activeDrawer: string | null
@@ -12,7 +17,28 @@ interface CaseFloatingActionsProps {
 
 export function CaseFloatingActions({ activeDrawer, setDrawer, benefitType }: CaseFloatingActionsProps) {
   const [isOpen, setIsOpen] = useState(false)
+  const [showHint, setShowHint] = useState(false)
+  const hasInteracted = useRef(false)
   const menuRef = useRef<HTMLDivElement>(null)
+  const pathname = usePathname()
+  const isCnisPage = pathname?.includes('/cnis')
+
+  const hintText = isCnisPage
+    ? 'Consulte o dicionário de indicadores'
+    : 'Acesse ferramentas rápidas'
+
+  // Resume interaction state
+  if (typeof window !== 'undefined' && !hasInteracted.current) {
+    hasInteracted.current = localStorage.getItem(LS_KEY) === 'true'
+  }
+
+  // Show hint on fresh pages if never interacted
+  useEffect(() => {
+    if (hasInteracted.current) return
+    const show = setTimeout(() => setShowHint(true), HINT_DELAY)
+    const hide = setTimeout(() => setShowHint(false), HINT_DELAY + HINT_DURATION)
+    return () => { clearTimeout(show); clearTimeout(hide) }
+  }, [])
 
   // Close when clicking outside or pressing Escape
   useEffect(() => {
@@ -34,9 +60,23 @@ export function CaseFloatingActions({ activeDrawer, setDrawer, benefitType }: Ca
     }
   }, [isOpen])
 
+  const markInteracted = () => {
+    if (!hasInteracted.current) {
+      hasInteracted.current = true
+      localStorage.setItem(LS_KEY, 'true')
+      setShowHint(false)
+    }
+  }
+
   const handleAction = (drawerName: string) => {
+    markInteracted()
     setDrawer(activeDrawer === drawerName ? null : drawerName)
     setIsOpen(false)
+  }
+
+  const handleToggle = () => {
+    markInteracted()
+    setIsOpen(!isOpen)
   }
 
   const actions = [
@@ -64,6 +104,14 @@ export function CaseFloatingActions({ activeDrawer, setDrawer, benefitType }: Ca
       icon: FileText,
       color: 'hover:text-amber-600 hover:border-amber-200 hover:bg-amber-50/50',
     },
+    ...(isCnisPage
+      ? [{
+          id: 'dictionary',
+          label: 'Dicionário',
+          icon: BookOpen,
+          color: 'hover:text-amber-600 hover:border-amber-200 hover:bg-amber-50/50',
+        }]
+      : []),
     ...(benefitType === 'BPC_LOAS'
       ? [{
           id: 'bpc',
@@ -91,7 +139,6 @@ export function CaseFloatingActions({ activeDrawer, setDrawer, benefitType }: Ca
 
           return (
             <div key={action.id} className="flex items-center gap-2 group">
-              {/* Text tooltip/label */}
               <span
                 className={cn(
                   'px-2.5 py-1 rounded bg-slate-900 text-white text-xs font-sans font-semibold shadow-md whitespace-nowrap transition-all duration-200 opacity-0 scale-95 origin-right translate-x-2 pointer-events-none',
@@ -100,8 +147,6 @@ export function CaseFloatingActions({ activeDrawer, setDrawer, benefitType }: Ca
               >
                 {action.label}
               </span>
-
-              {/* Action Button */}
               <button
                 onClick={() => handleAction(action.id)}
                 className={cn(
@@ -123,25 +168,59 @@ export function CaseFloatingActions({ activeDrawer, setDrawer, benefitType }: Ca
         })}
       </div>
 
+      {/* Hint tooltip */}
+      {showHint && (
+        <div className="animate-hint-fade bg-slate-900 text-white text-xs font-sans font-semibold px-3 py-2 rounded-lg shadow-lg flex items-center gap-2 whitespace-nowrap mb-1">
+          <Briefcase className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+          {hintText}
+        </div>
+      )}
+
       {/* Main Trigger Button */}
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className={cn(
-          'w-14 h-14 rounded-full flex items-center justify-center shadow-xl text-white transition-all duration-300 transform active:scale-95',
-          isOpen
-            ? 'bg-slate-800 hover:bg-slate-700 rotate-90 scale-95'
-            : 'bg-amber-600 hover:bg-amber-500 hover:shadow-amber-500/20 hover:scale-105'
-        )}
-        aria-expanded={isOpen}
-        aria-haspopup="true"
-        aria-label="Abrir menu de ferramentas rápidas do caso"
-      >
-        {isOpen ? (
-          <X className="w-6 h-6 animate-fade-in" />
-        ) : (
-          <Briefcase className="w-6 h-6 animate-fade-in" />
-        )}
-      </button>
+      <div className="relative">
+        <button
+          onClick={handleToggle}
+          className={cn(
+            'w-14 h-14 rounded-full flex items-center justify-center shadow-xl text-white transition-all duration-300 transform active:scale-95',
+            isOpen
+              ? 'bg-slate-800 hover:bg-slate-700 rotate-90 scale-95'
+              : 'bg-amber-600 hover:bg-amber-500 hover:shadow-amber-500/20 hover:scale-105',
+            !hasInteracted.current && !isOpen && 'animate-fab-attention'
+          )}
+          aria-expanded={isOpen}
+          aria-haspopup="true"
+          aria-label="Abrir menu de ferramentas rápidas do caso"
+        >
+          {isOpen ? (
+            <X className="w-6 h-6" />
+          ) : (
+            <Briefcase className="w-6 h-6" />
+          )}
+        </button>
+      </div>
+
+      <style dangerouslySetInnerHTML={{ __html: `
+        @keyframes fab-pulse {
+          0%, 100% { box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1), 0 0 0 0 rgba(217,119,6,0.5); }
+          50% { box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1), 0 0 0 14px rgba(217,119,6,0); }
+        }
+        @keyframes fab-breathe {
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(1.06); }
+        }
+        @keyframes hint-fade {
+          0% { opacity: 0; transform: translateY(8px); }
+          12% { opacity: 1; transform: translateY(0); }
+          80% { opacity: 1; transform: translateY(0); }
+          100% { opacity: 0; transform: translateY(-4px); }
+        }
+        .animate-fab-attention {
+          animation: fab-pulse 1.8s infinite, fab-breathe 2.4s ease-in-out infinite;
+        }
+        .animate-hint-fade {
+          animation: hint-fade ${HINT_DURATION}ms ease-out forwards;
+        }
+      `}} />
     </div>
   )
 }
