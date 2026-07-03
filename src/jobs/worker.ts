@@ -21,7 +21,7 @@ try {
   logger.error('Failed to load .env file natively', e)
 }
 
-const redis = new Redis(process.env.REDIS_URL || 'redis://localhost:60004', {
+const redis = new Redis(process.env.REDIS_URL!, {
   maxRetriesPerRequest: null,
 })
 

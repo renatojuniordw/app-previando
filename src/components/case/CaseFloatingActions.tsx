@@ -199,28 +199,6 @@ export function CaseFloatingActions({ activeDrawer, setDrawer, benefitType }: Ca
         </button>
       </div>
 
-      <style dangerouslySetInnerHTML={{ __html: `
-        @keyframes fab-pulse {
-          0%, 100% { box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1), 0 0 0 0 rgba(217,119,6,0.5); }
-          50% { box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1), 0 0 0 14px rgba(217,119,6,0); }
-        }
-        @keyframes fab-breathe {
-          0%, 100% { transform: scale(1); }
-          50% { transform: scale(1.06); }
-        }
-        @keyframes hint-fade {
-          0% { opacity: 0; transform: translateY(8px); }
-          12% { opacity: 1; transform: translateY(0); }
-          80% { opacity: 1; transform: translateY(0); }
-          100% { opacity: 0; transform: translateY(-4px); }
-        }
-        .animate-fab-attention {
-          animation: fab-pulse 1.8s infinite, fab-breathe 2.4s ease-in-out infinite;
-        }
-        .animate-hint-fade {
-          animation: hint-fade ${HINT_DURATION}ms ease-out forwards;
-        }
-      `}} />
     </div>
   )
 }

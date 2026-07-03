@@ -12,12 +12,6 @@ concurrency:
 
 env:
   NODE_VERSION: '20'
-  DATABASE_URL: postgresql://previando:previando@localhost:5432/previando
-  REDIS_URL: redis://localhost:6379
-  NEXTAUTH_SECRET: ci-secret-not-used-in-tests
-  NEXTAUTH_URL: http://localhost:60002
-  CPF_HASH_SALT: ci-test-salt-do-not-use-in-production
-  SALARIO_MINIMO_API: http://localhost:9999
 
 jobs:
   lint:
@@ -89,12 +83,12 @@ jobs:
       - run: npx prisma migrate deploy
         working-directory: app-previando
         env:
-          DATABASE_URL: ${{ env.DATABASE_URL }}
+          DATABASE_URL: ${{ secrets.CI_DATABASE_URL }}
       - run: npx vitest run --reporter=verbose
         working-directory: app-previando
         env:
-          DATABASE_URL: ${{ env.DATABASE_URL }}
-          REDIS_URL: ${{ env.REDIS_URL }}
+          DATABASE_URL: ${{ secrets.CI_DATABASE_URL }}
+          REDIS_URL: ${{ secrets.CI_REDIS_URL }}
 
   build:
     runs-on: ubuntu-latest

@@ -80,13 +80,6 @@ export default function CnisCasePage() {
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto relative px-4 sm:px-6">
-      <style dangerouslySetInnerHTML={{ __html: `
-        @keyframes loading-bar { 0% { transform: translateX(-100%); } 50% { transform: translateX(0%); } 100% { transform: translateX(100%); } }
-        .animate-loading-bar { animation: loading-bar 2s infinite linear; }
-        @keyframes slide-down { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
-        .animate-slide-down { animation: slide-down 0.2s ease-out forwards; }
-      ` }} />
-
       {uploading && <CnisUploadOverlay />}
 
       <CnisHeader
