@@ -5,10 +5,14 @@ import ReactMarkdown from 'react-markdown'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
+import dynamic from 'next/dynamic'
 import api from '@/lib/api'
 import { BpcPDFDocument } from '@/components/pdf/BpcPDFDocument'
 
-import { PDFDownloadLink } from '@react-pdf/renderer'
+const PDFDownloadLink = dynamic(
+  () => import('@react-pdf/renderer').then(m => ({ default: m.PDFDownloadLink })),
+  { ssr: false, loading: () => <span className="text-xs text-slate-400">Carregando...</span> }
+)
 
 type AnalysisType = 'preAnalise' | 'laudo' | 'social' | 'medical' | 'checklist' | null
 

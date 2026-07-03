@@ -20,7 +20,7 @@ export function StatusModal({ open, newStatus, loading, onClose, onStatusChange,
           <select
             value={newStatus}
             onChange={(e) => onStatusChange(e.target.value)}
-            className="w-full px-3 py-2 font-sans text-sm rounded-md bg-white text-slate-900 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-600 focus:border-transparent"
+            className="neo-input"
           >
             {STATUS_OPTIONS.map((s) => (
               <option key={s.value} value={s.value}>{s.label}</option>

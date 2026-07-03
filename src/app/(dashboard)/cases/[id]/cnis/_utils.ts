@@ -1,9 +1,6 @@
 import { Periodo, PeriodWarning } from './_types'
 import { getIndicatorDetails } from '@/services/cnis/indicatorsDictionary'
 
-export const formatCurrency = (value: number) =>
-  new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value)
-
 export const formatCompetencia = (comp: string) => {
   if (!comp) return 'N/A'
   const parts = comp.split('-')

@@ -1,6 +1,7 @@
 import { AlertCircle, Calendar, ChevronDown, ChevronUp, Edit3, Plus, X } from 'lucide-react'
 import { Periodo, PeriodWarning } from '../_types'
-import { formatCompetencia, formatCurrency, formatDateString } from '../_utils'
+import { formatCompetencia, formatDateString } from '../_utils'
+import { formatCurrency } from '@/lib/utils'
 import { getIndicatorDetails } from '@/services/cnis/indicatorsDictionary'
 
 interface Props {

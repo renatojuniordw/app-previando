@@ -2,7 +2,6 @@ import { describe, it, expect } from 'vitest'
 import { CalculationModality, CaseStatus, BenefitType, NoteType } from '@prisma/client'
 import {
   mapModalidadeToDb,
-  mapModalidadeToApi,
   mapCaseStatusToDb,
   mapCaseStatusToApi,
   mapBenefitTypeToDb,
@@ -24,16 +23,6 @@ describe('mapModalidadeToDb', () => {
 
   it('deve retornar fallback para modalidade desconhecida', () => {
     expect(mapModalidadeToDb('MODALIDADE_INVALIDA')).toBe(CalculationModality.RETIREMENT_BY_AGE)
-  })
-})
-
-describe('mapModalidadeToApi', () => {
-  it('deve mapear RETIREMENT_BY_AGE para APOSENTADORIA_IDADE', () => {
-    expect(mapModalidadeToApi(CalculationModality.RETIREMENT_BY_AGE)).toBe('APOSENTADORIA_IDADE')
-  })
-
-  it('deve retornar fallback para modalidade desconhecida', () => {
-    expect(mapModalidadeToApi('UNKNOWN' as CalculationModality)).toBe('APOSENTADORIA_IDADE')
   })
 })
 

@@ -28,7 +28,7 @@ export function EditPeriodModal({
             type="text"
             value={empregador}
             onChange={e => onChangeEmpregador(e.target.value)}
-            className="w-full border border-slate-200 rounded-lg p-2.5 text-sm"
+            className="neo-input"
             placeholder="Ex: Companhia de Alimentos S.A."
           />
         </div>
@@ -41,7 +41,7 @@ export function EditPeriodModal({
               type="text"
               value={inicio}
               onChange={e => onChangeInicio(e.target.value)}
-              className="w-full border border-slate-200 rounded-lg p-2.5 text-sm"
+              className="neo-input"
               placeholder="AAAA-MM-DD"
             />
           </div>
@@ -53,7 +53,7 @@ export function EditPeriodModal({
               value={fim}
               onChange={e => onChangeFim(e.target.value)}
               disabled={isCurrent}
-              className="w-full border border-slate-200 rounded-lg p-2.5 text-sm disabled:bg-slate-100"
+              className="neo-input disabled:bg-slate-100"
               placeholder="AAAA-MM-DD"
             />
           </div>

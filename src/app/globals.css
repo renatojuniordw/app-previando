@@ -3,13 +3,6 @@
 @tailwind utilities;
 
 /* ─── Design Tokens ──────────────────────────────────── */
-:root {
-  --color-brand-light: #f8fafc;
-  --color-brand-dark: #0f172a;
-  --color-brand-accent: #d97706;
-  --color-brand-surface: #ffffff;
-}
-
 /* ─── Base ───────────────────────────────────────────── */
 * {
   box-sizing: border-box;
@@ -17,6 +10,11 @@
 
 body {
   @apply bg-slate-50 text-slate-900 antialiased;
+}
+
+:focus-visible {
+  outline: 2px solid #d97706;
+  outline-offset: 2px;
 }
 
 
@@ -64,11 +62,6 @@ body {
   }
   .neo-scroll::-webkit-scrollbar-thumb:hover {
     @apply bg-slate-400;
-  }
-
-  /* Toast container */
-  .toast-container {
-    @apply fixed bottom-4 right-4 z-50 flex flex-col gap-2;
   }
 
   /* Spinner */
@@ -139,13 +132,4 @@ body {
   }
 }
 
-/* ─── Utilitários ─────────────────────────────────────── */
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
 
-  .font-mono-preview {
-    font-family: 'JetBrains Mono', monospace;
-  }
-}

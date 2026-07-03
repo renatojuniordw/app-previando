@@ -8,8 +8,8 @@ import { Modal } from '@/components/ui/Modal'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { HelpText } from '@/components/ui/HelpText'
 import { DatePicker } from '@/components/ui/DatePicker'
-import { formatDate } from '@/lib/utils'
-import { MODALIDADES_PADRAO } from '@/lib/modalidade-labels'
+import { formatCurrency, formatDate, formatPercentage } from '@/lib/utils'
+import { MODALIDADES_PADRAO, getModalityLabel, mapToPortugueseCode } from '@/lib/modalidade-labels'
 import { ModalitySelect } from '@/components/case/ModalitySelect'
 import { useToast } from '@/store/toast'
 import { CnisInfoCard } from '@/components/cases/CnisInfoCard'
@@ -79,17 +79,6 @@ interface Modalidade {
   label: string
 }
 
-const formatCurrency = (val: string | number) => {
-  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(val))
-}
-
-const formatPercentage = (val: string | number | undefined | null) => {
-  if (val === undefined || val === null) return 'N/A'
-  return new Intl.NumberFormat('pt-BR', { style: 'percent', minimumFractionDigits: 2 }).format(
-    Number(val)
-  )
-}
-
 export default function CalculatorPage() {
   const params = useParams()
   interface CnisDocument {
@@ -142,81 +131,22 @@ export default function CalculatorPage() {
         setCnisDocument(rCnis.data.cnisDocument)
       }
     } catch {
-      // noop
+      addToast({ type: 'error', title: 'Erro', message: 'Erro ao carregar dados do cálculo.' })
     } finally {
       setLoading(false)
     }
-  }, [params.id])
+  }, [params.id, addToast])
 
   useEffect(() => {
     load()
   }, [load])
 
-  const modalidadeLabels = Object.fromEntries(
-    (modalidades.length > 0 ? modalidades : MODALIDADES_PADRAO).map(({ codigo, label }) => [
-      codigo,
-      label,
-    ])
-  )
 
-  const mapEnglishToPortugueseModality = (code: string): string => {
-    const map: Record<string, string> = {
-      RETIREMENT_BY_AGE: 'APOSENTADORIA_IDADE',
-      MINIMUM_AGE_65_62: 'IDADE_MINIMA_65_62',
-      CONTRIBUTION_TIME: 'TEMPO_CONTRIBUICAO',
-      POINTS_86_96: 'PONTOS_86_96',
-      TOLL_50: 'PEDAGIO_50',
-      TOLL_100: 'PEDAGIO_100',
-      SPECIAL_RETIREMENT: 'APOSENTADORIA_ESPECIAL',
-      HYBRID: 'HIBRIDA',
-      SICKNESS_BENEFIT_B31: 'AUXILIO_DOENCA_B31',
-      SICKNESS_BENEFIT_B91: 'AUXILIO_DOENCA_B91',
-      MATERNITY_PAY: 'SALARIO_MATERNIDADE',
-      PRISONER_BENEFIT: 'AUXILIO_RECLUSAO',
-      DEATH_PENSION: 'PENSAO_MORTE',
-      BPC_LOAS: 'BPC_LOAS',
-    }
-    return map[code] || code
-  }
-
-  const getModalityLabel = (modalityCode: string | undefined | null) => {
-    if (!modalityCode) return ''
-    const localMap: Record<string, string> = {
-      POINTS_86_96: 'Aposentadoria por Pontos (Transição)',
-      TOLL_50: 'Transição - Pedágio de 50%',
-      TOLL_100: 'Transição - Pedágio de 100%',
-      MINIMUM_AGE_65_62: 'Idade Mínima Progressiva',
-      CONTRIBUTION_TIME: 'Tempo de Contribuição (Regra Geral)',
-      RETIREMENT_BY_AGE: 'Aposentadoria por Idade',
-      SPECIAL_RETIREMENT: 'Aposentadoria Especial (25 anos)',
-      HYBRID: 'Aposentadoria Híbrida',
-      SICKNESS_BENEFIT_B31: 'Auxílio-Doença Previdenciário',
-      SICKNESS_BENEFIT_B91: 'Auxílio-Doença Acidentário',
-      MATERNITY_PAY: 'Salário-Maternidade',
-      PRISONER_BENEFIT: 'Auxílio-Reclusão',
-      DEATH_PENSION: 'Pensão por Morte',
-      BPC_LOAS: 'BPC/LOAS (Idoso)',
-      PONTOS_86_96: 'Aposentadoria por Pontos (Transição)',
-      PEDAGIO_50: 'Transição - Pedágio de 50%',
-      PEDAGIO_100: 'Transição - Pedágio de 100%',
-      IDADE_MINIMA_65_62: 'Idade Mínima Progressiva',
-      TEMPO_CONTRIBUICAO: 'Tempo de Contribuição (Regra Geral)',
-      APOSENTADORIA_IDADE: 'Aposentadoria por Idade',
-      APOSENTADORIA_ESPECIAL: 'Aposentadoria Especial (25 anos)',
-      HIBRIDA: 'Aposentadoria Híbrida',
-      AUXILIO_DOENCA_B31: 'Auxílio-Doença Previdenciário',
-      AUXILIO_DOENCA_B91: 'Auxílio-Doença Acidentário',
-      SALARIO_MATERNIDADE: 'Salário-Maternidade',
-      AUXILIO_RECLUSAO: 'Auxílio-Reclusão',
-      PENSAO_MORTE: 'Pensão por Morte',
-    }
-    return modalidadeLabels[modalityCode] || localMap[modalityCode] || modalityCode
-  }
 
   const uniqueModalidades = Array.from(
     new Map(
       (modalidades.length > 0 ? modalidades : MODALIDADES_PADRAO).map((item) => {
-        const apiCode = mapEnglishToPortugueseModality(item.codigo)
+        const apiCode = mapToPortugueseCode(item.codigo)
         return [apiCode, { ...item, codigo: apiCode }]
       })
     ).values()
@@ -532,7 +462,7 @@ export default function CalculatorPage() {
                           Alíquota / Coeficiente
                         </span>
                         <span className="font-sans text-sm font-bold text-slate-800">
-                          {formatPercentage(calc.coefficient)}
+                          {calc.coefficient != null ? formatPercentage(Number(calc.coefficient) * 100) : 'N/A'}
                         </span>
                       </div>
                       <div className="rounded-xl border border-slate-200 bg-white p-4">

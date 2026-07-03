@@ -74,7 +74,7 @@ export default function ForgotPasswordPage() {
           <ArrowLeft className="w-4 h-4" />
           Voltar ao login
         </Link>
-        <h2 className="font-serif font-bold text-3xl text-slate-900 mb-2">Esqueceu a senha?</h2>
+        <h1 className="font-serif font-bold text-3xl text-slate-900 mb-2">Esqueceu a senha?</h1>
         <p className="font-sans text-slate-600">
           Informe seu email e enviaremos um link para você criar uma nova senha.
         </p>

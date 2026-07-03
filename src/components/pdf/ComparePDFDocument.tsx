@@ -1,6 +1,7 @@
 import React from 'react'
 import { Document, Page, View, Text, Image } from '@react-pdf/renderer'
 import { styles, BRAND, LOGO_BASE64 } from './styles'
+import { formatCurrency } from '@/lib/utils'
 
 interface ModalidadeSugerida {
   modalidade: string
@@ -32,10 +33,6 @@ const MODALITY_LABELS: Record<string, string> = {
 }
 
 const GENDER_LABEL: Record<string, string> = { M: 'Masc.', F: 'Fem.' }
-
-function formatCurrency(val: number) {
-  return val.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
-}
 
 const Header: React.FC = () => (
   <View style={styles.header} fixed>

@@ -33,29 +33,8 @@ const modalityToDbMap: Record<string, CalculationModality> = {
   BPC_LOAS: CalculationModality.BPC_LOAS,
 }
 
-const modalityToApiMap: Record<CalculationModality, string> = {
-  [CalculationModality.RETIREMENT_BY_AGE]: 'APOSENTADORIA_IDADE',
-  [CalculationModality.MINIMUM_AGE_65_62]: 'IDADE_MINIMA_65_62',
-  [CalculationModality.CONTRIBUTION_TIME]: 'TEMPO_CONTRIBUICAO',
-  [CalculationModality.POINTS_86_96]: 'PONTOS_86_96',
-  [CalculationModality.TOLL_50]: 'PEDAGIO_50',
-  [CalculationModality.TOLL_100]: 'PEDAGIO_100',
-  [CalculationModality.SPECIAL_RETIREMENT]: 'APOSENTADORIA_ESPECIAL',
-  [CalculationModality.HYBRID]: 'HIBRIDA',
-  [CalculationModality.SICKNESS_BENEFIT_B31]: 'AUXILIO_DOENCA_B31',
-  [CalculationModality.SICKNESS_BENEFIT_B91]: 'AUXILIO_DOENCA_B91',
-  [CalculationModality.MATERNITY_PAY]: 'SALARIO_MATERNIDADE',
-  [CalculationModality.PRISONER_BENEFIT]: 'AUXILIO_RECLUSAO',
-  [CalculationModality.DEATH_PENSION]: 'PENSAO_MORTE',
-  [CalculationModality.BPC_LOAS]: 'BPC_LOAS',
-}
-
 export function mapModalidadeToDb(modality: string): CalculationModality {
   return modalityToDbMap[modality] || CalculationModality.RETIREMENT_BY_AGE
-}
-
-export function mapModalidadeToApi(modality: CalculationModality): string {
-  return modalityToApiMap[modality] || 'APOSENTADORIA_IDADE'
 }
 
 export type ApiNoteType = 'CONTATO' | 'DOCUMENTO' | 'JURIDICO' | 'INTERNO' | 'CALCULO' | 'PENDENCIA' | 'BPC'

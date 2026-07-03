@@ -1,6 +1,6 @@
 # 11 — DESIGN SYSTEM
 > Diretrizes visuais, tipografia, componentes e regras de UX/UI do Previando
-> Última atualização: 2026-06-27
+> Última atualização: 2026-07-03
 
 ---
 
@@ -34,6 +34,7 @@ O Previando adota uma estética **Premium, Acessível e Clean**, focada em trans
 - **Títulos e Headings:** Fonte Serifada (`font-serif` - Playfair Display)
 - **UI e Corpo de Texto:** Fonte Sans-Serif (`font-sans` - Inter)
 - **Dados/Código:** Fonte Mono (`font-mono` - JetBrains Mono)
+- **Carregamento:** `next/font/google` com `display: 'swap'` (sem layout shift)
 
 ---
 
@@ -56,25 +57,54 @@ O Previando adota uma estética **Premium, Acessível e Clean**, focada em trans
 
 Tamanhos: `sm` (px-3 py-1.5 text-xs), `md` (px-4 py-2 text-sm), `lg` (px-6 py-3 text-base).
 
+**Uso:** Sempre preferir `<Button>` em vez de estilos inline. O componente gerencia loading, disabled e foco.
+
 ### 4.3 Formulários e Inputs
-- Fundo: Branco (`bg-white`)
-- Borda: `border-slate-300`
-- Foco: `focus:ring-2 focus:ring-amber-600 focus:border-transparent`
+| Classe | Uso |
+|---|---|
+| `neo-input` | Input padronizado (bg-white, border-slate-300, focus:ring-amber-600) |
+| `neo-label` | Label padronizado (font-medium text-sm text-slate-700) |
+| `Input.tsx` | Componente React com label, error, hint |
+
+**Uso:** Preferir a classe `neo-input` sobre estilos inline. O `<Input>` componente já usa `neo-input` internamente.
+
+### 4.4 Spinner
+Componente `<Spinner size="sm | md | lg" />` — substitui usos manuais de `Loader2` + `animate-spin`.
+
+### 4.5 PageHeader
+Componente `<PageHeader icon title description action meta />` — padroniza cabeçalhos de página.
+
+### 4.6 PageError
+Componente `<PageError error reset title />` — padroniza estados de erro.
+
+### 4.7 AlertBanner
+Componente `<AlertBanner variant="warning | error | success | info" icon title />` — banners de alerta.
+
+### 4.8 EmptyState
+Componente `<EmptyState icon title description action />` — estados vazios.
 
 ---
 
 ## 5. Regras de Acessibilidade (a11y)
 
-1. **Foco Visível:** Nunca remover `:focus-visible` nativo
-2. **Contraste:** `slate-900` sobre branco/off-white
+1. **Foco Visível:** `:focus-visible` global definido em `globals.css` (outline 2px amber + offset 2px)
+2. **Contraste:** Mínimo 4.5:1 para texto pequeno. Placeholder `slate-400` (2.8:1) → usar `slate-500` para texto visível
 3. **ARIA Attributes:** Modais, tooltips e tabs com `aria-hidden`, `aria-label`, `role`
 4. **Touch Targets:** Mínimo 44x44px em telas móveis
+5. **Skip-to-content:** Links de navegação por teclado nos layouts auth e dashboard
+6. **Focus trap:** `useFocusTrap` em modais e drawers
+7. **Heading hierarchy:** Uma única `<h1>` por página, hierarquia semântica h1→h2→h3
 
 ---
 
 ## 6. Animações
 
-Definidas em `tailwind.config.ts`:
+Definidas em `tailwind.config.ts` e `globals.css`:
 - `animate-slide-in`: Drawer slide (0.3s cubic-bezier)
 - `animate-fade-in`: Fade in (0.2s ease-out)
-- `animate-spin-slow`: Spinner (3s linear)
+- `animate-slide-up`: Toast slide (0.3s ease-out)
+- `animate-slide-down`: Banner slide (0.2s ease-out)
+- `animate-loading-bar`: Barra de progresso CNIS (2s linear)
+- `animate-fab-attention`: Pulso do FAB (1.8s infinite)
+- `animate-hint-fade`: Dica do FAB (5s ease-out)
+- `prefers-reduced-motion`: Respeitado globalmente (spinners mantidos)

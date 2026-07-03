@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/Button'
 import { Modal } from '@/components/ui/Modal'
 import { DatePicker } from '@/components/ui/DatePicker'
 import { CurrencyInput } from '@/components/ui/CurrencyInput'
-import { formatDate } from '@/lib/utils'
+import { formatDate, formatCurrency } from '@/lib/utils'
 import { MODALIDADES_PADRAO } from '@/lib/modalidade-labels'
 import { ModalitySelect } from '@/components/case/ModalitySelect'
 import { useToast } from '@/store/toast'
@@ -48,10 +48,6 @@ interface CnisDocument {
     dataNascimento?: string
     periodos?: unknown[]
   }
-}
-
-const formatCurrency = (val: string | number) => {
-  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(val))
 }
 
 export default function SimulatorPage() {

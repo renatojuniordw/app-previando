@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { formatCurrency, formatDate, formatDateTime } from '@/lib/utils'
+import { formatCurrency, formatDate } from '@/lib/utils'
 
 describe('formatCurrency', () => {
   it('deve formatar valor em reais', () => {
@@ -34,14 +34,4 @@ describe('formatDate', () => {
   })
 })
 
-describe('formatDateTime', () => {
-  it('deve formatar data e hora', () => {
-    const result = formatDateTime('2025-06-15T14:30:00')
-    expect(result).toContain('15/06/2025')
-    expect(result).toContain('14:30')
-  })
 
-  it('deve retornar — para data inválida', () => {
-    expect(formatDateTime('invalid')).toBe('—')
-  })
-})

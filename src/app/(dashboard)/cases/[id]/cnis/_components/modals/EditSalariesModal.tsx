@@ -1,7 +1,8 @@
 import { Plus, X } from 'lucide-react'
 import { Modal } from '@/components/ui/Modal'
 import { CurrencyInput } from '@/components/ui/CurrencyInput'
-import { formatCompetencia, formatCurrency } from '../../_utils'
+import { formatCompetencia } from '../../_utils'
+import { formatCurrency } from '@/lib/utils'
 
 interface Props {
   open: boolean

@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Calculator, Clock, CheckCircle2, XCircle, AlertCircle, Shield } from 'lucide-react'
 import { IdentityVerification } from '@/components/portal/IdentityVerification'
+import { formatCurrency, formatDate } from '@/lib/utils'
 
 interface CalculationData {
   modality: string
@@ -46,15 +47,6 @@ const MODALITY_LABELS: Record<string, string> = {
   PRISONER_BENEFIT: 'Auxílio-Reclusão',
   DEATH_PENSION: 'Pensão por Morte',
   BPC_LOAS: 'BPC/LOAS',
-}
-
-const formatCurrency = (val: number) => {
-  return val.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
-}
-
-const formatDate = (date: Date | string) => {
-  const d = new Date(date)
-  return d.toLocaleDateString('pt-BR')
 }
 
 /**

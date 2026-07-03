@@ -1,6 +1,5 @@
 import type { Metadata } from 'next'
 import { Inter, Playfair_Display, JetBrains_Mono } from 'next/font/google'
-import { MuiThemeProvider } from '@/components/ui/MuiThemeProvider'
 import './globals.css'
 
 const inter = Inter({
@@ -48,7 +47,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="theme-color" content="#d97706" />
         <link rel="apple-touch-icon" href="/logo-previando.svg" />
       </head>
-      <body className="font-sans"><MuiThemeProvider>{children}</MuiThemeProvider></body>
+      <body className="font-sans">{children}</body>
     </html>
   )
 }

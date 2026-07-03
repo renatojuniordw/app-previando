@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { Drawer } from '@/components/ui/Drawer'
 import { CheckSquare, Plus, Loader2 } from 'lucide-react'
+import { useToast } from '@/store/toast'
 
 interface CaseChecklistDrawerProps {
   open: boolean
@@ -21,6 +22,7 @@ interface ChecklistItem {
 }
 
 export function CaseChecklistDrawer({ open, onClose, caseId }: CaseChecklistDrawerProps) {
+  const { addToast } = useToast()
   const [items, setItems] = useState<ChecklistItem[]>([])
   const [hasChecklist, setHasChecklist] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -69,6 +71,7 @@ export function CaseChecklistDrawer({ open, onClose, caseId }: CaseChecklistDraw
       await saveItems(updated)
     } catch {
       setItems(items)
+      addToast({ type: 'error', title: 'Erro', message: 'Erro ao atualizar item.' })
     }
   }
 
@@ -88,7 +91,7 @@ export function CaseChecklistDrawer({ open, onClose, caseId }: CaseChecklistDraw
       setShowAddForm(false)
       setNewItem('')
     } catch {
-      // noop
+      addToast({ type: 'error', title: 'Erro', message: 'Erro ao criar item.' })
     } finally {
       setCreating(false)
     }

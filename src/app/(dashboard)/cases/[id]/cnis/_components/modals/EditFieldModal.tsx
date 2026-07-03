@@ -22,7 +22,7 @@ export function EditFieldModal({ open, label, currentValue, onClose, onSave }: P
             type="text"
             value={value}
             onChange={e => setValue(e.target.value)}
-            className="w-full border border-slate-200 rounded-lg p-2.5 text-sm"
+            className="neo-input"
             autoFocus
           />
         </div>

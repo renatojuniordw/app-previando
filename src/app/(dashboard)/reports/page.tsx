@@ -3,15 +3,26 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Card, CardHeader } from '@/components/ui/Card'
 import { Loader2, BarChart3 } from 'lucide-react'
+import api from '@/lib/api'
 import { formatCurrency } from '@/lib/utils'
-import {
-  ReportKpiCard,
-  ReportBarChart,
-  ReportPieChart,
-  ReportHorizontalBar,
-  ReportPeriodSelector,
-  ConversionFunnel,
-} from '@/components/reports'
+import { ReportKpiCard, ReportPeriodSelector } from '@/components/reports'
+import dynamic from 'next/dynamic'
+
+const ReportBarChart = dynamic(() => import('@/components/reports').then(m => m.ReportBarChart), {
+  loading: () => <div className="h-[300px] bg-slate-100 rounded-xl animate-pulse" />,
+})
+
+const ReportPieChart = dynamic(() => import('@/components/reports').then(m => m.ReportPieChart), {
+  loading: () => <div className="h-[300px] bg-slate-100 rounded-xl animate-pulse" />,
+})
+
+const ReportHorizontalBar = dynamic(() => import('@/components/reports').then(m => m.ReportHorizontalBar), {
+  loading: () => <div className="h-[260px] bg-slate-100 rounded-xl animate-pulse" />,
+})
+
+const ConversionFunnel = dynamic(() => import('@/components/reports').then(m => m.ConversionFunnel), {
+  loading: () => <div className="h-[300px] bg-slate-100 rounded-xl animate-pulse" />,
+})
 import type { PeriodOption } from '@/components/reports'
 import { STATUS_LABELS } from '@/lib/constants'
 
@@ -49,6 +60,7 @@ function formatNumber(val: number) {
 
 // ── Main Page ──────────────────────────────────────────────────────────────
 export default function ReportsPage() {
+  useEffect(() => { document.title = 'Relatórios — Previando' }, [])
   const [period, setPeriod] = useState<PeriodOption>(90)
   const [overview, setOverview] = useState<OverviewData | null>(null)
   const [financeiro, setFinanceiro] = useState<FinanceiroData | null>(null)
@@ -59,14 +71,14 @@ export default function ReportsPage() {
     setLoading(true)
     try {
       const [overviewRes, financeiroRes, operacionalRes] = await Promise.all([
-        fetch('/api/reports/overview'),
-        fetch(`/api/reports/financeiro?days=${days}`),
-        fetch(`/api/reports/operacional?days=${days}`),
+        api.get('/reports/overview').catch(() => ({ data: null })),
+        api.get(`/reports/financeiro?days=${days}`).catch(() => ({ data: null })),
+        api.get(`/reports/operacional?days=${days}`).catch(() => ({ data: null })),
       ])
 
-      if (overviewRes.ok) setOverview(await overviewRes.json())
-      if (financeiroRes.ok) setFinanceiro(await financeiroRes.json())
-      if (operacionalRes.ok) setOperacional(await operacionalRes.json())
+      if (overviewRes.data) setOverview(overviewRes.data)
+      if (financeiroRes.data) setFinanceiro(financeiroRes.data)
+      if (operacionalRes.data) setOperacional(operacionalRes.data)
     } catch {
       // Silently fail — data stays null
     } finally {

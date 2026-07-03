@@ -158,7 +158,7 @@ export function CaseNotesDrawer({ open, onClose, caseId }: CaseNotesDrawerProps)
                 <select
                   value={type}
                   onChange={(e) => setType(e.target.value)}
-                  className="w-full px-3 py-1.5 font-sans text-sm rounded-md bg-white text-slate-900 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-600 focus:border-transparent"
+                  className="neo-input"
                 >
                   {NOTE_TYPES.map((t) => (
                     <option key={t.value} value={t.value}>
@@ -172,7 +172,7 @@ export function CaseNotesDrawer({ open, onClose, caseId }: CaseNotesDrawerProps)
                 <textarea
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
-                  className="w-full px-3 py-2 font-sans text-sm rounded-md bg-white text-slate-900 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-600 focus:border-transparent min-h-[100px] resize-none"
+                  className="neo-input min-h-[100px] resize-none"
                   placeholder="Descreva o contato, documento ou informação relevante..."
                 />
               </div>

@@ -1,9 +1,10 @@
 'use client'
 import { useEffect, useState, useCallback } from 'react'
-import { formatDate } from '@/lib/utils'
+import { formatDate, formatCurrency } from '@/lib/utils'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { CreditCard, ChevronLeft, ChevronRight } from 'lucide-react'
+import api from '@/lib/api'
 
 interface Payment {
   id: string
@@ -13,10 +14,6 @@ interface Payment {
   paidAt: string | null
   createdAt: string
   user: { name: string | null; email: string | null }
-}
-
-function formatBRL(value: number) {
-  return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 }
 
 const STATUS_BADGE: Record<string, 'green' | 'yellow' | 'red' | 'slate'> = {
@@ -44,8 +41,7 @@ export default function AdminPaymentsPage() {
   const load = useCallback(async (p = page, status = statusFilter) => {
     setLoading(true)
     const params = new URLSearchParams({ page: String(p), ...(status && { status }) })
-    const r = await fetch(`/api/admin/payments?${params}`)
-    const data = await r.json()
+    const { data } = await api.get(`/admin/payments?${params}`)
     setPayments(data.payments ?? [])
     setTotal(data.total ?? 0)
     setPages(data.pages ?? 1)
@@ -103,7 +99,7 @@ export default function AdminPaymentsPage() {
                         {p.plan}
                       </span>
                     </td>
-                    <td className="px-5 py-4 font-semibold text-sm text-slate-900">{formatBRL(p.amount)}</td>
+                    <td className="px-5 py-4 font-semibold text-sm text-slate-900">{formatCurrency(p.amount)}</td>
                     <td className="px-5 py-4">
                       <Badge variant={STATUS_BADGE[p.status] ?? 'slate'}>
                         {STATUS_LABEL[p.status] ?? p.status}

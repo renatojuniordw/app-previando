@@ -13,6 +13,7 @@ import { DatePicker } from '@/components/ui/DatePicker'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { useToast } from '@/store/toast'
 import { format, parseISO } from 'date-fns'
+import { formatCurrency } from '@/lib/utils'
 
 interface Fee {
   id: string
@@ -46,10 +47,6 @@ const EMPTY_FORM = {
   dueDate: '',
   status: 'PENDING' as Fee['status'],
   notes: '',
-}
-
-function formatBRL(value: number) {
-  return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 }
 
 export default function HonorariosPage() {
@@ -192,7 +189,7 @@ export default function HonorariosPage() {
               <DollarSign className={`w-5 h-5 ${color} opacity-60 shrink-0`} />
               <div>
                 <p className="text-xs text-slate-500 font-medium">{label}</p>
-                <p className={`font-bold text-xl ${color}`}>{formatBRL(value)}</p>
+                <p className={`font-bold text-xl ${color}`}>{formatCurrency(value)}</p>
               </div>
             </div>
           </Card>
@@ -228,9 +225,9 @@ export default function HonorariosPage() {
                     </div>
 
                     <div className="flex flex-wrap gap-x-6 gap-y-1 text-xs text-slate-500 mb-3">
-                      <span>Total: <strong className="text-slate-700">{formatBRL(fee.totalAmount)}</strong></span>
-                      <span>Recebido: <strong className="text-emerald-700">{formatBRL(fee.paidAmount)}</strong></span>
-                      <span>Pendente: <strong className="text-amber-700">{formatBRL(fee.totalAmount - fee.paidAmount)}</strong></span>
+                      <span>Total: <strong className="text-slate-700">{formatCurrency(fee.totalAmount)}</strong></span>
+                      <span>Recebido: <strong className="text-emerald-700">{formatCurrency(fee.paidAmount)}</strong></span>
+                      <span>Pendente: <strong className="text-amber-700">{formatCurrency(fee.totalAmount - fee.paidAmount)}</strong></span>
                       {fee.dueDate && (
                         <span>Vence: <strong className="text-slate-700">{format(parseISO(fee.dueDate), 'dd/MM/yyyy')}</strong></span>
                       )}
@@ -293,7 +290,7 @@ export default function HonorariosPage() {
                   value={form.description}
                   onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
                   placeholder="Ex: Honorários iniciais, êxito, etc."
-                  className="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
+                  className="neo-input"
                 />
               </div>
 
@@ -327,7 +324,7 @@ export default function HonorariosPage() {
                   <select
                     value={form.status}
                     onChange={(e) => setForm((f) => ({ ...f, status: e.target.value as Fee['status'] }))}
-                    className="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
+                    className="neo-input"
                   >
                     {Object.entries(STATUS_CONFIG).map(([key, cfg]) => (
                       <option key={key} value={key}>{cfg.label}</option>
@@ -342,7 +339,7 @@ export default function HonorariosPage() {
                   value={form.notes}
                   onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
                   rows={2}
-                  className="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 resize-none"
+                  className="neo-input resize-none"
                 />
               </div>
             </div>

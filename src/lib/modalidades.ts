@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma'
-import { MODALIDADES_PADRAO, MODALIDADE_LABELS } from '@/lib/modalidade-labels'
+import { MODALIDADES_PADRAO } from '@/lib/modalidade-labels'
 
 export interface ModalidadeOption {
   id?: string
@@ -55,12 +55,4 @@ export async function getModalidades(options: GetModalidadesOptions = {}): Promi
     .sort(sortModalidades)
 }
 
-export async function getModalidadeLabelMap(options: GetModalidadesOptions = {}): Promise<Record<string, string>> {
-  const modalidades = await getModalidades(options)
 
-  if (modalidades.length === 0) {
-    return MODALIDADE_LABELS
-  }
-
-  return Object.fromEntries(modalidades.map(({ codigo, label }) => [codigo, label]))
-}

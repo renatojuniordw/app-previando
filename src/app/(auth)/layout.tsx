@@ -21,9 +21,9 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
             <div className="w-10 h-10 rounded-lg bg-amber-600 flex items-center justify-center">
               <Scale className="w-6 h-6 text-white" />
             </div>
-            <h1 className="font-serif font-bold text-3xl tracking-tight">
+            <span className="font-serif font-bold text-3xl tracking-tight">
               PREVI<span className="text-amber-500">ANDO</span>
-            </h1>
+            </span>
           </div>
         </div>
 
@@ -50,9 +50,9 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
           <div className="w-12 h-12 rounded-xl bg-amber-600 flex items-center justify-center mb-3">
             <Scale className="w-7 h-7 text-white" />
           </div>
-          <h1 className="font-serif font-bold text-3xl text-slate-900 tracking-tight">
+          <span className="font-serif font-bold text-3xl text-slate-900 tracking-tight">
             PREVI<span className="text-amber-600">ANDO</span>
-          </h1>
+          </span>
         </div>
 
         <div className="w-full max-w-sm">

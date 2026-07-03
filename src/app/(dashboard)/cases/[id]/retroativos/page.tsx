@@ -6,7 +6,7 @@ import api from '@/lib/api'
 import { Button } from '@/components/ui/Button'
 import { Modal } from '@/components/ui/Modal'
 import { DatePicker } from '@/components/ui/DatePicker'
-import { formatDate } from '@/lib/utils'
+import { formatDate, formatCurrency } from '@/lib/utils'
 import { useToast } from '@/store/toast'
 import { CurrencyInput } from '@/components/ui/CurrencyInput'
 import {
@@ -46,10 +46,6 @@ interface Retroativo {
     acumuladoINPC: number
   }
   createdAt: string
-}
-
-const formatCurrency = (val: string | number) => {
-  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(val))
 }
 
 const formatPercentage = (val: number) => {
@@ -113,11 +109,11 @@ export default function RetroativosPage() {
       }))
       setRetroativos(mapped)
     } catch {
-      // noop
+      addToast({ type: 'error', title: 'Erro', message: 'Erro ao carregar retroativo.' })
     } finally {
       setLoading(false)
     }
-  }, [params.id])
+  }, [params.id, addToast])
 
   useEffect(() => {
     load()

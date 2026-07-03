@@ -1,24 +1,5 @@
 import { describe, it, expect, beforeAll } from 'vitest'
-import { escapeHtml, sanitizeInput, hashCPF, maskCPF, sanitizePhone, sanitizeForAI } from '@/lib/sanitize'
-
-describe('escapeHtml', () => {
-  it('deve escapar caracteres HTML', () => {
-    expect(escapeHtml('<script>alert("xss")</script>')).toBe('&lt;script&gt;alert(&quot;xss&quot;)&lt;/script&gt;')
-  })
-
-  it('deve escapar aspas simples', () => {
-    expect(escapeHtml("it's")).toBe("it&#39;s")
-  })
-
-  it('deve retornar string vazia para null/undefined', () => {
-    expect(escapeHtml(null as unknown as string)).toBe('')
-    expect(escapeHtml(undefined as unknown as string)).toBe('')
-  })
-
-  it('deve retornar string normal inalterada', () => {
-    expect(escapeHtml('Hello World')).toBe('Hello World')
-  })
-})
+import { sanitizeInput, hashCPF, maskCPF, sanitizePhone, sanitizeForAI } from '@/lib/sanitize'
 
 describe('sanitizeInput', () => {
   it('deve remover tags HTML', () => {

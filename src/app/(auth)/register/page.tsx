@@ -71,9 +71,9 @@ export default function RegisterPage() {
   return (
     <div className="w-full max-w-md">
       <div className="mb-8">
-        <h2 className="font-serif font-bold text-3xl text-slate-900 mb-2">
+        <h1 className="font-serif font-bold text-3xl text-slate-900 mb-2">
           Criar conta grátis
-        </h2>
+        </h1>
         <p className="font-sans text-slate-600">
           Sem cartão de crédito · Plano FREE para sempre
         </p>

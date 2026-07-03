@@ -5,13 +5,18 @@ import { useParams } from 'next/navigation'
 import api from '@/lib/api'
 import { Card } from '@/components/ui/Card'
 import dynamic from 'next/dynamic'
-import { ComparePDFDocument } from '@/components/pdf/ComparePDFDocument'
+
+const ComparePDFDocument = dynamic(
+  () => import('@/components/pdf/ComparePDFDocument').then(m => ({ default: m.ComparePDFDocument })),
+  { ssr: false }
+)
 
 const PDFDownloadLink = dynamic(
-  () => import('@react-pdf/renderer').then(mod => mod.PDFDownloadLink),
+  () => import('@react-pdf/renderer').then(mod => ({ default: mod.PDFDownloadLink })),
   { ssr: false, loading: () => <span>Carregando...</span> }
 )
 import { CheckCircle2, XCircle, TrendingUp, AlertTriangle, Download } from 'lucide-react'
+import { formatCurrency } from '@/lib/utils'
 
 interface ModalidadeSugerida {
   modalidade: string
@@ -43,10 +48,6 @@ const MODALITY_LABELS: Record<string, string> = {
 }
 
 const GENDER_LABEL: Record<string, string> = { M: 'Masculino', F: 'Feminino' }
-
-function formatCurrency(val: number) {
-  return val.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
-}
 
 export default function ComparePage() {
   const { id } = useParams<{ id: string }>()

@@ -1,6 +1,7 @@
 import { memo } from 'react'
 import { Card } from '@/components/ui/Card'
 import { Users, Briefcase, AlertCircle, CheckCircle2, TrendingUp } from 'lucide-react'
+import { formatCurrency } from '@/lib/utils'
 
 interface KpiData {
   totalClients: number
@@ -10,10 +11,6 @@ interface KpiData {
   calculationsTotal: number
   avgRmi: number
   totalRmiPotencial: number
-}
-
-function formatCurrency(val: number) {
-  return val.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 }
 
 const COLOR_STYLES: Record<string, { bg: string; text: string; hover: string }> = {

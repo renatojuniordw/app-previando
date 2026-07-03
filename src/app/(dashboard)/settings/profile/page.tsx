@@ -97,8 +97,9 @@ export default function ProfilePage() {
         <CardHeader title="Dados da Conta" />
         <div className="space-y-4">
           <div>
-            <label className="neo-label">Email</label>
+            <label htmlFor="email" className="neo-label">Email</label>
             <input
+              id="email"
               value={session?.user?.email ?? ''}
               disabled
               className="neo-input opacity-50 cursor-not-allowed"
@@ -128,8 +129,8 @@ export default function ProfilePage() {
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="neo-label">Estado Civil</label>
-              <select value={maritalStatus} onChange={(e) => setMaritalStatus(e.target.value)} className="neo-input">
+              <label htmlFor="maritalStatus" className="neo-label">Estado Civil</label>
+              <select id="maritalStatus" value={maritalStatus} onChange={(e) => setMaritalStatus(e.target.value)} className="neo-input">
                 <option value="">Selecione...</option>
                 {ESTADO_CIVIL.map((e) => (
                   <option key={e.value} value={e.value}>{e.label}</option>
@@ -155,8 +156,8 @@ export default function ProfilePage() {
           <div className="grid grid-cols-[1fr_100px_120px] gap-4">
             <Input label="Cidade" value={city} onChange={(e) => setCity(e.target.value)} placeholder="Cidade" />
             <div>
-              <label className="neo-label">UF</label>
-              <select value={state} onChange={(e) => setState(e.target.value)} className="neo-input">
+              <label htmlFor="state" className="neo-label">UF</label>
+              <select id="state" value={state} onChange={(e) => setState(e.target.value)} className="neo-input">
                 <option value="">UF</option>
                 {ESTADOS.map((e) => (
                   <option key={e} value={e}>{e}</option>

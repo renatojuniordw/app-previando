@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import api from '@/lib/api'
 import { Button } from '@/components/ui/Button'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { Card } from '@/components/ui/Card'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { Receipt, Calculator, AlertCircle, CheckCircle, History, Trash2 } from 'lucide-react'
@@ -50,6 +51,7 @@ export default function GpsPage() {
   const [loading, setLoading] = useState(false)
   const [loadingInit, setLoadingInit] = useState(true)
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null)
   const [error, setError] = useState('')
   const [successMsg, setSuccessMsg] = useState('')
 
@@ -104,12 +106,19 @@ export default function GpsPage() {
     }
   }
 
-  const handleDelete = async (guiaId: string) => {
-    setDeletingId(guiaId)
+  const handleDelete = (guiaId: string) => {
+    setDeleteTarget(guiaId)
+  }
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteTarget) return
+    const id = deleteTarget
+    setDeleteTarget(null)
+    setDeletingId(id)
     try {
-      await api.delete(`/cases/${caseId}/gps/${guiaId}`)
-      setHistory((prev) => prev.filter((g) => g.id !== guiaId))
-      if (result && (result as GpsResult & { id?: string }).id === guiaId) setResult(null)
+      await api.delete(`/cases/${caseId}/gps/${id}`)
+      setHistory((prev) => prev.filter((g) => g.id !== id))
+      if (result && (result as GpsResult & { id?: string }).id === id) setResult(null)
     } catch {
       setError('Erro ao excluir guia.')
     } finally {
@@ -301,6 +310,15 @@ export default function GpsPage() {
           </div>
         </Card>
       )}
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        onConfirm={handleDeleteConfirm}
+        onCancel={() => setDeleteTarget(null)}
+        title="Excluir guia?"
+        message="Tem certeza que deseja excluir esta guia? Esta ação não pode ser desfeita."
+        confirmLabel="Sim, Excluir"
+        variant="danger"
+      />
     </div>
   )
 }

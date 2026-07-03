@@ -38,7 +38,7 @@ export function EditCaseModal({ open, caseData, loading, onClose, onSave }: Prop
           <select
             value={priority}
             onChange={(e) => setPriority(e.target.value)}
-            className="w-full px-3 py-2 font-sans text-sm rounded-md bg-white text-slate-900 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-600 focus:border-transparent"
+            className="neo-input"
           >
             {PRIORITY_OPTIONS.map((p) => (
               <option key={p.value} value={p.value}>{p.label}</option>
@@ -60,7 +60,7 @@ export function EditCaseModal({ open, caseData, loading, onClose, onSave }: Prop
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             rows={4}
-            className="w-full px-3 py-2 font-sans text-sm rounded-md bg-white text-slate-900 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-600 focus:border-transparent resize-y"
+            className="neo-input resize-y"
             placeholder="Adicione notas importantes sobre este caso..."
           />
         </div>

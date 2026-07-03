@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import api from '@/lib/api'
 import { Card } from '@/components/ui/Card'
+import { useToast } from '@/store/toast'
 import { Activity, ChevronLeft, ChevronRight } from 'lucide-react'
 
 interface ActivityLog {
@@ -105,6 +106,7 @@ export default function ActivityPage() {
   const [page, setPage] = useState(1)
   const [loading, setLoading] = useState(true)
   const limit = 25
+  const { addToast } = useToast()
 
   const fetchLogs = useCallback(async () => {
     setLoading(true)
@@ -112,9 +114,11 @@ export default function ActivityPage() {
       const res = await api.get(`/activity?page=${page}&limit=${limit}`)
       setLogs(res.data.logs)
       setTotal(res.data.total)
-    } catch {}
+    } catch {
+      addToast({ type: 'error', title: 'Erro', message: 'Erro ao carregar atividades.' })
+    }
     setLoading(false)
-  }, [page])
+  }, [page, addToast])
 
   useEffect(() => { fetchLogs() }, [fetchLogs])
 

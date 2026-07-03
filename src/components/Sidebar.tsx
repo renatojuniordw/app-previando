@@ -4,12 +4,30 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { signOut, useSession } from 'next-auth/react'
 import { cn } from '@/lib/utils'
-import { LayoutDashboard, Users, Columns, CreditCard, Settings, LogOut, Activity, Calendar, FolderOpen, X, BookOpen, Files, BarChart3, DollarSign, Tags, Package } from 'lucide-react'
+import {
+  LayoutDashboard,
+  Users,
+  Columns,
+  CreditCard,
+  Settings,
+  LogOut,
+  Activity,
+  Calendar,
+  CalendarDays,
+  FolderOpen,
+  X,
+  BookOpen,
+  Files,
+  BarChart3,
+  DollarSign,
+  Tags,
+  Package,
+} from 'lucide-react'
 import { UsageBar } from '@/components/UsageBar'
 import { useSidebarStore } from '@/store/sidebar'
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock'
 import { useUrgentDeadlines } from '@/hooks/useUrgentDeadlines'
-import { useEffect, useCallback } from 'react'
+import { memo, useEffect, useCallback } from 'react'
 
 const NAV_SECTIONS = [
   {
@@ -25,6 +43,7 @@ const NAV_SECTIONS = [
     label: 'Acompanhamento',
     items: [
       { href: '/reports', label: 'Relatórios', icon: BarChart3 },
+      { href: '/calendar', label: 'Calendário', icon: CalendarDays },
       { href: '/deadlines', label: 'Prazos', icon: Calendar },
       { href: '/activity', label: 'Atividade', icon: Activity },
     ],
@@ -59,7 +78,7 @@ const ADMIN_SECTION = {
   ],
 }
 
-export function Sidebar() {
+export const Sidebar = memo(function Sidebar() {
   const pathname = usePathname()
   const { data: session } = useSession()
   const isAdmin = session?.user?.isAdmin
@@ -68,15 +87,21 @@ export function Sidebar() {
   useBodyScrollLock(isOpen && isMobile)
   const urgentDeadlines = useUrgentDeadlines()
 
+  const handleClose = useCallback(() => close(), [close])
+  const handleSignOut = useCallback(() => signOut({ callbackUrl: '/login' }), [])
+
   // Close sidebar on route change (mobile only)
   useEffect(() => {
     if (window.innerWidth < 1024) close()
   }, [pathname, close])
 
   // Close on Escape key
-  const handleKeyDown = useCallback((e: KeyboardEvent) => {
-    if (e.key === 'Escape') close()
-  }, [close])
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent) => {
+      if (e.key === 'Escape') close()
+    },
+    [close]
+  )
 
   useEffect(() => {
     if (isOpen) {
@@ -92,15 +117,15 @@ export function Sidebar() {
       {/* Overlay backdrop - mobile only */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black/40 z-30 lg:hidden transition-opacity"
-          onClick={close}
+          className="fixed inset-0 z-30 bg-black/40 transition-opacity lg:hidden"
+          onClick={handleClose}
           aria-hidden="true"
         />
       )}
 
       <aside
         className={cn(
-          'shrink-0 h-screen sticky top-0 bg-white border-r border-slate-200 z-20 transition-all duration-300 overflow-hidden',
+          'sticky top-0 z-20 h-screen shrink-0 overflow-hidden border-r border-slate-200 bg-white transition-all duration-300',
           'fixed inset-y-0 left-0 z-40 transform lg:static lg:translate-x-0',
           isOpen ? 'translate-x-0' : '-translate-x-full',
           isDesktopOpen ? 'lg:w-64' : 'lg:w-0 lg:border-none'
@@ -108,113 +133,129 @@ export function Sidebar() {
         role="navigation"
         aria-label="Navegação principal"
       >
-        <div className="w-64 h-full flex flex-col">
-        {/* Logo + Close button */}
-        <div className="h-16 flex items-center justify-between px-6 border-b border-slate-200">
-          <Link href="/dashboard" className="flex flex-col">
-            <span className="font-serif font-bold text-2xl text-slate-900 tracking-tight leading-none">
-              PREVI<span className="text-amber-600">ANDO</span>
-            </span>
-            <span className="font-sans text-[10px] uppercase tracking-widest text-slate-400 mt-1 font-semibold">Previdência</span>
-          </Link>
-          <button
-            onClick={close}
-            className="lg:hidden min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/50"
-            aria-label="Fechar menu"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
-        <nav className="flex-1 p-3 overflow-y-auto" aria-label="Seções do sistema">
-          <ul role="list" className="space-y-1">
-            {NAV_SECTIONS.map((section) => (
-              <li key={section.label}>
-                <p className="px-3 py-2 text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                  {section.label}
-                </p>
-                <ul role="list" className="space-y-0.5 ml-0">
-                  {section.items.map((item) => {
-                    const active = pathname.startsWith(item.href)
-                    const Icon = item.icon
-                    return (
-                      <li key={item.href}>
-                        <Link
-                          href={item.href}
-                          aria-label={item.label}
-                          aria-current={active ? 'page' : undefined}
-                          className={cn(
-                            'flex items-center gap-3 px-3 py-2 min-h-[44px] font-sans font-medium text-sm transition-all rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/50',
-                            active
-                              ? 'bg-amber-50 text-amber-700'
-                              : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-                          )}
-                        >
-                          <Icon className={cn('w-5 h-5 shrink-0', active ? 'text-amber-600' : 'text-slate-400')} aria-hidden="true" />
-                          <span className="flex-1">{item.label}</span>
-                          {item.href === '/deadlines' && urgentDeadlines > 0 && (
-                            <span className="ml-auto min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-red-500 text-white text-[10px] font-bold px-1">
-                              {urgentDeadlines > 9 ? '9+' : urgentDeadlines}
-                            </span>
-                          )}
-                        </Link>
-                      </li>
-                    )
-                  })}
-                </ul>
-              </li>
-            ))}
-
-            {isAdmin && (
-              <li>
-                <hr className="my-2 border-slate-200" />
-                <p className="px-3 py-2 text-xs font-semibold text-amber-700 uppercase tracking-wider">
-                  {ADMIN_SECTION.label}
-                </p>
-                <ul role="list" className="space-y-0.5 ml-0">
-                  {ADMIN_SECTION.items.map((item) => {
-                    const active = pathname.startsWith(item.href)
-                    const Icon = item.icon
-                    return (
-                      <li key={item.href}>
-                        <Link
-                          href={item.href}
-                          aria-label={item.label}
-                          aria-current={active ? 'page' : undefined}
-                          className={cn(
-                            'flex items-center gap-3 px-3 py-2 min-h-[44px] font-sans font-medium text-sm transition-all rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/50',
-                            active
-                              ? 'bg-amber-50 text-amber-700'
-                              : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-                          )}
-                        >
-                          <Icon className={cn('w-5 h-5 shrink-0', active ? 'text-amber-600' : 'text-slate-400')} aria-hidden="true" />
-                          <span className="flex-1">{item.label}</span>
-                        </Link>
-                      </li>
-                    )
-                  })}
-                </ul>
-              </li>
-            )}
-          </ul>
-        </nav>
-
-        <div className="mt-auto">
-          <UsageBar />
-          <div className="p-4 border-t border-slate-200">
+        <div className="flex h-full w-64 flex-col">
+          {/* Logo + Close button */}
+          <div className="flex h-16 items-center justify-between border-b border-slate-200 px-6">
+            <Link href="/dashboard" prefetch={false} className="flex flex-col">
+              <span className="font-serif text-2xl font-bold leading-none tracking-tight text-slate-900">
+                PREVI<span className="text-amber-600">ANDO</span>
+              </span>
+              <span className="mt-1 font-sans text-[10px] font-semibold uppercase tracking-widest text-slate-400">
+                Previdência
+              </span>
+            </Link>
             <button
-              onClick={() => signOut({ callbackUrl: '/login' })}
-              className="w-full flex items-center justify-center gap-2 px-3 min-h-[44px] font-sans font-medium text-sm text-slate-500 hover:text-slate-900 hover:bg-slate-50 rounded-lg transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/50"
-              aria-label="Sair da conta"
+              onClick={handleClose}
+              className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/50 lg:hidden"
+              aria-label="Fechar menu"
             >
-              <LogOut className="w-4 h-4" aria-hidden="true" />
-              <span>Sair da Conta</span>
+              <X className="h-5 w-5" />
             </button>
           </div>
-        </div>
+
+          <nav className="flex-1 overflow-y-auto p-3" aria-label="Seções do sistema">
+            <ul role="list" className="space-y-1">
+              {NAV_SECTIONS.map((section) => (
+                <li key={section.label}>
+                  <p className="px-3 py-2 text-xs font-semibold uppercase tracking-wider text-slate-400">
+                    {section.label}
+                  </p>
+                  <ul role="list" className="ml-0 space-y-0.5">
+                    {section.items.map((item) => {
+                      const active = pathname.startsWith(item.href)
+                      const Icon = item.icon
+                      return (
+                        <li key={item.href}>
+                          <Link
+                            href={item.href}
+                            prefetch={false}
+                            aria-label={item.label}
+                            aria-current={active ? 'page' : undefined}
+                            className={cn(
+                              'flex min-h-[44px] items-center gap-3 rounded-lg px-3 py-2 font-sans text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/50',
+                              active
+                                ? 'bg-amber-50 text-amber-700'
+                                : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                            )}
+                          >
+                            <Icon
+                              className={cn(
+                                'h-5 w-5 shrink-0',
+                                active ? 'text-amber-600' : 'text-slate-400'
+                              )}
+                              aria-hidden="true"
+                            />
+                            <span className="flex-1">{item.label}</span>
+                            {item.href === '/deadlines' && urgentDeadlines > 0 && (
+                              <span className="ml-auto flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
+                                {urgentDeadlines > 9 ? '9+' : urgentDeadlines}
+                              </span>
+                            )}
+                          </Link>
+                        </li>
+                      )
+                    })}
+                  </ul>
+                </li>
+              ))}
+
+              {isAdmin && (
+                <li>
+                  <hr className="my-2 border-slate-200" />
+                  <p className="px-3 py-2 text-xs font-semibold uppercase tracking-wider text-amber-700">
+                    {ADMIN_SECTION.label}
+                  </p>
+                  <ul role="list" className="ml-0 space-y-0.5">
+                    {ADMIN_SECTION.items.map((item) => {
+                      const active = pathname.startsWith(item.href)
+                      const Icon = item.icon
+                      return (
+                        <li key={item.href}>
+                          <Link
+                            href={item.href}
+                            prefetch={false}
+                            aria-label={item.label}
+                            aria-current={active ? 'page' : undefined}
+                            className={cn(
+                              'flex min-h-[44px] items-center gap-3 rounded-lg px-3 py-2 font-sans text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/50',
+                              active
+                                ? 'bg-amber-50 text-amber-700'
+                                : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                            )}
+                          >
+                            <Icon
+                              className={cn(
+                                'h-5 w-5 shrink-0',
+                                active ? 'text-amber-600' : 'text-slate-400'
+                              )}
+                              aria-hidden="true"
+                            />
+                            <span className="flex-1">{item.label}</span>
+                          </Link>
+                        </li>
+                      )
+                    })}
+                  </ul>
+                </li>
+              )}
+            </ul>
+          </nav>
+
+          <div className="mt-auto">
+            <UsageBar />
+            <div className="border-t border-slate-200 p-4">
+              <button
+                onClick={handleSignOut}
+                className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-lg px-3 font-sans text-sm font-medium text-slate-500 transition-all hover:bg-slate-50 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/50"
+                aria-label="Sair da conta"
+              >
+                <LogOut className="h-4 w-4" aria-hidden="true" />
+                <span>Sair da Conta</span>
+              </button>
+            </div>
+          </div>
         </div>
       </aside>
     </>
   )
-}
+})

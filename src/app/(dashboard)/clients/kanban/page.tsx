@@ -24,7 +24,8 @@ import api from '@/lib/api'
 import { Badge } from '@/components/ui/Badge'
 import { ClientSwitcher } from '@/components/ClientSwitcher'
 import { useToast } from '@/store/toast'
-import { Clock, FileText, LayoutTemplate, AlertTriangle } from 'lucide-react'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
+import { Clock, FileText, LayoutTemplate } from 'lucide-react'
 import { BENEFIT_SHORT_LABELS, PRIORITY_STYLES } from '@/lib/constants'
 
 interface KanbanCase {
@@ -287,33 +288,15 @@ export default function ClientsKanbanPage() {
         </div>
       </div>
 
-      {/* Confirmation dialog for finalization */}
-      {confirmFinalize && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="finalize-title">
-          <div className="bg-white rounded-lg shadow-elevation-md max-w-sm w-full p-6">
-            <div className="flex items-start gap-3 mb-4">
-              <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center shrink-0">
-                <AlertTriangle className="w-5 h-5 text-red-600" />
-              </div>
-              <div>
-                <h2 id="finalize-title" className="font-serif font-bold text-lg text-slate-900">Finalizar caso?</h2>
-                <p className="font-sans text-sm text-slate-600 mt-1 leading-relaxed">
-                  {BENEFIT_SHORT_LABELS[confirmFinalize.benefitType] ?? confirmFinalize.benefitType} — {confirmFinalize.client.name}
-                </p>
-                <p className="font-sans text-xs text-slate-500 mt-2">Esta ação não pode ser desfeita.</p>
-              </div>
-            </div>
-            <div className="flex gap-3">
-              <button onClick={() => setConfirmFinalize(null)} className="flex-1 inline-flex items-center justify-center px-4 py-2.5 font-sans font-medium text-sm rounded-md border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2">
-                Cancelar
-              </button>
-              <button onClick={confirmFinalization} className="flex-1 inline-flex items-center justify-center px-4 py-2.5 font-sans font-medium text-sm rounded-md bg-red-600 text-white hover:bg-red-700 transition-colors shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2">
-                Sim, Finalizar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ConfirmDialog
+        open={confirmFinalize !== null}
+        variant="danger"
+        title="Finalizar caso?"
+        message={`${BENEFIT_SHORT_LABELS[confirmFinalize?.benefitType ?? ''] ?? confirmFinalize?.benefitType ?? ''} — ${confirmFinalize?.client.name ?? ''}\n\nEsta ação não pode ser desfeita.`}
+        confirmLabel="Finalizar"
+        onConfirm={confirmFinalization}
+        onCancel={() => setConfirmFinalize(null)}
+      />
 
       {/* Kanban Board Area */}
       <div className="flex-1 overflow-x-auto overflow-y-hidden pb-4">

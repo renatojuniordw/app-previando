@@ -35,10 +35,10 @@ export default function CnisIndicatorsPage() {
               <ArrowLeft className="w-3 h-3" /> Voltar ao Dashboard
             </Link>
           </div>
-          <h2 className="font-serif font-bold text-2xl text-slate-900 tracking-tight flex items-center gap-2">
+          <h1 className="font-serif font-bold text-2xl text-slate-900 tracking-tight flex items-center gap-2">
             <BookOpen className="w-6 h-6 text-amber-600" />
             Dicionário de Indicadores do CNIS
-          </h2>
+          </h1>
           <p className="font-sans text-sm text-slate-500 mt-1">
             Consulte a biblioteca completa de siglas do INSS e as ações práticas necessárias para resolver cada pendência.
           </p>

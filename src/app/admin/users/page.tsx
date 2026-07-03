@@ -3,6 +3,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { formatDate } from '@/lib/utils'
 import { Card } from '@/components/ui/Card'
 import { Search, Users, ChevronLeft, ChevronRight } from 'lucide-react'
+import api from '@/lib/api'
 
 interface AdminUser {
   id: string
@@ -27,8 +28,7 @@ export default function AdminUsersPage() {
   const load = useCallback(async (q = search, p = page, plan = planFilter) => {
     setLoading(true)
     const params = new URLSearchParams({ page: String(p), ...(q && { search: q }), ...(plan && { plan }) })
-    const r = await fetch(`/api/admin/users?${params}`)
-    const data = await r.json()
+    const { data } = await api.get(`/admin/users?${params}`)
     setUsers(data.users ?? [])
     setTotal(data.total ?? 0)
     setPages(data.pages ?? 1)
@@ -38,20 +38,12 @@ export default function AdminUsersPage() {
   useEffect(() => { load() }, [load])
 
   const handleChangePlan = async (userId: string, plan: string) => {
-    await fetch(`/api/admin/users/${userId}/plan`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ plan }),
-    })
+    await api.patch(`/admin/users/${userId}/plan`, { plan })
     load()
   }
 
   const handleToggleStatus = async (userId: string, isSuspended: boolean) => {
-    await fetch(`/api/admin/users/${userId}/status`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: isSuspended ? 'activate' : 'suspend' }),
-    })
+    await api.patch(`/admin/users/${userId}/status`, { action: isSuspended ? 'activate' : 'suspend' })
     load()
   }
 

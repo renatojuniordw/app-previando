@@ -7,6 +7,7 @@ import { useToast } from '@/store/toast'
 import { Users, ChevronRight, Columns } from 'lucide-react'
 import dynamic from 'next/dynamic'
 import { DashboardQuickActions } from '@/components/dashboard/DashboardQuickActions'
+import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { OnboardingBanner } from '@/components/dashboard/OnboardingBanner'
 
 const DashboardKpiGrid = dynamic(() => import('@/components/dashboard/DashboardKpiGrid').then((m) => ({ default: m.DashboardKpiGrid })), {
@@ -57,6 +58,7 @@ interface DashboardData {
 }
 
 export default function DashboardPage() {
+  useEffect(() => { document.title = 'Dashboard — Previando' }, [])
   const [data, setData] = useState<DashboardData | null>(null)
   const [loading, setLoading] = useState(true)
   const { addToast } = useToast()
@@ -130,6 +132,7 @@ export default function DashboardPage() {
       {/* Onboarding — só para usuários sem clientes */}
       {!loading && data?.totalClients === 0 && <OnboardingBanner />}
 
+      <ErrorBoundary>
       {/* KPIs + RMI Metrics */}
       {kpiData && <DashboardKpiGrid data={kpiData} />}
 
@@ -175,6 +178,7 @@ export default function DashboardPage() {
           </Link>
         </div>
       )}
+      </ErrorBoundary>
     </div>
   )
 }

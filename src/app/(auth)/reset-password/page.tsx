@@ -44,7 +44,7 @@ function ResetPasswordForm() {
     return (
       <div className="w-full max-w-md text-center">
         <AlertCircle className="w-16 h-16 text-red-400 mx-auto mb-4" />
-        <h2 className="font-serif font-bold text-2xl text-slate-900 mb-3">Link inválido</h2>
+        <h1 className="font-serif font-bold text-2xl text-slate-900 mb-3">Link inválido</h1>
         <p className="font-sans text-slate-600 mb-6">
           Este link de redefinição é inválido ou já foi usado.
         </p>
@@ -59,7 +59,7 @@ function ResetPasswordForm() {
     return (
       <div className="w-full max-w-md text-center">
         <CheckCircle2 className="w-16 h-16 text-amber-500 mx-auto mb-4" />
-        <h2 className="font-serif font-bold text-3xl text-slate-900 mb-3">Senha redefinida</h2>
+        <h1 className="font-serif font-bold text-3xl text-slate-900 mb-3">Senha redefinida</h1>
         <p className="font-sans text-slate-600 mb-8">
           Sua senha foi alterada com sucesso. Faça login com a nova senha.
         </p>
@@ -99,7 +99,7 @@ function ResetPasswordForm() {
   return (
     <div className="w-full max-w-md">
       <div className="mb-8">
-        <h2 className="font-serif font-bold text-3xl text-slate-900 mb-2">Nova senha</h2>
+        <h1 className="font-serif font-bold text-3xl text-slate-900 mb-2">Nova senha</h1>
         <p className="font-sans text-slate-600">Crie uma senha forte para proteger sua conta.</p>
       </div>
 

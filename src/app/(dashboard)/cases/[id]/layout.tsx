@@ -2,17 +2,35 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import dynamic from 'next/dynamic'
 import { useParams, usePathname, useRouter, useSearchParams } from 'next/navigation'
 import api from '@/lib/api'
 import { Badge } from '@/components/ui/Badge'
 import { ArrowLeft, LayoutDashboard, FileText, Calculator, BarChart3, History, Lock, Building2, GitCompareArrows, Files, ShieldAlert, Clock, DollarSign, Scale, Receipt } from 'lucide-react'
 import { BENEFIT_SHORT_LABELS, STATUS_LABELS, PRIORITY_STYLES } from '@/lib/constants'
-import { CaseNotesDrawer } from '@/components/case/CaseNotesDrawer'
-import { CaseChecklistDrawer } from '@/components/case/CaseChecklistDrawer'
-import { CaseOpinionsDrawer } from '@/components/case/CaseOpinionsDrawer'
-import { CaseBpcDrawer } from '@/components/case/CaseBpcDrawer'
 import { CaseFloatingActions } from '@/components/case/CaseFloatingActions'
-import { CasePeticaoModal } from '@/components/case/CasePeticaoModal'
+import { ErrorBoundary } from '@/components/ErrorBoundary'
+
+const CaseNotesDrawer = dynamic(
+  () => import('@/components/case/CaseNotesDrawer').then(m => ({ default: m.CaseNotesDrawer })),
+  { ssr: false }
+)
+const CaseChecklistDrawer = dynamic(
+  () => import('@/components/case/CaseChecklistDrawer').then(m => ({ default: m.CaseChecklistDrawer })),
+  { ssr: false }
+)
+const CaseOpinionsDrawer = dynamic(
+  () => import('@/components/case/CaseOpinionsDrawer').then(m => ({ default: m.CaseOpinionsDrawer })),
+  { ssr: false }
+)
+const CaseBpcDrawer = dynamic(
+  () => import('@/components/case/CaseBpcDrawer').then(m => ({ default: m.CaseBpcDrawer })),
+  { ssr: false }
+)
+const CasePeticaoModal = dynamic(
+  () => import('@/components/case/CasePeticaoModal').then(m => ({ default: m.CasePeticaoModal })),
+  { ssr: false }
+)
 
 interface CaseHeader {
   id: string
@@ -131,6 +149,7 @@ export default function CaseLayout({ children }: { children: React.ReactNode }) 
                   <Link
                     key={tab.id}
                     href={tab.locked ? '' : fullPath}
+                    prefetch={tab.locked ? false : undefined}
                     role="tab"
                     aria-selected={isActive}
                     aria-disabled={tab.locked || undefined}
@@ -160,7 +179,9 @@ export default function CaseLayout({ children }: { children: React.ReactNode }) 
 
       {/* Content Area */}
       <div className="flex-1 max-w-7xl w-full mx-auto p-6 md:p-8" role="tabpanel" aria-labelledby="tab-content">
-        {children}
+        <ErrorBoundary>
+          {children}
+        </ErrorBoundary>
       </div>
 
       {/* Petição Inicial Modal */}

@@ -2,7 +2,7 @@
 
 import { Bell, Search, X, ArrowRight, Menu } from 'lucide-react'
 import { useSession } from 'next-auth/react'
-import { useEffect, useRef, useState } from 'react'
+import { memo, useCallback, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useSidebarStore } from '@/store/sidebar'
@@ -16,7 +16,7 @@ interface AppNotification {
   createdAt: string
 }
 
-export function Header() {
+export const Header = memo(function Header() {
   const { data: session } = useSession()
   const router = useRouter()
   const { toggle: toggleSidebar, isOpen: sidebarOpen, isDesktopOpen } = useSidebarStore()
@@ -26,6 +26,20 @@ export function Header() {
   const [searchQuery, setSearchQuery] = useState('')
   const [mounted, setMounted] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
+
+  const handleSearchKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && searchQuery.trim()) {
+      router.push(`/cases?search=${encodeURIComponent(searchQuery.trim())}`)
+    }
+  }, [router, searchQuery])
+
+  const handleSearchClick = useCallback(() => {
+    router.push(`/cases?search=${encodeURIComponent(searchQuery.trim())}`)
+  }, [router, searchQuery])
+
+  const handleToggleNotifications = useCallback(() => setOpen((o) => !o), [])
+
+  const handleCloseNotifications = useCallback(() => setOpen(false), [])
 
   useEffect(() => { setMounted(true) }, [])
 
@@ -87,7 +101,8 @@ export function Header() {
     setUnreadCount((c) => Math.max(0, c - 1))
   }
 
-  return (        <header className="h-16 border-b border-slate-200 bg-white flex items-center justify-between px-4 sm:px-6 shrink-0" role="banner">
+  return (
+    <header className="h-16 border-b border-slate-200 bg-white flex items-center justify-between px-4 sm:px-6 shrink-0" role="banner">
       {/* Hamburger + Search */}
       <div className="flex items-center gap-3 flex-1">
         <button
@@ -107,20 +122,14 @@ export function Header() {
             type="search"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && searchQuery.trim()) {
-                router.push(`/cases?search=${encodeURIComponent(searchQuery.trim())}`)
-              }
-            }}
+            onKeyDown={handleSearchKeyDown}
             placeholder="Pesquisar casos, clientes..."
             aria-label="Pesquisar casos por nome do cliente"
             className="w-full pl-9 pr-12 py-2 bg-slate-50 border border-slate-200 rounded-full text-sm font-sans focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all placeholder:text-slate-400 text-slate-900"
           />
           {searchQuery.trim() && (
             <button
-              onClick={() => {
-                router.push(`/cases?search=${encodeURIComponent(searchQuery.trim())}`)
-              }}
+              onClick={handleSearchClick}
               className="absolute right-1.5 top-1/2 -translate-y-1/2 min-w-[44px] min-h-[44px] flex items-center justify-center bg-amber-600 hover:bg-amber-700 text-white rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/50"
               aria-label={`Pesquisar por "${searchQuery.trim()}"`}
             >
@@ -133,7 +142,7 @@ export function Header() {
       <div className="flex items-center gap-4">
         <div className="relative" ref={dropdownRef}>
           <button
-            onClick={() => setOpen((o) => !o)}
+            onClick={handleToggleNotifications}
             className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full hover:bg-slate-50 text-slate-500 transition-colors relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/50"
             aria-label={`Notificações${unreadCount > 0 ? ` (${unreadCount} não lidas)` : ''}`}
           >
@@ -149,7 +158,7 @@ export function Header() {
             <div className="absolute right-0 top-12 w-80 bg-white border border-slate-200 rounded-xl shadow-lg z-50 overflow-hidden" role="listbox" aria-label="Notificações">
               <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
                 <span className="font-semibold text-sm text-slate-900">Notificações</span>
-                <button onClick={() => setOpen(false)} className="min-w-[44px] min-h-[44px] flex items-center justify-center text-slate-400 hover:text-slate-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/50 rounded-lg" aria-label="Fechar notificações">
+                <button onClick={handleCloseNotifications} className="min-w-[44px] min-h-[44px] flex items-center justify-center text-slate-400 hover:text-slate-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/50 rounded-lg" aria-label="Fechar notificações">
                   <X className="w-4 h-4" />
                 </button>
               </div>
@@ -211,4 +220,4 @@ export function Header() {
       </div>
     </header>
   )
-}
+})

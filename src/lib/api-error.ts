@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server'
-import { NextRequest } from 'next/server'
 import { Logger } from './logger'
 
 const logger = new Logger('APIError')
@@ -37,32 +36,8 @@ export class PlanLimitError extends Error {
   }
 }
 
-/**
- * Tipo para handler de API route que recebe req + params e retorna NextResponse
- */
-type ApiHandler<T = Record<string, string>> = (
-  req: NextRequest,
-  params: T
-) => Promise<NextResponse>
-
-/**
- * Higher-Order Function que elimina o boilerplate try/catch nas rotas.
- * Exemplo de uso:
- *
- *   export const GET = withErrorHandler(async (req, params: { id: string }) => {
- *     // ... lógica sem try/catch
- *   })
- */
-export function withErrorHandler<T = Record<string, string>>(
-  handler: ApiHandler<T>
-): ApiHandler<T> {
-  return async (req: NextRequest, params: T) => {
-    try {
-      return await handler(req, params)
-    } catch (err) {
-      return handleApiError(err)
-    }
-  }
+export function extractApiError(err: unknown, fallback = 'Erro inesperado.'): string {
+  return (err as { response?: { data?: { error?: string } } })?.response?.data?.error ?? fallback
 }
 
 export function handleApiError(error: unknown): NextResponse {

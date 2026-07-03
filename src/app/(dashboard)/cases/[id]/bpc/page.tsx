@@ -2,16 +2,29 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { useParams, useRouter, usePathname, useSearchParams } from 'next/navigation'
+import dynamic from 'next/dynamic'
 import api from '@/lib/api'
 import { Button } from '@/components/ui/Button'
 import { Modal } from '@/components/ui/Modal'
-import { PDFDownloadLink } from '@react-pdf/renderer'
 
 import { BpcForm } from '@/components/bpc/BpcForm'
 import { HelpText } from '@/components/ui/HelpText'
-import { BpcResult } from '@/components/bpc/BpcResult'
 import { BpcSocialInterview } from '@/components/bpc/BpcSocialInterview'
-import { BpcConsolidatedPDFDocument } from '@/components/pdf/BpcConsolidatedPDFDocument'
+
+const PDFDownloadLink = dynamic(
+  () => import('@react-pdf/renderer').then(m => ({ default: m.PDFDownloadLink })),
+  { ssr: false, loading: () => <span className="text-xs text-slate-400">Carregando...</span> }
+)
+
+const BpcResult = dynamic(
+  () => import('@/components/bpc/BpcResult').then(m => ({ default: m.BpcResult })),
+  { ssr: false }
+)
+
+const BpcConsolidatedPDFDocument = dynamic(
+  () => import('@/components/pdf/BpcConsolidatedPDFDocument').then(m => ({ default: m.BpcConsolidatedPDFDocument })),
+  { ssr: false }
+)
 import type { RelatoSocial } from '@/types/bpc-social'
 
 interface BpcAnalysis {

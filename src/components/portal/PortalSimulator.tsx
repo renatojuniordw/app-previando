@@ -2,8 +2,10 @@
 
 import { useState } from 'react'
 import { TrendingUp, Loader2, AlertCircle, CheckCircle2 } from 'lucide-react'
+import api from '@/lib/api'
 import { DatePicker } from '@/components/ui/DatePicker'
 import { CurrencyInput } from '@/components/ui/CurrencyInput'
+import { formatCurrency } from '@/lib/utils'
 
 interface SimulacaoResult {
   atual: { rmi: number; elegivel: boolean; idade: number; tempoContribuicao: number }
@@ -13,10 +15,6 @@ interface SimulacaoResult {
 
 interface PortalSimulatorProps {
   token: string
-}
-
-const formatCurrency = (val: number) => {
-  return val.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 }
 
 export function PortalSimulator({ token }: PortalSimulatorProps) {
@@ -37,22 +35,10 @@ export function PortalSimulator({ token }: PortalSimulatorProps) {
     setResult(null)
 
     try {
-      const res = await fetch(`/api/portal/${token}/simulate`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ dibProjetada, valorContribuicao }),
-      })
-
-      if (!res.ok) {
-        const data = await res.json()
-        setError(data.error ?? 'Erro ao simular.')
-        return
-      }
-
-      const data = await res.json()
+      const { data } = await api.post(`/portal/${token}/simulate`, { dibProjetada, valorContribuicao })
       setResult(data)
-    } catch {
-      setError('Erro de conexão.')
+    } catch (err: any) {
+      setError(err.response?.data?.error ?? 'Erro de conexão.')
     } finally {
       setLoading(false)
     }

@@ -12,9 +12,10 @@ import { ActionsDropdown } from '@/components/ui/ActionsDropdown'
 import { useToast } from '@/store/toast'
 import { downloadPdf } from '@/lib/download-pdf'
 import { Search, SlidersHorizontal, X, ChevronLeft, ChevronRight } from 'lucide-react'
-import { formatDate } from '@/lib/utils'
+import { formatDate, formatCurrency } from '@/lib/utils'
 import { BENEFIT_SHORT_LABELS, STATUS_LABELS } from '@/lib/constants'
 import { DatePicker } from '@/components/ui/DatePicker'
+import { ErrorBoundary } from '@/components/ErrorBoundary'
 
 const STATUS_OPTIONS = [
   { value: 'PROSPECCAO', label: 'Prospecção' },
@@ -50,12 +51,8 @@ const PRIORITY_LABEL: Record<string, string> = {
   NORMAL: 'Normal',
 }
 
-function formatCurrency(val: number | null) {
-  if (!val) return '—'
-  return val.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
-}
-
 export default function CasesPage() {
+  useEffect(() => { document.title = 'Casos — Previando' }, [])
   const searchParams = useSearchParams()
   const router = useRouter()
   const { addToast } = useToast()
@@ -183,7 +180,7 @@ export default function CasesPage() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div>
               <label htmlFor="filter-status" className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Status</label>
-              <select id="filter-status" value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setPage(1) }} className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-slate-400">
+              <select id="filter-status" value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setPage(1) }} className="neo-input">
                 <option value="">Todos</option>
                 {STATUS_OPTIONS.map((s) => (
                   <option key={s.value} value={s.value}>{s.label}</option>
@@ -192,7 +189,7 @@ export default function CasesPage() {
             </div>
             <div>
               <label htmlFor="filter-priority" className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Prioridade</label>
-              <select id="filter-priority" value={priority} onChange={(e) => { setPriority(e.target.value); setPage(1) }} className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-slate-400">
+              <select id="filter-priority" value={priority} onChange={(e) => { setPriority(e.target.value); setPage(1) }} className="neo-input">
                 <option value="">Todas</option>
                 <option value="CRITICAL">Crítico</option>
                 <option value="ATTENTION">Atenção</option>
@@ -201,7 +198,7 @@ export default function CasesPage() {
             </div>
             <div>
               <label htmlFor="filter-benefit" className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Tipo de Benefício</label>
-              <select id="filter-benefit" value={benefitType} onChange={(e) => { setBenefitType(e.target.value); setPage(1) }} className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-slate-400">
+              <select id="filter-benefit" value={benefitType} onChange={(e) => { setBenefitType(e.target.value); setPage(1) }} className="neo-input">
                 <option value="">Todos</option>
                 {ALL_BENEFIT_TYPES.map((t) => (
                   <option key={t} value={t}>{BENEFIT_SHORT_LABELS[t]}</option>
@@ -210,11 +207,11 @@ export default function CasesPage() {
             </div>
             <div>
               <label htmlFor="filter-rmi-min" className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">RMI mínima (R$)</label>
-              <input id="filter-rmi-min" type="number" value={rmiMin} onChange={(e) => { setRmiMin(e.target.value); setPage(1) }} placeholder="0,00" className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-slate-400" />
+              <input id="filter-rmi-min" type="number" value={rmiMin} onChange={(e) => { setRmiMin(e.target.value); setPage(1) }} placeholder="0,00" className="neo-input" />
             </div>
             <div>
               <label htmlFor="filter-rmi-max" className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">RMI máxima (R$)</label>
-              <input id="filter-rmi-max" type="number" value={rmiMax} onChange={(e) => { setRmiMax(e.target.value); setPage(1) }} placeholder="99999,00" className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-slate-400" />
+              <input id="filter-rmi-max" type="number" value={rmiMax} onChange={(e) => { setRmiMax(e.target.value); setPage(1) }} placeholder="99999,00" className="neo-input" />
             </div>
             <div>
               <label htmlFor="filter-created-from" className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Criado a partir de</label>
@@ -236,6 +233,7 @@ export default function CasesPage() {
         </Card>
       )}
 
+      <ErrorBoundary>
       {/* Tabela */}
       <Card variant="light" className="p-0 overflow-hidden">
         {loading ? (
@@ -297,7 +295,7 @@ export default function CasesPage() {
                         {PRIORITY_LABEL[c.priority] ?? c.priority}
                       </Badge>
                     </td>
-                    <td className="px-5 py-4 text-sm font-semibold text-green-700">{formatCurrency(c.selectedRmi)}</td>
+                    <td className="px-5 py-4 text-sm font-semibold text-green-700">{c.selectedRmi ? formatCurrency(c.selectedRmi) : '—'}</td>
                     <td className="px-5 py-4 text-sm text-slate-500">
                       {c.deadlineDate ? formatDate(c.deadlineDate) : '—'}
                     </td>
@@ -339,7 +337,7 @@ export default function CasesPage() {
             <select
               value={statusTarget?.status ?? ''}
               onChange={(e) => setStatusTarget((prev) => prev ? { ...prev, status: e.target.value } : null)}
-              className="w-full px-3 py-2 font-sans text-sm rounded-md bg-white text-slate-900 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-600 focus:border-transparent"
+              className="neo-input"
             >
               {STATUS_OPTIONS.map((s) => (
                 <option key={s.value} value={s.value}>{s.label}</option>
@@ -384,6 +382,7 @@ export default function CasesPage() {
           </div>
         </div>
       )}
+      </ErrorBoundary>
     </div>
   )
 }
