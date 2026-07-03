@@ -54,7 +54,6 @@ export function CaseChecklistDrawer({ open, onClose, caseId }: CaseChecklistDraw
       await api.patch(`/cases/${caseId}/checklist`, { items: updated })
     } else {
       await api.post(`/cases/${caseId}/checklist`, {
-        benefitType: 'BPC_LOAS',
         items: updated,
         eligible: true,
         pendencias: [],

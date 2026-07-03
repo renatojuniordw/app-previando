@@ -123,6 +123,8 @@ export default function BillingPage() {
 
   const currentPlan = planInfo?.plan ?? session?.user?.plan ?? 'FREE'
   const statusInfo = STATUS_LABELS[planInfo?.planStatus ?? ''] ?? null
+  const isManagedPlan = currentPlan === 'PARTNER' || currentPlan === 'ADMIN'
+  const planDisplayName = currentPlan === 'PARTNER' ? 'PARCEIRO' : currentPlan === 'ADMIN' ? 'ADMINISTRADOR' : currentPlan
 
   const usageItems = planInfo?.usage && planInfo?.limits
     ? [
@@ -169,7 +171,7 @@ export default function BillingPage() {
         <div className="flex items-center justify-between">
           <div className="space-y-1">
             <div className="flex items-center gap-3">
-              <p className="font-serif font-bold text-3xl text-slate-900">{currentPlan}</p>
+              <p className="font-serif font-bold text-3xl text-slate-900">{planDisplayName}</p>
               {statusInfo && (
                 <span className={cn('inline-flex items-center gap-1 px-2.5 py-1 font-sans font-bold text-[10px] uppercase tracking-wide rounded-full border', statusInfo.color)}>
                   {statusInfo.icon}
@@ -185,7 +187,7 @@ export default function BillingPage() {
                 </p>
               </div>
             )}
-            {planInfo?.planExpiresAt && currentPlan !== 'FREE' && (
+            {planInfo?.planExpiresAt && currentPlan !== 'FREE' && !isManagedPlan && (
               <p className="font-sans text-xs text-slate-400 mt-0.5">
                 Expira em: {formatDate(planInfo.planExpiresAt)}
               </p>
@@ -193,12 +195,12 @@ export default function BillingPage() {
           </div>
 
           <div className="flex items-center gap-2">
-            {currentPlan !== 'FREE' && (
+            {!isManagedPlan && currentPlan !== 'FREE' && (
               <Button variant="outline" onClick={handleCancel} loading={cancelling} size="sm">
                 Cancelar
               </Button>
             )}
-            {currentPlan === 'FREE' && (
+            {!isManagedPlan && currentPlan === 'FREE' && (
               <Button variant="primary" size="sm" onClick={() => handleSubscribe('SOLO')} loading={subscribing === 'SOLO'}>
                 Fazer Upgrade
               </Button>

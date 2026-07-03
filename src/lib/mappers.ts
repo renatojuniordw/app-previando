@@ -150,6 +150,25 @@ export function mapNoteTypeToApi(noteType: DbNoteType): ApiNoteType {
   return noteToApiMap[noteType]
 }
 
+const BENEFIT_TO_MODALITIES: Record<ApiBenefitType, string[]> = {
+  APOSENTADORIA_IDADE: ['APOSENTADORIA_IDADE', 'IDADE_MINIMA_65_62', 'TEMPO_CONTRIBUICAO', 'PONTOS_86_96', 'PEDAGIO_50', 'PEDAGIO_100', 'APOSENTADORIA_ESPECIAL', 'HIBRIDA'],
+  APOSENTADORIA_TEMPO_CONTRIBUICAO: ['TEMPO_CONTRIBUICAO', 'PONTOS_86_96', 'PEDAGIO_50', 'PEDAGIO_100', 'IDADE_MINIMA_65_62', 'APOSENTADORIA_IDADE'],
+  APOSENTADORIA_ESPECIAL: ['APOSENTADORIA_ESPECIAL'],
+  APOSENTADORIA_HIBRIDA: ['HIBRIDA'],
+  APOSENTADORIA_PONTOS: ['PONTOS_86_96', 'PEDAGIO_50', 'PEDAGIO_100'],
+  AUXILIO_DOENCA: ['AUXILIO_DOENCA_B31', 'AUXILIO_DOENCA_B91'],
+  AUXILIO_ACIDENTE: [],
+  SALARIO_MATERNIDADE: ['SALARIO_MATERNIDADE'],
+  AUXILIO_RECLUSAO: ['AUXILIO_RECLUSAO'],
+  PENSAO_POR_MORTE: ['PENSAO_MORTE'],
+  BPC_LOAS: ['BPC_LOAS'],
+  REVISAO_BENEFICIO: [],
+}
+
+export function getModalitiesForBenefit(benefitType: ApiBenefitType): string[] {
+  return BENEFIT_TO_MODALITIES[benefitType] ?? []
+}
+
 export function mapCaseToApi<T extends { status: DbCaseStatus; benefitType: DbBenefitType }>(
   caso: T
 ): Omit<T, 'status' | 'benefitType'> & { status: ApiCaseStatus; benefitType: ApiBenefitType } {

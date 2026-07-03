@@ -4,14 +4,9 @@ import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { verifyCaseOwnership } from '@/lib/ownership'
 import { handleApiError } from '@/lib/api-error'
-import { mapBenefitTypeToDb, mapBenefitTypeToApi, ApiBenefitType } from '@/lib/mappers'
+import { mapBenefitTypeToApi } from '@/lib/mappers'
 
 const createSchema = z.object({
-  benefitType: z.enum([
-    'APOSENTADORIA_IDADE', 'APOSENTADORIA_TEMPO_CONTRIBUICAO', 'APOSENTADORIA_ESPECIAL',
-    'APOSENTADORIA_HIBRIDA', 'APOSENTADORIA_PONTOS', 'AUXILIO_DOENCA', 'AUXILIO_ACIDENTE',
-    'SALARIO_MATERNIDADE', 'AUXILIO_RECLUSAO', 'PENSAO_POR_MORTE', 'BPC_LOAS', 'REVISAO_BENEFICIO',
-  ]),
   items: z.array(z.object({
     id: z.string(),
     label: z.string(),
@@ -98,10 +93,16 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       return NextResponse.json({ error: 'Dados inválidos.' }, { status: 400 })
     }
 
+    const caseData = await prisma.case.findUnique({
+      where: { id: params.id },
+      select: { benefitType: true },
+    })
+    if (!caseData) return NextResponse.json({ error: 'Caso não encontrado.' }, { status: 404 })
+
     const checklist = await prisma.checklist.create({
       data: {
         caseId: params.id,
-        benefitType: mapBenefitTypeToDb(parsed.data.benefitType as ApiBenefitType),
+        benefitType: caseData.benefitType,
         items: parsed.data.items,
         eligible: parsed.data.eligible,
         pendingIssues: parsed.data.pendencias,

@@ -83,6 +83,7 @@ export default function AdminUsersPage() {
           <option value="FREE">FREE</option>
           <option value="SOLO">SOLO</option>
           <option value="PRO">PRO</option>
+          <option value="PARTNER">PARCEIRO</option>
         </select>
       </div>
 
@@ -126,6 +127,7 @@ export default function AdminUsersPage() {
                         <option value="FREE">FREE</option>
                         <option value="SOLO">SOLO</option>
                         <option value="PRO">PRO</option>
+                        <option value="PARTNER">PARCEIRO</option>
                       </select>
                     </td>
                     <td className="px-5 py-4 text-sm text-slate-700">{user._count.clients}</td>

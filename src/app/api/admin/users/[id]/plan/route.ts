@@ -13,14 +13,19 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     const body = await req.json()
     const { plan } = body
 
-    if (!['FREE', 'SOLO', 'PRO'].includes(plan)) {
+    if (!['FREE', 'SOLO', 'PRO', 'PARTNER'].includes(plan)) {
       return NextResponse.json({ error: 'Plano inválido' }, { status: 400 })
     }
+
+    // Ao definir PARTNER, remove vínculo com Mercado Pago
+    const resetMp = plan === 'PARTNER'
+      ? { mpSubscriptionId: null, mpSubscriptionStatus: null, mpCustomerId: null }
+      : {}
 
     const user = await prisma.user.findUnique({ where: { id: params.id } })
     if (!user) return NextResponse.json({ error: 'Usuário não encontrado' }, { status: 404 })
 
-    await prisma.user.update({ where: { id: params.id }, data: { plan, planStatus: 'ACTIVE' } })
+    await prisma.user.update({ where: { id: params.id }, data: { plan, planStatus: 'ACTIVE', ...resetMp } })
     await invalidatePlanLimitCache(plan)
 
     await logAudit({

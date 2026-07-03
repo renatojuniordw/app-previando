@@ -10,6 +10,7 @@ import { HelpText } from '@/components/ui/HelpText'
 import { DatePicker } from '@/components/ui/DatePicker'
 import { formatDate } from '@/lib/utils'
 import { MODALIDADES_PADRAO } from '@/lib/modalidade-labels'
+import { ModalitySelect } from '@/components/case/ModalitySelect'
 import { useToast } from '@/store/toast'
 import { CnisInfoCard } from '@/components/cases/CnisInfoCard'
 import {
@@ -104,6 +105,7 @@ export default function CalculatorPage() {
   const [calculations, setCalculations] = useState<Calculation[]>([])
   const [modalidades, setModalidades] = useState<Modalidade[]>([])
   const [cnisDocument, setCnisDocument] = useState<CnisDocument | null>(null)
+  const [caseBenefitType, setCaseBenefitType] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const [creating, setCreating] = useState(false)
@@ -122,13 +124,16 @@ export default function CalculatorPage() {
 
   const load = useCallback(async () => {
     try {
-      const [rCalc, rCnis, rModalidades] = await Promise.all([
+      const [rCalc, rCnis, rModalidades, rCase] = await Promise.all([
         api.get(`/cases/${params.id}/calculations`),
         api.get(`/cnis/${params.id}`),
         api.get('/modalidades'),
+        api.get(`/cases/${params.id}`),
       ])
       setCalculations(rCalc.data.calculations ?? [])
       setModalidades(rModalidades.data.modalidades ?? [])
+      const benefitType = rCase.data.case?.benefitType
+      setCaseBenefitType(benefitType)
 
       if (
         rCnis.data?.cnisDocument?.processingStatus === 'COMPLETED' ||
@@ -679,27 +684,16 @@ export default function CalculatorPage() {
               />
             </div>
 
-            <div>
-              <label htmlFor="modalidade" className="neo-label">
-                Regra / modalidade previdenciária
-              </label>
-              <select
-                id="modalidade"
-                value={modalidade}
-                onChange={(e) => setModalidade(e.target.value)}
-                className="neo-input"
-                aria-describedby="modalidade-hint"
-              >
-                {uniqueModalidades.map((item) => (
-                  <option key={item.codigo} value={item.codigo}>
-                    {item.label}
-                  </option>
-                ))}
-              </select>
-              <p id="modalidade-hint" className="mt-1 font-sans text-[10px] text-slate-400">
-                Escolha a modalidade que melhor se enquadra ao perfil do segurado
-              </p>
-            </div>
+            <ModalitySelect
+              benefitType={caseBenefitType}
+              modalidades={uniqueModalidades}
+              value={modalidade}
+              onChange={setModalidade}
+              label="Regra / modalidade previdenciária"
+              hint="Escolha a modalidade que melhor se enquadra ao perfil do segurado"
+              selectClassName="neo-input"
+              labelClassName="neo-label"
+            />
 
             {/* Parâmetros Avançados baseados na Modalidade */}
             {modalidade === 'APOSENTADORIA_ESPECIAL' && (

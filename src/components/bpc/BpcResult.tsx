@@ -88,7 +88,6 @@ export function BpcResult({ caseId, result, type, onCopy, onOpenChecklist, onReg
     setImporting(true)
     try {
       await api.post(`/cases/${caseId}/checklist`, {
-        benefitType: 'BPC_LOAS',
         items,
         eligible: true,
         pendencias,

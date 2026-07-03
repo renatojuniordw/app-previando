@@ -105,6 +105,8 @@ enum Plan {
   FREE
   SOLO
   PRO
+  PARTNER
+  ADMIN
 }
 
 enum PlanStatus {

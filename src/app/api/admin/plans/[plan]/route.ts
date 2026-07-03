@@ -10,7 +10,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { plan: stri
     const adminResult = await requireAdmin()
     if ('error' in adminResult) return adminResult.error
 
-    if (!['FREE', 'SOLO', 'PRO'].includes(params.plan)) {
+    if (!['FREE', 'SOLO', 'PRO', 'PARTNER', 'ADMIN'].includes(params.plan)) {
       return NextResponse.json({ error: 'Plano inválido' }, { status: 400 })
     }
 

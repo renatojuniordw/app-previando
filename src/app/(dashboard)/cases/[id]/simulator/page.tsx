@@ -9,6 +9,7 @@ import { DatePicker } from '@/components/ui/DatePicker'
 import { CurrencyInput } from '@/components/ui/CurrencyInput'
 import { formatDate } from '@/lib/utils'
 import { MODALIDADES_PADRAO } from '@/lib/modalidade-labels'
+import { ModalitySelect } from '@/components/case/ModalitySelect'
 import { useToast } from '@/store/toast'
 import { CnisInfoCard } from '@/components/cases/CnisInfoCard'
 import {
@@ -58,6 +59,7 @@ export default function SimulatorPage() {
   const [simulations, setSimulations] = useState<Simulation[]>([])
   const [modalidades, setModalidades] = useState<Modalidade[]>([])
   const [cnisDocument, setCnisDocument] = useState<CnisDocument | null>(null)
+  const [caseBenefitType, setCaseBenefitType] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const [creating, setCreating] = useState(false)
@@ -80,13 +82,15 @@ export default function SimulatorPage() {
 
   const load = useCallback(async () => {
     try {
-      const [rSim, rCnis, rModalidades] = await Promise.all([
+      const [rSim, rCnis, rModalidades, rCase] = await Promise.all([
         api.get(`/cases/${params.id}/simulations`),
         api.get(`/cnis/${params.id}`),
         api.get('/modalidades'),
+        api.get(`/cases/${params.id}`),
       ])
       setSimulations(rSim.data.simulations ?? [])
       setModalidades(rModalidades.data.modalidades ?? [])
+      setCaseBenefitType(rCase.data.case?.benefitType)
 
       if (rCnis.data?.cnisDocument?.processingStatus === 'COMPLETED' || rCnis.data?.cnisDocument?.processingStatus === 'SUMMARY_READY') {
         setCnisDocument(rCnis.data.cnisDocument)
@@ -113,6 +117,8 @@ export default function SimulatorPage() {
   const modalidadeLabels = Object.fromEntries(
     (modalidades.length > 0 ? modalidades : MODALIDADES_PADRAO).map(({ codigo, label }) => [codigo, label])
   )
+
+  const allModalidades = modalidades.length > 0 ? modalidades : MODALIDADES_PADRAO
 
   const handleCreate = async () => {
     setErrorMessage('')
@@ -466,18 +472,16 @@ export default function SimulatorPage() {
               />
             </div>
 
-            <div>
-              <label className="font-sans font-bold text-xs text-slate-600 block mb-1">Regra de Aposentadoria</label>
-              <select
-                value={modalidade}
-                onChange={(e) => setModalidade(e.target.value)}
-                className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm font-sans focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 outline-none"
-              >
-                {(modalidades.length > 0 ? modalidades : MODALIDADES_PADRAO).map((item) => (
-                  <option key={item.codigo} value={item.codigo}>{item.label}</option>
-                ))}
-              </select>
-            </div>
+            <ModalitySelect
+              benefitType={caseBenefitType}
+              modalidades={allModalidades}
+              value={modalidade}
+              onChange={setModalidade}
+              label="Regra de Aposentadoria"
+              hint=""
+              selectClassName="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm font-sans focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 outline-none"
+              labelClassName="font-sans font-bold text-xs text-slate-600 block mb-1"
+            />
 
             <div>
               <label className="font-sans font-bold text-xs text-slate-600 block mb-1">Tempo Especial Atual (Anos)</label>

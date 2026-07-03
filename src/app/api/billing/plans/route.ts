@@ -8,11 +8,14 @@ export async function GET() {
       orderBy: { maxClients: 'asc' },
     })
 
-    const plans = limits.map((l: typeof limits[number]) => ({
-      plan: l.plan,
-      price: l.plan === 'FREE' ? 0 : l.plan === 'SOLO' ? 97 : 197,
-      limits: l,
-    }))
+    const VISIBLE_PLANS = ['FREE', 'SOLO', 'PRO']
+    const plans = limits
+      .filter((l) => VISIBLE_PLANS.includes(l.plan))
+      .map((l) => ({
+        plan: l.plan,
+        price: l.plan === 'FREE' ? 0 : l.plan === 'SOLO' ? 97 : 197,
+        limits: l,
+      }))
 
     return NextResponse.json({ plans })
   } catch (err) {
