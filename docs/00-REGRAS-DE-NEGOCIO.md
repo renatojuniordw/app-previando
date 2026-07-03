@@ -336,13 +336,10 @@ Todo limite verificado no banco via API — retorna 402.
 - Email enviado via nodemailer (SMTP configurável)
 - Token expira em 1 hora
 
-### 5.8 Consulta de Processo (TrackJud Vigilant)
+### 5.8 Consulta de Processo
 - Endpoint: `POST /api/cases/[id]/process`
 - Aceita número CNJ (20 dígitos) em qualquer formato
-- Antes de consultar, o tribunal é identificado via `cnj-parser.ts` e enviado junto com a requisição para evitar consultas desnecessárias
-- Monitoramento push via webhook: `POST /api/webhooks/trackjud`
 - Cooldown: 10 min entre consultas manuais
-- Notificação PROCESS_UPDATE criada automaticamente via webhook
 
 ### 5.9 Portal do Cliente — Controle de Acesso
 O Portal do Cliente permite ao advogado compartilhar dados do caso de forma **granular e segura**:

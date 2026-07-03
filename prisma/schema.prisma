@@ -149,7 +149,7 @@ model PlanLimit {
   maxRevisionsPerMonth           Int     @default(0) // -1 = ilimitado | 0 = bloqueado
   gpsEnabled                     Boolean @default(false)
   viabilityScoreEnabled          Boolean @default(false)
-  assinaturaEnabled              Boolean @default(false)
+
 
   updatedAt DateTime @updatedAt
 
@@ -245,9 +245,6 @@ model Case {
   googleCalendarEventId  String?
   notes                  String?
 
-  trackjudMonitorId     String?
-  trackjudRegisteredAt  DateTime?
-
   // Configuração do Portal do Cliente — define quais abas o cliente pode ver
   portalConfig Json @default("{\"showProcessTracking\":true,\"showCalculations\":true,\"showRetroactives\":false,\"showInterpretation\":false}")
 
@@ -266,14 +263,13 @@ model Case {
   fees         Fee[]
   revisions    Revision[]
   gpsGuides    GpsGuide[]
-  assinaturas  Assinatura[]
+
 
   @@index([userId])
   @@index([clientId])
   @@index([userId, status])
   @@index([priority, deadlineDate])
   @@index([processNumber])
-  @@index([trackjudMonitorId])
   @@map("cases")
 }
 
@@ -800,26 +796,6 @@ model GpsGuide {
   @@map("gps_guides")
 }
 
-// ─────────────────────────────────────────
-// ASSINATURA DIGITAL (Clicksign)
-// ─────────────────────────────────────────
-
-model Assinatura {
-  id              String   @id @default(cuid())
-  caseId          String
-  case            Case     @relation(fields: [caseId], references: [id], onDelete: Cascade)
-  tipoDocumento   String   // PROCURACAO, PETICAO, CONTRATO
-  processoKey     String
-  signUrl         String?  // Link temporário do Clicksign para assinar
-  status          String   // PENDING, SIGNED, CANCELLED, EXPIRED
-  documentUrl     String?
-  signers         Json
-  createdAt       DateTime @default(now())
-  completedAt     DateTime?
-
-  @@index([caseId])
-  @@map("assinaturas")
-}
 
 // ─────────────────────────────────────────
 // PORTAL DO CLIENTE

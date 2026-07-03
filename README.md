@@ -18,7 +18,6 @@ SaaS B2B para **advocacia previdenciária brasileira**. Automatiza todo o fluxo 
 | **Pagamentos** | Mercado Pago |
 | **Armazenamento** | Cloudflare R2 |
 | **Monitoramento** | Sentry |
-| **Assinatura Digital** | Clicksign |
 | **Testes** | Vitest (unit), Playwright (E2E) |
 
 ---
@@ -170,7 +169,6 @@ src/
 │   ├── bpc/               # Serviço BPC/LOAS
 │   ├── cnis/              # Processamento de CNIS
 │   ├── revision-service.ts # Revisão de benefícios
-│   ├── assinatura-digital.ts # Assinatura digital (Clicksign)
 │   └── mercadopago.ts     # Integração de pagamentos
 ├── jobs/                  # BullMQ workers
 │   ├── worker.ts          # Entry point
@@ -219,7 +217,7 @@ O sistema usa 4 workers para processamento assíncrono, iniciados via `npm run w
 | `MERCADOPAGO_WEBHOOK_SECRET` | ❌ | HMAC webhook MP |
 | `MP_PLAN_ID_SOLO` / `MP_PLAN_ID_PRO` | ❌ | IDs dos planos no Mercado Pago |
 | `DATAJUD_API_KEY` | ❌ | API pública do CNJ |
-| `CLICKSIGN_API_KEY` | ❌ | Assinatura digital (Clicksign) |
+
 | `SMTP_HOST` / `SMTP_PORT` / `SMTP_USER` / `SMTP_PASS` / `EMAIL_FROM` | ❌ | Config de email (worker opcional) |
 | `WHATSAPP_PROVIDER` / `ZAPI_INSTANCE_ID` / `ZAPI_TOKEN` / `ZAPI_CLIENT_TOKEN` | ❌ | WhatsApp (Z-API) |
 | `WHATSAPP_PHONE_NUMBER_ID` / `WHATSAPP_ACCESS_TOKEN` | ❌ | WhatsApp (Meta Cloud API) |

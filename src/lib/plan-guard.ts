@@ -36,7 +36,7 @@ export type PlanFeature =
   | 'REVISION_MODULE'
   | 'GPS_MODULE'
   | 'VIABILITY_SCORE'
-  | 'ASSINATURA_DIGITAL'
+
 
 const FEATURE_MAP: Record<PlanFeature, keyof PlanLimit> = {
   SIMULATOR: 'simulatorEnabled',
@@ -50,7 +50,7 @@ const FEATURE_MAP: Record<PlanFeature, keyof PlanLimit> = {
   REVISION_MODULE: 'revisionEnabled',
   GPS_MODULE: 'gpsEnabled',
   VIABILITY_SCORE: 'viabilityScoreEnabled',
-  ASSINATURA_DIGITAL: 'assinaturaEnabled',
+
 }
 
 const FEATURE_LABELS: Record<PlanFeature, string> = {
@@ -65,7 +65,7 @@ const FEATURE_LABELS: Record<PlanFeature, string> = {
   REVISION_MODULE: 'Revisão de Benefícios',
   GPS_MODULE: 'Guias de Contribuição (GPS/DAS)',
   VIABILITY_SCORE: 'Score de Viabilidade',
-  ASSINATURA_DIGITAL: 'Assinatura Digital',
+
 }
 
 const PLAN_LIMIT_TTL = 300 // 5 minutos

@@ -15,8 +15,6 @@ export interface CaseDetail {
   processLastMovDate: string | null
   processLastMovCount: number | null
   processLastSummary: string | null
-  trackjudMonitorId: string | null
-  trackjudRegisteredAt: string | null
   planLimits?: {
     simulatorEnabled: boolean
     retroativosEnabled: boolean

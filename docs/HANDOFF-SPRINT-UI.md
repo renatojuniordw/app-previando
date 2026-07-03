@@ -143,7 +143,7 @@ npm run lint     ✅ (4 warnings jsx-a11y/alt-text em PDF — aceitável porque 
 ## Decisões arquiteturais
 
 - **Kanban stale closure**: `casesRef.current` dentro do `handleDragEnd` — única forma confiável de evitar closure desatualizada
-- **ConfirmDialog FINALIZADO**: status terminal que cancela monitoramento TrackJud — requer confirmação explícita
+- **ConfirmDialog FINALIZADO**: status terminal — requer confirmação explícita
 - **Split saving state**: Profile page tem dois formulários independentes (dados + senha) que não devem compartilhar estado de loading
 - **sucrase@3.34.0**: pinned porque 3.35.1 quebrou o `CJSImportProcessor` usado pelo Next.js
 - **Tooltip CSS-only**: sem dependências, `role="tooltip"` + `aria-describedby` para a11y

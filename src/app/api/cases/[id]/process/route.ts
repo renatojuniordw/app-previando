@@ -4,7 +4,6 @@ import { prisma } from '@/lib/prisma'
 import { verifyCaseOwnership } from '@/lib/ownership'
 import { handleApiError } from '@/lib/api-error'
 import { logAudit } from '@/lib/audit'
-import { trackjud } from '@/services/trackjud'
 
 const COOLDOWN_MINUTES = 10
 
@@ -23,8 +22,6 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
         processLastMovDate: true,
         processLastMovCount: true,
         processLastSummary: true,
-        trackjudMonitorId: true,
-        trackjudRegisteredAt: true,
       },
     })
 
@@ -45,21 +42,12 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
     const caso = await prisma.case.findUnique({
       where: { id: params.id },
-      select: {
-        processNumber: true,
-        processLastCheck: true,
-        trackjudMonitorId: true,
-      },
+      select: { processNumber: true, processLastCheck: true },
     })
 
     if (!caso) return NextResponse.json({ error: 'Caso não encontrado.' }, { status: 404 })
     if (!caso.processNumber) {
       return NextResponse.json({ error: 'Nenhum número de processo cadastrado neste caso.' }, { status: 400 })
-    }
-    if (!caso.trackjudMonitorId) {
-      return NextResponse.json({
-        error: 'Processo ainda não registrado para monitoramento no TrackJud.',
-      }, { status: 400 })
     }
 
     if (caso.processLastCheck) {
@@ -73,27 +61,10 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       }
     }
 
-    const result = await trackjud.getProcess(caso.trackjudMonitorId)
-
     const now = new Date()
-    const updateData: {
-      processLastCheck: Date
-      processLastMovDate?: Date | null
-      processLastMovCount?: number
-      processLastSummary?: string | null
-    } = { processLastCheck: now }
-
-    if (result) {
-      updateData.processLastMovDate = result.ultimaMovimentacao?.data
-        ? new Date(result.ultimaMovimentacao.data)
-        : null
-      updateData.processLastMovCount = result.totalMovimentacoes
-      updateData.processLastSummary = result.ultimaMovimentacao?.descricao ?? null
-    }
-
     const updated = await prisma.case.update({
       where: { id: params.id },
-      data: updateData,
+      data: { processLastCheck: now },
       select: {
         processNumber: true,
         processLastCheck: true,
@@ -108,12 +79,11 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       action: 'case.process.checked',
       resource: `case:${params.id}`,
       req,
-      metadata: { processNumber: caso.processNumber, found: !!result },
+      metadata: { processNumber: caso.processNumber },
     })
 
     return NextResponse.json({
       process: updated,
-      trackjud: result,
       error: null,
     })
   } catch (err) {

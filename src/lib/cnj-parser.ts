@@ -5,9 +5,6 @@
  *
  * - J (1 dígito): Segmento do Poder Judiciário
  * - TR (2 dígitos): Identificador do Tribunal
- *
- * Com base em J+TR, identificamos o tribunal exato para evitar
- * consultas desnecessárias a tribunais errados no TrackJud.
  */
 
 // ─── Segmentos da Justiça ────────────────────────────────────────────────
@@ -204,10 +201,8 @@ export function parseCnjNumber(raw: string): CnjProcessInfo | null {
 }
 
 /**
- * Gera um identificador de tribunal no formato usado pelo TrackJud.
+ * Gera um identificador de tribunal a partir do número CNJ.
  * Ex: "TJSP", "TRF3", "TRT2", "TRE-SP"
- *
- * Pode ser ajustado conforme a documentação real da TrackJud.
  */
 export function getTribunalId(raw: string): string | null {
   const info = parseCnjNumber(raw)

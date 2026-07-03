@@ -300,7 +300,7 @@ export default function ClientsKanbanPage() {
                 <p className="font-sans text-sm text-slate-600 mt-1 leading-relaxed">
                   {BENEFIT_SHORT_LABELS[confirmFinalize.benefitType] ?? confirmFinalize.benefitType} — {confirmFinalize.client.name}
                 </p>
-                <p className="font-sans text-xs text-slate-500 mt-2">Esta ação não pode ser desfeita. O monitoramento TrackJud será cancelado.</p>
+                <p className="font-sans text-xs text-slate-500 mt-2">Esta ação não pode ser desfeita.</p>
               </div>
             </div>
             <div className="flex gap-3">

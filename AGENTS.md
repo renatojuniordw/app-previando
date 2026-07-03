@@ -46,7 +46,7 @@ src/
     dashboard/       dashboard widgets
     reports/         BI chart components
   lib/               shared logic: prisma, redis, engines, prompts
-  services/          external integrations: CNIS, Mercado Pago, Clicksign, etc.
+  services/          external integrations: CNIS, Mercado Pago, etc.
   jobs/              BullMQ workers
   store/             Zustand stores
   types/             TS type declarations

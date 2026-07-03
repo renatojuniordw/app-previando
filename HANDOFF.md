@@ -14,7 +14,7 @@
 |---|---|---|
 | **Testes** — ownership, plan-guard, mappers | Áreas críticas sem cobertura | `tests/unit/ownership.test.ts`, `plan-guard.test.ts`, `mappers.test.ts` |
 | **CI/CD** — GitHub Actions | Automatizar testes/lint em todo PR | `.github/workflows/ci.yml`, `.github/workflows/e2e.yml` |
-| **Zod Validation** — 3 rotas | Gaps de segurança sem validação de body | `portal/simulate`, `webhooks/mercadopago`, `webhooks/trackjud` |
+| **Zod Validation** — 2 rotas | Gaps de segurança sem validação de body | `portal/simulate`, `webhooks/mercadopago` |
 | **Prisma v5/v6** | Inconsistência entre package.json e .vscode | `.vscode/settings.json` |
 | **README** | Defasado, não refletia estado atual | `README.md` |
 | **Worker Health** | Sem monitoramento dos workers BullMQ | `src/app/api/health/workers/route.ts` |
@@ -82,18 +82,6 @@
 | **Componentes** | 7 componentes reutilizáveis | `src/components/reports/` |
 | **Sidebar** | Link "Relatórios" adicionado | `src/components/Sidebar.tsx` |
 
-### Fase 8 — Assinatura Digital (Clicksign)
-
-| O quê | Por quê | Arquivos |
-|---|---|---|
-| **Service Layer** | Envio, verificação e download via API Clicksign | `src/services/assinatura-digital.ts` |
-| **API** | `GET/POST /api/cases/{id}/assinatura` | `src/app/api/cases/[id]/assinatura/route.ts` |
-| **Webhook** | Notificações de conclusão de assinatura | `src/app/api/webhooks/clicksign/route.ts` |
-| **UI** | Lista de documentos, modal de envio, download | `src/app/(dashboard)/cases/[id]/assinatura/page.tsx` |
-| **Model Prisma** | `Assinatura`, `SIGNATURE_COMPLETED` no enum | `prisma/schema.prisma` |
-| **Plan Gating** | Feature `ASSINATURA_DIGITAL` (PRO) | `src/lib/plan-guard.ts` |
-| **Layout** | Aba "Assinatura" no caso | `src/app/(dashboard)/cases/[id]/layout.tsx` |
-
 ---
 
 ## 2. Estado Atual
@@ -126,8 +114,7 @@ Nenhum erro novo foi introduzido pelas implementações. Os 14 erros restantes s
 
 | Variável | Feature | Obrigatória? |
 |---|---|---|
-| `CLICKSIGN_API_KEY` | Assinatura Digital | ❌ (só se usar o módulo) |
-| `CLICKSIGN_WEBHOOK_SECRET` | Webhook Clicksign | ❌ |
+
 
 ### Novos pacotes npm
 

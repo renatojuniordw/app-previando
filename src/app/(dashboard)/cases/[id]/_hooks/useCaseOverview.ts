@@ -78,11 +78,9 @@ export function useCaseOverview() {
     try {
       const r = await api.post(`/cases/${params.id}/process`)
       if (r.data.error) {
-        addToast({ type: 'error', title: 'TrackJud', message: r.data.error })
-      } else if (!r.data.trackjud) {
-        addToast({ type: 'info', title: 'Processo não encontrado', message: 'Nenhum dado retornado pelo TrackJud.' })
+        addToast({ type: 'error', title: 'Erro', message: r.data.error })
       } else {
-        addToast({ type: 'success', title: 'Processo atualizado', message: 'Movimentações sincronizadas com o TrackJud.' })
+        addToast({ type: 'success', title: 'Processo atualizado', message: 'Consulta realizada com sucesso.' })
       }
       load()
     } catch (err: unknown) {

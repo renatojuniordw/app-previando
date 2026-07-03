@@ -172,7 +172,7 @@ Tabela: `usage_records`
 | `usageMonthRef` | `DateTime @default(now())` | Referência do mês |
 | `updatedAt` | `DateTime @updatedAt` | Atualização |
 
-**Observação:** Os campos `peticoesThisMonth` e `processInterpretThisMonth` foram adicionados junto com a feature de interpretação de movimentações (Fase 3 TrackJud).
+**Observação:** Os campos `peticoesThisMonth` e `processInterpretThisMonth` foram adicionados junto com a feature de interpretação de movimentações.
 
 **Relações:** `user -> User` (Cascade on delete)
 
@@ -236,7 +236,7 @@ Tabela: `cases`
 | `updatedAt` | `DateTime @updatedAt` | Atualização |
 
 **Relações:** `user -> User`, `client -> Client`, `cnisDocument?`, `calculations[]`, `retroactives[]`, `opinions[]`, `checklists[]`, `simulations[]`, `caseNotes[]`, `bpcAnalysis?`
-**Índices:** `@@index([userId])`, `@@index([clientId])`, `@@index([userId, status])`, `@@index([priority, deadlineDate])`, `@@index([processNumber])`, `@@index([trackjudMonitorId])`
+**Índices:** `@@index([userId])`, `@@index([clientId])`, `@@index([userId, status])`, `@@index([priority, deadlineDate])`, `@@index([processNumber])`
 
 **PortalConfig (JSON):**
 ```json

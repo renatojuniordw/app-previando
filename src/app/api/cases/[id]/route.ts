@@ -5,12 +5,10 @@ import { prisma } from '@/lib/prisma'
 import { verifyCaseOwnership } from '@/lib/ownership'
 import { sanitizeInput } from '@/lib/sanitize'
 import { handleApiError } from '@/lib/api-error'
-import { getTribunalId } from '@/lib/cnj-parser'
 import { logAudit } from '@/lib/audit'
 import { getPlanLimit } from '@/lib/plan-guard'
 import { mapCaseStatusToDb, mapCaseToApi, ApiCaseStatus } from '@/lib/mappers'
 import { createCalendarEvent, updateCalendarEvent, deleteCalendarEvent } from '@/services/google-calendar'
-import { trackjud } from '@/services/trackjud'
 import { Logger } from '@/lib/logger'
 
 const logger = new Logger('CaseUpdate')
@@ -64,7 +62,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
           processInterpretEnabled: planLimits.processInterpretEnabled,
           revisionEnabled: planLimits.revisionEnabled,
           viabilityScoreEnabled: planLimits.viabilityScoreEnabled,
-          assinaturaEnabled: planLimits.assinaturaEnabled,
+
         },
       },
     })
@@ -103,7 +101,6 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
         deadlineDate: true,
         benefitType: true,
         processNumber: true,
-        trackjudMonitorId: true,
         client: { select: { name: true } },
       },
     })
@@ -131,45 +128,6 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
       } else if (!newDate && existingEventId) {
         await deleteCalendarEvent(session.user.id, existingEventId)
         await prisma.case.update({ where: { id: params.id }, data: { googleCalendarEventId: null } })
-      }
-    }
-
-    // ─── TrackJud: register/unregister monitor quando processNumber muda ──
-    if (parsed.data.processNumber !== undefined) {
-      const oldProcessNumber = casoAntes?.processNumber ?? null
-      const newProcessNumber = parsed.data.processNumber
-
-      if (newProcessNumber !== oldProcessNumber) {
-        // Se havia um processo monitorado anteriormente, cancela
-        if (oldProcessNumber && casoAntes?.trackjudMonitorId) {
-          await trackjud.unregisterProcess(casoAntes.trackjudMonitorId).catch(() => {
-            logger.warn(`Falha ao cancelar monitoramento ${casoAntes.trackjudMonitorId}`)
-          })
-          await prisma.case.update({
-            where: { id: params.id },
-            data: { trackjudMonitorId: null, trackjudRegisteredAt: null },
-          })
-        }
-
-        // Se há um novo número, registra no TrackJud
-        if (newProcessNumber) {
-          try {
-            // Identifica o tribunal a partir do número CNJ para evitar consultas desnecessárias
-            const tribunal = getTribunalId(newProcessNumber)
-            const { monitorId } = await trackjud.registerProcess({
-              processNumber: newProcessNumber,
-              tribunal: tribunal ?? undefined,
-            })
-            await prisma.case.update({
-              where: { id: params.id },
-              data: { trackjudMonitorId: monitorId, trackjudRegisteredAt: new Date() },
-            })
-            logger.info(`Processo ${newProcessNumber} registrado no TrackJud: monitorId=${monitorId} tribunal=${tribunal}`)
-          } catch (err) {
-            // Não bloqueia o save do caso — loga a falha e continua
-            logger.warn(`Falha ao registrar processo ${newProcessNumber} no TrackJud`, err)
-          }
-        }
       }
     }
 

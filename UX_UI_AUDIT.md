@@ -17,7 +17,7 @@ Esta auditoria cobre 100+ arquivos entre páginas, componentes, serviços e util
 - **Componente Input.tsx não associa `<label>` ao `<input>` via `htmlFor`/`id`** — padrão replicado em todo o app.
 - **13 abas na tela de Casos em scroll horizontal único** — sobrecarga cognitiva e navegação confusa em mobile.
 - **15 `<input type="date">` nativos espalhados sem componente DatePicker padronizado.**
-- **3 integrações externas ativas (Mercado Pago, Clicksign, TrackJud) com webhooks implementados;** validação HMAC do Clicksign incompleta.
+- **1 integração externa ativa (Mercado Pago) com webhook implementado.
 
 ---
 
@@ -693,20 +693,8 @@ Adicionar labels de grupo ou separadores visuais sutis (ex: `border-t border-sla
 
 ## Fase 4 — Integrações
 
-> Observação: As integrações listadas abaixo NÃO são problemas, mas sim oportunidades de melhoria identificadas durante a auditoria.
 
-### 4.1 Clicksign — Validação HMAC incompleta
 
-| Arquivo | Linha | Severidade | Descrição |
-|---------|-------|------------|-----------|
-| `src/app/api/webhooks/clicksign/route.ts` | 27-31 | **MODERADO** | A verificação da assinatura do webhook verifica a presença do header `x-clicksign-signature` mas não valida criptograficamente o valor contra `CLICKSIGN_WEBHOOK_SECRET`. Comentário no código: "Validação simples — em produção, usar HMAC conforme documentação do Clicksign". |
-
-**Antes:** `const signature = headers.get('x-clicksign-signature'); if (!signature) return ...` (presença, não conteúdo)
-**Depois (sugestão):** Implementar validação HMAC-SHA256 do payload usando `CLICKSIGN_WEBHOOK_SECRET`, similar ao padrão já implementado no webhook do TrackJud.
-
-**Esforço:** Baixo
-
----
 
 ### 4.2 Google Calendar — Timezone em eventos all-day
 
@@ -740,10 +728,10 @@ Baseado nas integrações já existentes e no domínio (direito previdenciário 
 
 | Integração | Justificativa | Complexidade |
 |------------|---------------|-------------|
-| **PJE (Processo Judicial Eletrônico) CNJ** | O app já tem parser CNJ e integração TrackJud. Consulta direta ao PJE eliminaria dependência de intermediário para tribunais que usam PJE. | Alta |
+| **PJE (Processo Judicial Eletrônico) CNJ** | O app já tem parser CNJ. Consulta direta ao PJE eliminaria dependência de intermediário para tribunais que usam PJE. | Alta |
 | **DataJud (CNJ)** | Base estatística oficial do Judiciário. Permitiria enriquecer análises de sucesso com dados reais de cada tribunal/juiz. | Média |
 | **API do INSS (Meu INSS / serviço público)** | Consulta direta de CNIS, extratos, e resultados de requerimentos. Eliminaria dependência de upload manual de PDF. | Alta |
-| **Sistema de tribunais estaduais (TJSP, TJRJ, etc.)** | Cada tribunal tem API própria para consulta processual. TrackJud já cobre parcialmente, mas integração direta seria mais resiliente. | Alta (cada tribunal) |
+| **Sistema de tribunais estaduais (TJSP, TJRJ, etc.)** | Cada tribunal tem API própria para consulta processual. Integração direta seria mais resiliente. | Alta (cada tribunal) |
 | **E-noticiado / Diário de Justiça Eletrônico (DJE)** | Publicação de intimações. Permitiria monitoramento automático de intimações sem depender de webhook. | Média |
 
 > **Nota:** Nenhuma dessas integrações deve ser iniciada sem estudo de viabilidade técnica e jurídica. São oportunidades mapeadas, não recomendações de implementação imediata.
@@ -816,7 +804,7 @@ Baseado nas integrações já existentes e no domínio (direito previdenciário 
 
 | # | Item | Esforço |
 |---|------|---------|
-| 4.1 | Clicksign: validação HMAC | Baixo |
+
 | 4.2 | Google Calendar: timezone | Baixo |
 | 4.3 | OpenAI: fallback placeholder | Baixo |
 | 4.4 | Oportunidades de integração (pesquisa) | — |

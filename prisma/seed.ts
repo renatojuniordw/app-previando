@@ -80,7 +80,7 @@ async function main() {
       maxRevisionsPerMonth: 0,
       gpsEnabled: false,
       viabilityScoreEnabled: false,
-      assinaturaEnabled: false,
+
     },
     {
       plan: 'SOLO' as const,
@@ -105,7 +105,7 @@ async function main() {
       maxRevisionsPerMonth: 20,
       gpsEnabled: true,
       viabilityScoreEnabled: true,
-      assinaturaEnabled: true,
+
     },
     {
       plan: 'PRO' as const,
@@ -130,7 +130,7 @@ async function main() {
       maxRevisionsPerMonth: -1,
       gpsEnabled: true,
       viabilityScoreEnabled: true,
-      assinaturaEnabled: true,
+
     },
     {
       plan: 'PARTNER' as const,
@@ -155,7 +155,7 @@ async function main() {
       maxRevisionsPerMonth: -1,
       gpsEnabled: true,
       viabilityScoreEnabled: true,
-      assinaturaEnabled: true,
+
     },
     {
       plan: 'ADMIN' as const,
@@ -180,7 +180,7 @@ async function main() {
       maxRevisionsPerMonth: -1,
       gpsEnabled: true,
       viabilityScoreEnabled: true,
-      assinaturaEnabled: true,
+
     },
   ]
 
