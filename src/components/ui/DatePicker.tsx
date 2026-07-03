@@ -35,6 +35,7 @@ export function DatePicker({ value, onChange, label, error, hint, minDate, maxDa
 
   const textFieldProps: Record<string, unknown> = {
     fullWidth: true,
+    size: 'small',
     error: !!error,
     helperText: error || hint || undefined,
   }
