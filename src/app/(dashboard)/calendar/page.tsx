@@ -5,6 +5,7 @@ import api from '@/lib/api'
 import { Card } from '@/components/ui/Card'
 import { CalendarEventCard } from '@/components/calendar/CalendarEventCard'
 import { CalendarDays, ChevronLeft, ChevronRight, Filter, X } from 'lucide-react'
+import { ErrorBoundary } from '@/components/ErrorBoundary'
 
 interface CalendarEvent {
   id: string
@@ -164,6 +165,7 @@ export default function CalendarPage() {
   }, [data])
 
   return (
+    <ErrorBoundary>
     <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
@@ -398,5 +400,6 @@ export default function CalendarPage() {
         </div>
       </div>
     </div>
+    </ErrorBoundary>
   )
 }

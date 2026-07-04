@@ -3,9 +3,8 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useParams } from 'next/navigation'
 import api from '@/lib/api'
-import { MODALIDADES_PADRAO, getModalityLabel, mapToPortugueseCode } from '@/lib/modalidade-labels'
+import { MODALIDADES_PADRAO, mapToPortugueseCode } from '@/lib/modalidade-labels'
 import { useToast } from '@/store/toast'
-import { formatCurrency, formatPercentage } from '@/lib/utils'
 
 interface InputParams {
   birthDate?: string

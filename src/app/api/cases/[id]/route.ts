@@ -30,11 +30,8 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       include: {
         client: { select: { id: true, name: true, phone: true, email: true } },
         cnisDocument: true,
-        calculations: { orderBy: { createdAt: 'desc' } },
         opinions: { orderBy: { createdAt: 'desc' }, select: { id: true, status: true, createdAt: true } },
         checklists: { orderBy: { createdAt: 'desc' }, take: 1 },
-        simulations: { orderBy: { createdAt: 'desc' } },
-        retroactives: { orderBy: { createdAt: 'desc' } },
         _count: { select: { caseNotes: true } },
       },
     })

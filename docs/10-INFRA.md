@@ -158,13 +158,6 @@ SMTP_USER=""
 SMTP_PASS=""
 EMAIL_FROM="Previando <noreply@previando.com.br>"
 
-# WhatsApp Provider
-WHATSAPP_PROVIDER="zapi"   # zapi | meta
-ZAPI_INSTANCE_ID=""
-ZAPI_TOKEN=""
-ZAPI_CLIENT_TOKEN=""
-WHATSAPP_PHONE_NUMBER_ID=""
-WHATSAPP_ACCESS_TOKEN=""
 ```
 
 ---

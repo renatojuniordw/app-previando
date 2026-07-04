@@ -34,7 +34,6 @@ export default function SimulatorPage() {
     showModal,
     setShowModal,
     errorMessage,
-    setErrorMessage,
     scenarioName,
     setScenarioName,
     modalidade,

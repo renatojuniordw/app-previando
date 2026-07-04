@@ -5,6 +5,9 @@ import { prisma } from '@/lib/prisma'
 import { verifyCaseOwnership } from '@/lib/ownership'
 import { sanitizeInput } from '@/lib/sanitize'
 import { handleApiError } from '@/lib/api-error'
+import { Logger } from '@/lib/logger'
+
+const logger = new Logger('OpinionsPUT')
 
 // Aceita tanto `editedContent` (nome do frontend) quanto `customizedContent` (nome legado do banco)
 const updateSchema = z.object({
@@ -29,8 +32,7 @@ export async function PUT(
     if (!opinion) return NextResponse.json({ error: 'Parecer não encontrado.' }, { status: 404 })
 
     const body = await req.json()
-    console.log('[opinions PUT] body recebido:', {
-      oId: params.oId,
+    logger.debug('Body recebido', {
       hasEditedContent: 'editedContent' in body,
       hasCustomizedContent: 'customizedContent' in body,
       status: body.status,
@@ -38,12 +40,11 @@ export async function PUT(
 
     const parsed = updateSchema.safeParse(body)
     if (!parsed.success) {
-      console.error('[opinions PUT] Validação falhou:', parsed.error.flatten())
+      logger.warn('Validação falhou', parsed.error.flatten())
       return NextResponse.json({ error: 'Dados inválidos.' }, { status: 400 })
     }
 
     const data: Record<string, unknown> = {}
-    // editedContent é o nome enviado pelo frontend; mapeia para customizedContent no banco
     const contentValue = parsed.data.editedContent ?? parsed.data.customizedContent
     if (contentValue) {
       data.customizedContent = sanitizeInput(contentValue)
@@ -52,7 +53,7 @@ export async function PUT(
       data.status = parsed.data.status
     }
 
-    console.log('[opinions PUT] Atualizando campos:', Object.keys(data))
+    logger.debug('Atualizando campos', Object.keys(data))
 
     const updated = await prisma.opinion.update({
       where: { id: params.oId },

@@ -1,5 +1,5 @@
 # 08 — SAAS: PLANOS E PAGAMENTOS
-> Freemium, Mercado Pago Subscriptions, Webhooks e WhatsApp Share
+> Freemium, Mercado Pago Subscriptions, Webhooks
 > Última atualização: 2026-06-27
 
 ---
@@ -19,7 +19,6 @@
 | Simulador | ❌ | ✅ | ✅ |
 | Retroativos | ❌ | ✅ | ✅ |
 | Export PDF | ❌ | ✅ | ✅ |
-| WhatsApp share | ❌ | ✅ | ✅ |
 | Diagnóstico IA | ❌ | ✅ | ✅ |
 | Módulo BPC/LOAS | ❌ | ✅ | ✅ |
 | Petição Inicial IA | ❌ | ✅ | ✅ |
@@ -36,7 +35,6 @@
 | `SIMULATOR` | Simulador de benefício | `simulatorEnabled` |
 | `RETROATIVOS` | Cálculo de retroativos | `retroactiveEnabled` |
 | `EXPORT_PDF` | Exportar PDF | `exportPdfEnabled` |
-| `WHATSAPP_SHARE` | Compartilhar via WhatsApp | `whatsappEnabled` |
 | `DIAGNOSIS` | Diagnóstico IA | `diagnosisEnabled` |
 | `USE_BPC_MODULE` | Módulo BPC/LOAS | `bpcEnabled` |
 | `PETICAO` | Petição Inicial com IA | `peticaoEnabled` |
@@ -83,16 +81,6 @@ export const PLAN_PRICES: Record<string, number> = { SOLO: 97, PRO: 197 }
 - **Não confia no payload** — faz fetch na API MP para dados autoritativos
 - Processa: `subscription_preapproval` e `payment`
 - Mapeamento de status MP → DB
-
----
-
-## WhatsApp Share / Send
-
-- Provider configurável: `WHATSAPP_PROVIDER` (zapi | meta)
-- **Z-API:** via `ZAPI_INSTANCE_ID` + `ZAPI_TOKEN` + `ZAPI_CLIENT_TOKEN`
-- **Meta Cloud API:** via `WHATSAPP_PHONE_NUMBER_ID` + `WHATSAPP_ACCESS_TOKEN`
-- Link share: `https://wa.me/{phone}?text={message}`
-- Rodapé: "Calculado via Previando (app.previando.com.br)"
 
 ---
 
@@ -150,12 +138,6 @@ MERCADOPAGO_ACCESS_TOKEN=""
 MERCADOPAGO_WEBHOOK_SECRET=""
 MP_PLAN_ID_SOLO=""
 MP_PLAN_ID_PRO=""
-WHATSAPP_PROVIDER="zapi"         # zapi | meta
-ZAPI_INSTANCE_ID=""
-ZAPI_TOKEN=""
-ZAPI_CLIENT_TOKEN=""
-WHATSAPP_PHONE_NUMBER_ID=""
-WHATSAPP_ACCESS_TOKEN=""
 ```
 
 ---

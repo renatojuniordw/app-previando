@@ -35,7 +35,6 @@ export default function CalculatorPage() {
     showModal,
     setShowModal,
     errorMessage,
-    setErrorMessage,
     uniqueModalidades,
     deleteTarget,
     setDeleteTarget,

@@ -47,7 +47,9 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     const safe = { ...client } as Record<string, unknown>
     delete safe.cpfHash
     const maskCpf = req.nextUrl.searchParams.get('mask') !== 'false'
-    return NextResponse.json({ client: { ...safe, cpf: maskCpf ? '***.***.**-**' : (client as Record<string, unknown>).cpf } })
+    return NextResponse.json({ client: { ...safe, cpf: maskCpf ? '***.***.**-**' : (client as Record<string, unknown>).cpf } }, {
+      headers: { 'Cache-Control': 'private, max-age=0, stale-while-revalidate=60' },
+    })
   } catch (err) {
     return handleApiError(err)
   }

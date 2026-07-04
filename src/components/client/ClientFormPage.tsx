@@ -232,7 +232,7 @@ export function ClientFormPage({ clientId }: ClientFormPageProps) {
 
           <div className="grid grid-cols-2 gap-4">
             <Input
-              label="WhatsApp / Telefone"
+              label="Telefone"
               value={formatPhone(phoneRaw)}
               onChange={(e) => {
                 const raw = stripNonDigits(e.target.value).slice(0, 11)

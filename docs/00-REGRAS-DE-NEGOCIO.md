@@ -75,10 +75,9 @@ Histórico versionado e imutável de anotações de um caso. Cada entrada nunca 
 ### DataJud
 API pública do CNJ (Conselho Nacional de Justiça) para consulta de andamento processual. Integrada via `/api/cases/[id]/process`.
 
-### Z-API / Meta WhatsApp
-Serviço de envio de mensagens WhatsApp. Provider configurável via `WHATSAPP_PROVIDER` (zapi | meta).
-
 ---
+
+
 
 ## 3. Entidades do Sistema
 
@@ -159,7 +158,7 @@ Histórico versionado de anotações. Imutável — nunca edita, só cria novas 
 
 | Tipo | Ícone | Uso |
 |---|---|---|
-| `CONTACT` | 🗣 | Ligação, reunião, WhatsApp com cliente |
+| `CONTACT` | 🗣 | Ligação, reunião com cliente |
 | `DOCUMENT` | 📄 | Recebimento/envio de documentos |
 | `LEGAL` | ⚖️ | Decisões, despachos, prazos |
 | `INTERNAL` | 📝 | Observação interna do advogado |
@@ -241,7 +240,7 @@ Módulo de pré-análise de viabilidade para benefícios BPC/LOAS.
 ```
 PASSO 1 — CADASTRAR CLIENTE
     /clients/list → "Novo Cliente"
-    Campos: nome, CPF, data nascimento, WhatsApp, email, notas
+    Campos: nome, CPF, data nascimento, email, notas
     Cliente aparece na lista — NÃO no Kanban ainda
 
 PASSO 2 — CRIAR CASO
@@ -304,7 +303,6 @@ PASSO 8 — FINALIZAR
 | Simulador | ❌ | ✅ | ✅ |
 | Retroativos | ❌ | ✅ | ✅ |
 | Export PDF | ❌ | ✅ | ✅ |
-| WhatsApp share | ❌ | ✅ | ✅ |
 | BPC/LOAS module | ❌ | ✅ | ✅ |
 | Marca d'água | ✅ | ❌ | ❌ |
 
@@ -320,14 +318,7 @@ Todo limite verificado no banco via API — retorna 402.
 - Hash HMAC-SHA256 com salt fixo — nunca plain text
 - Sempre mascarado na UI: `XXX.***.YYY-**` (primeiros 3 e últimos 3 dígitos visíveis)
 
-### 5.5 WhatsApp Share / Send
-- Formato telefone: `5511999999999`
-- **Provider Z-API**: `WHATSAPP_PROVIDER=zapi` (padrão) — envia via API Z-API
-- **Provider Meta**: `WHATSAPP_PROVIDER=meta` — envia via WhatsApp Cloud API
-- Link de compartilhamento: `https://wa.me/{phone}?text={mensagem}`
-- Rodapé: "Calculado via Previando (app.previando.com.br)"
-
-### 5.6 PDF com Fallback OCR
+### 5.5 PDF com Fallback OCR
 `pdf-parse` → se < 100 chars → `Tesseract.js` (lang: 'por')
 
 ### 5.7 Recuperação de Senha

@@ -1,9 +1,19 @@
 import axios from 'axios'
+import axiosRetry from 'axios-retry'
 import { useUpgradeModal } from '@/store/upgrade-modal'
 
 const api = axios.create({
   baseURL: '/api',
   headers: { 'Content-Type': 'application/json' },
+})
+
+axiosRetry(api, {
+  retries: 3,
+  retryDelay: axiosRetry.exponentialDelay,
+  retryCondition: (error) => {
+    return axiosRetry.isNetworkOrIdempotentRequestError(error)
+      || error.response?.status === 429
+  },
 })
 
 // Interceptor global: 402 → abre modal de upgrade automaticamente

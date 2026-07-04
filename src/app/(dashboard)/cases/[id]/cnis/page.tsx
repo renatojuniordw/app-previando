@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useSearchParams, useRouter, usePathname } from 'next/navigation'
 import { ExternalLink, FileText } from 'lucide-react'
+import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { useCnis } from './_hooks/useCnis'
 import { useCnisUpload } from './_hooks/useCnisUpload'
 import { useCnisEditing } from './_hooks/useCnisEditing'
@@ -79,6 +80,7 @@ export default function CnisCasePage() {
   const isProcessing = cnis ? isProcessingStatus(cnis.processingStatus) : false
 
   return (
+    <ErrorBoundary>
     <div className="space-y-6 max-w-7xl mx-auto relative px-4 sm:px-6">
       {uploading && <CnisUploadOverlay />}
 
@@ -215,5 +217,6 @@ export default function CnisCasePage() {
         onClose={closeDictionary}
       />
     </div>
+    </ErrorBoundary>
   )
 }

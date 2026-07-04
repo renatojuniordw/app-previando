@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma'
 import { hashCPF, sanitizeInput, sanitizePhone } from '@/lib/sanitize'
 import { guardClientLimit } from '@/lib/plan-guard'
 import { handleApiError } from '@/lib/api-error'
+import { rateLimit } from '@/lib/rate-limit'
 import { logAudit } from '@/lib/audit'
 
 const createSchema = z.object({
@@ -30,6 +31,9 @@ export async function GET(req: NextRequest) {
   try {
     const session = await auth()
     if (!session?.user?.id) return NextResponse.json({ error: 'Não autorizado.' }, { status: 401 })
+
+    const { success } = await rateLimit(`clients:list:${session.user.id}`, 60, 60)
+    if (!success) return NextResponse.json({ error: 'Muitas requisições. Tente novamente mais tarde.' }, { status: 429 })
 
     const { searchParams } = req.nextUrl
     const search = searchParams.get('search')?.trim()

@@ -53,7 +53,7 @@ const PLANS = [
     id: 'SOLO',
     name: 'SOLO',
     price: 'R$ 97/mês',
-    features: ['30 clientes', 'Cálculos ilimitados', '20 pareceres IA/mês', 'Simulador', 'Retroativos', 'Export PDF', 'WhatsApp'],
+    features: ['30 clientes', 'Cálculos ilimitados', '20 pareceres IA/mês', 'Simulador', 'Retroativos', 'Export PDF'],
   },
   {
     id: 'PRO',

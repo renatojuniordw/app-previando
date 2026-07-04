@@ -17,7 +17,9 @@ export async function GET() {
         limits: l,
       }))
 
-    return NextResponse.json({ plans })
+    return NextResponse.json({ plans }, {
+      headers: { 'Cache-Control': 'public, max-age=3600, stale-while-revalidate=86400' },
+    })
   } catch (err) {
     return handleApiError(err)
   }

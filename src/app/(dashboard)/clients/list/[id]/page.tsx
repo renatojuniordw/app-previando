@@ -240,7 +240,6 @@ export default function ClientDetailPage() {
       {/* Portal do Cliente */}
       <ClientPortalCard
         cases={client.cases}
-        clientPhone={client.phone}
       />
 
       {/* Casos */}
@@ -361,8 +360,6 @@ export default function ClientDetailPage() {
       </Modal>
 
       <ClientFloatingActions
-        clientId={client.id}
-        phone={client.phone}
         email={client.email}
         cpf={client.cpf}
         onEdit={() => {

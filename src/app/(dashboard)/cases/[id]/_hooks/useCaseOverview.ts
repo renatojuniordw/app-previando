@@ -1,19 +1,19 @@
 'use client'
 
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import api from '@/lib/api'
 import { useToast } from '@/store/toast'
 import { downloadPdf } from '@/lib/download-pdf'
+import { useCaseData } from '../_components/CaseContext'
 import type { CaseDetail } from '../_types'
 import { STATUS_OPTIONS } from '../_constants'
 
 export function useCaseOverview() {
   const params = useParams()
   const { addToast } = useToast()
+  const { data, refresh } = useCaseData()
 
-  const [caseData, setCaseData] = useState<CaseDetail | null>(null)
-  const [loading, setLoading] = useState(true)
   const [showStatusModal, setShowStatusModal] = useState(false)
   const [newStatus, setNewStatus] = useState('')
   const [updatingStatus, setUpdatingStatus] = useState(false)
@@ -21,15 +21,13 @@ export function useCaseOverview() {
   const [showEditModal, setShowEditModal] = useState(false)
   const [updatingCase, setUpdatingCase] = useState(false)
 
+  useEffect(() => {
+    if (data?.status) setNewStatus(data.status)
+  }, [data?.status])
+
   const load = useCallback(() => {
-    api.get(`/cases/${params.id}`)
-      .then((r) => {
-        setCaseData(r.data.case)
-        setNewStatus(r.data.case.status)
-      })
-      .catch(() => null)
-      .finally(() => setLoading(false))
-  }, [params.id])
+    refresh()
+  }, [refresh])
 
   const handleStatusChange = async () => {
     setUpdatingStatus(true)
@@ -49,13 +47,13 @@ export function useCaseOverview() {
     }
   }
 
-  const handleEditSubmit = async (data: { priority: string; deadlineDate: string; notes: string }) => {
+  const handleEditSubmit = async (formData: { priority: string; deadlineDate: string; notes: string }) => {
     setUpdatingCase(true)
     try {
       await api.put(`/cases/${params.id}`, {
-        priority: data.priority,
-        deadlineDate: data.deadlineDate ? new Date(data.deadlineDate).toISOString() : null,
-        notes: data.notes || null,
+        priority: formData.priority,
+        deadlineDate: formData.deadlineDate ? new Date(formData.deadlineDate).toISOString() : null,
+        notes: formData.notes || null,
       })
       setShowEditModal(false)
       addToast({ type: 'success', title: 'Sucesso', message: 'Caso atualizado com sucesso.' })
@@ -74,8 +72,8 @@ export function useCaseOverview() {
   }
 
   return {
-    caseData,
-    loading,
+    caseData: data as CaseDetail | null,
+    loading: data === null,
     showStatusModal,
     newStatus,
     updatingStatus,

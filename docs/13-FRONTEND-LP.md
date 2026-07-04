@@ -254,7 +254,7 @@ GRID DE 8 FUNCIONALIDADES (4x2 ou carrossel):
 4. 🔍 Consulta de Processo (DataJud)
    "Informe o número CNJ e receba o andamento do processo
    sem abrir o PJe. Resumo em linguagem clara gerado por IA.
-   Compartilhe direto com o cliente pelo WhatsApp."
+    Compartilhe direto com o cliente."
 
 5. 📊 Comparativo de Modalidades
    "O sistema calcula automaticamente todas as 11 modalidades
@@ -404,7 +404,6 @@ SOLO → DESTAQUE "Mais Popular":
     ✓ Cálculo de retroativos
     ✓ Consulta DataJud
     ✓ Export PDF sem marca d'água
-    ✓ WhatsApp share
     ✓ Diagnóstico IA
     × Portal do Cliente básico
   CTA: "Assinar Solo"

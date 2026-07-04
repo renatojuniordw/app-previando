@@ -155,7 +155,6 @@ Importação de clientes em lote via:
 ### Curto prazo (30 dias)
 | Feature | Esforço | Impacto |
 |---|---|---|
-| **WhatsApp IA no Portal** — cliente pergunta via WhatsApp e IA responde | Médio | Altíssimo |
 | **Notificações push** — cliente recebe notificação quando CNIS processado, cálculo pronto | Baixo | Alto |
 | **Portal do Cliente versão mobile** — PWA | Baixo | Alto |
 

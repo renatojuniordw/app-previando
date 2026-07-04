@@ -1,6 +1,6 @@
 # 02 — BACKEND
 
-> Documentação atualizada em 2026-06-27. Reflete o estado atual do codebase.
+> Última atualização: 2026-07-03
 
 ---
 
@@ -165,12 +165,6 @@ PDF Upload → Extração de Texto → Parser Programático (instantâneo)
 - **Suporta:** STF, STJ, TRFs (1-5), TRTs (1-24), TJs (27 tribunais)
 - **Chave pública:** `cDZHYzlZa0JadVREZDJCendFbzNRdnp6Z3ZUcTdjMHJueFRuMnBiQVQ=`
 
-### WhatsApp
-- **Arquivo:** `src/services/whatsapp.ts`
-- **Provider configurável:** `WHATSAPP_PROVIDER` (zapi | meta)
-- **Z-API:** via `ZAPI_INSTANCE_ID` + `ZAPI_TOKEN` + `ZAPI_CLIENT_TOKEN`
-- **Meta Cloud API:** via `WHATSAPP_PHONE_NUMBER_ID` + `WHATSAPP_ACCESS_TOKEN`
-
 ### Register
 - **Arquivo:** `src/services/register.ts`
 - **Transação:** Cria User + UsageRecord
@@ -211,7 +205,6 @@ PDF Upload → Extração de Texto → Parser Programático (instantâneo)
 | PUT/DELETE | `/api/clients/[id]` | Atualiza/Exclui |
 | PATCH | `/api/clients/[id]/priority` | Prioridade |
 | POST | `/api/clients/import` | CSV (3/hora) |
-| POST | `/api/clients/[id]/whatsapp` | Envia WhatsApp |
 
 ### Cases
 | Método | Rota | Função |
@@ -318,13 +311,6 @@ PDF Upload → Extração de Texto → Parser Programático (instantâneo)
 | GET | `/api/dashboard/summary` | Resumo (clientes, casos, cálculos, prazos) |
 | GET | `/api/dashboard/deadlines` | Prazos próximos (30 dias) |
 
-### Dados de Referência
-| Método | Rota | Função |
-|--------|------|--------|
-| GET | `/api/modalidades` | Lista modalidades |
-| GET | `/api/salario-minimo` | Salário vigente (?dib=YYYY-MM-DD) |
-| GET | `/api/regras-aposentadoria` | Regras (?dib=YYYY-MM-DD) |
-
 ### Ferramentas
 | Método | Rota | Função |
 |--------|------|--------|
@@ -376,7 +362,6 @@ type PlanFeature =
   | 'SIMULATOR'
   | 'RETROATIVOS'
   | 'EXPORT_PDF'
-  | 'WHATSAPP_SHARE'
   | 'DIAGNOSIS'
   | 'USE_BPC_MODULE'
   // NOTA: BPC_SOCIAL_MEDIA foi removido do PlanFeature
@@ -385,7 +370,7 @@ type PlanFeature =
 
 ### Guards de Limite
 - `guardClientLimit()`, `guardCalculationLimit()`, `guardOpinionLimit()`
-- `guardBpcAnalysisLimit()`, `guardBpcSocialMediaLimit()`
+- `guardBpcAnalysisLimit()`
 
 ### Notificações de Limite Próximo
 - Threshold: 80%

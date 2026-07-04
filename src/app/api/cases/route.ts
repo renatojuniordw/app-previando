@@ -65,6 +65,9 @@ export async function GET(req: NextRequest) {
     const session = await auth()
     if (!session?.user?.id) return NextResponse.json({ error: 'Não autorizado.' }, { status: 401 })
 
+    const { success } = await rateLimit(`cases:list:${session.user.id}`, 60, 60)
+    if (!success) return NextResponse.json({ error: 'Muitas requisições. Tente novamente mais tarde.' }, { status: 429 })
+
     const { searchParams } = req.nextUrl
     const status = searchParams.get('status')
     const clientId = searchParams.get('clientId')
@@ -119,7 +122,12 @@ export async function GET(req: NextRequest) {
         include: {
           client: { select: { id: true, name: true, phone: true } },
           cnisDocument: { select: { processingStatus: true } },
-          calculations: { select: { id: true, isSelected: true, rmi: true }, orderBy: { createdAt: 'desc' } },
+          calculations: {
+            where: { isSelected: true },
+            select: { id: true, modality: true, rmi: true, createdAt: true },
+            orderBy: { createdAt: 'desc' },
+            take: 1,
+          },
         },
       }),
       prisma.case.count({ where }),
@@ -127,7 +135,7 @@ export async function GET(req: NextRequest) {
 
     const mapped = cases.map((c) => ({
       ...mapCaseToApi(c),
-      selectedRmi: c.calculations.find((calc) => calc.isSelected)?.rmi ?? null,
+      selectedRmi: c.calculations[0]?.rmi ?? null,
     }))
 
     return NextResponse.json({ cases: mapped, total, page, limit }, {

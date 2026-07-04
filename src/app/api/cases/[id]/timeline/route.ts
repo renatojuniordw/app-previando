@@ -38,47 +38,41 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 
     await verifyCaseOwnership(params.id, session.user.id)
 
-    const [caso, caseNotes, calculations, opinions, checklists, simulations, retroactives, cnisDoc] =
-      await Promise.all([
-        prisma.case.findUnique({
-          where: { id: params.id },
-          select: { createdAt: true, status: true, benefitType: true },
-        }),
-        prisma.caseNote.findMany({
-          where: { caseId: params.id },
+    const caso = await prisma.case.findUnique({
+      where: { id: params.id },
+      select: {
+        createdAt: true,
+        status: true,
+        benefitType: true,
+        caseNotes: {
           orderBy: { createdAt: 'desc' },
           select: { id: true, type: true, content: true, createdAt: true, version: true },
-        }),
-        prisma.calculation.findMany({
-          where: { caseId: params.id },
+        },
+        calculations: {
           orderBy: { createdAt: 'desc' },
           select: { id: true, modality: true, rmi: true, eligible: true, createdAt: true, isSelected: true },
-        }),
-        prisma.opinion.findMany({
-          where: { caseId: params.id },
+        },
+        opinions: {
           orderBy: { createdAt: 'desc' },
           select: { id: true, status: true, createdAt: true },
-        }),
-        prisma.checklist.findMany({
-          where: { caseId: params.id },
+        },
+        checklists: {
           orderBy: { createdAt: 'desc' },
           select: { id: true, eligible: true, createdAt: true },
-        }),
-        prisma.simulation.findMany({
-          where: { caseId: params.id },
+        },
+        simulations: {
           orderBy: { createdAt: 'desc' },
           select: { id: true, scenarioName: true, rmiProjected: true, createdAt: true },
-        }),
-        prisma.retroactive.findMany({
-          where: { caseId: params.id },
+        },
+        retroactives: {
           orderBy: { createdAt: 'desc' },
           select: { id: true, totalCorrectedValue: true, createdAt: true },
-        }),
-        prisma.cnisDocument.findUnique({
-          where: { caseId: params.id },
+        },
+        cnisDocument: {
           select: { createdAt: true, processingStatus: true, fileName: true },
-        }),
-      ])
+        },
+      },
+    })
 
     type TimelineEvent = {
       id: string
@@ -90,32 +84,34 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       meta?: Record<string, unknown>
     }
 
-    const events: TimelineEvent[] = []
-
-    if (caso) {
-      events.push({
-        id: 'case-created',
-        type: 'CASE_CREATED',
-        category: 'case',
-        title: 'Caso criado',
-        description: 'Caso registrado no sistema',
-        date: caso.createdAt,
-      })
+    if (!caso) {
+      return NextResponse.json({ error: 'Caso não encontrado.' }, { status: 404 })
     }
 
-    if (cnisDoc) {
+    const events: TimelineEvent[] = []
+
+    events.push({
+      id: 'case-created',
+      type: 'CASE_CREATED',
+      category: 'case',
+      title: 'Caso criado',
+      description: 'Caso registrado no sistema',
+      date: caso.createdAt,
+    })
+
+    if (caso.cnisDocument) {
       events.push({
         id: 'cnis-upload',
         type: 'CNIS_UPLOAD',
         category: 'cnis',
         title: 'CNIS enviado',
-        description: cnisDoc.fileName,
-        date: cnisDoc.createdAt,
-        meta: { status: cnisDoc.processingStatus },
+        description: caso.cnisDocument.fileName,
+        date: caso.cnisDocument.createdAt,
+        meta: { status: caso.cnisDocument.processingStatus },
       })
     }
 
-    for (const note of caseNotes) {
+    for (const note of caso.caseNotes) {
       events.push({
         id: `note-${note.id}`,
         type: 'NOTE',
@@ -127,7 +123,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       })
     }
 
-    for (const calc of calculations) {
+    for (const calc of caso.calculations) {
       const rmi = Number(calc.rmi).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
       events.push({
         id: `calc-${calc.id}`,
@@ -140,7 +136,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       })
     }
 
-    for (const op of opinions) {
+    for (const op of caso.opinions) {
       events.push({
         id: `opinion-${op.id}`,
         type: 'OPINION',
@@ -151,7 +147,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       })
     }
 
-    for (const ck of checklists) {
+    for (const ck of caso.checklists) {
       events.push({
         id: `checklist-${ck.id}`,
         type: 'CHECKLIST',
@@ -163,7 +159,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       })
     }
 
-    for (const sim of simulations) {
+    for (const sim of caso.simulations) {
       const rmi = Number(sim.rmiProjected).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
       events.push({
         id: `sim-${sim.id}`,
@@ -175,7 +171,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       })
     }
 
-    for (const ret of retroactives) {
+    for (const ret of caso.retroactives) {
       const val = Number(ret.totalCorrectedValue).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
       events.push({
         id: `retro-${ret.id}`,

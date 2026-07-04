@@ -3,7 +3,7 @@ import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
 import { redis } from '@/lib/redis'
 
-const ADMIN_CACHE_TTL = 300 // 5 minutos
+const ADMIN_CACHE_TTL = 60 // 1 minuto
 
 async function isAdminFromDB(userId: string): Promise<boolean> {
   const cacheKey = `admin:${userId}`

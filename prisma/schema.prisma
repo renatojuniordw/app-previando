@@ -132,7 +132,6 @@ model PlanLimit {
   simulatorEnabled   Boolean @default(false)
   retroactiveEnabled Boolean @default(false)
   exportPdfEnabled   Boolean @default(false)
-  whatsappEnabled    Boolean @default(false)
   watermarkEnabled   Boolean @default(true)
   diagnosisEnabled   Boolean @default(false)
   bpcEnabled                  Boolean @default(false)
@@ -390,6 +389,7 @@ model Calculation {
   createdAt DateTime @default(now())
 
   @@index([caseId])
+  @@index([caseId, isSelected])
   @@map("calculations")
 }
 

@@ -139,7 +139,6 @@ Tabela: `plan_limits`
 | `simulatorEnabled` | `Boolean` | Simulador habilitado |
 | `retroactiveEnabled` | `Boolean` | Retroativos habilitados |
 | `exportPdfEnabled` | `Boolean` | Export PDF |
-| `whatsappEnabled` | `Boolean` | WhatsApp |
 | `watermarkEnabled` | `Boolean` | Marca d'água |
 | `diagnosisEnabled` | `Boolean` | Diagnóstico IA |
 | `bpcEnabled` | `Boolean` | Módulo BPC |

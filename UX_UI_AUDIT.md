@@ -55,7 +55,7 @@ Esta auditoria cobre 100+ arquivos entre páginas, componentes, serviços e util
 
 | Arquivo | Linha | Severidade | Descrição |
 |---------|-------|------------|-----------|
-| `src/app/(dashboard)/clients/list/page.tsx` | 401-406 | **MODERADO** | Campo WhatsApp/Telefone sem máscara. Placeholder `"(11) 99999-9999"` orienta mas não formata. Schema Zod aceita string opcional sem validação de formato. |
+| `src/app/(dashboard)/clients/list/page.tsx` | 401-406 | **MODERADO** | Campo Telefone sem máscara. Placeholder `"(11) 99999-9999"` orienta mas não formata. Schema Zod aceita string opcional sem validação de formato. |
 | `src/app/(dashboard)/clients/list/page.tsx` | 316-320 | **MODERADO** | Edição de telefone no modal de edição: `onChange` com `e.target.value` cru, sem formatação. |
 
 **Antes:** `<Input {...register('phone')} placeholder="(11) 99999-9999" />`

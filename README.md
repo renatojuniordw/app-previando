@@ -219,8 +219,6 @@ O sistema usa 4 workers para processamento assíncrono, iniciados via `npm run w
 | `DATAJUD_API_KEY` | ❌ | API pública do CNJ |
 
 | `SMTP_HOST` / `SMTP_PORT` / `SMTP_USER` / `SMTP_PASS` / `EMAIL_FROM` | ❌ | Config de email (worker opcional) |
-| `WHATSAPP_PROVIDER` / `ZAPI_INSTANCE_ID` / `ZAPI_TOKEN` / `ZAPI_CLIENT_TOKEN` | ❌ | WhatsApp (Z-API) |
-| `WHATSAPP_PHONE_NUMBER_ID` / `WHATSAPP_ACCESS_TOKEN` | ❌ | WhatsApp (Meta Cloud API) |
 | `NEXT_PUBLIC_SENTRY_DSN` | ❌ | Sentry monitoring |
 
 ---

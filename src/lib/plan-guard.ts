@@ -28,7 +28,6 @@ export type PlanFeature =
   | 'SIMULATOR'
   | 'RETROATIVOS'
   | 'EXPORT_PDF'
-  | 'WHATSAPP_SHARE'
   | 'DIAGNOSIS'
   | 'USE_BPC_MODULE'
   | 'PETICAO'
@@ -41,7 +40,6 @@ const FEATURE_MAP: Record<PlanFeature, keyof PlanLimit> = {
   SIMULATOR: 'simulatorEnabled',
   RETROATIVOS: 'retroactiveEnabled',
   EXPORT_PDF: 'exportPdfEnabled',
-  WHATSAPP_SHARE: 'whatsappEnabled',
   DIAGNOSIS: 'diagnosisEnabled',
   USE_BPC_MODULE: 'bpcEnabled',
   PETICAO: 'peticaoEnabled',
@@ -55,7 +53,6 @@ const FEATURE_LABELS: Record<PlanFeature, string> = {
   SIMULATOR: 'Simulador de benefício',
   RETROATIVOS: 'Cálculo de retroativos',
   EXPORT_PDF: 'Exportar PDF',
-  WHATSAPP_SHARE: 'Compartilhar via WhatsApp',
   DIAGNOSIS: 'Diagnóstico IA',
   USE_BPC_MODULE: 'Módulo BPC/LOAS',
   PETICAO: 'Petição Inicial com IA',

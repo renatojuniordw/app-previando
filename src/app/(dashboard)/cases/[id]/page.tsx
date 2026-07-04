@@ -1,6 +1,5 @@
 'use client'
 
-import { useEffect } from 'react'
 import { AlertCircle } from 'lucide-react'
 import { useCaseOverview } from './_hooks/useCaseOverview'
 import { CaseOverviewSkeleton } from './_components/CaseOverviewSkeleton'
@@ -28,8 +27,6 @@ export default function CaseOverviewPage() {
     handleEditSubmit,
     handleExportPDF,
   } = useCaseOverview()
-
-  useEffect(() => { load() }, [load])
 
   if (loading) return <CaseOverviewSkeleton />
 

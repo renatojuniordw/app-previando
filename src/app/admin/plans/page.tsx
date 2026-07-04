@@ -12,7 +12,6 @@ interface PlanLimitData {
   simulatorEnabled: boolean
   retroactiveEnabled: boolean
   exportPdfEnabled: boolean
-  whatsappEnabled: boolean
   watermarkEnabled: boolean
   diagnosisEnabled: boolean
   bpcEnabled: boolean
@@ -44,7 +43,7 @@ const BOOLEAN_FIELDS: { key: keyof PlanLimitData; label: string }[] = [
   { key: 'simulatorEnabled', label: 'Simulador' },
   { key: 'retroactiveEnabled', label: 'Retroativos' },
   { key: 'exportPdfEnabled', label: 'Export PDF' },
-  { key: 'whatsappEnabled', label: 'WhatsApp' },
+
   { key: 'watermarkEnabled', label: 'Marca d\'água' },
   { key: 'diagnosisEnabled', label: 'Diagnóstico IA' },
   { key: 'bpcEnabled', label: 'Módulo BPC/LOAS' },

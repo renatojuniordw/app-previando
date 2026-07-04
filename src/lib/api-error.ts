@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { captureException } from '@sentry/nextjs'
 import { Logger } from './logger'
 
 const logger = new Logger('APIError')
@@ -60,6 +61,7 @@ export function handleApiError(error: unknown): NextResponse {
       { status: 402 }
     )
   }
+  captureException(error)
   logger.error('Unhandled API exception', error)
   return NextResponse.json({ error: 'Erro interno. Tente novamente.' }, { status: 500 })
 }

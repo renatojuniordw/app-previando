@@ -18,7 +18,6 @@ O projeto é uma aplicação web Full-Stack baseada em **Next.js 14 (App Router)
 - **Storage:** Cloudflare R2 (PDF CNIS e documentos)
 - **Pagamentos:** Mercado Pago (assinaturas recorrentes)
 - **Monitoramento Processual:** DataJud (API pública CNJ)
-- **WhatsApp:** Z-API / Meta Cloud API
 - **Email:** Nodemailer (password recovery)
 
 ---
@@ -101,14 +100,14 @@ src/
 │   ├── mappers.ts, constants.ts, modalidade-labels.ts (+ getModalityLabel)
 │   ├── utils.ts (+ formatCurrency, formatDate, formatPercentage, daysUntil, cn)
 │   ├── masks.ts, api.ts, bpc-notes.ts, previdenciario-constants.ts, sentry.ts
-│   ├── whatsapp.ts, portal-config.ts, revision-engine.ts
+│   ├── portal-config.ts, revision-engine.ts
 │   └── prompts/bpc/   # Prompts BPC (pre-analysis, laudo-analysis, questions, checklist)
 ├── services/           # Lógica de negócio
 │   ├── bpc/            # BPC analysis (5 funções AI)
 │   ├── cnis/           # Parser CNIS (programmatic + AI + indicadores)
 │   ├── previdencia/    # Calculation, Simulation, Retroativo orchestrators
 │   ├── opinion-generator.ts, register.ts, r2.ts, peticao-generator.ts
-│   ├── whatsapp.ts, mercadopago.ts, query-cnis.ts, revision-service.ts
+│   ├── mercadopago.ts, query-cnis.ts, revision-service.ts
 │   ├── google-calendar.ts, email-service.ts, cnis-parser.ts
 ├── store/              # Zustand (sidebar, upgrade-modal, toast)
 └── types/              # bpc-social.ts, xlsx.d.ts
@@ -133,10 +132,9 @@ POST /forgot-password → Token → Email SMTP → POST /reset-password → Hash
 ### Consulta DataJud
 POST /cases/[id]/process → API pública CNJ → Atualiza campos de processo
 
-### WhatsApp
-Provider Z-API ou Meta → Envio de mensagem → Resposta com messageId
-
 ---
+
+
 
 ## 5. Convenções de Código
 

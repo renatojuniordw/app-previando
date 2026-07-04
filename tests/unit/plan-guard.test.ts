@@ -42,7 +42,6 @@ const mockPlanLimitFree = {
   retroactiveEnabled: false,
   exportPdfEnabled: true,
   watermarkEnabled: true,
-  whatsappEnabled: false,
   diagnosisEnabled: false,
   bpcEnabled: false,
   peticaoEnabled: false,

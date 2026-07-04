@@ -5,7 +5,7 @@ import api from '@/lib/api'
 import { Card, CardHeader } from '@/components/ui/Card'
 import {
   Link2, Copy, RefreshCw, Loader2, CheckCircle2,
-  Clock, XCircle, Share2, MessageCircle,
+  Clock, XCircle, Share2,
 } from 'lucide-react'
 import { useToast } from '@/store/toast'
 import { BENEFIT_DB_LABELS, BENEFIT_SHORT_LABELS } from '@/lib/constants'
@@ -25,22 +25,13 @@ interface PortalState {
 
 interface Props {
   cases: Case[]
-  clientPhone: string | null
 }
 
 function daysLeft(expiresAt: string): number {
   return Math.ceil((new Date(expiresAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
 }
 
-function buildWhatsAppLink(phone: string, link: string, benefitLabel: string): string {
-  const msg = encodeURIComponent(
-    `Olá! Aqui está o link do seu portal referente ao benefício *${benefitLabel}*:\n\n${link}\n\nO link é válido por 30 dias.`
-  )
-  const clean = phone.replace(/\D/g, '')
-  return `https://wa.me/${clean}?text=${msg}`
-}
-
-export function ClientPortalCard({ cases, clientPhone }: Props) {
+export function ClientPortalCard({ cases }: Props) {
   const { addToast } = useToast()
   const [portals, setPortals] = useState<Record<string, PortalState>>(() =>
     Object.fromEntries(cases.map((c) => [c.id, { link: null, expiresAt: null, loading: true, generating: false }]))
@@ -180,19 +171,6 @@ export function ClientPortalCard({ cases, clientPhone }: Props) {
                         <Copy className="w-3.5 h-3.5" />
                         Copiar
                       </button>
-
-                      {clientPhone && (
-                        <a
-                          href={buildWhatsAppLink(clientPhone, state.link, benefitLabel)}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-green-500 hover:bg-green-600 rounded-lg transition-colors"
-                          title="Enviar por WhatsApp"
-                        >
-                          <MessageCircle className="w-3.5 h-3.5" />
-                          WhatsApp
-                        </a>
-                      )}
 
                       <button
                         onClick={() => generateLink(c.id)}

@@ -102,11 +102,15 @@ export async function GET() {
         },
       }),
 
-      // Tempo médio por status (data de criação vs agora)
-      prisma.case.findMany({
-        where: { userId },
-        select: { status: true, createdAt: true, updatedAt: true },
-      }),
+      // Tempo médio por status via raw aggregate query
+      prisma.$queryRaw<Array<{ status: string; avg_days: number }>>`
+        SELECT
+          "status"::text as status,
+          AVG(EXTRACT(EPOCH FROM (NOW() - "createdAt")) / 86400) as avg_days
+        FROM "cases"
+        WHERE "userId" = ${userId}::text
+        GROUP BY "status"
+      `,
     ])
 
     // ── Receita potencial ──────────────────────────────────────────────
@@ -117,17 +121,10 @@ export async function GET() {
     const estimatedFees = totalRmiPotencial * 0.2 * 24
 
     // ── Tempo médio em cada status ────────────────────────────────────
-    const timeByStatus: Record<string, number[]> = {}
-    for (const c of casesByStatus) {
-      const days = (now.getTime() - c.createdAt.getTime()) / (1000 * 60 * 60 * 24)
-      if (!timeByStatus[c.status]) timeByStatus[c.status] = []
-      timeByStatus[c.status].push(days)
-    }
     const avgDaysByStatus = Object.fromEntries(
-      Object.entries(timeByStatus).map(([status, days]) => [
-        status,
-        Math.round(days.reduce((a, b) => a + b, 0) / days.length),
-      ])
+      casesByStatus
+        .filter((s) => s.avg_days !== null)
+        .map((s) => [s.status, Math.round(s.avg_days)])
     )
 
     // ── Uso do plano ───────────────────────────────────────────────────
