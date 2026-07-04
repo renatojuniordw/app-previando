@@ -130,7 +130,9 @@ export async function GET(req: NextRequest) {
       selectedRmi: c.calculations.find((calc) => calc.isSelected)?.rmi ?? null,
     }))
 
-    return NextResponse.json({ cases: mapped, total, page, limit })
+    return NextResponse.json({ cases: mapped, total, page, limit }, {
+      headers: { 'Cache-Control': 'private, max-age=0, stale-while-revalidate=30' },
+    })
   } catch (err) {
     return handleApiError(err)
   }

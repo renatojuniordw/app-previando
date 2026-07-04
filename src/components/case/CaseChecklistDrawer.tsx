@@ -1,7 +1,8 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState } from 'react'
 import api from '@/lib/api'
+import { useApi } from '@/hooks/useApi'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { Drawer } from '@/components/ui/Drawer'
@@ -23,33 +24,27 @@ interface ChecklistItem {
 
 export function CaseChecklistDrawer({ open, onClose, caseId }: CaseChecklistDrawerProps) {
   const { addToast } = useToast()
+  const { data, loading, refetch } = useApi<{ checklist?: { items: ChecklistItem[] } }>(`/cases/${caseId}/checklist`)
   const [items, setItems] = useState<ChecklistItem[]>([])
   const [hasChecklist, setHasChecklist] = useState(false)
-  const [loading, setLoading] = useState(true)
   const [showAddForm, setShowAddForm] = useState(false)
   const [creating, setCreating] = useState(false)
   const [newItem, setNewItem] = useState('')
 
-  const load = useCallback(() => {
-    if (!caseId) return
-    setLoading(true)
-    api.get(`/cases/${caseId}/checklist`)
-      .then((r) => {
-        const raw = r.data.checklist?.items
-        setHasChecklist(!!r.data.checklist)
-        setItems(Array.isArray(raw) ? raw : [])
-      })
-      .catch(() => null)
-      .finally(() => setLoading(false))
-  }, [caseId])
+  useEffect(() => {
+    if (data) {
+      setHasChecklist(!!data.checklist)
+      setItems(Array.isArray(data.checklist?.items) ? data.checklist.items : [])
+    }
+  }, [data])
 
   useEffect(() => {
     if (open) {
-      load()
+      refetch()
       setShowAddForm(false)
       setNewItem('')
     }
-  }, [open, load])
+  }, [open, refetch])
 
   const saveItems = async (updated: ChecklistItem[]) => {
     if (hasChecklist) {

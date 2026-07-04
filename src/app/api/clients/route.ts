@@ -70,7 +70,9 @@ export async function GET(req: NextRequest) {
 
     const safe = clients.map((c) => ({ ...c, cpf: '***.***.**-**' }))
 
-    return NextResponse.json({ clients: safe, total, page, limit })
+    return NextResponse.json({ clients: safe, total, page, limit }, {
+      headers: { 'Cache-Control': 'private, max-age=0, stale-while-revalidate=30' },
+    })
   } catch (err) {
     return handleApiError(err)
   }

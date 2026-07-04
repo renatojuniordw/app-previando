@@ -1,7 +1,8 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState } from 'react'
 import api from '@/lib/api'
+import { useApi } from '@/hooks/useApi'
 import { useToast } from '@/store/toast'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
@@ -51,8 +52,8 @@ const NOTE_TYPE_VARIANTS: Record<string, 'blue' | 'green' | 'lime' | 'slate' | '
 }
 
 export function CaseNotesDrawer({ open, onClose, caseId }: CaseNotesDrawerProps) {
-  const [notes, setNotes] = useState<CaseNote[]>([])
-  const [loading, setLoading] = useState(true)
+  const { data, loading, refetch } = useApi<{ notes: CaseNote[] }>(`/cases/${caseId}/notes`)
+  const notes = data?.notes ?? []
   const [showAddForm, setShowAddForm] = useState(false)
   const [creating, setCreating] = useState(false)
   const [type, setType] = useState('CONTATO')
@@ -60,24 +61,15 @@ export function CaseNotesDrawer({ open, onClose, caseId }: CaseNotesDrawerProps)
   const [error, setError] = useState('')
   const { addToast } = useToast()
 
-  const load = useCallback(() => {
-    if (!caseId) return
-    setLoading(true)
-    api.get(`/cases/${caseId}/notes`)
-      .then((r) => setNotes(r.data.notes ?? []))
-      .catch(() => null)
-      .finally(() => setLoading(false))
-  }, [caseId])
-
   useEffect(() => {
     if (open) {
-      load()
+      refetch()
       setShowAddForm(false)
       setContent('')
       setType('CONTATO')
       setError('')
     }
-  }, [open, load])
+  }, [open, refetch])
 
   const handleCreate = async () => {
     if (!content.trim()) {
@@ -96,7 +88,7 @@ export function CaseNotesDrawer({ open, onClose, caseId }: CaseNotesDrawerProps)
         title: 'Anotação salva',
         message: 'Registro adicionado ao prontuário.',
       })
-      load()
+      refetch()
     } catch (err: unknown) {
       setError(
         (err as { response?: { data?: { error?: string } } })?.response?.data?.error ??

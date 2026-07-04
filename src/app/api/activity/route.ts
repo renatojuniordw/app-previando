@@ -57,7 +57,9 @@ export async function GET(req: NextRequest) {
       label: ACTION_LABELS[log.action] ?? log.action,
     }))
 
-    return NextResponse.json({ logs: formatted, total, page, limit })
+    return NextResponse.json({ logs: formatted, total, page, limit }, {
+      headers: { 'Cache-Control': 'private, max-age=0, stale-while-revalidate=30' },
+    })
   } catch (err) {
     return handleApiError(err)
   }

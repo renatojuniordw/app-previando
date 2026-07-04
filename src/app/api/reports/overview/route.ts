@@ -78,7 +78,9 @@ export async function GET() {
     try {
       const cached = await redis.get(cacheKey)
       if (cached) {
-        return NextResponse.json(JSON.parse(cached))
+        return NextResponse.json(JSON.parse(cached), {
+          headers: { 'Cache-Control': 'private, max-age=0, stale-while-revalidate=120' },
+        })
       }
     } catch {
       // Redis unavailable — skip cache
@@ -93,7 +95,9 @@ export async function GET() {
       // Redis unavailable — skip cache write
     }
 
-    return NextResponse.json(data)
+    return NextResponse.json(data, {
+      headers: { 'Cache-Control': 'private, max-age=0, stale-while-revalidate=120' },
+    })
   } catch (err) {
     return handleApiError(err)
   }

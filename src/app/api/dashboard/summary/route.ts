@@ -167,6 +167,8 @@ export async function GET() {
         type: mapNoteTypeToApi(n.type),
         content: n.content.slice(0, 120) + (n.content.length > 120 ? '...' : ''),
       })),
+    }, {
+      headers: { 'Cache-Control': 'private, max-age=0, stale-while-revalidate=60' },
     })
   } catch (err) {
     return handleApiError(err)

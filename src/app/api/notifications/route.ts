@@ -24,7 +24,9 @@ export async function GET() {
 
     const unreadCount = notifications.filter((n) => !n.read).length
 
-    return NextResponse.json({ notifications, unreadCount })
+    return NextResponse.json({ notifications, unreadCount }, {
+      headers: { 'Cache-Control': 'private, max-age=0, stale-while-revalidate=15' },
+    })
   } catch (err) {
     return handleApiError(err)
   }

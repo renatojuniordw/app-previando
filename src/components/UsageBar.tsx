@@ -1,7 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import api from '@/lib/api'
+import { useApi } from '@/hooks/useApi'
 import { cn } from '@/lib/utils'
 
 interface Usage {
@@ -36,11 +35,7 @@ function UsageItem({ label, used, max }: { label: string; used: number; max: num
 }
 
 export function UsageBar() {
-  const [usage, setUsage] = useState<Usage | null>(null)
-
-  useEffect(() => {
-    api.get('/usage').then((r) => setUsage(r.data)).catch(() => null)
-  }, [])
+  const { data: usage } = useApi<Usage>('/usage')
 
   if (!usage) return null
 

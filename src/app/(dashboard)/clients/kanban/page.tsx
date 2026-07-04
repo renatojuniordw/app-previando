@@ -152,7 +152,7 @@ export default function ClientsKanbanPage() {
 
   const load = useCallback(() => {
     setLoading(true)
-    api.get('/cases', { params: { limit: 200 } })
+    api.get('/cases', { params: { limit: 100 } })
       .then((r) => {
         const cases: KanbanCase[] = r.data.cases ?? []
         const active = cases.filter((c) => c.status !== 'FINALIZADO')
@@ -321,6 +321,9 @@ export default function ClientsKanbanPage() {
           <div className="flex gap-6 h-full min-w-max">
             {COLUMNS.map((col) => {
               const cases = casesByStatus[col.id] ?? []
+              const MAX_VISIBLE = 30
+              const visibleCases = cases.slice(0, MAX_VISIBLE)
+              const hiddenCount = cases.length - MAX_VISIBLE
               return (
                 <div key={col.id} className="w-[320px] flex flex-col h-full bg-slate-100/80 rounded-2xl border border-slate-200/60 shadow-sm overflow-hidden shrink-0">
                   {/* Column Header */}
@@ -337,23 +340,30 @@ export default function ClientsKanbanPage() {
                   <div className="flex-1 overflow-y-auto p-4 neo-scroll" role="list" aria-label={`Coluna ${col.label}`}>
                     <SortableContext
                       id={col.id}
-                      items={cases.map((c) => c.id)}
+                      items={visibleCases.map((c) => c.id)}
                       strategy={verticalListSortingStrategy}
                     >
                       <div data-column-id={col.id} className="min-h-full space-y-4">
-                        {cases.length === 0 ? (
+                        {visibleCases.length === 0 ? (
                           <div className="h-full flex flex-col items-center justify-center text-center opacity-50 py-10">
                             <LayoutTemplate className="w-8 h-8 text-slate-400 mb-2" aria-hidden="true" />
                             <span className="font-sans font-medium text-sm text-slate-500">Arraste casos para cá</span>
                           </div>
                         ) : (
-                          cases.map((caso) => (
-                            <CaseCard
-                              key={caso.id}
-                              caso={caso}
-                              isDragging={activeDragCase?.id === caso.id}
-                            />
-                          ))
+                          <>
+                            {visibleCases.map((caso) => (
+                              <CaseCard
+                                key={caso.id}
+                                caso={caso}
+                                isDragging={activeDragCase?.id === caso.id}
+                              />
+                            ))}
+                            {hiddenCount > 0 && (
+                              <div className="text-center py-3 font-sans text-sm text-slate-400 font-medium">
+                                +{hiddenCount} caso{hiddenCount > 1 ? 's' : ''} oculto{hiddenCount > 1 ? 's' : ''}
+                              </div>
+                            )}
+                          </>
                         )}
                       </div>
                     </SortableContext>

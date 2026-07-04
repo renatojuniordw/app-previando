@@ -1,17 +1,14 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
-import { useParams } from 'next/navigation'
-import api from '@/lib/api'
 import { Button } from '@/components/ui/Button'
 import { Modal } from '@/components/ui/Modal'
 import { DatePicker } from '@/components/ui/DatePicker'
 import { CurrencyInput } from '@/components/ui/CurrencyInput'
 import { formatDate, formatCurrency } from '@/lib/utils'
-import { MODALIDADES_PADRAO } from '@/lib/modalidade-labels'
 import { ModalitySelect } from '@/components/case/ModalitySelect'
-import { useToast } from '@/store/toast'
 import { CnisInfoCard } from '@/components/cases/CnisInfoCard'
+import { useToast } from '@/store/toast'
+import { useSimulator } from './_hooks/useSimulator'
 import {
   TrendingUp,
   Scale,
@@ -25,153 +22,38 @@ import {
   AlertCircle
 } from 'lucide-react'
 
-interface Simulation {
-  id: string
-  scenarioName: string
-  scenarioParams: unknown
-  rmiProjected: string | number
-  rmaProjected: string | number
-  dibProjected: string
-  gainVsNow: string | number
-  createdAt: string
-}
-
-interface Modalidade {
-  codigo: string
-  label: string
-}
-
-interface CnisDocument {
-  extractedData?: {
-    nome?: string
-    nit?: string
-    dataNascimento?: string
-    periodos?: unknown[]
-  }
-}
-
 export default function SimulatorPage() {
-  const params = useParams()
-  const [simulations, setSimulations] = useState<Simulation[]>([])
-  const [modalidades, setModalidades] = useState<Modalidade[]>([])
-  const [cnisDocument, setCnisDocument] = useState<CnisDocument | null>(null)
-  const [caseBenefitType, setCaseBenefitType] = useState<string | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [showModal, setShowModal] = useState(false)
-  const [creating, setCreating] = useState(false)
-  
-  // Parâmetros do Modal Visual de Projeção
-  const [scenarioName, setScenarioName] = useState('')
-  const [modalidade, setModalidade] = useState('APOSENTADORIA_IDADE')
-  const [gender, setGender] = useState<'M' | 'F'>('F')
-  const [dibProjetada, setDibProjetada] = useState('2030-01-01')
-  
-  const [tempoEspecialAnos, setTempoEspecialAnos] = useState(0)
-  
-  // Valor padrão de contribuição futura (ex: Salário Mínimo ou customizado)
-  const [tipoContribuicao, setTipoContribuicao] = useState<'MINIMO' | 'TETO' | 'CUSTOM'>('MINIMO')
-  const [valorCustomContribuicao, setValorCustomContribuicao] = useState(0)
-  const [salarioVigente, setSalarioVigente] = useState({ valor: 0, teto: 0 })
-  
   const { addToast } = useToast()
-  const [errorMessage, setErrorMessage] = useState('')
-
-  const load = useCallback(async () => {
-    try {
-      const [rSim, rCnis, rModalidades, rCase] = await Promise.all([
-        api.get(`/cases/${params.id}/simulations`),
-        api.get(`/cnis/${params.id}`),
-        api.get('/modalidades'),
-        api.get(`/cases/${params.id}`),
-      ])
-      setSimulations(rSim.data.simulations ?? [])
-      setModalidades(rModalidades.data.modalidades ?? [])
-      setCaseBenefitType(rCase.data.case?.benefitType)
-
-      if (rCnis.data?.cnisDocument?.processingStatus === 'COMPLETED' || rCnis.data?.cnisDocument?.processingStatus === 'SUMMARY_READY') {
-        setCnisDocument(rCnis.data.cnisDocument)
-      }
-
-      // 3. Busca salário mínimo, teto e regras previdenciárias vigentes hoje
-      const hoje = new Date().toISOString().slice(0, 10)
-      const [rSalario] = await Promise.all([
-        api.get(`/salario-minimo?dib=${hoje}`),
-      ])
-      setSalarioVigente({ valor: rSalario.data.valor, teto: rSalario.data.teto })
-      setValorCustomContribuicao(rSalario.data.valor)
-    } catch {
-      // noop
-    } finally {
-      setLoading(false)
-    }
-  }, [params.id])
-
-  useEffect(() => {
-    load()
-  }, [load])
-
-  const modalidadeLabels = Object.fromEntries(
-    (modalidades.length > 0 ? modalidades : MODALIDADES_PADRAO).map(({ codigo, label }) => [codigo, label])
-  )
-
-  const allModalidades = modalidades.length > 0 ? modalidades : MODALIDADES_PADRAO
-
-  const handleCreate = async () => {
-    setErrorMessage('')
-    
-    if (!scenarioName.trim()) {
-      setErrorMessage('Por favor, informe o nome do cenário.')
-      return
-    }
-
-    if (!cnisDocument) {
-      setErrorMessage('Para simular, primeiro envie e processe o extrato do CNIS na aba CNIS.')
-      return
-    }
-
-    let valorContribuicaoFutura = salarioVigente.valor
-    if (tipoContribuicao === 'TETO') {
-      valorContribuicaoFutura = salarioVigente.teto
-    } else if (tipoContribuicao === 'CUSTOM') {
-      valorContribuicaoFutura = Number(valorCustomContribuicao)
-    }
-
-    setCreating(true)
-    try {
-      // Envia apenas os parâmetros brutos do cenário para o servidor calcular com segurança
-      await api.post(`/cases/${params.id}/simulations`, {
-        scenarioName,
-        gender,
-        dibProjetada,
-        valorContribuicaoFutura,
-        modalidade,
-        tempoEspecialAnos: Number(tempoEspecialAnos),
-      })
-
-      setShowModal(false)
-      // Reseta form
-      setScenarioName('')
-      setTempoEspecialAnos(0)
-      setTipoContribuicao('MINIMO')
-      setValorCustomContribuicao(salarioVigente.valor)
-      addToast({ type: 'success', title: 'Simulação criada', message: 'Cenário de planejamento gerado com sucesso.' })
-      load()
-    } catch (err: unknown) {
-      setErrorMessage((err as { response?: { data?: { error?: string } } })?.response?.data?.error ?? 'Falha ao salvar a simulação no servidor.')
-    } finally {
-      setCreating(false)
-    }
-  }
-
-  const handleDelete = async (simId: string) => {
-    try {
-      await api.delete(`/cases/${params.id}/simulations/${simId}`)
-      addToast({ type: 'success', title: 'Simulação excluída' })
-      load()
-    } catch {
-      addToast({ type: 'error', title: 'Erro', message: 'Não foi possível excluir a simulação.' })
-    }
-  }
+  const {
+    simulations,
+    cnisDocument,
+    modalidadeLabels,
+    allModalidades,
+    loading,
+    creating,
+    showModal,
+    setShowModal,
+    errorMessage,
+    setErrorMessage,
+    scenarioName,
+    setScenarioName,
+    modalidade,
+    setModalidade,
+    gender,
+    setGender,
+    dibProjetada,
+    setDibProjetada,
+    tempoEspecialAnos,
+    setTempoEspecialAnos,
+    tipoContribuicao,
+    setTipoContribuicao,
+    valorCustomContribuicao,
+    setValorCustomContribuicao,
+    salarioVigente,
+    caseBenefitType,
+    handleCreate,
+    handleDelete,
+  } = useSimulator()
 
   if (loading) {
     return (

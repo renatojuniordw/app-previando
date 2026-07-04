@@ -108,6 +108,8 @@ export async function GET() {
       startDate: now.toISOString().split('T')[0],
       endDate: end.toISOString().split('T')[0],
       eventsByDate,
+    }, {
+      headers: { 'Cache-Control': 'private, max-age=0, stale-while-revalidate=60' },
     })
   } catch (err) {
     return handleApiError(err)

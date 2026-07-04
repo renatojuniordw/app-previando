@@ -1,7 +1,7 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
-import api from '@/lib/api'
+import { useEffect, useState } from 'react'
+import { useApi } from '@/hooks/useApi'
 import { Drawer } from '@/components/ui/Drawer'
 import { Badge } from '@/components/ui/Badge'
 import { Card } from '@/components/ui/Card'
@@ -31,22 +31,13 @@ const SECTIONS = [
 ]
 
 export function CaseBpcDrawer({ open, onClose, caseId }: CaseBpcDrawerProps) {
-  const [analysis, setAnalysis] = useState<BpcAnalysis | null>(null)
-  const [loading, setLoading] = useState(true)
+  const { data, loading, refetch } = useApi<{ analysis: BpcAnalysis | null }>(`/cases/${caseId}/bpc`)
+  const analysis = data?.analysis ?? null
   const [expanded, setExpanded] = useState<string | null>(null)
 
-  const load = useCallback(() => {
-    if (!caseId) return
-    setLoading(true)
-    api.get(`/cases/${caseId}/bpc`)
-      .then((r) => setAnalysis(r.data.analysis ?? null))
-      .catch(() => setAnalysis(null))
-      .finally(() => setLoading(false))
-  }, [caseId])
-
   useEffect(() => {
-    if (open) load()
-  }, [open, load])
+    if (open) refetch()
+  }, [open, refetch])
 
   const available = analysis
     ? SECTIONS.filter((s) => analysis[s.key])

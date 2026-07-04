@@ -1,8 +1,8 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 import { CheckCircle2, Circle, ChevronDown, ChevronUp, PartyPopper, X } from 'lucide-react'
-import api from '@/lib/api'
+import { useApi } from '@/hooks/useApi'
 import { cn } from '@/lib/utils'
 import Link from 'next/link'
 
@@ -18,30 +18,9 @@ interface OnboardingProgress {
 }
 
 export function OnboardingChecklist() {
-  const [progress, setProgress] = useState<OnboardingProgress | null>(null)
+  const { data: progress } = useApi<OnboardingProgress>('/onboarding/progress')
   const [expanded, setExpanded] = useState(true)
   const [dismissed, setDismissed] = useState(false)
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  useEffect(() => {
-    const controller = new AbortController()
-
-    api.get('/onboarding/progress')
-      .then((r) => {
-        if (controller.signal.aborted) return
-        setProgress(r.data)
-        if (r.data.isComplete) {
-          // Auto-dismiss após 3 segundos se completo
-          timerRef.current = setTimeout(() => setExpanded(false), 3000)
-        }
-      })
-      .catch(() => null)
-
-    return () => {
-      controller.abort()
-      if (timerRef.current) clearTimeout(timerRef.current)
-    }
-  }, [])
 
   if (!progress || dismissed || progress.isComplete) return null
 
