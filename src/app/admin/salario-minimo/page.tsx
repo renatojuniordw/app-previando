@@ -1,9 +1,15 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { Plus, Pencil, Trash2, Check, X } from 'lucide-react'
+import { Plus, Pencil, Trash2, DollarSign } from 'lucide-react'
+import { PageHeader } from '@/components/ui/PageHeader'
+import { Button } from '@/components/ui/Button'
+import { Drawer } from '@/components/ui/Drawer'
 import { DatePicker } from '@/components/ui/DatePicker'
 import { CurrencyInput } from '@/components/ui/CurrencyInput'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
+import { AdminTable, type AdminTableColumn } from '@/components/admin/AdminTable'
+import { useToast } from '@/store/toast'
+
 interface SalarioMinimo {
   id: string
   vigencia: string
@@ -12,34 +18,51 @@ interface SalarioMinimo {
   legislacao: string
   reajuste: number | null
 }
+
 const fmt = (v: string | number) =>
   new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(v))
+
 const fmtDate = (d: string) => {
   const date = new Date(d)
   return new Intl.DateTimeFormat('pt-BR', { month: 'long', year: 'numeric', timeZone: 'UTC' }).format(date)
 }
+
 const EMPTY_FORM = { vigencia: '', valor: '', teto: '', legislacao: '', reajuste: '' }
+
 export default function SalarioMinimoPage() {
   const [registros, setRegistros] = useState<SalarioMinimo[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [showForm, setShowForm] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [form, setForm] = useState(EMPTY_FORM)
   const [saving, setSaving] = useState(false)
-  const [error, setError] = useState('')
+  const [formError, setFormError] = useState('')
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
+  const [deleting, setDeleting] = useState(false)
+  const { addToast } = useToast()
+
   const load = async () => {
     setLoading(true)
-    const r = await fetch('/api/admin/salario-minimo')
-    const data = await r.json()
-    setRegistros(data.registros ?? [])
-    setLoading(false)
+    setError(null)
+    try {
+      const r = await fetch('/api/admin/salario-minimo')
+      if (!r.ok) throw new Error()
+      const data = await r.json()
+      setRegistros(data.registros ?? [])
+    } catch {
+      setError('Erro ao carregar registros.')
+    } finally {
+      setLoading(false)
+    }
   }
+
   useEffect(() => { load() }, [])
+
   const handleSubmit = async () => {
-    setError('')
+    setFormError('')
     if (!form.vigencia || !form.valor || !form.teto || !form.legislacao) {
-      setError('Preencha todos os campos obrigatórios.')
+      setFormError('Preencha todos os campos obrigatórios.')
       return
     }
     setSaving(true)
@@ -51,29 +74,24 @@ export default function SalarioMinimoPage() {
         legislacao: form.legislacao,
         reajuste: form.reajuste ? parseFloat(form.reajuste.replace(',', '.')) : null,
       }
-      if (editingId) {
-        await fetch(`/api/admin/salario-minimo/${editingId}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body),
-        })
-      } else {
-        await fetch('/api/admin/salario-minimo', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body),
-        })
-      }
+      const res = await fetch(editingId ? `/api/admin/salario-minimo/${editingId}` : '/api/admin/salario-minimo', {
+        method: editingId ? 'PATCH' : 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      })
+      if (!res.ok) throw new Error()
+      addToast({ type: 'success', title: editingId ? 'Registro atualizado.' : 'Registro criado.' })
       setForm(EMPTY_FORM)
       setShowForm(false)
       setEditingId(null)
       await load()
     } catch {
-      setError('Erro ao salvar. Tente novamente.')
+      setFormError('Erro ao salvar. Tente novamente.')
     } finally {
       setSaving(false)
     }
   }
+
   const handleEdit = (r: SalarioMinimo) => {
     setEditingId(r.id)
     setForm({
@@ -84,165 +102,159 @@ export default function SalarioMinimoPage() {
       reajuste: r.reajuste !== null ? String(r.reajuste) : '',
     })
     setShowForm(true)
-    setError('')
+    setFormError('')
   }
+
   const handleDeleteConfirm = async () => {
     if (!confirmDeleteId) return
-    await fetch(`/api/admin/salario-minimo/${confirmDeleteId}`, {
-      method: 'DELETE',
-    })
-    setConfirmDeleteId(null)
-    await load()
+    setDeleting(true)
+    try {
+      const res = await fetch(`/api/admin/salario-minimo/${confirmDeleteId}`, { method: 'DELETE' })
+      if (!res.ok) throw new Error()
+      addToast({ type: 'success', title: 'Registro excluído.' })
+      setConfirmDeleteId(null)
+      await load()
+    } catch {
+      addToast({ type: 'error', title: 'Erro ao excluir registro.' })
+    } finally {
+      setDeleting(false)
+    }
   }
+
   const handleCancel = () => {
     setForm(EMPTY_FORM)
     setShowForm(false)
     setEditingId(null)
-    setError('')
+    setFormError('')
   }
-  return (
-    <div className="p-8 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="font-serif font-bold text-2xl text-slate-900">Salário Mínimo</h1>
-          <p className="font-sans text-sm text-slate-500 mt-1">
-            Tabela histórica usada nos cálculos previdenciários. O sistema busca o valor vigente na DIB.
-          </p>
-        </div>
-        {!showForm && (
+
+  const columns: AdminTableColumn<SalarioMinimo & { _index: number }>[] = [
+    {
+      key: 'vigencia',
+      header: 'Vigência',
+      render: (r) => (
+        <span className={`font-mono font-semibold text-sm ${r._index === 0 ? 'text-amber-700' : 'text-slate-800'}`}>
+          {fmtDate(r.vigencia)}
+          {r._index === 0 && (
+            <span className="ml-2 font-sans text-[10px] bg-amber-500 text-white px-1.5 py-0.5 rounded font-bold uppercase">Vigente</span>
+          )}
+        </span>
+      ),
+    },
+    { key: 'valor', header: 'Salário Mínimo', render: (r) => <span className="font-mono font-bold text-sm text-slate-900">{fmt(r.valor)}</span> },
+    { key: 'teto', header: 'Teto RGPS', render: (r) => <span className="font-mono text-sm text-slate-600">{fmt(r.teto)}</span> },
+    { key: 'legislacao', header: 'Legislação', render: (r) => <span className="font-sans text-xs text-slate-500">{r.legislacao}</span> },
+    { key: 'reajuste', header: 'Reajuste', render: (r) => <span className="font-mono text-sm text-slate-500">{r.reajuste !== null ? `${r.reajuste.toFixed(2)}%` : '—'}</span> },
+    {
+      key: 'actions',
+      header: 'Ações',
+      align: 'right',
+      render: (r) => (
+        <div className="flex gap-1 justify-end">
           <button
-            onClick={() => { setShowForm(true); setEditingId(null); setForm(EMPTY_FORM); setError('') }}
-            className="flex items-center gap-2 bg-amber-600 hover:bg-amber-700 text-white font-sans font-semibold text-sm px-4 py-2.5 rounded-lg transition-colors"
+            onClick={() => handleEdit(r)}
+            aria-label={`Editar registro de ${fmtDate(r.vigencia)}`}
+            className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg text-slate-400 hover:text-amber-600 hover:bg-amber-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
           >
-            <Plus className="w-4 h-4" />
-            Novo Registro
+            <Pencil className="w-3.5 h-3.5" aria-hidden="true" />
           </button>
-        )}
-      </div>
-      {showForm && (
-        <div className="bg-white border border-slate-200 rounded-xl p-6 space-y-4 shadow-sm">
-          <h2 className="font-serif font-bold text-lg text-slate-900">
-            {editingId ? 'Editar Registro' : 'Novo Registro'}
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div>
-              <DatePicker
-                label="Vigência (início) *"
-                value={form.vigencia}
-                onChange={(d) => setForm(f => ({ ...f, vigencia: d ? d.toISOString().split('T')[0] : '' }))}
-                disabled={!!editingId}
-              />
-            </div>
-            <div>
-              <CurrencyInput
-                value={form.valor ? parseFloat(form.valor) : ''}
-                onChange={(val) => setForm(f => ({ ...f, valor: String(val) }))}
-                label="Salário Mínimo (R$) *"
-                placeholder="Ex: 1.621,00"
-              />
-            </div>
-            <div>
-              <CurrencyInput
-                value={form.teto ? parseFloat(form.teto) : ''}
-                onChange={(val) => setForm(f => ({ ...f, teto: String(val) }))}
-                label="Teto Previdenciário (R$) *"
-                placeholder="Ex: 8.157,41"
-              />
-            </div>
-            <div className="sm:col-span-2">
-              <label className="block font-sans text-xs font-bold text-slate-600 mb-1">Legislação *</label>
-              <input
-                type="text"
-                value={form.legislacao}
-                onChange={e => setForm(f => ({ ...f, legislacao: e.target.value }))}
-                placeholder="Ex: Decreto 12.797/2025"
-                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm font-sans focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 outline-none"
-              />
-            </div>
-            <div>
-              <label className="block font-sans text-xs font-bold text-slate-600 mb-1">Reajuste (%)</label>
-              <input
-                type="number"
-                step="0.01"
-                value={form.reajuste}
-                onChange={e => setForm(f => ({ ...f, reajuste: e.target.value }))}
-                placeholder="Ex: 6.79"
-                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm font-sans focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 outline-none"
-              />
-            </div>
+          <button
+            onClick={() => setConfirmDeleteId(r.id)}
+            aria-label={`Excluir registro de ${fmtDate(r.vigencia)}`}
+            className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
+          >
+            <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
+          </button>
+        </div>
+      ),
+    },
+  ]
+
+  return (
+    <div className="space-y-6">
+      <PageHeader
+        title="Salário Mínimo"
+        description="Tabela histórica usada nos cálculos previdenciários. O sistema busca o valor vigente na DIB."
+        meta={`${registros.length} registros`}
+        action={
+          <Button variant="primary" size="sm" onClick={() => { setShowForm(true); setEditingId(null); setForm(EMPTY_FORM); setFormError('') }} className="bg-amber-600 hover:bg-amber-700 flex items-center gap-1.5">
+            <Plus className="w-3.5 h-3.5" aria-hidden="true" />
+            Novo Registro
+          </Button>
+        }
+      />
+
+      <AdminTable
+        columns={columns}
+        data={registros.map((r, i) => ({ ...r, _index: i }))}
+        rowKey={(r) => r.id}
+        loading={loading}
+        error={error}
+        onRetry={load}
+        emptyIcon={DollarSign}
+        emptyTitle="Nenhum registro encontrado"
+        emptyDescription="Cadastre o primeiro registro de salário mínimo."
+      />
+
+      <Drawer
+        open={showForm}
+        onClose={handleCancel}
+        title={editingId ? 'Editar Registro' : 'Novo Registro'}
+        description="Vigência histórica de salário mínimo e teto previdenciário."
+      >
+        <div className="space-y-4">
+          <DatePicker
+            label="Vigência (início) *"
+            value={form.vigencia}
+            onChange={(d) => setForm((f) => ({ ...f, vigencia: d ? d.toISOString().split('T')[0] : '' }))}
+            disabled={!!editingId}
+          />
+          <CurrencyInput
+            value={form.valor ? parseFloat(form.valor) : ''}
+            onChange={(val) => setForm((f) => ({ ...f, valor: String(val) }))}
+            label="Salário Mínimo (R$) *"
+            placeholder="Ex: 1.621,00"
+          />
+          <CurrencyInput
+            value={form.teto ? parseFloat(form.teto) : ''}
+            onChange={(val) => setForm((f) => ({ ...f, teto: String(val) }))}
+            label="Teto Previdenciário (R$) *"
+            placeholder="Ex: 8.157,41"
+          />
+          <div>
+            <label className="font-sans text-[10px] uppercase font-extrabold tracking-wider text-slate-400 block mb-1">Legislação *</label>
+            <input
+              type="text"
+              value={form.legislacao}
+              onChange={(e) => setForm((f) => ({ ...f, legislacao: e.target.value }))}
+              placeholder="Ex: Decreto 12.797/2025"
+              className="w-full border border-slate-200/80 rounded-xl px-3 py-2 text-sm font-sans focus:border-amber-500 focus:ring-1 focus:ring-amber-500 outline-none transition-all"
+            />
           </div>
-          {error && <p className="font-sans text-sm text-red-600">{error}</p>}
-          <div className="flex gap-3">
-            <button
-              onClick={handleSubmit}
-              disabled={saving}
-              className="flex items-center gap-2 bg-amber-600 hover:bg-amber-700 disabled:opacity-60 text-white font-sans font-semibold text-sm px-4 py-2.5 rounded-lg transition-colors"
-            >
-              <Check className="w-4 h-4" />
-              {saving ? 'Salvando...' : 'Salvar'}
-            </button>
-            <button
-              onClick={handleCancel}
-              className="flex items-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-sans font-semibold text-sm px-4 py-2.5 rounded-lg transition-colors"
-            >
-              <X className="w-4 h-4" />
+          <div>
+            <label className="font-sans text-[10px] uppercase font-extrabold tracking-wider text-slate-400 block mb-1">Reajuste (%)</label>
+            <input
+              type="number"
+              step="0.01"
+              value={form.reajuste}
+              onChange={(e) => setForm((f) => ({ ...f, reajuste: e.target.value }))}
+              placeholder="Ex: 6.79"
+              className="w-full border border-slate-200/80 rounded-xl px-3 py-2 text-sm font-mono focus:border-amber-500 focus:ring-1 focus:ring-amber-500 outline-none transition-all"
+            />
+          </div>
+
+          {formError && <p className="font-sans text-sm text-red-600" role="alert">{formError}</p>}
+
+          <div className="flex gap-3 pt-2">
+            <Button variant="primary" onClick={handleSubmit} loading={saving} className="bg-amber-600 hover:bg-amber-700 flex-1">
+              Salvar
+            </Button>
+            <Button variant="outline" onClick={handleCancel} className="flex-1">
               Cancelar
-            </button>
+            </Button>
           </div>
         </div>
-      )}
-      <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
-        <div className="grid grid-cols-[1fr_1fr_1fr_1.5fr_0.8fr_auto] px-5 py-3 bg-slate-50 border-b border-slate-200 text-xs font-bold text-slate-500 uppercase tracking-wider">
-          <span>Vigência</span>
-          <span>Salário Mínimo</span>
-          <span>Teto RGPS</span>
-          <span>Legislação</span>
-          <span>Reajuste</span>
-          <span></span>
-        </div>
-        {loading ? (
-          <div className="py-12 text-center font-sans text-sm text-slate-400">Carregando...</div>
-        ) : registros.length === 0 ? (
-          <div className="py-12 text-center font-sans text-sm text-slate-400">Nenhum registro encontrado.</div>
-        ) : (
-          registros.map((r, i) => (
-            <div
-              key={r.id}
-              className={`grid grid-cols-[1fr_1fr_1fr_1.5fr_0.8fr_auto] px-5 py-4 items-center text-sm font-sans ${i === 0 ? 'bg-amber-50 border-b border-amber-100' : 'border-b border-slate-100 last:border-0'}`}
-            >
-              <span className={`font-semibold ${i === 0 ? 'text-amber-700' : 'text-slate-800'}`}>
-                {fmtDate(r.vigencia)}
-                {i === 0 && <span className="ml-2 text-[10px] bg-amber-500 text-white px-1.5 py-0.5 rounded font-bold uppercase">Vigente</span>}
-              </span>
-              <span className="font-bold text-slate-900">{fmt(r.valor)}</span>
-              <span className="text-slate-600">{fmt(r.teto)}</span>
-              <span className="text-slate-500 text-xs truncate pr-2">{r.legislacao}</span>
-              <span className="text-slate-500">
-                {r.reajuste !== null ? `${r.reajuste?.toFixed(2)}%` : '—'}
-              </span>
-              <div className="flex gap-1">
-                <button
-                  onClick={() => handleEdit(r)}
-                  className="p-1.5 rounded-lg text-slate-400 hover:text-amber-600 hover:bg-amber-50 transition-colors"
-                  title="Editar"
-                >
-                  <Pencil className="w-3.5 h-3.5" />
-                </button>
-                <button
-                  onClick={() => setConfirmDeleteId(r.id)}
-                  className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors"
-                  title="Excluir"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            </div>
-          ))
-        )}
-      </div>
-      <p className="font-sans text-xs text-slate-400">
-        Total: {registros.length} registros · O sistema sempre usa o registro com vigência mais recente anterior à DIB do cálculo.
-      </p>
+      </Drawer>
 
       <ConfirmDialog
         open={confirmDeleteId !== null}
@@ -252,6 +264,7 @@ export default function SalarioMinimoPage() {
         message="Tem certeza que deseja excluir este registro de salário mínimo? Esta ação não pode ser desfeita."
         confirmLabel="Excluir"
         variant="danger"
+        loading={deleting}
       />
     </div>
   )

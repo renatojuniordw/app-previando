@@ -30,6 +30,7 @@ export function AdminNav() {
             href={item.href}
             className={cn(
               'flex items-center gap-3 px-3 py-2.5 font-sans font-medium text-sm transition-all rounded-lg',
+              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500',
               active
                 ? 'bg-slate-800 text-white'
                 : 'text-slate-400 hover:bg-slate-800 hover:text-white'

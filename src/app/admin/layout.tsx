@@ -29,7 +29,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         <div className="p-4 border-t border-slate-800">
           <Link
             href="/dashboard"
-            className="flex items-center gap-2 px-3 py-2.5 font-sans font-medium text-sm text-slate-400 hover:text-white transition-colors rounded-lg"
+            className="flex items-center gap-2 px-3 py-2.5 font-sans font-medium text-sm text-slate-400 hover:text-white transition-colors rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
           >
             <ArrowLeft className="w-4 h-4" />
             Voltar ao App
