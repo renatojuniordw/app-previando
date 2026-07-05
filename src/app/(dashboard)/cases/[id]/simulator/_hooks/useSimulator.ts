@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useParams } from 'next/navigation'
 import api from '@/lib/api'
-import { MODALIDADES_PADRAO } from '@/lib/modalidade-labels'
+import { MODALIDADES_PADRAO, mapToPortugueseCode } from '@/lib/modalidade-labels'
 import { useToast } from '@/store/toast'
 
 interface Simulation {
@@ -63,7 +63,12 @@ export function useSimulator() {
         api.get(`/cases/${params.id}`),
       ])
       setSimulations(rSim.data.simulations ?? [])
-      setModalidades(rModalidades.data.modalidades ?? [])
+      setModalidades(
+        (rModalidades.data.modalidades ?? []).map((m: { codigo: string; label: string }) => ({
+          ...m,
+          codigo: mapToPortugueseCode(m.codigo),
+        }))
+      )
       setCaseBenefitType(rCase.data.case?.benefitType)
 
       if (rCnis.data?.cnisDocument?.processingStatus === 'COMPLETED' || rCnis.data?.cnisDocument?.processingStatus === 'SUMMARY_READY') {
