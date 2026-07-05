@@ -6,7 +6,9 @@ import dynamic from 'next/dynamic'
 import api from '@/lib/api'
 import { Button } from '@/components/ui/Button'
 import { Modal } from '@/components/ui/Modal'
+import { ErrorBoundary } from '@/components/ErrorBoundary'
 
+import { FileText } from 'lucide-react'
 import { BpcForm } from '@/components/bpc/BpcForm'
 import { HelpText } from '@/components/ui/HelpText'
 import { BpcSocialInterview } from '@/components/bpc/BpcSocialInterview'
@@ -223,23 +225,26 @@ export default function BpcPage() {
         <div className="flex items-center gap-3 flex-wrap shrink-0">
           {/* PDF consolidado — aparece quando há ao menos 1 análise concluída */}
           {completedCount > 0 && (
-            <PDFDownloadLink
-              document={
-                <BpcConsolidatedPDFDocument
-                  generatedAt={new Date().toLocaleDateString('pt-BR')}
-                  sections={TABS.flatMap((t) => {
-                    if (t.id === 'social') return []
-                    const content = tabResults[t.id]
-                    if (!content) return []
-                    return [{ type: t.id, label: t.label, content }]
-                  })}
-                />
-              }
-              fileName={`previando-bpc-completo-${caseId}.pdf`}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border border-slate-200 rounded-full bg-white text-slate-600 hover:bg-slate-50 transition-colors"
-            >
-              📄 Relatório Completo
-            </PDFDownloadLink>
+            <ErrorBoundary fallback={null}>
+              <PDFDownloadLink
+                document={
+                  <BpcConsolidatedPDFDocument
+                    generatedAt={new Date().toLocaleDateString('pt-BR')}
+                    sections={TABS.flatMap((t) => {
+                      if (t.id === 'social') return []
+                      const content = tabResults[t.id]
+                      if (!content) return []
+                      return [{ type: t.id, label: t.label, content }]
+                    })}
+                  />
+                }
+                fileName={`previando-bpc-completo-${caseId}.pdf`}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border border-slate-200 rounded-full bg-white text-slate-600 hover:bg-slate-50 transition-colors"
+              >
+                <FileText className="w-3.5 h-3.5" />
+                Relatório Completo
+              </PDFDownloadLink>
+            </ErrorBoundary>
           )}
 
           {bpcNotesCount > 0 && (

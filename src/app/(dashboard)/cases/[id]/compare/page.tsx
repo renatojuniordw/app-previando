@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import api from '@/lib/api'
 import { Card } from '@/components/ui/Card'
+import { ErrorBoundary } from '@/components/ErrorBoundary'
 import dynamic from 'next/dynamic'
 
 const ComparePDFDocument = dynamic(
@@ -90,14 +91,16 @@ export default function ComparePage() {
           <p className="text-sm text-slate-500 mt-1">Análise de elegibilidade para todas as modalidades com base no CNIS atual</p>
         </div>
         {data && (
-          <PDFDownloadLink
-            document={<ComparePDFDocument elegiveis={data.elegiveis} naoElegiveis={data.naoElegiveis} />}
-            fileName={`previando-comparativo-${id}.pdf`}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
-          >
-            <Download className="w-4 h-4" />
-            Exportar PDF
-          </PDFDownloadLink>
+          <ErrorBoundary fallback={null}>
+            <PDFDownloadLink
+              document={<ComparePDFDocument elegiveis={data.elegiveis} naoElegiveis={data.naoElegiveis} />}
+              fileName={`previando-comparativo-${id}.pdf`}
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
+            >
+              <Download className="w-4 h-4" />
+              Exportar PDF
+            </PDFDownloadLink>
+          </ErrorBoundary>
         )}
       </div>
 

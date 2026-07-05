@@ -5,12 +5,14 @@ import { useParams } from 'next/navigation'
 import api from '@/lib/api'
 import { Button } from '@/components/ui/Button'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
-import { Card } from '@/components/ui/Card'
 import { Skeleton } from '@/components/ui/Skeleton'
-import { Receipt, Calculator, AlertCircle, CheckCircle, History, Trash2 } from 'lucide-react'
+import {
+  Receipt, Calculator, AlertCircle, CheckCircle2,
+  History, Trash2, Loader2, Percent, Banknote, Hash,
+} from 'lucide-react'
 import { CurrencyInput } from '@/components/ui/CurrencyInput'
 import { MonthPicker } from '@/components/ui/MonthPicker'
-import { HelpText } from '@/components/ui/HelpText'
+import { cn, formatCurrency } from '@/lib/utils'
 import type { CategoriaContribuinte, PlanoContribuicao, GpsResult } from '@/lib/gps-engine'
 
 interface CategoriaInfo {
@@ -77,7 +79,7 @@ export default function GpsPage() {
     setResult(null)
 
     if (!selectedCat || !salario || !competencia) {
-      setError('Preencha todos os campos.')
+      setError('Preencha todos os campos obrigatórios.')
       return
     }
 
@@ -97,7 +99,7 @@ export default function GpsPage() {
       })
       setResult(res.data)
       setCompetencia('')
-      setSuccessMsg('Guia salva com sucesso!')
+      setSuccessMsg('Guia calculada e salva com sucesso.')
       await loadHistory()
     } catch (err: unknown) {
       setError((err as { response?: { data?: { error?: string } } })?.response?.data?.error || 'Erro ao calcular contribuição.')
@@ -106,9 +108,7 @@ export default function GpsPage() {
     }
   }
 
-  const handleDelete = (guiaId: string) => {
-    setDeleteTarget(guiaId)
-  }
+  const handleDelete = (guiaId: string) => setDeleteTarget(guiaId)
 
   const handleDeleteConfirm = async () => {
     if (!deleteTarget) return
@@ -128,85 +128,101 @@ export default function GpsPage() {
 
   if (loadingInit) {
     return (
-      <div className="max-w-4xl mx-auto px-6 py-8 space-y-4">
-        <Skeleton className="h-8 w-64" />
-        <Skeleton className="h-40 w-full" />
+      <div className="mx-auto max-w-5xl space-y-5 px-4 py-8 sm:px-0">
+        <Skeleton className="h-8 w-72" />
+        <Skeleton className="h-48 w-full rounded-2xl" />
+        <Skeleton className="h-32 w-full rounded-2xl" />
       </div>
     )
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-6 py-8 space-y-8">
-      {/* Header */}
-      <div>
-        <h2 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
-          <Receipt className="w-6 h-6 text-amber-600" />
-          Guias de Contribuição (GPS/DAS)
-        </h2>
-        <p className="text-sm text-slate-500 mt-1">
-          Calcule contribuições previdenciárias para Contribuinte Individual, Facultativo, MEI e Segurado Especial.
+    <div className="mx-auto max-w-5xl space-y-6 px-4 sm:px-0">
+
+      {/* Page Header */}
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h1 className="font-serif text-2xl font-bold tracking-tight text-slate-900">
+            Guias de Contribuição (GPS/DAS)
+          </h1>
+          <p className="mt-1 font-sans text-sm text-slate-500">
+            Calcule contribuições previdenciárias para Contribuinte Individual, Facultativo, MEI e Segurado Especial.
+          </p>
+        </div>
+      </div>
+
+      {/* Help Banner */}
+      <div className="flex items-start gap-3 rounded-xl border border-amber-100 bg-amber-50/40 px-4 py-3.5">
+        <Receipt className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" aria-hidden="true" />
+        <p className="font-sans text-xs font-semibold leading-relaxed text-amber-900">
+          Selecione a categoria do contribuinte e o plano desejado. O histórico de guias geradas fica salvo no caso para consulta futura.
         </p>
       </div>
 
-      <HelpText title="Sobre guias GPS/DAS" variant="info" collapsible>
-        <p>Calcule o valor da contribuição previdenciária e gere guias GPS/DAS para recolhimento.
-        Selecione a categoria do contribuinte e o plano desejado. O histórico de guias geradas fica
-        salvo no caso para consulta futura.</p>
-      </HelpText>
-
-      {/* Formulário */}
-      <Card className="p-6">
-        <h3 className="font-semibold text-slate-800 mb-4 flex items-center gap-2">
-          <Calculator className="w-5 h-5 text-amber-600" />
-          Calcular Contribuição
-        </h3>
-
-        {/* Categoria */}
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-slate-700 mb-2">Categoria</label>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-            {categorias.map((cat) => (
-              <button
-                key={cat.categoria}
-                onClick={() => { setSelectedCat(cat.categoria); setResult(null); setSuccessMsg('') }}
-                className={`p-3 rounded-lg border-2 text-left transition-all text-sm ${
-                  selectedCat === cat.categoria
-                    ? 'border-amber-500 bg-amber-50'
-                    : 'border-slate-200 hover:border-slate-300'
-                }`}
-              >
-                <span className="font-medium text-slate-900 block">{cat.label}</span>
-                <span className="text-xs text-slate-500 mt-0.5 block">{cat.descricao}</span>
-              </button>
-            ))}
+      {/* Form Section */}
+      <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
+        {/* Section Header */}
+        <div className="flex items-center gap-2.5 border-b border-slate-100 bg-slate-50/50 px-6 py-4">
+          <div className="flex h-7 w-7 items-center justify-center rounded-lg border border-slate-200 bg-white">
+            <Calculator className="h-3.5 w-3.5 text-amber-600" aria-hidden="true" />
           </div>
+          <h2 className="font-sans text-sm font-extrabold uppercase tracking-wider text-slate-600">
+            Calcular Contribuição
+          </h2>
         </div>
 
-        {/* Plano */}
-        {selectedCat && selectedCat !== 'MEI' && selectedCat !== 'SEGURADO_ESPECIAL' && (
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-slate-700 mb-2">Plano</label>
-            <div className="flex gap-2">
-              {(['NORMAL', 'SIMPLIFICADO', 'BAIXA_RENDA'] as PlanoContribuicao[]).map((plano) => (
+        <div className="space-y-6 p-6">
+          {/* Categoria */}
+          <div>
+            <label className="neo-label mb-3 block">Categoria do Contribuinte</label>
+            <div className="grid grid-cols-2 gap-2.5 md:grid-cols-4">
+              {categorias.map((cat) => (
                 <button
-                  key={plano}
-                  onClick={() => setSelectedPlano(plano)}
-                  className={`px-4 py-2 rounded-lg border-2 text-sm transition-all ${
-                    selectedPlano === plano
-                      ? 'border-amber-500 bg-amber-50 text-amber-800 font-medium'
-                      : 'border-slate-200 text-slate-600 hover:border-slate-300'
-                  }`}
+                  key={cat.categoria}
+                  onClick={() => { setSelectedCat(cat.categoria); setResult(null); setSuccessMsg('') }}
+                  className={cn(
+                    'rounded-xl border-2 p-3.5 text-left transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500',
+                    selectedCat === cat.categoria
+                      ? 'border-amber-400 bg-amber-50 shadow-sm'
+                      : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'
+                  )}
+                  aria-pressed={selectedCat === cat.categoria}
                 >
-                  {PLANO_LABELS[plano]}
+                  <span className="block font-sans text-sm font-bold text-slate-900">{cat.label}</span>
+                  <span className="mt-0.5 block font-sans text-[10px] leading-relaxed text-slate-500">
+                    {cat.descricao}
+                  </span>
                 </button>
               ))}
             </div>
           </div>
-        )}
 
-        {/* Campos */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-          <div>
+          {/* Plano */}
+          {selectedCat && selectedCat !== 'MEI' && selectedCat !== 'SEGURADO_ESPECIAL' && (
+            <div className="animate-fade-in">
+              <label className="neo-label mb-2 block">Plano de Contribuição</label>
+              <div className="flex flex-wrap gap-2">
+                {(['NORMAL', 'SIMPLIFICADO', 'BAIXA_RENDA'] as PlanoContribuicao[]).map((plano) => (
+                  <button
+                    key={plano}
+                    onClick={() => setSelectedPlano(plano)}
+                    className={cn(
+                      'rounded-lg border-2 px-4 py-2 font-sans text-sm font-semibold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500',
+                      selectedPlano === plano
+                        ? 'border-amber-400 bg-amber-50 text-amber-800'
+                        : 'border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50'
+                    )}
+                    aria-pressed={selectedPlano === plano}
+                  >
+                    {PLANO_LABELS[plano]}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Fields */}
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <CurrencyInput
               value={salario ? parseFloat(salario) : ''}
               onChange={(val) => setSalario(String(val))}
@@ -214,102 +230,148 @@ export default function GpsPage() {
               disabled={selectedCat === 'MEI'}
               placeholder="Ex: 1.518,00"
             />
+            <div>
+              <label className="neo-label mb-1 block">Competência</label>
+              <MonthPicker value={competencia} onChange={setCompetencia} />
+            </div>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Competência</label>
-            <MonthPicker value={competencia} onChange={setCompetencia} />
-          </div>
+
+          {/* Error / Success alerts */}
+          {error && (
+            <div role="alert" className="flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3">
+              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-red-500" aria-hidden="true" />
+              <span className="font-sans text-sm text-red-700">{error}</span>
+            </div>
+          )}
+          {successMsg && (
+            <div role="status" className="flex items-start gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3">
+              <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" aria-hidden="true" />
+              <span className="font-sans text-sm font-semibold text-emerald-700">{successMsg}</span>
+            </div>
+          )}
+
+          {/* Submit */}
+          <Button
+            onClick={handleSubmit}
+            disabled={loading || !selectedCat}
+            loading={loading}
+            className="flex items-center gap-2 bg-amber-600 font-semibold text-white shadow-sm hover:bg-amber-700 disabled:opacity-50"
+          >
+            <Calculator className="h-4 w-4" />
+            {loading ? 'Calculando...' : 'Calcular e Salvar Guia'}
+          </Button>
         </div>
+      </div>
 
-        {error && (
-          <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg mb-4">
-            <AlertCircle className="w-4 h-4 text-red-500 shrink-0" />
-            <span className="text-sm text-red-700">{error}</span>
-          </div>
-        )}
-
-        {successMsg && (
-          <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-lg mb-4">
-            <CheckCircle className="w-4 h-4 text-green-500 shrink-0" />
-            <span className="text-sm text-green-700">{successMsg}</span>
-          </div>
-        )}
-
-        <Button onClick={handleSubmit} disabled={loading || !selectedCat} className="w-full md:w-auto">
-          {loading ? 'Salvando...' : 'Calcular e Salvar'}
-        </Button>
-      </Card>
-
-      {/* Resultado */}
+      {/* Result Card */}
       {result && (
-        <Card className="p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-semibold text-slate-800 flex items-center gap-2">
-              <CheckCircle className="w-5 h-5 text-green-500" />
-              Resultado
-            </h3>
-            <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full font-medium">
+        <div className="overflow-hidden rounded-2xl border border-emerald-200/80 bg-white shadow-sm">
+          {/* Emerald stripe = success */}
+          <div className="h-1 w-full bg-gradient-to-r from-emerald-400 to-emerald-600" />
+
+          <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/50 px-6 py-4">
+            <div className="flex items-center gap-2.5">
+              <div className="flex h-7 w-7 items-center justify-center rounded-lg border border-emerald-200 bg-emerald-50">
+                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" aria-hidden="true" />
+              </div>
+              <h2 className="font-sans text-sm font-extrabold uppercase tracking-wider text-slate-600">
+                Resultado do Cálculo
+              </h2>
+            </div>
+            <span className="rounded-md border border-emerald-200 bg-emerald-50 px-2.5 py-1 font-mono text-xs font-extrabold text-emerald-700">
               {result.competencia}
             </span>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-            <div className="p-4 bg-slate-50 rounded-lg">
-              <span className="text-xs text-slate-500 block mb-1">Salário Contribuição</span>
-              <span className="text-lg font-bold text-slate-900">R$ {result.salarioContribuicao.toFixed(2)}</span>
-            </div>
-            <div className="p-4 bg-amber-50 rounded-lg">
-              <span className="text-xs text-amber-600 block mb-1">Alíquota</span>
-              <span className="text-lg font-bold text-amber-700">{(result.aliquota * 100).toFixed(1)}%</span>
-            </div>
-            <div className="p-4 bg-green-50 rounded-lg">
-              <span className="text-xs text-green-600 block mb-1">Valor a Recolher</span>
-              <span className="text-lg font-bold text-green-700">R$ {result.valorCalculado.toFixed(2)}</span>
-            </div>
-            <div className="p-4 bg-blue-50 rounded-lg">
-              <span className="text-xs text-blue-600 block mb-1">Código GPS</span>
-              <span className="text-lg font-bold text-blue-700">{result.codigoPagamento}</span>
-            </div>
+          <div className="grid grid-cols-2 gap-0 border-b border-slate-100 md:grid-cols-4">
+            <ResultCell label="Salário de Contribuição" icon={<Banknote className="h-4 w-4 text-slate-400" />} border="right">
+              <span className="font-mono text-lg font-bold text-slate-900">
+                R$ {result.salarioContribuicao.toFixed(2)}
+              </span>
+            </ResultCell>
+            <ResultCell label="Alíquota" icon={<Percent className="h-4 w-4 text-amber-500" />} highlight="amber" border="right">
+              <span className="font-mono text-lg font-bold text-amber-700">
+                {(result.aliquota * 100).toFixed(1)}%
+              </span>
+            </ResultCell>
+            <ResultCell label="Valor a Recolher" icon={<CheckCircle2 className="h-4 w-4 text-emerald-500" />} highlight="emerald" border="right">
+              <span className="font-mono text-lg font-bold text-emerald-700">
+                R$ {result.valorCalculado.toFixed(2)}
+              </span>
+            </ResultCell>
+            <ResultCell label="Código GPS" icon={<Hash className="h-4 w-4 text-slate-400" />}>
+              <span className="font-mono text-lg font-bold text-slate-800">
+                {result.codigoPagamento}
+              </span>
+            </ResultCell>
           </div>
 
-          <p className="text-sm text-slate-600 bg-slate-50 p-3 rounded-lg">{result.descricao}</p>
-        </Card>
+          <div className="px-6 py-4">
+            <p className="font-sans text-sm leading-relaxed text-slate-600">
+              {result.descricao}
+            </p>
+          </div>
+        </div>
       )}
 
-      {/* Histórico */}
+      {/* History */}
       {history.length > 0 && (
-        <Card className="p-6">
-          <h3 className="font-semibold text-slate-800 mb-4 flex items-center gap-2">
-            <History className="w-5 h-5 text-slate-500" />
-            Guias Geradas ({history.length})
-          </h3>
+        <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
+          <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/50 px-6 py-4">
+            <div className="flex items-center gap-2.5">
+              <div className="flex h-7 w-7 items-center justify-center rounded-lg border border-slate-200 bg-white">
+                <History className="h-3.5 w-3.5 text-slate-500" aria-hidden="true" />
+              </div>
+              <h2 className="font-sans text-sm font-extrabold uppercase tracking-wider text-slate-600">
+                Guias Geradas
+              </h2>
+            </div>
+            <span className="rounded-md bg-slate-100 px-2 py-0.5 font-sans text-[10px] font-extrabold text-slate-500">
+              {history.length}
+            </span>
+          </div>
+
           <div className="divide-y divide-slate-100">
             {history.map((g) => (
-              <div key={g.id} className="py-3 flex items-center justify-between text-sm">
-                <div>
-                  <span className="font-medium text-slate-800">{g.categoria}</span>
-                  <span className="text-slate-400 mx-2">·</span>
-                  <span className="text-slate-500">{g.competencia}</span>
-                  <span className="text-slate-400 mx-2">·</span>
-                  <span className="text-slate-500">Cód. {g.codigoPagamento}</span>
+              <div
+                key={g.id}
+                className="flex flex-col items-start justify-between gap-3 px-6 py-4 transition-colors hover:bg-slate-50/60 sm:flex-row sm:items-center"
+              >
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 font-sans text-sm">
+                  <span className="font-bold text-slate-800">{g.categoria}</span>
+                  <span className="text-slate-300" aria-hidden="true">·</span>
+                  <span className="font-mono text-slate-600">{g.competencia}</span>
+                  <span className="text-slate-300" aria-hidden="true">·</span>
+                  <span className="rounded-md bg-slate-100 px-1.5 py-0.5 font-mono text-[10px] font-bold text-slate-500">
+                    Cód. {g.codigoPagamento}
+                  </span>
                 </div>
-                <div className="flex items-center gap-3">
-                  <span className="font-medium text-slate-800">R$ {g.valorCalculado.toFixed(2)}</span>
-                  <span className="text-xs text-slate-400">{new Date(g.createdAt).toLocaleDateString('pt-BR')}</span>
+
+                <div className="flex items-center gap-4 shrink-0">
+                  <span className="font-mono text-sm font-bold text-slate-800">
+                    {formatCurrency(g.valorCalculado)}
+                  </span>
+                  <span className="font-sans text-xs text-slate-400">
+                    {new Date(g.createdAt).toLocaleDateString('pt-BR')}
+                  </span>
                   <button
                     onClick={() => handleDelete(g.id)}
                     disabled={deletingId === g.id}
-                    className="p-1 text-slate-400 hover:text-red-500 transition-colors disabled:opacity-40"
-                    title="Excluir guia"
+                    className="rounded-lg border border-red-200 p-1.5 text-red-500 transition-colors hover:bg-red-50 hover:text-red-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 disabled:opacity-40"
+                    aria-label={`Excluir guia ${g.categoria} — ${g.competencia}`}
                   >
-                    <Trash2 className="w-4 h-4" />
+                    {deletingId === g.id
+                      ? <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+                      : <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
+                    }
                   </button>
                 </div>
               </div>
             ))}
           </div>
-        </Card>
+        </div>
       )}
+
       <ConfirmDialog
         open={deleteTarget !== null}
         onConfirm={handleDeleteConfirm}
@@ -319,6 +381,37 @@ export default function GpsPage() {
         confirmLabel="Sim, Excluir"
         variant="danger"
       />
+    </div>
+  )
+}
+
+// ─── Sub-components ──────────────────────────────────────────────────────────
+
+function ResultCell({
+  label,
+  icon,
+  highlight,
+  border,
+  children,
+}: {
+  label: string
+  icon: React.ReactNode
+  highlight?: 'amber' | 'emerald'
+  border?: 'right'
+  children: React.ReactNode
+}) {
+  return (
+    <div className={cn(
+      'flex flex-col gap-1 p-5',
+      highlight === 'amber' && 'bg-amber-50/30',
+      highlight === 'emerald' && 'bg-emerald-50/30',
+      border === 'right' && 'border-b border-slate-100 sm:border-b-0 sm:border-r'
+    )}>
+      <div className="flex items-center gap-1.5">
+        {icon}
+        <span className="font-sans text-[10px] font-extrabold uppercase tracking-wider text-slate-400">{label}</span>
+      </div>
+      <div className="mt-0.5">{children}</div>
     </div>
   )
 }

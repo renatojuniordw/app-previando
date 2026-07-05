@@ -36,10 +36,10 @@ async function fetchOverview(userId: string): Promise<OverviewData> {
       select: { rmi: true },
     }),
 
+    // Honorários cancelados não contam como receita esperada nem pendente.
     prisma.fee.aggregate({
-      where: { case: { userId } },
+      where: { case: { userId }, status: { not: 'CANCELLED' } },
       _sum: { totalAmount: true, paidAmount: true },
-      _count: { status: true },
     }),
   ])
 
@@ -49,18 +49,17 @@ async function fetchOverview(userId: string): Promise<OverviewData> {
       ? rmiValues.reduce((a, b) => a + b, 0) / rmiValues.length
       : 0
 
-  const paidFees = await prisma.fee.count({
-    where: { case: { userId }, status: { in: ['PAID'] } },
-  })
+  const totalFeesExpected = Number(fees._sum.totalAmount ?? 0)
+  const totalFeesReceived = Number(fees._sum.paidAmount ?? 0)
 
   return {
     totalClients,
     totalCases,
     totalCalculations,
     avgRmi: Number(avgRmi.toFixed(2)),
-    totalFeesExpected: Number(fees._sum.totalAmount ?? 0),
-    totalFeesReceived: Number(fees._sum.paidAmount ?? 0),
-    totalFeesPending: fees._count.status - paidFees,
+    totalFeesExpected,
+    totalFeesReceived,
+    totalFeesPending: totalFeesExpected - totalFeesReceived,
   }
 }
 

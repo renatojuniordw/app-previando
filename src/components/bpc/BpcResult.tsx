@@ -5,6 +5,7 @@ import ReactMarkdown from 'react-markdown'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
+import { ErrorBoundary } from '@/components/ErrorBoundary'
 import dynamic from 'next/dynamic'
 import api from '@/lib/api'
 import { BpcPDFDocument } from '@/components/pdf/BpcPDFDocument'
@@ -134,13 +135,15 @@ export function BpcResult({ caseId, result, type, onCopy, onOpenChecklist, onReg
           📋 Copiar
         </Button>
         {mounted && (
-          <PDFDownloadLink
-            document={<BpcPDFDocument result={result} type={type ? TYPE_LABELS[type] || 'BPC/LOAS' : 'BPC/LOAS'} />}
-            fileName={`previando-bpc-${caseId}.pdf`}
-            className="inline-flex items-center justify-center px-3 py-2 text-xs border border-slate-200 rounded-md hover:bg-slate-100 transition-colors"
-          >
-            📄 Exportar PDF
-          </PDFDownloadLink>
+          <ErrorBoundary fallback={null}>
+            <PDFDownloadLink
+              document={<BpcPDFDocument result={result} type={type ? TYPE_LABELS[type] || 'BPC/LOAS' : 'BPC/LOAS'} />}
+              fileName={`previando-bpc-${caseId}.pdf`}
+              className="inline-flex items-center justify-center px-3 py-2 text-xs border border-slate-200 rounded-md hover:bg-slate-100 transition-colors"
+            >
+              📄 Exportar PDF
+            </PDFDownloadLink>
+          </ErrorBoundary>
         )}
         {onRegenerate && (
           <Button variant="outline" onClick={onRegenerate} className="text-xs py-2 border-slate-300 text-slate-600 hover:bg-slate-100">

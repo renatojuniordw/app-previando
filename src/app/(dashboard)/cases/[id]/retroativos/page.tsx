@@ -3,8 +3,9 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/Button'
 import { Modal } from '@/components/ui/Modal'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { DatePicker } from '@/components/ui/DatePicker'
-import { formatDate, formatCurrency, formatPercentage } from '@/lib/utils'
+import { formatDate, formatCurrency, formatPercentage, cn } from '@/lib/utils'
 import { CurrencyInput } from '@/components/ui/CurrencyInput'
 import { useRetroativos } from './_hooks/useRetroativos'
 import {
@@ -16,7 +17,11 @@ import {
   ChevronUp,
   ShieldAlert,
   FileSpreadsheet,
-  Plus
+  Plus,
+  TrendingUp,
+  Banknote,
+  Receipt,
+  PercentCircle,
 } from 'lucide-react'
 
 export default function RetroativosPage() {
@@ -49,52 +54,69 @@ export default function RetroativosPage() {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center py-20">
-        <Loader2 className="w-8 h-8 text-amber-500 animate-spin" />
-        <p className="font-sans font-medium text-slate-500 mt-4">Carregando painel de retroativos...</p>
+      <div className="flex flex-col items-center justify-center py-24">
+        <Loader2 className="h-8 w-8 animate-spin text-amber-500" />
+        <p className="mt-4 animate-pulse font-sans text-sm font-medium text-slate-500">
+          Carregando painel de retroativos...
+        </p>
       </div>
     )
   }
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto">
-      <div className="flex items-center justify-between">
+    <div className="mx-auto max-w-5xl space-y-6 px-4 sm:px-0">
+
+      {/* Page Header */}
+      <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h2 className="font-serif font-bold text-2xl text-slate-900 tracking-tight">Liquidação de Retroativos</h2>
-          <p className="font-sans text-sm text-slate-500 mt-1">
-            Calcule os valores atrasados devidos pelo INSS com correção monetária oficial.
+          <h1 className="font-serif text-2xl font-bold tracking-tight text-slate-900">
+            Liquidação de Retroativos
+          </h1>
+          <p className="mt-1 font-sans text-sm text-slate-500">
+            Calcule valores atrasados devidos pelo INSS com correção monetária oficial (INPC mês a mês).
           </p>
         </div>
         {retroativos.length > 0 && (
           <Button
             onClick={() => setShowModal(true)}
-            className="bg-amber-600 hover:bg-amber-700 text-white flex items-center gap-2 shadow-sm font-semibold"
+            className="flex items-center gap-2 bg-amber-600 font-semibold text-white shadow-sm hover:bg-amber-700"
           >
-            <Plus className="w-4 h-4" />
+            <Plus className="h-4 w-4" />
             Nova Liquidação
           </Button>
         )}
       </div>
 
+      {/* Help Banner */}
+      <div className="flex items-start gap-3 rounded-xl border border-amber-100 bg-amber-50/40 px-4 py-3.5">
+        <History className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" aria-hidden="true" />
+        <p className="font-sans text-xs font-semibold leading-relaxed text-amber-900">
+          Gere a memória de cálculo completa de parcelas atrasadas, corrigindo-as mês a mês pelo INPC oficial. O valor líquido final já considera os descontos informados.
+        </p>
+      </div>
+
+      {/* Empty State */}
       {retroativos.length === 0 ? (
-        <div className="py-20 flex flex-col items-center justify-center border border-dashed border-slate-300 bg-slate-50 rounded-2xl text-center">
-          <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center mb-4 border border-slate-200 shadow-sm">
-            <History className="w-8 h-8 text-slate-400" />
+        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-250 bg-white py-20 text-center shadow-sm">
+          <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-2xl border border-amber-100 bg-amber-50 shadow-xs">
+            <History className="h-8 w-8 text-amber-500" />
           </div>
-          <h3 className="font-serif font-bold text-lg text-slate-900 mb-2">Nenhuma Liquidação de Retroativos</h3>
-          <p className="font-sans text-sm text-slate-500 mb-6 max-w-md mx-auto">
+          <h2 className="mb-2 font-serif text-lg font-bold text-slate-900">
+            Nenhuma Liquidação de Retroativos
+          </h2>
+          <p className="mx-auto mb-7 max-w-sm font-sans text-sm leading-relaxed text-slate-500">
             Gere a memória de cálculo completa de parcelas atrasadas, corrigindo-as mês a mês pelo INPC oficial.
           </p>
           <Button
             onClick={() => setShowModal(true)}
-            className="bg-amber-600 hover:bg-amber-700 text-white flex items-center gap-2 shadow-sm"
+            className="flex items-center gap-2 bg-amber-600 text-white shadow-sm hover:bg-amber-700"
           >
-            <Plus className="w-4 h-4" />
+            <Plus className="h-4 w-4" />
             Iniciar Liquidação
           </Button>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-5">
           {retroativos.map((retro) => {
             const isExpanded = expandedRetro === retro.id
             const ipcAcumulado = retro.memoriaCalculo?.acumuladoINPC ?? 0
@@ -102,120 +124,154 @@ export default function RetroativosPage() {
             return (
               <div
                 key={retro.id}
-                className="border border-slate-200 rounded-xl shadow-sm overflow-hidden bg-white hover:border-slate-300 transition-colors"
+                className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm transition-all duration-300 hover:border-slate-300 hover:shadow-md"
               >
-                {/* Header do Card */}
-                <div className="px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-50/50">
-                  <div className="space-y-1">
-                    <h3 className="font-sans font-bold text-slate-800 text-base sm:text-lg">
-                      Parcelas Vencidas ({retro.mesesAtraso} meses)
-                    </h3>
-                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500 font-medium">
-                      <span className="flex items-center gap-1">
-                        <Calendar className="w-3.5 h-3.5 text-slate-400" />
-                        Período: {formatDate(retro.dataInicioDireito)} a {formatDate(retro.dataRequerimento)}
+                {/* Top gradient accent */}
+                <div className="h-1 w-full bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600" />
+
+                {/* Card Header */}
+                <div className="flex flex-col justify-between gap-4 px-6 py-5 sm:flex-row sm:items-center">
+                  <div className="space-y-1.5">
+                    <h2 className="font-serif text-lg font-bold tracking-tight text-slate-900">
+                      Parcelas Vencidas —{' '}
+                      <span className="font-mono text-base text-amber-700">
+                        {retro.mesesAtraso} meses
+                      </span>
+                    </h2>
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs font-semibold text-slate-500">
+                      <span className="flex items-center gap-1.5">
+                        <Calendar className="h-3.5 w-3.5 text-slate-400" aria-hidden="true" />
+                        Período:{' '}
+                        <span className="font-mono">
+                          {formatDate(retro.dataInicioDireito)} → {formatDate(retro.dataRequerimento)}
+                        </span>
                       </span>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2 shrink-0">
+                  <div className="flex shrink-0 items-center gap-2">
                     <button
                       type="button"
                       onClick={() => setExpandedRetro(isExpanded ? null : retro.id)}
-                      className="font-sans font-semibold text-xs text-slate-600 bg-white border border-slate-200 px-3 py-2 rounded-lg hover:bg-slate-50 transition-colors flex items-center gap-1.5"
+                      aria-expanded={isExpanded}
+                      className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 font-sans text-xs font-semibold text-slate-600 transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
                     >
                       {isExpanded ? (
-                        <>
-                          Esconder Memória
-                          <ChevronUp className="w-4 h-4" />
-                        </>
+                        <><ChevronUp className="h-3.5 w-3.5" /> Esconder Memória</>
                       ) : (
-                        <>
-                          Ver Memória
-                          <ChevronDown className="w-4 h-4" />
-                        </>
+                        <><ChevronDown className="h-3.5 w-3.5" /> Ver Memória</>
                       )}
                     </button>
 
                     <button
                       onClick={() => handleDelete(retro.id)}
-                      className="p-2 border border-red-200 text-red-600 rounded-lg hover:bg-red-50 hover:text-red-700 transition-colors"
+                      className="rounded-lg border border-red-200 p-2 text-red-600 transition-colors hover:bg-red-50 hover:text-red-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400"
                       aria-label="Excluir este cálculo de retroativos"
                     >
-                      <Trash2 className="w-4 h-4" aria-hidden="true" />
+                      <Trash2 className="h-4 w-4" aria-hidden="true" />
                     </button>
                   </div>
                 </div>
 
-                {/* Resumo Financeiro */}
-                <div className="p-6 grid grid-cols-1 sm:grid-cols-4 gap-4 border-t border-slate-100">
-                  <div className="bg-slate-50 border border-slate-100 rounded-xl p-4 flex flex-col justify-between">
-                    <span className="font-sans text-[10px] uppercase font-bold tracking-wider text-slate-400 block mb-1">
-                      Valor Mensal Original
-                    </span>
-                    <span className="font-sans font-bold text-slate-700 text-lg tracking-tight">
+                {/* KPI Strip — 4 metrics */}
+                <div className="grid grid-cols-2 gap-0 border-t border-slate-100 sm:grid-cols-4">
+                  <KpiCell
+                    label="Valor Mensal Original"
+                    icon={<Banknote className="h-4 w-4 text-slate-400" />}
+                    border="right"
+                  >
+                    <span className="font-mono text-lg font-bold text-slate-700">
                       {formatCurrency(retro.valorMensalBruto)}
                     </span>
-                  </div>
+                  </KpiCell>
 
-                  <div className="bg-slate-50 border border-slate-100 rounded-xl p-4 flex flex-col justify-between">
-                    <span className="font-sans text-[10px] uppercase font-bold tracking-wider text-slate-400 block mb-1">
-                      Total Bruto Original
-                    </span>
-                    <span className="font-sans font-bold text-slate-700 text-lg tracking-tight">
+                  <KpiCell
+                    label="Total Bruto Acumulado"
+                    icon={<Receipt className="h-4 w-4 text-slate-400" />}
+                    border="right"
+                  >
+                    <span className="font-mono text-lg font-bold text-slate-700">
                       {formatCurrency(retro.valorTotalBruto)}
                     </span>
-                  </div>
+                  </KpiCell>
 
-                  <div className="bg-emerald-50/20 border border-emerald-100/50 rounded-xl p-4 flex flex-col justify-between">
-                    <span className="font-sans text-[10px] uppercase font-bold tracking-wider text-emerald-700 block mb-1">
-                      Total Corrigido (INPC)
-                    </span>
-                    <span className="font-sans font-bold text-emerald-700 text-lg tracking-tight">
+                  <KpiCell
+                    label="Total Corrigido (INPC)"
+                    icon={<PercentCircle className="h-4 w-4 text-emerald-500" />}
+                    highlight="emerald"
+                    border="right"
+                  >
+                    <span className="font-mono text-lg font-bold text-emerald-700">
                       {formatCurrency(retro.valorTotalCorrigido)}
-                      <span className="text-[10px] text-emerald-600 font-semibold ml-1.5 block sm:inline">
-                        (+{formatPercentage(ipcAcumulado * 100)})
-                      </span>
                     </span>
-                  </div>
+                    <span className="mt-0.5 block font-sans text-[10px] font-bold text-emerald-600">
+                      +{formatPercentage(ipcAcumulado * 100)} acumulado
+                    </span>
+                  </KpiCell>
 
-                  <div className="bg-amber-50/30 border border-amber-200/50 rounded-xl p-4 flex flex-col justify-between">
-                    <span className="font-sans text-[10px] uppercase font-bold tracking-wider text-amber-700 block mb-1">
-                      Valor Líquido a Receber
-                    </span>
-                    <span className="font-sans font-black text-amber-600 text-xl tracking-tight">
+                  <KpiCell
+                    label="Valor Líquido a Receber"
+                    icon={<TrendingUp className="h-4 w-4 text-amber-500" />}
+                    highlight="amber"
+                  >
+                    <span className="font-mono text-xl font-black text-amber-600">
                       {formatCurrency(retro.valorLiquidoFinal)}
                     </span>
-                  </div>
+                  </KpiCell>
                 </div>
 
-                {/* Seção Expansível da Memória de Cálculo */}
+                {/* Expanded: Calculation Memory */}
                 {isExpanded && retro.memoriaCalculo?.parcelas && (
-                  <div className="animate-fade-in space-y-4 border-t border-slate-200 bg-slate-50/20 p-6">
-                    <div className="flex items-center gap-2 text-xs font-bold text-slate-500 uppercase tracking-wider">
-                      <FileSpreadsheet className="h-4 w-4 text-slate-400" aria-hidden="true" />
-                      Memória de Cálculo Discriminada Mês a Mês
+                  <div className="animate-fade-in space-y-4 border-t border-slate-100 bg-slate-50/30 p-6">
+
+                    {/* Section label */}
+                    <div className="flex items-center gap-2">
+                      <div className="flex h-7 w-7 items-center justify-center rounded-lg border border-slate-200 bg-white">
+                        <FileSpreadsheet className="h-3.5 w-3.5 text-slate-500" aria-hidden="true" />
+                      </div>
+                      <span className="font-sans text-xs font-extrabold uppercase tracking-wider text-slate-500">
+                        Memória de Cálculo — Discriminada Mês a Mês
+                      </span>
                     </div>
 
-                    <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
-                      <table className="w-full text-left font-sans text-xs">
+                    {/* Table */}
+                    <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+                      <table className="w-full text-left font-sans text-xs" role="table">
                         <thead>
-                          <tr className="bg-slate-50 border-b border-slate-200 font-bold text-slate-500 text-[10px] uppercase tracking-wider">
-                            <th className="px-4 py-3">Competência</th>
-                            <th className="px-4 py-3">Valor Original</th>
-                            <th className="px-4 py-3">Correção Acumulada</th>
-                            <th className="px-4 py-3 text-right">Valor Corrigido</th>
+                          <tr className="border-b border-slate-200 bg-slate-50">
+                            <th scope="col" className="px-4 py-3 font-sans text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
+                              Competência
+                            </th>
+                            <th scope="col" className="px-4 py-3 font-sans text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
+                              Valor Original
+                            </th>
+                            <th scope="col" className="px-4 py-3 font-sans text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
+                              Correção (INPC)
+                            </th>
+                            <th scope="col" className="px-4 py-3 text-right font-sans text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
+                              Valor Corrigido
+                            </th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100 text-slate-700">
                           {retro.memoriaCalculo.parcelas.map((par, pIdx) => (
-                            <tr key={pIdx} className="hover:bg-slate-50/55 transition-colors">
-                              <td className="px-4 py-3 font-semibold text-slate-800">{par.competencia}</td>
-                              <td className="px-4 py-3 text-slate-500">{formatCurrency(par.valorOriginal)}</td>
-                              <td className="px-4 py-3 text-slate-400">
-                                {par.indiceINPC > 0 ? `+${formatPercentage(par.indiceINPC * 100)}` : 'Sem correção'}
+                            <tr key={pIdx} className="transition-colors hover:bg-slate-50/60">
+                              <td className="px-4 py-3 font-mono font-semibold text-slate-800">
+                                {par.competencia}
                               </td>
-                              <td className="px-4 py-3 text-right font-bold text-slate-800">
+                              <td className="px-4 py-3 font-mono text-slate-500">
+                                {formatCurrency(par.valorOriginal)}
+                              </td>
+                              <td className="px-4 py-3">
+                                {par.indiceINPC > 0 ? (
+                                  <span className="inline-flex items-center gap-1 rounded-md bg-emerald-50 px-1.5 py-0.5 font-mono text-[10px] font-bold text-emerald-700">
+                                    +{formatPercentage(par.indiceINPC * 100)}
+                                  </span>
+                                ) : (
+                                  <span className="text-slate-400 italic">Sem correção</span>
+                                )}
+                              </td>
+                              <td className="px-4 py-3 text-right font-mono font-bold text-slate-800">
                                 {formatCurrency(par.valorCorrigido)}
                               </td>
                             </tr>
@@ -224,14 +280,19 @@ export default function RetroativosPage() {
                       </table>
                     </div>
 
+                    {/* Desconto Alert */}
                     {Number(retro.valorDescontos) > 0 && (
-                      <div className="flex items-start gap-2 bg-rose-50/40 border border-rose-100 rounded-xl p-4 text-xs font-sans text-rose-700">
-                        <ShieldAlert className="w-4 h-4 shrink-0 mt-0.5" />
-                        <div>
-                          <p className="font-bold">Descontos Aplicados na Liquidação</p>
-                          <p className="mt-0.5 font-semibold text-rose-600">
-                            Valor total descontado: {formatCurrency(retro.valorDescontos)}
-                            {retro.descricaoDescontos && ` — Motivo: ${retro.descricaoDescontos}`}
+                      <div className="flex items-start gap-3 rounded-xl border border-rose-200 bg-rose-50/40 p-4">
+                        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-rose-200 bg-white text-rose-600">
+                          <ShieldAlert className="h-3.5 w-3.5" aria-hidden="true" />
+                        </div>
+                        <div className="font-sans text-xs">
+                          <p className="font-bold text-rose-800">Descontos Aplicados na Liquidação</p>
+                          <p className="mt-0.5 font-semibold text-rose-700">
+                            Total descontado: <span className="font-mono">{formatCurrency(retro.valorDescontos)}</span>
+                            {retro.descricaoDescontos && (
+                              <span className="text-rose-600"> — {retro.descricaoDescontos}</span>
+                            )}
                           </p>
                         </div>
                       </div>
@@ -244,80 +305,78 @@ export default function RetroativosPage() {
         </div>
       )}
 
-      {/* Modal Visual de Nova Liquidação de Retroativos */}
-      <Modal open={showModal} onClose={() => setShowModal(false)} title="NOVA LIQUIDAÇÃO DE RETROATIVOS" size="lg">
+      {/* Modal — Nova Liquidação */}
+      <Modal
+        open={showModal}
+        onClose={() => setShowModal(false)}
+        title="Nova Liquidação de Retroativos"
+        size="lg"
+      >
         <div className="space-y-5">
           {errorMessage && (
-            <div className="border border-red-200 bg-red-50 rounded-xl p-4 flex items-start gap-3">
-              <ShieldAlert className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
+            <div role="alert" className="flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-4">
+              <ShieldAlert className="mt-0.5 h-5 w-5 shrink-0 text-red-500" aria-hidden="true" />
               <p className="font-sans text-sm font-medium text-red-700">{errorMessage}</p>
             </div>
           )}
 
           <div className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <DatePicker
-                  label="Data Início do Direito (DIB)"
-                  value={dataInicioDireito}
-                  onChange={(d) => setDataInicioDireito(d ? d.toISOString().split('T')[0] : '')}
-                />
-              </div>
-
-              <div>
-                <DatePicker
-                  label="Data de Cálculo / Requerimento"
-                  value={dataRequerimento}
-                  onChange={(d) => setDataRequerimento(d ? d.toISOString().split('T')[0] : '')}
-                />
-              </div>
-            </div>
-
-            <div>
-              <CurrencyInput
-                value={valorMensalBruto ? parseFloat(valorMensalBruto) : ''}
-                onChange={(val) => setValorMensalBruto(String(val))}
-                label="Valor Mensal Devido (R$)"
-                placeholder="Ex: 3.500,00"
-                hint="O valor correspondente ao benefício mensal não recebido."
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <DatePicker
+                label="Data Início do Direito (DIB)"
+                value={dataInicioDireito}
+                onChange={(d) => setDataInicioDireito(d ? d.toISOString().split('T')[0] : '')}
+              />
+              <DatePicker
+                label="Data de Cálculo / Requerimento"
+                value={dataRequerimento}
+                onChange={(d) => setDataRequerimento(d ? d.toISOString().split('T')[0] : '')}
               />
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <CurrencyInput
-                  value={valorDescontos ? parseFloat(valorDescontos) : ''}
-                  onChange={(val) => setValorDescontos(String(val))}
-                  label="Descontos Opcionais (R$)"
-                  placeholder="Ex: 500,00"
-                />
-              </div>
+            <CurrencyInput
+              value={valorMensalBruto ? parseFloat(valorMensalBruto) : ''}
+              onChange={(val) => setValorMensalBruto(String(val))}
+              label="Valor Mensal Devido (R$)"
+              placeholder="Ex: 3.500,00"
+              hint="Valor correspondente ao benefício mensal não recebido pelo segurado."
+            />
 
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <CurrencyInput
+                value={valorDescontos ? parseFloat(valorDescontos) : ''}
+                onChange={(val) => setValorDescontos(String(val))}
+                label="Descontos Opcionais (R$)"
+                placeholder="Ex: 500,00"
+              />
               <div>
-                <label className="font-sans font-bold text-xs text-slate-600 block mb-1">Motivo/Descrição do Desconto</label>
+                <label htmlFor="descricao-desconto" className="neo-label">
+                  Motivo / Descrição do Desconto
+                </label>
                 <input
+                  id="descricao-desconto"
                   type="text"
                   value={descricaoDescontos}
                   onChange={(e) => setDescricaoDescontos(e.target.value)}
-                  className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm font-sans focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 outline-none"
+                  className="neo-input"
                   placeholder="Ex: Honorários já pagos"
                 />
               </div>
             </div>
           </div>
 
-          <div className="flex gap-3 pt-3 border-t border-slate-100">
+          <div className="flex gap-3 border-t border-slate-100 pt-4">
             <Button
               onClick={handleCreate}
               loading={creating}
-              className="flex-1 bg-amber-600 hover:bg-amber-700 text-white font-semibold"
+              className="flex-1 bg-amber-600 font-semibold text-white hover:bg-amber-700"
             >
               Liquidar Retroativos
             </Button>
             <Button
               variant="outline"
               onClick={() => setShowModal(false)}
-              className="flex-1 border-slate-300 text-slate-700 font-semibold"
+              className="flex-1"
             >
               Cancelar
             </Button>
@@ -325,29 +384,47 @@ export default function RetroativosPage() {
         </div>
       </Modal>
 
-      {/* Modal de Confirmação de Exclusão */}
-      <Modal open={showDeleteConfirm} onClose={() => { setShowDeleteConfirm(false); setDeleteTarget(null) }} title="CONFIRMAR EXCLUSÃO">
-        <div className="space-y-4">
-          <p className="font-sans text-sm text-slate-600">
-            Deseja realmente excluir este cálculo de retroativos? Esta ação não pode ser desfeita.
-          </p>
-          <div className="flex gap-3 pt-3 border-t border-slate-100">
-            <Button
-              onClick={confirmDelete}
-              className="flex-1 bg-red-600 hover:bg-red-700 text-white font-semibold"
-            >
-              Sim, Excluir
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => { setShowDeleteConfirm(false); setDeleteTarget(null) }}
-              className="flex-1 border-slate-300 text-slate-700 font-semibold"
-            >
-              Cancelar
-            </Button>
-          </div>
-        </div>
-      </Modal>
+      {/* ConfirmDialog — Exclusão */}
+      <ConfirmDialog
+        open={showDeleteConfirm}
+        onConfirm={confirmDelete}
+        onCancel={() => { setShowDeleteConfirm(false); setDeleteTarget(null) }}
+        title="Excluir liquidação?"
+        message="Deseja realmente excluir este cálculo de retroativos? Esta ação não pode ser desfeita."
+        confirmLabel="Sim, Excluir"
+        variant="danger"
+      />
+    </div>
+  )
+}
+
+// ─── Sub-components ──────────────────────────────────────────────────────────
+
+function KpiCell({
+  label,
+  icon,
+  highlight,
+  border,
+  children,
+}: {
+  label: string
+  icon: React.ReactNode
+  highlight?: 'amber' | 'emerald'
+  border?: 'right'
+  children: React.ReactNode
+}) {
+  return (
+    <div className={cn(
+      'flex flex-col gap-1 p-5',
+      highlight === 'amber' && 'bg-amber-50/20',
+      highlight === 'emerald' && 'bg-emerald-50/20',
+      border === 'right' && 'border-b border-slate-100 sm:border-b-0 sm:border-r'
+    )}>
+      <div className="flex items-center gap-1.5">
+        {icon}
+        <span className="font-sans text-[10px] font-extrabold uppercase tracking-wider text-slate-400">{label}</span>
+      </div>
+      <div className="mt-0.5 flex flex-col">{children}</div>
     </div>
   )
 }

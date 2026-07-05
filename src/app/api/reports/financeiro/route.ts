@@ -54,6 +54,7 @@ async function fetchFinanceiro(
         WHERE
           "caseId" IN (SELECT id FROM cases WHERE "userId" = ${userId})
           AND "createdAt" >= ${periodStart}
+          AND status != 'CANCELLED'
         GROUP BY month
         ORDER BY month ASC
       `,
@@ -72,7 +73,7 @@ async function fetchFinanceiro(
 
   // Average ticket (mean fee totalAmount)
   const feeAgg = await prisma.fee.aggregate({
-    where: { case: { userId } },
+    where: { case: { userId }, status: { not: 'CANCELLED' } },
     _avg: { totalAmount: true },
     _sum: { totalAmount: true, paidAmount: true },
   })
