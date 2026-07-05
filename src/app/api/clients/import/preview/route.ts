@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
-import { hashCPF } from '@/lib/sanitize'
+import { hashCPF } from '@/lib/sanitize-server'
 import { isValidCPF } from '@/lib/cpf'
 import { handleApiError } from '@/lib/api-error'
 import { parseCSVContent, parseExcelContent, parseBirthDate, type ParsedClientRow as ParsedRow } from '@/lib/client-import-parser'

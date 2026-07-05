@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeAll } from 'vitest'
-import { sanitizeInput, hashCPF, maskCPF, sanitizePhone, sanitizeForAI } from '@/lib/sanitize'
+import { maskCPF, sanitizePhone, sanitizeForAI } from '@/lib/sanitize'
+import { sanitizeInput, hashCPF } from '@/lib/sanitize-server'
 
 describe('sanitizeInput', () => {
   it('deve remover tags HTML', () => {

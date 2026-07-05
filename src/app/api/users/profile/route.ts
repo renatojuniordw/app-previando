@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { authWithFreshPlan as auth } from '@/lib/auth-server'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
-import { sanitizeInput } from '@/lib/sanitize'
+import { sanitizeInput } from '@/lib/sanitize-server'
 import { handleApiError } from '@/lib/api-error'
 
 const profileSchema = z.object({

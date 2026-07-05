@@ -4,7 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { verifyCaseOwnership } from '@/lib/ownership'
 import { uploadDocument } from '@/services/r2'
 import { mapNoteTypeToDb } from '@/lib/mappers'
-import { sanitizeInput } from '@/lib/sanitize'
+import { sanitizeInput } from '@/lib/sanitize-server'
 import { logAudit } from '@/lib/audit'
 
 export async function POST(req: NextRequest, { params }: { params: { id: string; tool: string } }) {

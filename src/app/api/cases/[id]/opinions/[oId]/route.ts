@@ -3,7 +3,7 @@ import { auth } from '@/auth'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { verifyCaseOwnership } from '@/lib/ownership'
-import { sanitizeInput } from '@/lib/sanitize'
+import { sanitizeInput } from '@/lib/sanitize-server'
 import { handleApiError } from '@/lib/api-error'
 import { Logger } from '@/lib/logger'
 

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { hashCPF } from '@/lib/sanitize'
+import { hashCPF } from '@/lib/sanitize-server'
 import { handleApiError } from '@/lib/api-error'
 import { rateLimit } from '@/lib/rate-limit'
 import { Logger } from '@/lib/logger'

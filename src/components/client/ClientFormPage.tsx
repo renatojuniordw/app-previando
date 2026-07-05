@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/Button'
 import { DatePicker } from '@/components/ui/DatePicker'
 import { useToast } from '@/store/toast'
 import { formatCPF, formatPhone, stripNonDigits } from '@/lib/masks'
+import { isValidCPF } from '@/lib/cpf'
 import { AlertCircle, ArrowLeft, Search, Loader2, UserPlus, UserCheck } from 'lucide-react'
 
 const ESTADOS = [
@@ -34,7 +35,7 @@ const GENERO = [
 
 const formSchema = z.object({
   name: z.string().min(2, 'Mínimo 2 caracteres').max(100),
-  cpf: z.string().optional(),
+  cpf: z.string().optional().refine((v) => !v || isValidCPF(v), 'CPF inválido.'),
   birthDate: z.string().min(1, 'Data obrigatória'),
   gender: z.enum(['M', 'F']).optional().nullable(),
   phone: z.string().optional(),
