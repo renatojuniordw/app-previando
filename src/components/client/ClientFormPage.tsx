@@ -27,10 +27,16 @@ const ESTADO_CIVIL = [
   { value: 'uniao estavel', label: 'União Estável' },
 ]
 
+const GENERO = [
+  { value: 'F', label: 'Feminino' },
+  { value: 'M', label: 'Masculino' },
+]
+
 const formSchema = z.object({
   name: z.string().min(2, 'Mínimo 2 caracteres').max(100),
   cpf: z.string().optional(),
   birthDate: z.string().min(1, 'Data obrigatória'),
+  gender: z.enum(['M', 'F']).optional().nullable(),
   phone: z.string().optional(),
   email: z.string().email('Email inválido').optional().or(z.literal('')),
   maritalStatus: z.string().optional().nullable(),
@@ -80,6 +86,7 @@ export function ClientFormPage({ clientId }: ClientFormPageProps) {
         reset({
           name: c.name ?? '',
           birthDate: c.birthDate ? c.birthDate.split('T')[0] : '',
+          gender: c.gender ?? null,
           phone: formatPhone(stripNonDigits(c.phone ?? '')),
           email: c.email ?? '',
           maritalStatus: c.maritalStatus ?? '',
@@ -129,6 +136,7 @@ export function ClientFormPage({ clientId }: ClientFormPageProps) {
       const payload: Record<string, unknown> = {
         ...data,
         birthDate: new Date(data.birthDate).toISOString(),
+        gender: data.gender || null,
         maritalStatus: data.maritalStatus || null,
         profession: data.profession || null,
         street: data.street || null,
@@ -264,8 +272,8 @@ export function ClientFormPage({ clientId }: ClientFormPageProps) {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div>
                 <label className="block text-[11px] font-extrabold text-slate-400 uppercase tracking-wider mb-2">Estado Civil</label>
-                <select 
-                  {...register('maritalStatus')} 
+                <select
+                  {...register('maritalStatus')}
                   className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-2.5 text-sm text-slate-800 focus:outline-none focus:border-slate-400 focus:ring-1 focus:ring-slate-400 transition-all"
                 >
                   <option value="">Selecione...</option>
@@ -275,6 +283,22 @@ export function ClientFormPage({ clientId }: ClientFormPageProps) {
                 </select>
               </div>
               <Input label="Profissão" {...register('profession')} placeholder="Ex: Metalúrgico, Aposentado" />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div>
+                <label className="block text-[11px] font-extrabold text-slate-400 uppercase tracking-wider mb-2">Sexo</label>
+                <select
+                  {...register('gender')}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-2.5 text-sm text-slate-800 focus:outline-none focus:border-slate-400 focus:ring-1 focus:ring-slate-400 transition-all"
+                >
+                  <option value="">Selecione...</option>
+                  {GENERO.map((g) => (
+                    <option key={g.value} value={g.value}>{g.label}</option>
+                  ))}
+                </select>
+                <p className="text-[10px] text-slate-400 mt-1">Usado nas regras de aposentadoria (idade mínima difere por sexo).</p>
+              </div>
             </div>
           </div>
 

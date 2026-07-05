@@ -5,50 +5,19 @@ import { PrismaAdapter } from '@auth/prisma-adapter'
 import bcrypt from 'bcryptjs'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
+import { rateLimit } from '@/lib/rate-limit'
+import { withEncryptedTokens } from '@/lib/oauth-token-adapter'
+import { getClientIp } from '@/lib/request-ip'
+import { authConfig } from '@/auth.config'
 
-// Session duration in seconds (24h)
-const SESSION_MAX_AGE = 86400
-
-declare module 'next-auth' {
-  interface Session {
-    user: {
-      id: string
-      name?: string | null
-      email?: string | null
-      image?: string | null
-      plan: string
-      isAdmin: boolean
-      oabNumber?: string | null
-      phone?: string | null
-      cpf?: string | null
-      maritalStatus?: string | null
-      profession?: string | null
-      street?: string | null
-      streetNumber?: string | null
-      complement?: string | null
-      neighborhood?: string | null
-      city?: string | null
-      state?: string | null
-      zipCode?: string | null
-    }
-  }
-}
-
-async function enrichSessionUser(userId: string) {
-  return prisma.user.findUnique({
-    where: { id: userId },
-    select: {
-      plan: true, isAdmin: true, oabNumber: true, phone: true,
-      cpf: true, maritalStatus: true, profession: true,
-      street: true, streetNumber: true, complement: true,
-      neighborhood: true, city: true, state: true, zipCode: true,
-    },
-  })
-}
+// Instância completa do NextAuth — só é importada por API routes (Node.js
+// runtime). O middleware usa src/auth.edge.ts, que compartilha `authConfig`
+// mas não os providers abaixo: o CredentialsProvider usa `rateLimit()`
+// (ioredis), que quebra o build do middleware no Edge Runtime.
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  adapter: PrismaAdapter(prisma),
-  session: { strategy: 'jwt', maxAge: SESSION_MAX_AGE },
+  ...authConfig,
+  adapter: withEncryptedTokens(PrismaAdapter(prisma)),
 
   providers: [
     GoogleProvider({
@@ -69,7 +38,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         email: { label: 'Email', type: 'email' },
         password: { label: 'Senha', type: 'password' },
       },
-      async authorize(credentials) {
+      async authorize(credentials, request) {
         const parsed = z
           .object({
             email: z.string().email(),
@@ -78,6 +47,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           .safeParse(credentials)
 
         if (!parsed.success) return null
+
+        const ip = getClientIp(request)
+
+        // Brute force: no máximo 5 tentativas por IP e por email a cada 15 minutos
+        const [ipLimit, emailLimit] = await Promise.all([
+          rateLimit(`login:ip:${ip}`, 5, 900),
+          rateLimit(`login:email:${parsed.data.email}`, 5, 900),
+        ])
+        if (!ipLimit.success || !emailLimit.success) return null
 
         const user = await prisma.user.findUnique({
           where: { email: parsed.data.email },
@@ -106,90 +84,4 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       },
     }),
   ],
-
-  callbacks: {
-    async jwt({ token, user, trigger }) {
-      if (user) {
-        const extUser = user as typeof user & { plan?: string; isAdmin?: boolean }
-        const credPlan = extUser.plan
-        const credIsAdmin = extUser.isAdmin
-        if (credPlan !== undefined && credIsAdmin !== undefined) {
-          token.plan = credPlan
-          token.isAdmin = credIsAdmin
-        }
-        if (user.id) {
-          const dbUser = await enrichSessionUser(user.id)
-          if (!dbUser) return null
-          Object.assign(token, {
-            oabNumber: dbUser.oabNumber,
-            phone: dbUser.phone,
-            cpf: dbUser.cpf,
-            maritalStatus: dbUser.maritalStatus,
-            profession: dbUser.profession,
-            street: dbUser.street,
-            streetNumber: dbUser.streetNumber,
-            complement: dbUser.complement,
-            neighborhood: dbUser.neighborhood,
-            city: dbUser.city,
-            state: dbUser.state,
-            zipCode: dbUser.zipCode,
-          })
-        }
-      }
-
-      if (trigger === 'update') {
-        const userId = (typeof token.sub === 'string' ? token.sub : undefined)
-                    ?? (typeof token.id === 'string' ? token.id : undefined)
-        if (userId) {
-          const dbUser = await enrichSessionUser(userId)
-          if (!dbUser) return null
-          Object.assign(token, {
-            plan: dbUser.plan,
-            isAdmin: dbUser.isAdmin,
-            oabNumber: dbUser.oabNumber,
-            phone: dbUser.phone,
-            cpf: dbUser.cpf,
-            maritalStatus: dbUser.maritalStatus,
-            profession: dbUser.profession,
-            street: dbUser.street,
-            streetNumber: dbUser.streetNumber,
-            complement: dbUser.complement,
-            neighborhood: dbUser.neighborhood,
-            city: dbUser.city,
-            state: dbUser.state,
-            zipCode: dbUser.zipCode,
-          })
-        }
-      }
-
-      return token
-    },
-    async session({ session, token }) {
-      if (token.sub) {
-        session.user.id = token.sub
-      }
-
-      session.user.plan = (token.plan as string | undefined) ?? 'FREE'
-      session.user.isAdmin = (token.isAdmin as boolean | undefined) ?? false
-      session.user.oabNumber = token.oabNumber as string | undefined
-      session.user.phone = token.phone as string | undefined
-      session.user.cpf = token.cpf as string | undefined
-      session.user.maritalStatus = token.maritalStatus as string | undefined
-      session.user.profession = token.profession as string | undefined
-      session.user.street = token.street as string | undefined
-      session.user.streetNumber = token.streetNumber as string | undefined
-      session.user.complement = token.complement as string | undefined
-      session.user.neighborhood = token.neighborhood as string | undefined
-      session.user.city = token.city as string | undefined
-      session.user.state = token.state as string | undefined
-      session.user.zipCode = token.zipCode as string | undefined
-
-      return session
-    },
-  },
-
-  pages: {
-    signIn: '/login',
-    error: '/login',
-  },
 })

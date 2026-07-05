@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { rateLimit } from '@/lib/rate-limit'
 import { logAudit } from '@/lib/audit'
 import { createUser } from '@/services/register'
+import { getClientIp } from '@/lib/request-ip'
 
 const schema = z.object({
   name: z.string().min(2).max(100),
@@ -17,10 +18,7 @@ const schema = z.object({
 })
 
 async function checkRateLimit(req: NextRequest): Promise<NextResponse | null> {
-  const ip =
-    req.headers.get('cf-connecting-ip') ??
-    req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ??
-    'unknown'
+  const ip = getClientIp(req)
 
   const limit = await rateLimit(`register:${ip}`, 3, 3600)
   if (!limit.success) {

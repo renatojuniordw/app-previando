@@ -1,5 +1,6 @@
 import { google } from 'googleapis'
 import { prisma } from '@/lib/prisma'
+import { encrypt, decryptOrPlain } from '@/lib/encryption'
 
 function createOAuthClient() {
   return new google.auth.OAuth2(
@@ -9,10 +10,19 @@ function createOAuthClient() {
 }
 
 async function getGoogleAccount(userId: string) {
-  return prisma.account.findFirst({
+  const account = await prisma.account.findFirst({
     where: { userId, provider: 'google' },
     select: { access_token: true, refresh_token: true, scope: true },
   })
+  if (!account) return null
+
+  // Tokens são gravados criptografados (ver src/lib/oauth-token-adapter.ts).
+  // decryptOrPlain tolera contas antigas ainda em texto puro até o próximo refresh.
+  return {
+    ...account,
+    access_token: account.access_token ? decryptOrPlain(account.access_token) : account.access_token,
+    refresh_token: account.refresh_token ? decryptOrPlain(account.refresh_token) : account.refresh_token,
+  }
 }
 
 export async function hasCalendarAccess(userId: string): Promise<boolean> {
@@ -36,7 +46,7 @@ export async function getCalendarClient(userId: string) {
     if (tokens.access_token) {
       await prisma.account.updateMany({
         where: { userId, provider: 'google' },
-        data: { access_token: tokens.access_token },
+        data: { access_token: encrypt(tokens.access_token) },
       })
     }
   })

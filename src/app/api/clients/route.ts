@@ -3,6 +3,7 @@ import { authWithFreshPlan as auth } from '@/lib/auth-server'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { hashCPF, sanitizeInput, sanitizePhone } from '@/lib/sanitize'
+import { isValidCPF } from '@/lib/cpf'
 import { guardClientLimit } from '@/lib/plan-guard'
 import { handleApiError } from '@/lib/api-error'
 import { rateLimit } from '@/lib/rate-limit'
@@ -10,8 +11,9 @@ import { logAudit } from '@/lib/audit'
 
 const createSchema = z.object({
   name: z.string().min(2).max(100),
-  cpf: z.string().min(11).max(14),
+  cpf: z.string().min(11).max(14).refine(isValidCPF, 'CPF inválido.'),
   birthDate: z.string().datetime(),
+  gender: z.enum(['M', 'F']).optional().nullable(),
   phone: z.string().optional(),
   email: z.string().email().optional().or(z.literal('')),
   maritalStatus: z.string().optional().nullable(),
@@ -57,6 +59,7 @@ export async function GET(req: NextRequest) {
           userId: true,
           name: true,
           birthDate: true,
+          gender: true,
           phone: true,
           email: true,
           priority: true,
@@ -101,7 +104,7 @@ export async function POST(req: NextRequest) {
 
     await guardClientLimit(session.user.id, session.user.plan)
 
-    const { name, cpf, birthDate, phone, email, maritalStatus, profession, street, streetNumber, complement, neighborhood, city, state, zipCode, priority, notes } = parsed.data
+    const { name, cpf, birthDate, gender, phone, email, maritalStatus, profession, street, streetNumber, complement, neighborhood, city, state, zipCode, priority, notes } = parsed.data
 
     const cpfHash = hashCPF(cpf)
 
@@ -120,6 +123,7 @@ export async function POST(req: NextRequest) {
         name: sanitizeInput(name),
         cpfHash,
         birthDate: new Date(birthDate),
+        gender: gender || null,
         phone: phone ? sanitizePhone(phone) : null,
         email: email || null,
         maritalStatus: maritalStatus || null,

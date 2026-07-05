@@ -22,9 +22,17 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       return NextResponse.json({ error: 'Dados inválidos.' }, { status: 400 })
     }
 
+    const { codigo, label, descricao, ativo, ordem } = parsed.data
+
     const modalidade = await prisma.modalityLabel.update({
       where: { id: params.id },
-      data: parsed.data,
+      data: {
+        ...(codigo !== undefined && { code: codigo }),
+        ...(label !== undefined && { label }),
+        ...(descricao !== undefined && { description: descricao }),
+        ...(ativo !== undefined && { active: ativo }),
+        ...(ordem !== undefined && { order: ordem }),
+      },
     })
 
     return NextResponse.json({ modalidade })

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { authWithFreshPlan as auth } from '@/lib/auth-server'
 import { prisma } from '@/lib/prisma'
 import { verifyCaseOwnership } from '@/lib/ownership'
-import { guardCalculationLimit } from '@/lib/plan-guard'
+import { guardCalculationLimit, tryConsumeMonthlyUsage } from '@/lib/plan-guard'
 import { handleApiError } from '@/lib/api-error'
 import { logAudit } from '@/lib/audit'
 import { runCalculationSchema } from './schema'
@@ -53,12 +53,8 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       dependentesPensao: parsed.data.dependentesPensao,
     })
 
-    // Incrementa contador mensal de uso do plano
-    await prisma.usageRecord.upsert({
-      where: { userId: session.user.id },
-      create: { userId: session.user.id, calculationsThisMonth: 1 },
-      update: { calculationsThisMonth: { increment: 1 } },
-    })
+    // Incrementa contador mensal de uso do plano (atômico — evita estourar o limite em corridas)
+    await tryConsumeMonthlyUsage(session.user.id, session.user.plan, 'calculationsThisMonth')
 
     // Registrar log de atividade
     await logAudit({

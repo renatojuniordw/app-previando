@@ -30,6 +30,8 @@ interface Props {
   calculations: CalculationData[]
   retroactives: RetroactiveData[]
   requireIdentity: boolean
+  /** Calculado no servidor (cookie de sessão do portal) — evita reabrir o formulário à toa. */
+  initialVerified?: boolean
 }
 
 const MODALITY_LABELS: Record<string, string> = {
@@ -53,8 +55,8 @@ const MODALITY_LABELS: Record<string, string> = {
  * PortalContent — exibe cálculos e retroativos, protegidos por
  * IdentityVerification quando requireIdentity=true.
  */
-export function PortalContent({ token, calculations, retroactives, requireIdentity }: Props) {
-  const [identityVerified, setIdentityVerified] = useState(false)
+export function PortalContent({ token, calculations, retroactives, requireIdentity, initialVerified = false }: Props) {
+  const [identityVerified, setIdentityVerified] = useState(initialVerified)
 
   const bestCalc = calculations[0]
   const needsVerification = requireIdentity && !identityVerified

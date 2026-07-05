@@ -1,9 +1,11 @@
 import { notFound } from 'next/navigation'
+import { cookies } from 'next/headers'
 import { prisma } from '@/lib/prisma'
 import { formatDate } from '@/lib/utils'
 import { Scale, FileText } from 'lucide-react'
 import { PortalSimulator } from '@/components/portal/PortalSimulator'
 import { PortalContent } from './PortalContent'
+import { PORTAL_SESSION_COOKIE, isPortalSessionValid } from '@/lib/portal-session'
 
 const BENEFIT_LABELS: Record<string, string> = {
   RETIREMENT_BY_AGE: 'Aposentadoria por Idade',
@@ -62,6 +64,12 @@ export default async function PortalPage({ params }: Props) {
     portalConfig?: { requireIdentity?: boolean }
   }
   const requireIdentity = casoData.portalConfig?.requireIdentity ?? false
+
+  // Gate real do lado do servidor: sem isso, os dados sensíveis (cálculos,
+  // retroativos) seriam embutidos no HTML/RSC payload antes de qualquer
+  // verificação no cliente, tornando a checagem apenas cosmética.
+  const verifiedCookie = cookies().get(PORTAL_SESSION_COOKIE)?.value
+  const identityVerified = !requireIdentity || isPortalSessionValid(verifiedCookie, params.token)
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -128,22 +136,33 @@ export default async function PortalPage({ params }: Props) {
           <PortalSimulator token={params.token} />
         )}
 
-        {/* Conteúdo protegido por identidade (cálculos + retroativos) */}
+        {/* Conteúdo protegido por identidade (cálculos + retroativos).
+            Quando requireIdentity=true e a sessão não está verificada, os
+            arrays abaixo ficam vazios — os dados nunca chegam ao HTML. */}
         <PortalContent
           token={params.token}
-          calculations={c.calculations.map((calc) => ({
-            ...calc,
-            rmi: Number(calc.rmi),
-            rma: Number(calc.rma),
-            benefitSalary: Number(calc.benefitSalary),
-          }))}
-          retroactives={c.retroactives.map((r) => ({
-            ...r,
-            totalGrossValue: Number(r.totalGrossValue),
-            totalCorrectedValue: Number(r.totalCorrectedValue),
-            finalNetValue: Number(r.finalNetValue),
-          }))}
+          calculations={
+            identityVerified
+              ? c.calculations.map((calc) => ({
+                  ...calc,
+                  rmi: Number(calc.rmi),
+                  rma: Number(calc.rma),
+                  benefitSalary: Number(calc.benefitSalary),
+                }))
+              : []
+          }
+          retroactives={
+            identityVerified
+              ? c.retroactives.map((r) => ({
+                  ...r,
+                  totalGrossValue: Number(r.totalGrossValue),
+                  totalCorrectedValue: Number(r.totalCorrectedValue),
+                  finalNetValue: Number(r.finalNetValue),
+                }))
+              : []
+          }
           requireIdentity={requireIdentity}
+          initialVerified={identityVerified}
         />
 
         {/* Rodapé */}

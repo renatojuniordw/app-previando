@@ -82,9 +82,10 @@ model User {
   mpSubscriptionStatus String?
   planExpiresAt        DateTime?
 
-  isAdmin      Boolean   @default(false)
-  firstLoginAt DateTime?
-  createdAt    DateTime  @default(now())
+  isAdmin           Boolean   @default(false)
+  firstLoginAt      DateTime?
+  passwordChangedAt DateTime? // usado para invalidar sessões JWT emitidas antes de um reset de senha
+  createdAt         DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
   accounts      Account[]
@@ -97,6 +98,7 @@ model User {
   auditLogs     AuditLog[]
   notifications Notification[]
   clientAccess  ClientAccess[]
+  documents     Document[]
 
   @@map("users")
 }
@@ -187,6 +189,7 @@ model Client {
   name          String
   cpfHash       String // HMAC-SHA256 — nunca plain text
   birthDate     DateTime
+  gender        String? // 'M' | 'F' — usado nas regras de aposentadoria (idade mínima difere por sexo)
   phone         String? // Formato: 5511999999999 (DDI sem +)
   email         String?
   maritalStatus String?
@@ -253,6 +256,7 @@ model Case {
   fees         Fee[]
   revisions    Revision[]
   gpsGuides    GpsGuide[]
+  documents    Document[]
 
 
   @@index([userId])
@@ -545,6 +549,25 @@ enum PaymentStatus {
 }
 
 // ─────────────────────────────────────────
+// EVENTOS DE WEBHOOK (auditoria + reprocessamento)
+// ─────────────────────────────────────────
+
+model WebhookEvent {
+  id           String    @id @default(cuid())
+  provider     String // 'mercadopago'
+  eventType    String
+  externalId   String? // data.id do provedor (ex: subscription id, payment id)
+  payload      Json
+  processedAt  DateTime?
+  error        String?
+  createdAt    DateTime  @default(now())
+
+  @@index([provider, externalId])
+  @@index([processedAt])
+  @@map("webhook_events")
+}
+
+// ─────────────────────────────────────────
 // SALÁRIO MÍNIMO HISTÓRICO
 // ─────────────────────────────────────────
 
@@ -625,9 +648,11 @@ model BpcAnalysis {
   cid              String?
   idade            Int
   faixaEtaria      BpcFaixaEtaria
-  rendaFamiliar    Float
+  // Decimal (não Float) — é o critério de elegibilidade do BPC/LOAS; erro de
+  // arredondamento de ponto flutuante aqui pode mudar o resultado da análise.
+  rendaFamiliar    Decimal        @db.Decimal(12, 2)
   membrosGrupo     Int
-  rendaPerCapita   Float
+  rendaPerCapita   Decimal        @db.Decimal(12, 2)
   barreiras        String?        @db.Text
   resumoLaudos     String?        @db.Text
 
@@ -733,13 +758,38 @@ enum FeeStatus {
 }
 
 // ─────────────────────────────────────────
+// DOCUMENTOS (armazenados no R2 fora do fluxo de CNIS)
+// ─────────────────────────────────────────
+
+model Document {
+  id          String   @id @default(cuid())
+  caseId      String
+  userId      String
+  r2Key       String   @unique
+  fileName    String
+  contentType String
+  createdAt   DateTime @default(now())
+
+  case Case @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([caseId])
+  @@index([userId])
+  @@map("documents")
+}
+
+// ─────────────────────────────────────────
 // AUDITORIA
 // ─────────────────────────────────────────
 
 model AuditLog {
   id        String   @id @default(cuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // Opcional + SetNull (não Cascade): a trilha de auditoria é evidência de
+  // compliance/segurança e deve sobreviver à exclusão da conta do usuário —
+  // apagar o registro de quem fez o quê junto com a conta anula a própria
+  // finalidade da auditoria.
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
   action    String
   resource  String
   ipAddress String?
@@ -747,9 +797,27 @@ model AuditLog {
   metadata  Json?
   createdAt DateTime @default(now())
 
+  // Hash encadeado (previousHash → hash, tipo blockchain simplificado):
+  // cada registro carrega o SHA-256 do anterior. Se alguém alterar ou apagar
+  // uma linha diretamente no banco (fora da aplicação), a cadeia quebra a
+  // partir dali e fica detectável — ver verifyAuditChainIntegrity() em
+  // src/lib/audit.ts. "Prova de integridade do prontuário" para o advogado.
+  previousHash String?
+  hash         String?
+
   @@index([userId])
   @@index([createdAt])
   @@map("audit_logs")
+}
+
+// Guarda o hash da última entrada da cadeia de auditoria — uma única linha
+// (id fixo) travada via SELECT ... FOR UPDATE a cada escrita, serializando
+// os workers concorrentes que gravam audit logs (ver audit-worker.ts).
+model AuditChainState {
+  id       Int    @id @default(1)
+  lastHash String @default("genesis")
+
+  @@map("audit_chain_state")
 }
 
 // ─────────────────────────────────────────
@@ -822,7 +890,9 @@ model ClientAccess {
   id        String   @id @default(cuid())
   caseId    String   @unique
   userId    String
-  token     String   @unique @default(cuid())
+  // Gerado em código com crypto.randomBytes(32) — nunca usar valor previsível (cuid, uuid v1, sequencial).
+  // É um bearer token com acesso a dados financeiros e de saúde do cliente.
+  token     String   @unique
   expiresAt DateTime
   createdAt DateTime @default(now())
 

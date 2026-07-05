@@ -1,3 +1,4 @@
+import { randomUUID } from 'crypto'
 import { redis } from './redis'
 
 interface RateLimitResult {
@@ -40,9 +41,13 @@ export async function rateLimit(
   const windowMs = windowSeconds * 1000
 
   try {
+    // Membro precisa ser único mesmo com duas requisições no mesmo milissegundo,
+    // senão o sorted set as funde em uma única entrada e subconta o uso real.
+    const member = `${now}:${randomUUID()}`
+
     const pipeline = redis.pipeline()
     pipeline.zremrangebyscore(redisKey, 0, now - windowMs)
-    pipeline.zadd(redisKey, now, `${now}`)
+    pipeline.zadd(redisKey, now, member)
     pipeline.zcard(redisKey)
     pipeline.expire(redisKey, windowSeconds)
 

@@ -6,7 +6,9 @@ import { getRegrasVigentes } from '@/lib/regras-aposentadoria'
 import { getSalarioVigente } from '@/lib/salario-minimo'
 import { handleApiError } from '@/lib/api-error'
 import { rateLimit } from '@/lib/rate-limit'
+import { PORTAL_SESSION_COOKIE, isPortalSessionValid } from '@/lib/portal-session'
 import type { CnisExtractedData } from '@/services/cnis/types'
+import type { PortalConfig } from '@/lib/portal-config'
 
 const simulateSchema = z.object({
   dibProjetada: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Formato inválido (YYYY-MM-DD)'),
@@ -24,7 +26,7 @@ export async function POST(req: NextRequest, { params }: { params: { token: stri
       include: {
         case: {
           include: {
-            client: { select: { birthDate: true } },
+            client: { select: { birthDate: true, gender: true } },
             cnisDocument: { select: { extractedData: true, processingStatus: true } },
             user: { select: { plan: true } },
           },
@@ -38,6 +40,15 @@ export async function POST(req: NextRequest, { params }: { params: { token: stri
 
     if (access.expiresAt < new Date()) {
       return NextResponse.json({ error: 'Este link expirou.' }, { status: 410 })
+    }
+
+    // Se o advogado exigiu verificação de identidade, o simulador também fica atrás dela
+    const portalConfig = (access.case as unknown as { portalConfig?: PortalConfig }).portalConfig
+    if (portalConfig?.requireIdentity) {
+      const verifiedCookie = req.cookies.get(PORTAL_SESSION_COOKIE)?.value
+      if (!isPortalSessionValid(verifiedCookie, params.token)) {
+        return NextResponse.json({ error: 'Verificação de identidade necessária.' }, { status: 401 })
+      }
     }
 
     // Rate limit por token: 5 simulações por hora
@@ -62,6 +73,16 @@ export async function POST(req: NextRequest, { params }: { params: { token: stri
     const { dibProjetada, valorContribuicao } = parsed.data
 
     const birthDate = c.client.birthDate.toISOString().split('T')[0]
+    // Idade mínima de aposentadoria por idade difere por sexo (65 M / 62 F) — sem o
+    // dado do cliente, cair silenciosamente em 'F' gerava RMI/elegibilidade errados
+    // para clientes homens. Aqui exigimos o cadastro correto do sexo do cliente.
+    const gender = c.client.gender as 'M' | 'F' | null
+    if (gender !== 'M' && gender !== 'F') {
+      return NextResponse.json(
+        { error: 'Cadastro do cliente incompleto: informe o sexo para simular.' },
+        { status: 422 }
+      )
+    }
     const salario = await getSalarioVigente(dibProjetada)
     const regras = await getRegrasVigentes(dibProjetada)
     const extractedData = c.cnisDocument!.extractedData as unknown as CnisExtractedData
@@ -70,7 +91,7 @@ export async function POST(req: NextRequest, { params }: { params: { token: stri
     const hojeStr = new Date().toISOString().split('T')[0]
     const calcHoje = calculatePrevidenciario({
       birthDate,
-      gender: 'F',
+      gender,
       dib: hojeStr,
       modalidade: 'APOSENTADORIA_IDADE',
       extractedData,
@@ -108,7 +129,7 @@ export async function POST(req: NextRequest, { params }: { params: { token: stri
 
     const calcProjetado = calculatePrevidenciario({
       birthDate,
-      gender: 'F',
+      gender,
       dib: dibProjetada,
       modalidade: 'APOSENTADORIA_IDADE',
       extractedData: clonedData,

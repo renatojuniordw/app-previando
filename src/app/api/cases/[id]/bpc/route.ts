@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
 import { verifyCaseOwnership } from '@/lib/ownership'
-import { guardFeature, guardBpcAnalysisLimit } from '@/lib/plan-guard'
+import { guardFeature, guardBpcAnalysisLimit, tryConsumeMonthlyUsage } from '@/lib/plan-guard'
 import { handleApiError } from '@/lib/api-error'
 import { NoteType } from '@prisma/client'
 import { z } from 'zod'
@@ -65,11 +65,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       create: { ...rest, barreiras: barreirasRelatadas, caseId: params.id },
     })
 
-    await prisma.usageRecord.upsert({
-      where: { userId: session.user.id },
-      update: { bpcAnalysesThisMonth: { increment: 1 } },
-      create: { userId: session.user.id, bpcAnalysesThisMonth: 1 },
-    })
+    await tryConsumeMonthlyUsage(session.user.id, session.user.plan, 'bpcAnalysesThisMonth')
 
     return NextResponse.json(analysis)
   } catch (err: unknown) {

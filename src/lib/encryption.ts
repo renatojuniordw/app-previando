@@ -26,3 +26,21 @@ export function decrypt(ciphertext: string): string {
   const decrypted = Buffer.concat([decipher.update(Buffer.from(encHex, 'hex')), decipher.final()])
   return decrypted.toString('utf8')
 }
+
+const CIPHERTEXT_FORMAT = /^[0-9a-f]{32}:[0-9a-f]{32}:[0-9a-f]+$/i
+
+/**
+ * Descriptografa se o valor tiver o formato `iv:tag:enc` produzido por `encrypt()`;
+ * caso contrário devolve o valor como veio. Usado em migrações de campos que
+ * passaram a ser criptografados em produção — dados antigos ficam em texto puro
+ * até serem regravados (ex: próximo refresh de token OAuth), e não podem quebrar
+ * a leitura enquanto isso não acontece.
+ */
+export function decryptOrPlain(value: string): string {
+  if (!CIPHERTEXT_FORMAT.test(value)) return value
+  try {
+    return decrypt(value)
+  } catch {
+    return value
+  }
+}

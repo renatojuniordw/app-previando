@@ -3,7 +3,7 @@ import { z } from 'zod'
 import { authWithFreshPlan as auth } from '@/lib/auth-server'
 import { prisma } from '@/lib/prisma'
 import { verifyCaseOwnership } from '@/lib/ownership'
-import { guardRevisionLimit, incrementRevisionUsage } from '@/lib/plan-guard'
+import { guardRevisionLimit, tryConsumeMonthlyUsage } from '@/lib/plan-guard'
 import { rateLimit } from '@/lib/rate-limit'
 import { handleApiError } from '@/lib/api-error'
 import { runAndSaveRevision } from '@/services/revision-service'
@@ -74,7 +74,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       dibConcedido,
     })
 
-    await incrementRevisionUsage(session.user.id)
+    await tryConsumeMonthlyUsage(session.user.id, session.user.plan, 'revisionsThisMonth')
 
     return NextResponse.json(result, { status: 201 })
   } catch (err) {

@@ -78,6 +78,12 @@ export async function POST(req: NextRequest, { params }: { params: { id: string;
     // 1. Fazer upload para o R2 do Previando
     const r2Key = await uploadDocument(buffer, session.user.id, caseId, outputFilename, contentType)
 
+    // Registro de ownership no banco — o download nunca mais confia em
+    // dono/caso extraídos da própria string da chave R2 (ver M5 do audit)
+    await prisma.document.create({
+      data: { caseId, userId: session.user.id, r2Key, fileName: outputFilename, contentType },
+    })
+
     // 2. Calcular informações de tamanho para o prontuário
     const formatBytes = (bytes: number) => {
       if (bytes === 0) return '0 Bytes'

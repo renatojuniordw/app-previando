@@ -5,7 +5,7 @@ import { prisma } from '@/lib/prisma'
 import { redis } from '@/lib/redis'
 import { invalidatePlanLimitCache } from '@/lib/plan-guard'
 import { Logger } from '@/lib/logger'
-import type { PaymentStatus } from '@prisma/client'
+import type { PaymentStatus, Prisma } from '@prisma/client'
 
 const webhookSchema = z.object({
   type: z.string().min(1),
@@ -77,6 +77,60 @@ function mapMpPaymentStatus(mpStatus: string): PaymentStatus {
   return map[mpStatus] ?? 'PENDING'
 }
 
+/**
+ * Resolve o usuário Previando a partir do payload do Mercado Pago.
+ * Prioriza `external_reference` (userId, setado na criação da assinatura em
+ * /api/billing/subscribe) — o email do pagador no checkout do MP é um campo
+ * que o próprio pagador controla e pode divergir do email cadastrado.
+ * Mantém o fallback por email para assinaturas criadas antes desta mudança.
+ */
+async function resolveUser(
+  externalReference: string | undefined,
+  payerEmail: string | undefined
+): Promise<{ id: string; plan: string } | null> {
+  if (externalReference) {
+    const user = await prisma.user.findUnique({
+      where: { id: externalReference },
+      select: { id: true, plan: true },
+    })
+    if (user) return user
+  }
+  if (payerEmail) {
+    const user = await prisma.user.findUnique({
+      where: { email: payerEmail },
+      select: { id: true, plan: true },
+    })
+    if (user) return user
+  }
+  return null
+}
+
+async function recordWebhookEvent(
+  eventType: string,
+  externalId: string | undefined,
+  payload: unknown
+): Promise<string> {
+  const event = await prisma.webhookEvent.create({
+    data: {
+      provider: 'mercadopago',
+      eventType,
+      externalId: externalId ?? null,
+      payload: payload as Prisma.InputJsonValue,
+    },
+    select: { id: true },
+  })
+  return event.id
+}
+
+async function markWebhookEvent(eventId: string, error?: string): Promise<void> {
+  await prisma.webhookEvent.update({
+    where: { id: eventId },
+    data: { processedAt: new Date(), error: error ?? null },
+  }).catch(() => {
+    // Não crítico — o evento já foi persistido, só o marcador de status falhou
+  })
+}
+
 export async function POST(req: NextRequest) {
   const rawBody = await req.text()
 
@@ -102,6 +156,13 @@ export async function POST(req: NextRequest) {
   const type = parsedPayload.data.type
   const data = parsedPayload.data.data ?? { id: undefined }
 
+  // Persiste o evento bruto antes de processar — permite reprocessamento manual
+  // se algo falhar depois deste ponto (ex: API do MP fora do ar).
+  const eventId = await recordWebhookEvent(type, data.id, payload).catch((err) => {
+    logger.error('Falha ao persistir webhook_event (seguindo sem auditoria)', err)
+    return null
+  })
+
   try {
     if (type === 'subscription_preapproval') {
       const subId = String(data.id)
@@ -109,6 +170,7 @@ export async function POST(req: NextRequest) {
       const locked = await acquireLock(`sub:${subId}`)
       if (!locked) {
         logger.warn(`Evento duplicado ignorado para subscription ${subId}`)
+        if (eventId) await markWebhookEvent(eventId, 'duplicado (lock ativo)')
         return NextResponse.json({ received: true })
       }
 
@@ -117,18 +179,21 @@ export async function POST(req: NextRequest) {
           headers: { Authorization: `Bearer ${process.env.MERCADOPAGO_ACCESS_TOKEN}` },
         }).then((r) => r.json())
 
-        if (!mpSub?.payer_email) return NextResponse.json({ received: true })
+        if (!mpSub?.payer_email && !mpSub?.external_reference) {
+          if (eventId) await markWebhookEvent(eventId, 'sem payer_email/external_reference')
+          return NextResponse.json({ received: true })
+        }
 
         const planStatus = mapMpSubscriptionStatus(mpSub.status)
 
+        const user = await resolveUser(mpSub.external_reference, mpSub.payer_email)
+        if (!user) {
+          logger.warn(`Usuário não encontrado para subscription ${subId}`)
+          if (eventId) await markWebhookEvent(eventId, 'usuário não encontrado')
+          return NextResponse.json({ received: true })
+        }
+
         await prisma.$transaction(async (tx) => {
-          const user = await tx.user.findUnique({
-            where: { email: mpSub.payer_email },
-            select: { id: true, plan: true },
-          })
-
-          if (!user) return
-
           let plan = user.plan
           if (planStatus === 'ACTIVE' && mpSub.preapproval_plan_id) {
             if (mpSub.preapproval_plan_id === process.env.MP_PLAN_ID_SOLO) plan = 'SOLO'
@@ -149,6 +214,8 @@ export async function POST(req: NextRequest) {
 
           await invalidatePlanLimitCache(plan)
         })
+
+        if (eventId) await markWebhookEvent(eventId)
       } finally {
         await releaseLock(`sub:${subId}`)
       }
@@ -161,14 +228,26 @@ export async function POST(req: NextRequest) {
         headers: { Authorization: `Bearer ${process.env.MERCADOPAGO_ACCESS_TOKEN}` },
       }).then((r) => r.json())
 
-      if (!mpPayment?.payer?.email) return NextResponse.json({ received: true })
+      if (!mpPayment?.payer?.email && !mpPayment?.external_reference) {
+        if (eventId) await markWebhookEvent(eventId, 'sem payer/external_reference')
+        return NextResponse.json({ received: true })
+      }
 
-      const user = await prisma.user.findUnique({
-        where: { email: mpPayment.payer.email },
-        select: { id: true, plan: true },
-      })
+      // Pagamentos avulsos não carregam external_reference direto sempre;
+      // se a assinatura já foi vinculada antes, localiza o usuário por ela.
+      let user = await resolveUser(mpPayment.external_reference, mpPayment.payer?.email)
+      if (!user && mpPayment.preapproval_id) {
+        user = await prisma.user.findFirst({
+          where: { mpSubscriptionId: mpPayment.preapproval_id },
+          select: { id: true, plan: true },
+        })
+      }
 
-      if (!user) return NextResponse.json({ received: true })
+      if (!user) {
+        logger.warn(`Usuário não encontrado para payment ${paymentId}`)
+        if (eventId) await markWebhookEvent(eventId, 'usuário não encontrado')
+        return NextResponse.json({ received: true })
+      }
 
       const paymentStatus = mapMpPaymentStatus(mpPayment.status ?? '')
       await prisma.payment.upsert({
@@ -181,7 +260,7 @@ export async function POST(req: NextRequest) {
           userId: user.id,
           mpPaymentId: paymentId,
           mpSubscriptionId: mpPayment.preapproval_id ?? null,
-          plan: user.plan,
+          plan: user.plan as never,
           amount: mpPayment.transaction_amount ?? 0,
           currency: mpPayment.currency_id ?? 'BRL',
           status: paymentStatus,
@@ -189,9 +268,16 @@ export async function POST(req: NextRequest) {
           periodStart: mpPayment.date_created ? new Date(mpPayment.date_created) : null,
         },
       })
+
+      if (eventId) await markWebhookEvent(eventId)
     }
   } catch (err) {
     logger.error('Error processing event', err)
+    if (eventId) await markWebhookEvent(eventId, err instanceof Error ? err.message : String(err))
+    // Falha real de processamento (rede, DB, etc.) — devolve 500 para o Mercado
+    // Pago reenviar o evento automaticamente. Antes disso retornava 200 sempre,
+    // e um erro transitório durante um deploy perdia o evento para sempre.
+    return NextResponse.json({ error: 'Falha ao processar evento.' }, { status: 500 })
   }
 
   return NextResponse.json({ received: true })

@@ -32,6 +32,10 @@ export async function POST(req: NextRequest) {
       body: {
         preapproval_plan_id: MP_PLAN_IDS[plan],
         payer_email: user.email,
+        // Vincula a assinatura ao usuário de forma inequívoca — o webhook usa isso
+        // como fonte primária de identificação (o email do pagador no checkout do MP
+        // pode divergir do email cadastrado, e é um campo que o pagador controla).
+        external_reference: session.user.id,
         back_url: 'https://app.previando.com.br/settings/billing?status=success',
         auto_recurring: {
           frequency: 1,

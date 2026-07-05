@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { authWithFreshPlan as auth } from '@/lib/auth-server'
 import { prisma } from '@/lib/prisma'
 import { verifyCaseOwnership } from '@/lib/ownership'
-import { guardOpinionLimit } from '@/lib/plan-guard'
+import { guardOpinionLimit, tryConsumeMonthlyUsage, getPlanLimit } from '@/lib/plan-guard'
 import { generateOpinion } from '@/services/opinion-generator'
 import { rateLimit } from '@/lib/rate-limit'
 import { handleApiError } from '@/lib/api-error'
@@ -78,6 +78,9 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
     logger.info(`Gerando parecer para caseId=${params.id} client=${caso.client?.name} benefitType=${caso.benefitType}`)
 
+    // Plano decide se o parecer sai com a marca "Previando" (white-label no PRO)
+    const planLimit = await getPlanLimit(session.user.plan)
+
     const result = await generateOpinion({
       clientName: caso.client?.name ?? 'Cliente',
       benefitType: caso.benefitType,
@@ -95,6 +98,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
         content: n.content,
         createdAt: n.createdAt,
       })),
+      includeWatermark: planLimit.watermarkEnabled,
     })
 
     logger.info(`Parecer gerado tokens=${result.tokensUsed} cost=${result.costUsd} model=${result.model}`)
@@ -111,11 +115,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       },
     })
 
-    await prisma.usageRecord.upsert({
-      where: { userId: session.user.id },
-      create: { userId: session.user.id, opinionsThisMonth: 1 },
-      update: { opinionsThisMonth: { increment: 1 } },
-    })
+    await tryConsumeMonthlyUsage(session.user.id, session.user.plan, 'opinionsThisMonth')
 
     await logAudit({
       userId: session.user.id,

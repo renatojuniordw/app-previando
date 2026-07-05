@@ -10,14 +10,15 @@ interface Props {
   onVerified: () => void
 }
 
-const VERIFIED_KEY = 'previando_portal_verified'
-
 /**
  * IdentityVerification — pede CPF + data de nascimento antes de liberar
  * dados sensíveis no Portal do Cliente.
  *
- * O estado de verificação fica em sessionStorage — dura apenas a aba.
- * Fecha a aba, precisa verificar de novo.
+ * Quem decide se os dados são liberados é o servidor: ao verificar com
+ * sucesso, a API emite um cookie de sessão assinado (httpOnly) e nós
+ * recarregamos a página para que o Server Component busque e renderize
+ * os dados reais. Isso evita que os dados sensíveis cheguem ao navegador
+ * antes da verificação — um gate só no cliente seria cosmético.
  */
 export function IdentityVerification({ token, onVerified }: Props) {
   const [cpf, setCpf] = useState('')
@@ -25,11 +26,6 @@ export function IdentityVerification({ token, onVerified }: Props) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [showCpf, setShowCpf] = useState(false)
-
-  // Se já verificou nesta sessão, nem renderiza
-  if (typeof window !== 'undefined' && sessionStorage.getItem(VERIFIED_KEY) === token) {
-    return null
-  }
 
   const handleVerify = async () => {
     const cpfDigits = cpf.replace(/\D/g, '')
@@ -55,14 +51,16 @@ export function IdentityVerification({ token, onVerified }: Props) {
       const data = await res.json()
 
       if (data.verified) {
-        sessionStorage.setItem(VERIFIED_KEY, token)
         onVerified()
+        // Recarrega para o servidor renderizar os dados agora que o
+        // cookie de sessão do portal foi emitido.
+        window.location.reload()
       } else {
         setError(data.error ?? 'Dados não conferem.')
+        setLoading(false)
       }
     } catch {
       setError('Erro de conexão. Tente novamente.')
-    } finally {
       setLoading(false)
     }
   }

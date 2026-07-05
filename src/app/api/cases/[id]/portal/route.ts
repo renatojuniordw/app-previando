@@ -1,10 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { randomBytes } from 'crypto'
 import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
 import { verifyCaseOwnership } from '@/lib/ownership'
 import { handleApiError } from '@/lib/api-error'
 
 const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000
+
+// 256 bits de entropia — nunca usar cuid/uuid sequencial para token de acesso público
+function generatePortalToken(): string {
+  return randomBytes(32).toString('base64url')
+}
 
 /**
  * GET /api/cases/[id]/portal
@@ -45,8 +51,8 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
     const access = await prisma.clientAccess.upsert({
       where: { caseId: params.id },
-      create: { caseId: params.id, userId: session.user.id, expiresAt },
-      update: { expiresAt, token: undefined },
+      create: { caseId: params.id, userId: session.user.id, expiresAt, token: generatePortalToken() },
+      update: { expiresAt },
     })
 
     const link = `${process.env.NEXTAUTH_URL ?? ''}/portal/${access.token}`

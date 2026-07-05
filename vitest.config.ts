@@ -6,7 +6,9 @@ export default defineConfig({
     globals: true,
     environment: 'node',
     include: ['**/*.test.ts', '**/*.test.tsx'],
-    exclude: ['node_modules', '.next', 'tests/e2e'],
+    // .opencode/.agents/.claude têm suas próprias node_modules (com testes de
+    // terceiros, ex: zod) que o include acima capturava por engano.
+    exclude: ['**/node_modules/**', '.next', 'tests/e2e', '.opencode/**', '.agents/**', '.claude/**'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'lcov', 'html'],

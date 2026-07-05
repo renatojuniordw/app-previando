@@ -189,7 +189,7 @@ export function CnisIndicatorsDrawer({ open, onClose }: Props) {
                 {search && (
                   <>
                     {' '}
-                    · Busca: <span className="font-mono font-extrabold">"{search}"</span>
+                    · Busca: <span className="font-mono font-extrabold">&quot;{search}&quot;</span>
                   </>
                 )}
               </span>

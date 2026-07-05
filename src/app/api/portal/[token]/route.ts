@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { handleApiError } from '@/lib/api-error'
 import type { PortalConfig } from '@/lib/portal-config'
+import { PORTAL_SESSION_COOKIE, isPortalSessionValid } from '@/lib/portal-session'
 
 /**
  * GET /api/portal/[token]
@@ -63,12 +64,20 @@ export async function GET(req: NextRequest, { params }: { params: { token: strin
       showCalculations: true,
       showRetroactives: false,
       showInterpretation: false,
+      requireIdentity: false,
     }
+
+    // Se o advogado exigiu verificação de identidade, só libera os campos
+    // sensíveis (cálculos/retroativos) com o cookie de sessão do portal válido.
+    const verifiedCookie = req.cookies.get(PORTAL_SESSION_COOKIE)?.value
+    const identityVerified =
+      !portalConfig.requireIdentity || isPortalSessionValid(verifiedCookie, params.token)
 
     // Monta resposta respeitando a config — spreads condicionais (sem mutation)
     return NextResponse.json({
       hasWatermark,
       portalConfig,
+      requiresVerification: portalConfig.requireIdentity && !identityVerified,
       lawyer: {
         name: c.user.name,
         oabNumber: c.user.oabNumber,
@@ -83,8 +92,8 @@ export async function GET(req: NextRequest, { params }: { params: { token: strin
         benefitType: c.benefitType,
         createdAt: c.createdAt,
       },
-      ...(portalConfig.showCalculations && { calculations: c.calculations }),
-      ...(portalConfig.showRetroactives && { retroactives: c.retroactives }),
+      ...(portalConfig.showCalculations && identityVerified && { calculations: c.calculations }),
+      ...(portalConfig.showRetroactives && identityVerified && { retroactives: c.retroactives }),
       expiresAt: access.expiresAt,
     })
   } catch (err) {

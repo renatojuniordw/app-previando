@@ -4,8 +4,14 @@ import { hashCPF } from '@/lib/sanitize'
 import { handleApiError } from '@/lib/api-error'
 import { rateLimit } from '@/lib/rate-limit'
 import { Logger } from '@/lib/logger'
+import { PORTAL_SESSION_COOKIE, createPortalSessionValue } from '@/lib/portal-session'
 
 const logger = new Logger('PortalVerify')
+
+// Últimos 6 caracteres do token — suficiente para correlacionar logs sem expor o segredo
+function tokenFingerprint(token: string): string {
+  return token.slice(-6)
+}
 
 /**
  * POST /api/portal/[token]/verify
@@ -105,19 +111,32 @@ export async function POST(req: NextRequest, { params }: { params: { token: stri
     const dataValida = birthStr === clientBirthStr
 
     if (!cpfValido || !dataValida) {
-      logger.info(`Falha na verificação: token=${params.token} cpfOk=${cpfValido} dataOk=${dataValida}`)
+      logger.info(`Falha na verificação: token=...${tokenFingerprint(params.token)} cpfOk=${cpfValido} dataOk=${dataValida}`)
       return NextResponse.json(
         { verified: false, error: 'Dados não conferem. Verifique o CPF e a data de nascimento.' },
         { status: 401 }
       )
     }
 
-    logger.info(`Identidade verificada com sucesso: token=${params.token}`)
+    logger.info(`Identidade verificada com sucesso: token=...${tokenFingerprint(params.token)}`)
 
-    return NextResponse.json({
+    const res = NextResponse.json({
       verified: true,
       message: 'Identidade confirmada com sucesso.',
     })
+
+    // Cookie assinado que efetivamente libera os dados sensíveis no servidor
+    // (ver src/lib/portal-session.ts e src/app/portal/[token]/page.tsx)
+    const session = createPortalSessionValue(params.token)
+    res.cookies.set(PORTAL_SESSION_COOKIE, session.value, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: session.maxAge,
+    })
+
+    return res
   } catch (err) {
     return handleApiError(err)
   }

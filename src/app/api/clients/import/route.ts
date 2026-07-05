@@ -2,169 +2,12 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
 import { hashCPF, sanitizeInput, sanitizePhone } from '@/lib/sanitize'
+import { isValidCPF } from '@/lib/cpf'
 import { guardClientLimit } from '@/lib/plan-guard'
 import { handleApiError } from '@/lib/api-error'
 import { rateLimit } from '@/lib/rate-limit'
 import { logAudit } from '@/lib/audit'
-import * as XLSX from 'xlsx'
-
-// Formatos suportados:
-// CSV: nome,cpf,data_nascimento,telefone,email,prioridade,observacoes
-//   - prioridade: NORMAL|ATTENTION|CRITICAL
-//   - data_nascimento: YYYY-MM-DD ou DD/MM/YYYY
-// Excel (.xlsx): mesmas colunas (primeira linha = cabeçalho)
-// Colunas esperadas: Nome, CPF, Data Nascimento, Telefone, Email, Prioridade, Observações
-
-/** Mapa de nomes de colunas possíveis (case-insensitive) para o campo normalizado */
-const COLUMN_ALIASES: Record<string, string> = {
-  nome: 'nome',
-  name: 'nome',
-  'nome completo': 'nome',
-  cpf: 'cpf',
-  documento: 'cpf',
-  'data nascimento': 'dataNascimento',
-  'data de nascimento': 'dataNascimento',
-  nascimento: 'dataNascimento',
-  birthdate: 'dataNascimento',
-  'data_nascimento': 'dataNascimento',
-   telefone: 'telefone',
-   phone: 'telefone',
-   celular: 'telefone',
-  email: 'email',
-  e_mail: 'email',
-  prioridade: 'prioridade',
-  priority: 'prioridade',
-  observacoes: 'observacoes',
-  observações: 'observacoes',
-  notes: 'observacoes',
-  observacao: 'observacoes',
-  anotacoes: 'observacoes',
-}
-
-interface ParsedRow {
-  nome: string
-  cpf: string
-  dataNascimento: string
-  telefone: string
-  email: string
-  prioridade: string
-  observacoes: string
-}
-
-function normalizeColumnName(col: string): string | null {
-  const key = col.trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-  return COLUMN_ALIASES[key] ?? null
-}
-
-function parseCsvLine(line: string): string[] {
-  const result: string[] = []
-  let current = ''
-  let inQuotes = false
-
-  for (let i = 0; i < line.length; i++) {
-    const ch = line[i]
-    if (ch === '"') {
-      inQuotes = !inQuotes
-    } else if (ch === ',' && !inQuotes) {
-      result.push(current.trim())
-      current = ''
-    } else {
-      current += ch
-    }
-  }
-  result.push(current.trim())
-  return result
-}
-
-function parseBirthDate(raw: string): Date | null {
-  const cleaned = raw.trim()
-  if (/^\d{4}-\d{2}-\d{2}$/.test(cleaned)) {
-    const d = new Date(cleaned + 'T00:00:00Z')
-    return isNaN(d.getTime()) ? null : d
-  }
-  if (/^\d{2}\/\d{2}\/\d{4}$/.test(cleaned)) {
-    const [day, month, year] = cleaned.split('/')
-    const d = new Date(`${year}-${month}-${day}T00:00:00Z`)
-    return isNaN(d.getTime()) ? null : d
-  }
-  return null
-}
-
-function parseExcelDate(raw: unknown): string {
-  if (typeof raw === 'number') {
-    // Excel serial date number
-    const d = XLSX.SSF.parse_date_code(raw)
-    if (d) {
-      return `${String(d.y).padStart(4, '0')}-${String(d.m).padStart(2, '0')}-${String(d.d).padStart(2, '0')}`
-    }
-  }
-  if (typeof raw === 'string') {
-    const cleaned = raw.trim()
-    if (/^\d{4}-\d{2}-\d{2}$/.test(cleaned)) return cleaned
-    if (/^\d{2}\/\d{2}\/\d{4}$/.test(cleaned)) {
-      const [day, month, year] = cleaned.split('/')
-      return `${year}-${month}-${day}`
-    }
-  }
-  if (raw instanceof Date) {
-    return `${raw.getFullYear()}-${String(raw.getMonth() + 1).padStart(2, '0')}-${String(raw.getDate()).padStart(2, '0')}`
-  }
-  return String(raw ?? '')
-}
-
-function normalizeRow(row: Record<string, unknown>): ParsedRow {
-  const mapped: Record<string, string> = {}
-  for (const [rawCol, value] of Object.entries(row)) {
-    const col = normalizeColumnName(rawCol)
-    if (col) {
-      mapped[col] = String(value ?? '').trim()
-    }
-  }
-
-  // Se a data veio do Excel como número serial, converte
-  const rawDate = row[Object.keys(row).find((k) => normalizeColumnName(k) === 'dataNascimento') ?? '']
-  const dataNascimento = rawDate !== undefined ? parseExcelDate(rawDate) : (mapped['dataNascimento'] ?? '')
-
-  return {
-    nome: mapped['nome'] ?? '',
-    cpf: mapped['cpf'] ?? '',
-    dataNascimento,
-    telefone: mapped['telefone'] ?? '',
-    email: mapped['email'] ?? '',
-    prioridade: mapped['prioridade'] ?? '',
-    observacoes: mapped['observacoes'] ?? '',
-  }
-}
-
-function parseCSVContent(text: string): ParsedRow[] {
-  const lines = text.split(/\r?\n/).map((l) => l.trim()).filter(Boolean)
-  if (lines.length < 2) return []
-
-  const headerCols = parseCsvLine(lines[0])
-  const rows: ParsedRow[] = []
-
-  for (let i = 1; i < lines.length; i++) {
-    const cols = parseCsvLine(lines[i])
-    const row: Record<string, unknown> = {}
-    headerCols.forEach((h, idx) => {
-      row[h] = cols[idx] ?? ''
-    })
-    rows.push(normalizeRow(row))
-  }
-
-  return rows
-}
-
-function parseExcelContent(buffer: ArrayBuffer): ParsedRow[] {
-  const workbook = XLSX.read(buffer, { type: 'array' })
-  const sheetName = workbook.SheetNames[0]
-  if (!sheetName) return []
-
-  const sheet = workbook.Sheets[sheetName]
-  const jsonData = XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet, { defval: '' })
-
-  return jsonData.map((row) => normalizeRow(row))
-}
+import { parseCSVContent, parseExcelContent, parseBirthDate, type ParsedClientRow as ParsedRow } from '@/lib/client-import-parser'
 
 export async function POST(req: NextRequest) {
   try {
@@ -189,7 +32,7 @@ export async function POST(req: NextRequest) {
 
     if (isExcel) {
       const buffer = await file.arrayBuffer()
-      rows = parseExcelContent(buffer)
+      rows = await parseExcelContent(buffer)
     } else if (fileName.endsWith('.csv')) {
       const text = await file.text()
       rows = parseCSVContent(text)
@@ -227,6 +70,11 @@ export async function POST(req: NextRequest) {
       const birthDate = parseBirthDate(row.dataNascimento)
       if (!birthDate) {
         results.push({ row: i + 1, status: 'error', message: `Data de nascimento inválida: ${row.dataNascimento}`, nome: row.nome })
+        continue
+      }
+
+      if (!isValidCPF(row.cpf)) {
+        results.push({ row: i + 1, status: 'error', message: 'CPF inválido.', nome: row.nome })
         continue
       }
 

@@ -10,6 +10,7 @@ import { logAudit } from '@/lib/audit'
 const updateSchema = z.object({
   name: z.string().min(2).max(100).optional(),
   birthDate: z.string().datetime().optional(),
+  gender: z.enum(['M', 'F']).optional().nullable(),
   phone: z.string().optional(),
   email: z.string().email().optional().or(z.literal('')),
   maritalStatus: z.string().optional().nullable(),
@@ -77,6 +78,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     const data: Record<string, unknown> = {}
     if (parsed.data.name) data.name = sanitizeInput(parsed.data.name)
     if (parsed.data.birthDate) data.birthDate = new Date(parsed.data.birthDate)
+    if (parsed.data.gender !== undefined) data.gender = parsed.data.gender || null
     if (parsed.data.phone !== undefined) data.phone = parsed.data.phone ? sanitizePhone(parsed.data.phone) : null
     if (parsed.data.email !== undefined) data.email = parsed.data.email || null
     if (parsed.data.maritalStatus !== undefined) data.maritalStatus = parsed.data.maritalStatus || null

@@ -1,14 +1,20 @@
 import { prisma } from './prisma'
 import { redis } from './redis'
 import { PlanLimitError } from './api-error'
-import type { PlanLimit, UsageRecord } from '@prisma/client'
+import { Logger } from './logger'
+import type { PlanLimit, UsageRecord, Prisma } from '@prisma/client'
+
+const logger = new Logger('PlanGuard')
 
 const NEAR_LIMIT_THRESHOLD = 0.8
 
-async function notifyLimitNear(userId: string, message: string): Promise<void> {
-  // Deduplicar: máximo 1 notificação PLAN_LIMIT_NEAR por tipo por dia
+async function notifyLimitNear(userId: string, feature: string, message: string): Promise<void> {
+  // Deduplicar: máximo 1 notificação PLAN_LIMIT_NEAR por FEATURE por dia.
+  // Sem o `feature` na chave, atingir 80% em cálculos suprimia o aviso de
+  // petições (ou qualquer outra feature) no mesmo dia — só a primeira
+  // notificação do dia, de qualquer tipo, passava.
   const today = new Date().toISOString().slice(0, 10)
-  const dedupKey = `plan-limit-notif:${userId}:${today}`
+  const dedupKey = `plan-limit-notif:${userId}:${feature}:${today}`
   try {
     const already = await redis.get(dedupKey)
     if (already) return
@@ -177,6 +183,7 @@ export async function guardCalculationLimit(userId: string, plan: string): Promi
   ) {
     notifyLimitNear(
       userId,
+      'CALCULATIONS',
       `Você usou ${currentCount} de ${limit.maxCalculationsPerMonth} cálculos disponíveis neste mês.`
     )
   }
@@ -207,6 +214,7 @@ export async function guardOpinionLimit(userId: string, plan: string): Promise<v
   ) {
     notifyLimitNear(
       userId,
+      'OPINIONS',
       `Você usou ${currentCount} de ${limit.maxOpinionsPerMonth} pareceres IA disponíveis neste mês.`
     )
   }
@@ -261,17 +269,10 @@ export async function guardPeticaoLimit(userId: string, plan: string): Promise<v
   ) {
     notifyLimitNear(
       userId,
+      'PETICAO',
       `Você usou ${currentCount} de ${limit.maxPeticoesPerMonth} petições disponíveis neste mês.`
     )
   }
-}
-
-export async function incrementPeticaoUsage(userId: string): Promise<void> {
-  await prisma.usageRecord.upsert({
-    where: { userId },
-    update: { peticoesThisMonth: { increment: 1 } },
-    create: { userId, peticoesThisMonth: 1 },
-  })
 }
 
 export async function guardRevisionLimit(userId: string, plan: string): Promise<void> {
@@ -303,16 +304,103 @@ export async function guardRevisionLimit(userId: string, plan: string): Promise<
   ) {
     notifyLimitNear(
       userId,
+      'REVISION_MODULE',
       `Você usou ${currentCount} de ${limit.maxRevisionsPerMonth} revisões de benefício disponíveis neste mês.`
     )
   }
 }
 
-export async function incrementRevisionUsage(userId: string): Promise<void> {
-  await prisma.usageRecord.upsert({
-    where: { userId },
-    update: { revisionsThisMonth: { increment: 1 } },
-    create: { userId, revisionsThisMonth: 1 },
+// ─────────────────────────────────────────
+// CONSUMO ATÔMICO DE COTA (evita corrida entre checar e incrementar)
+// ─────────────────────────────────────────
+//
+// O padrão anterior era: guardXLimit() lê o contador e decide se permite,
+// e só depois — em uma chamada separada — o contador é incrementado. Duas
+// requisições concorrentes podem passar pelo guard ao mesmo tempo (ambas
+// veem contador == limite-1) e as duas incrementam, estourando o limite.
+// tryConsumeMonthlyUsage() faz a checagem e o incremento em uma única
+// operação atômica no banco (`UPDATE ... WHERE campo < limite`), que o
+// Postgres serializa por linha — só passa quem realmente ainda tinha
+// cota no momento exato do incremento.
+
+export type MonthlyUsageField =
+  | 'calculationsThisMonth'
+  | 'opinionsThisMonth'
+  | 'bpcAnalysesThisMonth'
+  | 'peticoesThisMonth'
+  | 'revisionsThisMonth'
+
+const FIELD_TO_LIMIT_KEY: Record<MonthlyUsageField, keyof PlanLimit> = {
+  calculationsThisMonth: 'maxCalculationsPerMonth',
+  opinionsThisMonth: 'maxOpinionsPerMonth',
+  bpcAnalysesThisMonth: 'bpcAnalysesPerMonth',
+  peticoesThisMonth: 'maxPeticoesPerMonth',
+  revisionsThisMonth: 'maxRevisionsPerMonth',
+}
+
+function buildIncrementData(field: MonthlyUsageField): Prisma.UsageRecordUpdateManyMutationInput {
+  switch (field) {
+    case 'calculationsThisMonth':
+      return { calculationsThisMonth: { increment: 1 } }
+    case 'opinionsThisMonth':
+      return { opinionsThisMonth: { increment: 1 } }
+    case 'bpcAnalysesThisMonth':
+      return { bpcAnalysesThisMonth: { increment: 1 } }
+    case 'peticoesThisMonth':
+      return { peticoesThisMonth: { increment: 1 } }
+    case 'revisionsThisMonth':
+      return { revisionsThisMonth: { increment: 1 } }
+  }
+}
+
+function buildLimitWhere(field: MonthlyUsageField, maxPerMonth: number): Prisma.UsageRecordWhereInput {
+  switch (field) {
+    case 'calculationsThisMonth':
+      return { calculationsThisMonth: { lt: maxPerMonth } }
+    case 'opinionsThisMonth':
+      return { opinionsThisMonth: { lt: maxPerMonth } }
+    case 'bpcAnalysesThisMonth':
+      return { bpcAnalysesThisMonth: { lt: maxPerMonth } }
+    case 'peticoesThisMonth':
+      return { peticoesThisMonth: { lt: maxPerMonth } }
+    case 'revisionsThisMonth':
+      return { revisionsThisMonth: { lt: maxPerMonth } }
+  }
+}
+
+/**
+ * Incrementa o contador de uso do mês atomicamente. Retorna `false` (sem
+ * lançar) se o limite já havia sido atingido por uma requisição concorrente
+ * entre o guard e este ponto — nesse caso o chamador decide o que fazer
+ * (o trabalho já pode ter sido feito; não vale a pena descartá-lo por uma
+ * corrida rara, mas o contador nunca ultrapassa o limite no banco).
+ */
+export async function tryConsumeMonthlyUsage(
+  userId: string,
+  plan: string,
+  field: MonthlyUsageField
+): Promise<boolean> {
+  await getOrResetUsageRecord(userId)
+  await prisma.usageRecord.upsert({ where: { userId }, create: { userId }, update: {} })
+
+  const limit = await getPlanLimit(plan)
+  const maxPerMonth = limit[FIELD_TO_LIMIT_KEY[field]] as number
+
+  if (maxPerMonth === -1) {
+    await prisma.usageRecord.update({ where: { userId }, data: buildIncrementData(field) })
+    return true
+  }
+
+  const result = await prisma.usageRecord.updateMany({
+    where: { userId, ...buildLimitWhere(field, maxPerMonth) },
+    data: buildIncrementData(field),
   })
+
+  if (result.count === 0) {
+    logger.warn(`Cota de ${field} já esgotada no momento do incremento (corrida concorrente) — userId=${userId}`)
+    return false
+  }
+
+  return true
 }
 

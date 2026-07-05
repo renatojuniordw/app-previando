@@ -41,14 +41,23 @@ export async function invalidateAdminCache(userId: string): Promise<void> {
 
 export async function requireAdmin(): Promise<{ error: NextResponse } | { userId: string }> {
   const session = await auth()
+  const denied = { error: NextResponse.json({ error: 'Acesso negado.' }, { status: 403 }) }
 
   if (!session?.user?.id || !session.user.isAdmin) {
-    return { error: NextResponse.json({ error: 'Acesso negado.' }, { status: 403 }) }
+    return denied
   }
 
-  const isAdmin = await isAdminFromDB(session.user.id)
+  const [isAdmin, user] = await Promise.all([
+    isAdminFromDB(session.user.id),
+    prisma.user.findUnique({ where: { id: session.user.id }, select: { passwordChangedAt: true } }),
+  ])
   if (!isAdmin) {
-    return { error: NextResponse.json({ error: 'Acesso negado.' }, { status: 403 }) }
+    return denied
+  }
+
+  // Sessão emitida antes da última troca de senha — invalida (rotas admin merecem o check mais rígido)
+  if (user?.passwordChangedAt && session.user.issuedAt && user.passwordChangedAt.getTime() > session.user.issuedAt * 1000) {
+    return denied
   }
 
   return { userId: session.user.id }

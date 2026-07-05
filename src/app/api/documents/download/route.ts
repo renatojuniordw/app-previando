@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/auth'
+import { prisma } from '@/lib/prisma'
 import { getSignedDownloadUrl } from '@/services/r2'
 import { verifyCaseOwnership } from '@/lib/ownership'
 
@@ -17,23 +18,38 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Chave do documento ausente.' }, { status: 400 })
     }
 
-    // A chave R2 gerada por uploadDocument tem o formato:
-    // "documents/${userId}/${caseId}/${timestamp}_${normalizedName}"
-    const parts = key.split('/')
-    if (parts.length < 4 || parts[0] !== 'documents') {
-      return NextResponse.json({ error: 'Chave de documento inválida.' }, { status: 400 })
-    }
+    // Fonte de verdade da autorização: a tabela Document, nunca a própria
+    // string da chave R2 (que é dado de exibição, não deveria carregar
+    // autoridade — ver M5 do audit de segurança).
+    const document = await prisma.document.findUnique({
+      where: { r2Key: key },
+      select: { caseId: true, userId: true },
+    })
 
-    const ownerUserId = parts[1]
-    const caseId = parts[2]
+    if (document) {
+      if (session.user.id !== document.userId) {
+        try {
+          await verifyCaseOwnership(document.caseId, session.user.id)
+        } catch {
+          return NextResponse.json({ error: 'Acesso negado ao documento.' }, { status: 403 })
+        }
+      }
+    } else {
+      // Compatibilidade com documentos enviados antes da tabela Document existir:
+      // a chave legada tem o formato "documents/${userId}/${caseId}/${timestamp}_${nome}"
+      const parts = key.split('/')
+      if (parts.length < 4 || parts[0] !== 'documents') {
+        return NextResponse.json({ error: 'Documento não encontrado.' }, { status: 404 })
+      }
 
-    // Garantir que o usuário atual é o proprietário do arquivo ou tem acesso ao caso
-    if (session.user.id !== ownerUserId) {
-      // Como fallback de segurança, verificar se ele é dono do caso associado
-      try {
-        await verifyCaseOwnership(caseId, session.user.id)
-      } catch {
-        return NextResponse.json({ error: 'Acesso negado ao documento.' }, { status: 403 })
+      const [, legacyOwnerUserId, legacyCaseId] = parts
+
+      if (session.user.id !== legacyOwnerUserId) {
+        try {
+          await verifyCaseOwnership(legacyCaseId, session.user.id)
+        } catch {
+          return NextResponse.json({ error: 'Acesso negado ao documento.' }, { status: 403 })
+        }
       }
     }
 
