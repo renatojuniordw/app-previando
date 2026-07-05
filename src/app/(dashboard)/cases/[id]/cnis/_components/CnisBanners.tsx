@@ -13,23 +13,23 @@ export function CnisBanners({ isModified, showSuccessBanner, uploadError, onSave
   return (
     <>
       {isModified && (
-        <div className="border border-amber-200 bg-amber-50 text-amber-900 rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4 animate-slide-down shadow-sm">
+        <div className="border border-amber-200 bg-amber-50/50 text-amber-900 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4 animate-slide-down shadow-sm">
           <div className="flex items-center gap-3">
             <AlertCircle className="w-5 h-5 text-amber-600 shrink-0" />
-            <span className="font-sans text-sm font-semibold">
+            <span className="font-sans text-sm font-bold text-amber-800 leading-snug">
               Você fez alterações manuais nos dados do CNIS. Salve para atualizar definitivamente os cálculos e pareceres vinculados.
             </span>
           </div>
-          <div className="flex items-center gap-2 w-full sm:w-auto">
+          <div className="flex items-center gap-2.5 w-full sm:w-auto">
             <button
               onClick={onSaveClick}
-              className="flex-1 sm:flex-initial bg-amber-600 hover:bg-amber-700 text-white font-sans font-semibold text-xs px-4 py-2.5 rounded-lg transition-colors shadow-sm"
+              className="flex-1 sm:flex-initial bg-amber-600 hover:bg-amber-700 text-white font-sans font-bold text-xs h-9 px-4.5 rounded-lg transition-colors shadow-sm"
             >
               Salvar Alterações
             </button>
             <button
               onClick={onDiscard}
-              className="flex-1 sm:flex-initial border border-slate-200 hover:bg-slate-100 text-slate-700 font-sans font-semibold text-xs px-4 py-2.5 rounded-lg transition-colors"
+              className="flex-1 sm:flex-initial border border-slate-250 hover:bg-slate-50 text-slate-700 font-sans font-bold text-xs h-9 px-4.5 rounded-lg transition-colors bg-white shadow-xs"
             >
               Descartar
             </button>
@@ -38,16 +38,16 @@ export function CnisBanners({ isModified, showSuccessBanner, uploadError, onSave
       )}
 
       {showSuccessBanner && (
-        <div className="border border-emerald-200 bg-emerald-50 text-emerald-800 rounded-xl p-4 flex items-center justify-between gap-3 animate-slide-down shadow-sm" aria-live="polite">
+        <div className="border border-emerald-250 bg-emerald-50/50 text-emerald-800 rounded-2xl p-4 flex items-center justify-between gap-3 animate-slide-down shadow-sm" aria-live="polite">
           <div className="flex items-center gap-3">
             <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
-            <span className="font-sans text-sm font-semibold">
+            <span className="font-sans text-sm font-bold text-emerald-800 leading-snug">
               O CNIS foi processado e todos os dados foram extraídos com sucesso pela inteligência artificial!
             </span>
           </div>
           <button
             onClick={onCloseSucess}
-            className="text-emerald-500 hover:text-emerald-700 font-sans text-xs font-bold uppercase transition-colors shrink-0 focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none"
+            className="text-emerald-600 hover:text-emerald-700 font-sans text-xs font-bold uppercase transition-colors shrink-0 focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none"
           >
             Fechar
           </button>
@@ -55,9 +55,9 @@ export function CnisBanners({ isModified, showSuccessBanner, uploadError, onSave
       )}
 
       {uploadError && (
-        <div className="border border-red-200 bg-red-50 rounded-xl p-4 flex items-start gap-3">
+        <div className="border border-red-200 bg-red-50/30 rounded-2xl p-4 flex items-start gap-3 shadow-xs">
           <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
-          <p className="font-sans text-sm font-medium text-red-700">{uploadError}</p>
+          <p className="font-sans text-xs text-red-750 font-bold leading-relaxed">{uploadError}</p>
         </div>
       )}
     </>

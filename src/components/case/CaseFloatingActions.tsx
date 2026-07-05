@@ -18,7 +18,8 @@ interface CaseFloatingActionsProps {
 export function CaseFloatingActions({ activeDrawer, setDrawer, benefitType }: CaseFloatingActionsProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [showHint, setShowHint] = useState(false)
-  const hasInteracted = useRef(false)
+  const [showAttention, setShowAttention] = useState(true)
+  const hasInteractedRef = useRef(false)
   const menuRef = useRef<HTMLDivElement>(null)
   const pathname = usePathname()
   const isCnisPage = pathname?.includes('/cnis')
@@ -27,14 +28,18 @@ export function CaseFloatingActions({ activeDrawer, setDrawer, benefitType }: Ca
     ? 'Consulte o dicionário de indicadores'
     : 'Acesse ferramentas rápidas'
 
-  // Resume interaction state
-  if (typeof window !== 'undefined' && !hasInteracted.current) {
-    hasInteracted.current = localStorage.getItem(LS_KEY) === 'true'
-  }
+  // Resume interaction state after hydration
+  useEffect(() => {
+    const interacted = localStorage.getItem(LS_KEY) === 'true'
+    hasInteractedRef.current = interacted
+    if (interacted) {
+      setShowAttention(false)
+    }
+  }, [])
 
   // Show hint on fresh pages if never interacted
   useEffect(() => {
-    if (hasInteracted.current) return
+    if (hasInteractedRef.current) return
     const show = setTimeout(() => setShowHint(true), HINT_DELAY)
     const hide = setTimeout(() => setShowHint(false), HINT_DELAY + HINT_DURATION)
     return () => { clearTimeout(show); clearTimeout(hide) }
@@ -61,10 +66,11 @@ export function CaseFloatingActions({ activeDrawer, setDrawer, benefitType }: Ca
   }, [isOpen])
 
   const markInteracted = () => {
-    if (!hasInteracted.current) {
-      hasInteracted.current = true
+    if (!hasInteractedRef.current) {
+      hasInteractedRef.current = true
       localStorage.setItem(LS_KEY, 'true')
       setShowHint(false)
+      setShowAttention(false)
     }
   }
 
@@ -185,7 +191,7 @@ export function CaseFloatingActions({ activeDrawer, setDrawer, benefitType }: Ca
             isOpen
               ? 'bg-slate-800 hover:bg-slate-700 rotate-90 scale-95'
               : 'bg-amber-600 hover:bg-amber-500 hover:shadow-amber-500/20 hover:scale-105',
-            !hasInteracted.current && !isOpen && 'animate-fab-attention'
+            showAttention && !isOpen && 'animate-fab-attention'
           )}
           aria-expanded={isOpen}
           aria-haspopup="true"

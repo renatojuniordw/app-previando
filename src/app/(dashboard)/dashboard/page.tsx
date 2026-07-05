@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import api from '@/lib/api'
 import { useToast } from '@/store/toast'
-import { Users, ChevronRight, Columns } from 'lucide-react'
+import { Users, ChevronRight, LayoutDashboard } from 'lucide-react'
 import dynamic from 'next/dynamic'
 import { DashboardQuickActions } from '@/components/dashboard/DashboardQuickActions'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
@@ -103,29 +103,20 @@ export default function DashboardPage() {
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6 lg:space-y-8">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-        <div>
-          <h1 className="font-serif font-bold text-3xl text-slate-900 tracking-tight">Visão Geral</h1>
-          <p className="font-sans text-sm text-slate-500 mt-1 font-medium">Acompanhamento do escritório</p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 border-b border-slate-200 pb-6">
+        <div className="flex items-center gap-4">
+          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center shadow-lg flex-shrink-0">
+            <LayoutDashboard className="w-7 h-7 text-white" />
+          </div>
+          <div>
+            <h1 className="font-serif font-bold text-3xl text-slate-900 tracking-tight">Visão Geral</h1>
+            <p className="font-sans text-sm text-slate-500 mt-0.5 font-medium">Acompanhamento do escritório</p>
+          </div>
         </div>
 
         {/* Quick Actions */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 w-full sm:w-auto">
           <DashboardQuickActions />
-          <Link
-            href="/clients/list"
-            className="px-4 min-h-[44px] bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 shadow-sm transition-all flex items-center gap-2"
-            aria-label="Ver lista de clientes"
-          >
-            <Users className="w-4 h-4" aria-hidden="true" /> <span className="hidden sm:inline">Clientes</span>
-          </Link>
-          <Link
-            href="/clients/kanban"
-            className="px-4 min-h-[44px] bg-amber-600 text-white rounded-lg text-sm font-medium hover:bg-amber-700 shadow-sm transition-all flex items-center gap-2"
-            aria-label="Kanban de casos"
-          >
-            <Columns className="w-4 h-4" aria-hidden="true" /> <span className="hidden sm:inline">Kanban</span>
-          </Link>
         </div>
       </div>
 

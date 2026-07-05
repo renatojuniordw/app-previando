@@ -1,15 +1,25 @@
 'use client'
 
 import { useState } from 'react'
-import { Briefcase, Edit3, FileSpreadsheet, Plus, Search, User } from 'lucide-react'
+import { Briefcase, Edit3, FileSpreadsheet, Plus, Search, User, FileText, Calendar, CheckCircle2, Trash2 } from 'lucide-react'
 import { CnisExtractedData as ExtractedData } from '../_types'
 import { formatDateString, getPeriodWarnings } from '../_utils'
 import { PeriodItem } from './PeriodItem'
 import { EditFieldModal } from './modals/EditFieldModal'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
+import { Badge } from '@/components/ui/Badge'
+import { Button } from '@/components/ui/Button'
+import { formatDate, cn } from '@/lib/utils'
+import { STATUS_CONFIG } from '../_constants'
 
 interface Props {
   data: ExtractedData
+  cnisCreatedAt: string
+  cnisUpdatedAt: string
+  cnisStatus: string
+  onReprocessClick: () => void
+  onUploadClick: () => void
+  onDeleteCnisClick: () => void
   onEditField: (field: keyof ExtractedData, value: string) => void
   onExportCSV: () => void
   onAddPeriod: () => void
@@ -19,7 +29,9 @@ interface Props {
 }
 
 export function CnisExtractedDataView({
-  data, onEditField, onExportCSV, onAddPeriod, onEditPeriod, onEditSalaries, onDeletePeriod,
+  data, cnisCreatedAt, cnisUpdatedAt, cnisStatus,
+  onReprocessClick, onUploadClick, onDeleteCnisClick,
+  onEditField, onExportCSV, onAddPeriod, onEditPeriod, onEditSalaries, onDeletePeriod,
 }: Props) {
   const [searchQuery, setSearchQuery] = useState('')
   const [expandedPeriods, setExpandedPeriods] = useState<Record<number, boolean>>({})
@@ -47,102 +59,166 @@ export function CnisExtractedDataView({
     return (p.empregador || '').toLowerCase().includes(q) || (p.inicio || '').includes(q) || (p.fim || '').includes(q)
   }) || []
 
-  return (
-    <div className="space-y-8 mt-6">
-      {/* Dados do Segurado */}
-      <div className="border-t border-slate-200 pt-6">
-        <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
-          <h4 className="font-serif font-bold text-lg text-slate-900 flex items-center gap-2">
-            <User className="w-5 h-5 text-amber-600" aria-hidden="true" />
-            Dados do Segurado
-          </h4>
-          <button
-            onClick={onExportCSV}
-            className="bg-amber-600 hover:bg-amber-700 text-white font-sans font-semibold text-xs px-3 py-1.5 rounded-lg shadow-sm flex items-center gap-1.5 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:outline-none"
-          >
-            <FileSpreadsheet className="w-3.5 h-3.5" />
-            Exportar para CSV
-          </button>
+  const statusConfig = STATUS_CONFIG[cnisStatus] || { label: cnisStatus, color: 'slate' as const }
+
+  // Sidebar segment showing client data
+  const seguradoCard = (
+    <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm space-y-5">
+      <div className="flex items-center gap-2.5 pb-2 border-b border-slate-100">
+        <div className="w-8 h-8 rounded-lg bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-600 shadow-xs">
+          <User className="w-4.5 h-4.5" aria-hidden="true" />
+        </div>
+        <h2 className="font-serif font-bold text-base text-slate-850">
+          Dados do Segurado
+        </h2>
+      </div>
+
+      <div className="space-y-4">
+        <EditableField label="Nome Completo" value={data.nome ?? 'Não identificado'} currentValue={data.nome || ''} onSave={v => onEditField('nome', v)} onOpenEdit={openEditField} />
+        <EditableField label="NIT / PIS" value={data.nit ?? 'Não identificado'} currentValue={data.nit || ''} onSave={v => onEditField('nit', v)} onOpenEdit={openEditField} />
+        <EditableField label="Data de Nascimento" value={formatDateString(data.dataNascimento ?? '')} currentValue={data.dataNascimento || ''} onSave={v => onEditField('dataNascimento', v)} onOpenEdit={openEditField} />
+
+        <CalculatedField label="Total de Competências" value={`${data.totalContribuicoes ?? 0} contribuições`} />
+        <CalculatedField label="Primeira Contribuição" value={formatDateString(data.primeiraContribuicao ?? '')} isMono />
+        <CalculatedField label="Última Contribuição" value={formatDateString(data.ultimaContribuicao ?? '')} isMono />
+      </div>
+    </div>
+  )
+
+  // Document metadata card
+  const documentoCard = (
+    <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm space-y-5">
+      <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-lg bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-600 shadow-xs">
+            <FileText className="w-4.5 h-4.5" aria-hidden="true" />
+          </div>
+          <h2 className="font-serif font-bold text-base text-slate-850">
+            Documento CNIS
+          </h2>
+        </div>
+        <Badge variant={statusConfig.color} className="uppercase text-[8px] font-extrabold tracking-wider px-2 py-0.5">{statusConfig.label}</Badge>
+      </div>
+
+      <div className="space-y-3.5">
+        <div className="flex items-center justify-between text-xs">
+          <span className="text-slate-455 font-semibold flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5" /> Enviado em:</span>
+          <span className="font-mono font-bold text-slate-700">{formatDate(cnisCreatedAt)}</span>
+        </div>
+        <div className="flex items-center justify-between text-xs">
+          <span className="text-slate-455 font-semibold flex items-center gap-1.5"><CheckCircle2 className="w-3.5 h-3.5" /> Atualizado:</span>
+          <span className="font-mono font-bold text-slate-700">{formatDate(cnisUpdatedAt)}</span>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 2xl:grid-cols-3 gap-4">
-          <EditableField label="Nome Completo" value={data.nome ?? 'Não identificado'} currentValue={data.nome || ''} onSave={v => onEditField('nome', v)} onOpenEdit={openEditField} />
-          <EditableField label="NIT / PIS" value={data.nit ?? 'Não identificado'} currentValue={data.nit || ''} onSave={v => onEditField('nit', v)} onOpenEdit={openEditField} />
-          <EditableField label="Data de Nascimento" value={formatDateString(data.dataNascimento ?? '')} currentValue={data.dataNascimento || ''} onSave={v => onEditField('dataNascimento', v)} onOpenEdit={openEditField} />
+        <div className="flex flex-col gap-2 pt-3 border-t border-slate-100">
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={onReprocessClick} className="flex-1">
+              Reprocessar
+            </Button>
+            <Button variant="dark" size="sm" onClick={onUploadClick} className="flex-1">
+              Novo Upload
+            </Button>
+          </div>
+          <Button 
+            variant="danger" 
+            size="sm" 
+            onClick={onDeleteCnisClick} 
+            className="w-full flex items-center justify-center gap-2"
+          >
+            <Trash2 className="w-4 h-4 text-white" aria-hidden="true" />
+            Excluir Extrato CNIS
+          </Button>
+        </div>
+      </div>
+    </div>
+  )
 
-          <div className="bg-slate-50 border border-slate-100 rounded-xl p-4">
-            <span className="font-sans text-[10px] uppercase font-bold tracking-wider text-slate-400 block mb-1">Total de Contribuições</span>
-            <span className="font-sans font-bold text-slate-800 text-sm">{data.totalContribuicoes ?? 0} competências</span>
+  // Main Period List Card
+  const listCard = (
+    <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm space-y-6">
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-5">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-lg bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-600 shadow-xs">
+            <Briefcase className="w-4.5 h-4.5" aria-hidden="true" />
           </div>
-          <div className="bg-slate-50 border border-slate-100 rounded-xl p-4">
-            <span className="font-sans text-[10px] uppercase font-bold tracking-wider text-slate-400 block mb-1">Primeira Contribuição</span>
-            <span className="font-sans font-bold text-slate-800 text-sm">{formatDateString(data.primeiraContribuicao ?? '')}</span>
-          </div>
-          <div className="bg-slate-50 border border-slate-100 rounded-xl p-4">
-            <span className="font-sans text-[10px] uppercase font-bold tracking-wider text-slate-400 block mb-1">Última Contribuição</span>
-            <span className="font-sans font-bold text-slate-800 text-sm">{formatDateString(data.ultimaContribuicao ?? '')}</span>
-          </div>
+          <h2 className="font-serif font-bold text-base text-slate-850">
+            Histórico de Vínculos
+          </h2>
+          <span className="font-sans text-[10px] font-extrabold text-slate-500 bg-slate-100 border border-slate-200/50 px-2 py-0.5 rounded-md whitespace-nowrap">
+            {data.periodos?.length ?? 0} {data.periodos?.length === 1 ? 'vínculo' : 'vínculos'}
+          </span>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button variant="outline" size="sm" onClick={onExportCSV} className="flex items-center gap-1">
+            <FileSpreadsheet className="w-3.5 h-3.5 text-slate-550" />
+            <span>Exportar CSV</span>
+          </Button>
+          <Button variant="outline" size="sm" onClick={expandAll}>
+            Expandir
+          </Button>
+          <Button variant="outline" size="sm" onClick={collapseAll}>
+            Recolher
+          </Button>
+          <Button 
+            variant="primary" 
+            size="sm" 
+            onClick={onAddPeriod} 
+            className="bg-amber-600 border-amber-600 hover:bg-amber-700 hover:border-amber-700 flex items-center gap-1.5"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            Adicionar
+          </Button>
         </div>
       </div>
 
-      {/* Histórico de Vínculos */}
-      <div className="space-y-4">
-        <div className="flex flex-wrap items-center justify-between gap-4 border-t border-slate-100 pt-6">
-          <div className="flex flex-wrap items-center gap-2">
-            <h4 className="font-serif font-bold text-lg text-slate-900 flex items-center gap-2">
-              <Briefcase className="w-5 h-5 text-amber-600" aria-hidden="true" />
-              Histórico de Vínculos Empregatícios
-            </h4>
-            <span className="font-sans text-xs text-slate-500 font-medium bg-slate-100 px-2.5 py-1 rounded-full whitespace-nowrap">
-              {data.periodos?.length ?? 0} {data.periodos?.length === 1 ? 'vínculo' : 'vínculos'}
-            </span>
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <button onClick={expandAll} className="text-xs font-semibold text-slate-600 hover:text-slate-800 bg-slate-100 px-2.5 py-1.5 rounded transition-all focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:outline-none">
-              Expandir Todos
-            </button>
-            <button onClick={collapseAll} className="text-xs font-semibold text-slate-600 hover:text-slate-800 bg-slate-100 px-2.5 py-1.5 rounded transition-all focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:outline-none">
-              Recolher Todos
-            </button>
-            <button onClick={onAddPeriod} className="bg-amber-600 hover:bg-amber-700 text-white font-sans font-semibold text-xs px-3 py-1.5 rounded-lg shadow-sm flex items-center gap-1.5 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:outline-none">
-              <Plus className="w-3.5 h-3.5" />
-              Adicionar Vínculo
-            </button>
-          </div>
-        </div>
+      <div className="relative">
+        <Search className="w-4.5 h-4.5 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" aria-hidden="true" />
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={e => setSearchQuery(e.target.value)}
+          placeholder="Buscar por empresa, data de início ou fim..."
+          aria-label="Filtrar vínculos do histórico"
+          className="w-full pl-10 pr-4 h-10 border border-slate-200/80 rounded-xl text-sm font-sans focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus-visible:ring-2 transition-all placeholder:text-slate-400 shadow-xs"
+        />
+      </div>
 
-        <div className="relative">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" aria-hidden="true" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            placeholder="Buscar vínculo por empresa, data de início ou data fim…"
-            className="w-full pl-9 pr-4 py-2 border border-slate-200 rounded-lg text-sm font-sans focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus-visible:ring-2 transition-all placeholder:text-slate-400"
-          />
+      {filteredPeriodos.length === 0 ? (
+        <div className="text-center py-12 bg-slate-50 border border-slate-200 rounded-xl">
+          <p className="font-sans text-slate-500 text-sm font-medium">Nenhum vínculo corresponde aos filtros aplicados.</p>
         </div>
+      ) : (
+        <div className="space-y-4">
+          {filteredPeriodos.map((periodo, idx) => (
+            <PeriodItem
+              key={idx}
+              periodo={periodo}
+              idx={idx}
+              isExpanded={!!expandedPeriods[idx]}
+              warnings={getPeriodWarnings(periodo, idx, data.periodos || [])}
+              onToggle={() => togglePeriod(idx)}
+              onEdit={() => onEditPeriod(idx)}
+              onEditSalaries={() => onEditSalaries(idx)}
+              onDelete={() => setConfirmDeleteIdx(idx)}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  )
 
-        {filteredPeriodos.length === 0 ? (
-          <div className="text-center py-12 bg-slate-50 border border-slate-200 rounded-xl">
-            <p className="font-sans text-slate-500 text-sm">Nenhum vínculo corresponde aos filtros aplicados.</p>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {filteredPeriodos.map((periodo, idx) => (
-              <PeriodItem
-                key={idx}
-                periodo={periodo}
-                idx={idx}
-                isExpanded={!!expandedPeriods[idx]}
-                warnings={getPeriodWarnings(periodo, idx, data.periodos || [])}
-                onToggle={() => togglePeriod(idx)}
-                onEdit={() => onEditPeriod(idx)}
-                onEditSalaries={() => onEditSalaries(idx)}
-                onDelete={() => setConfirmDeleteIdx(idx)}
-              />
-            ))}
-          </div>
-        )}
+  return (
+    // Always render 2-column split dashboard on desktop since PDF is displayed on the drawer overlay
+    <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 items-start">
+      {/* Main Area */}
+      <div className="xl:col-span-2 space-y-6">
+        {listCard}
+      </div>
+
+      {/* Sidebar Area */}
+      <div className="xl:col-span-1 space-y-6">
+        {seguradoCard}
+        {documentoCard}
       </div>
 
       <ConfirmDialog
@@ -176,18 +252,32 @@ function EditableField({ label, value, currentValue, onSave, onOpenEdit }: {
   label: string; value: string; currentValue: string; onSave: (v: string) => void; onOpenEdit: (label: string, currentValue: string, onSave: (v: string) => void) => void
 }) {
   return (
-    <div className="bg-amber-50/20 border border-amber-100/30 rounded-xl p-4 relative group">
-      <span className="font-sans text-[10px] uppercase font-bold tracking-wider text-slate-400 block mb-1">{label}</span>
+    <div className="bg-slate-50/50 border border-slate-200/60 rounded-xl p-4 relative group hover:border-slate-350 transition-all duration-300">
+      <span className="font-sans text-[10px] uppercase font-extrabold tracking-wider text-slate-400 block mb-1">{label}</span>
       <div className="flex items-center justify-between gap-2">
         <span className="font-sans font-bold text-slate-800 text-sm truncate">{value}</span>
         <button
           onClick={() => onOpenEdit(label, currentValue, onSave)}
-          className="opacity-0 group-hover:opacity-100 hover:text-amber-600 transition-opacity p-0.5"
+          className="opacity-50 group-hover:opacity-100 group-focus-within:opacity-100 focus:opacity-100 hover:text-amber-600 transition-opacity p-1 text-slate-455 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 rounded-md"
           title={`Editar ${label.toLowerCase()}`}
         >
           <Edit3 className="w-3.5 h-3.5" />
         </button>
       </div>
+    </div>
+  )
+}
+
+function CalculatedField({ label, value, isMono }: { label: string; value: string; isMono?: boolean }) {
+  return (
+    <div className="bg-slate-50/50 border border-slate-200/60 rounded-xl p-4">
+      <span className="font-sans text-[10px] uppercase font-extrabold tracking-wider text-slate-400 block mb-1">{label}</span>
+      <span className={cn(
+        "font-sans font-bold text-slate-800 text-sm block",
+        isMono && "font-mono"
+      )}>
+        {value}
+      </span>
     </div>
   )
 }

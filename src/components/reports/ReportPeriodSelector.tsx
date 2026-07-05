@@ -21,16 +21,16 @@ export const ReportPeriodSelector = memo(function ReportPeriodSelector({
   onChange,
 }: ReportPeriodSelectorProps) {
   return (
-    <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-lg p-1">
+    <div className="flex items-center gap-1 bg-slate-50 border border-slate-200 rounded-lg p-1">
       {OPTIONS.map((opt) => (
         <button
           key={opt.value}
           onClick={() => onChange(opt.value)}
           className={cn(
-            'px-3 py-1.5 text-sm font-medium rounded-md transition-all',
+            'px-3.5 py-1.5 text-xs font-bold rounded-md transition-all duration-200',
             value === opt.value
-              ? 'bg-amber-50 text-amber-700 border border-amber-200 shadow-sm'
-              : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'
+              ? 'bg-slate-900 text-white shadow-sm'
+              : 'text-slate-555 hover:text-slate-800 hover:bg-slate-100/50'
           )}
         >
           {opt.label}

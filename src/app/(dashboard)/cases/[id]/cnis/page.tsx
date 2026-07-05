@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useParams, useSearchParams, useRouter, usePathname } from 'next/navigation'
-import { ExternalLink, FileText } from 'lucide-react'
+import { ExternalLink } from 'lucide-react'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { useCnis } from './_hooks/useCnis'
 import { useCnisUpload } from './_hooks/useCnisUpload'
@@ -19,6 +19,7 @@ import { ReprocessModal } from './_components/modals/ReprocessModal'
 import { EditPeriodModal } from './_components/modals/EditPeriodModal'
 import { EditSalariesModal } from './_components/modals/EditSalariesModal'
 import { CnisIndicatorsDrawer } from './_components/CnisIndicatorsDrawer'
+import { Drawer } from '@/components/ui/Drawer'
 
 export default function CnisCasePage() {
   const params = useParams()
@@ -109,57 +110,62 @@ export default function CnisCasePage() {
         onCloseSucess={() => setShowSuccessBanner(false)}
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {showPdfViewer && cnis?.downloadUrl && (
-          <div className="lg:col-span-5 bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden sticky top-6 z-10 hidden lg:flex flex-col h-[calc(100vh-6rem)]">
-            <div className="px-4 py-3 bg-slate-50 border-b border-slate-200 flex items-center justify-between shrink-0">
-              <span className="font-sans font-bold text-xs text-slate-700 flex items-center gap-1.5">
-                <FileText className="w-4 h-4 text-slate-400" />
-                Documento CNIS Original
-              </span>
-              <div className="flex items-center gap-2">
-                <a href={cnis.downloadUrl} target="_blank" rel="noopener noreferrer" className="text-[11px] font-bold text-amber-700 hover:text-amber-800 bg-amber-50 border border-amber-100 px-2.5 py-1 rounded transition-colors flex items-center gap-1 focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:outline-none">
-                  <ExternalLink className="w-3 h-3" />
-                  Nova Aba
-                </a>
-                <button onClick={() => setShowPdfViewer(false)} className="text-[11px] font-semibold text-slate-500 hover:text-slate-700 bg-slate-100 px-2 py-1 rounded transition-colors focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:outline-none">
-                  Ocultar
-                </button>
-              </div>
-            </div>
-            <iframe src={pdfBlobUrl ?? ''} className="w-full grow border-0 bg-slate-100" title="Extrato CNIS Original" />
-          </div>
+      <div className="w-full">
+        {!cnis ? (
+          <CnisUploadDropzone
+            isDragging={isDragging}
+            uploading={uploading}
+            isProcessing={isProcessing}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            onUploadClick={() => fileRef.current?.click()}
+          />
+        ) : (
+          <CnisStatusCard
+            cnis={cnis}
+            isProcessing={isProcessing}
+            stuckWarning={stuckWarning}
+            tempExtractedData={editing.tempExtractedData}
+            onReprocessClick={() => setShowReprocessModal(true)}
+            onUploadClick={() => fileRef.current?.click()}
+            onDeleteCnisClick={() => setShowDeleteModal(true)}
+            onEditField={editing.editField}
+            onExportCSV={editing.handleExportCSV}
+            onAddPeriod={editing.addPeriod}
+            onEditPeriod={editing.openEditPeriod}
+            onEditSalaries={editing.openEditSalaries}
+            onDeletePeriod={editing.deletePeriodLocal}
+          />
         )}
-
-        <div className={`${showPdfViewer && cnis?.downloadUrl ? 'lg:col-span-7' : 'lg:col-span-12'} space-y-6 w-full`}>
-          {!cnis ? (
-            <CnisUploadDropzone
-              isDragging={isDragging}
-              uploading={uploading}
-              isProcessing={isProcessing}
-              onDragOver={handleDragOver}
-              onDragLeave={handleDragLeave}
-              onDrop={handleDrop}
-              onUploadClick={() => fileRef.current?.click()}
-            />
-          ) : (
-            <CnisStatusCard
-              cnis={cnis}
-              isProcessing={isProcessing}
-              stuckWarning={stuckWarning}
-              tempExtractedData={editing.tempExtractedData}
-              onReprocessClick={() => setShowReprocessModal(true)}
-              onUploadClick={() => fileRef.current?.click()}
-              onEditField={editing.editField}
-              onExportCSV={editing.handleExportCSV}
-              onAddPeriod={editing.addPeriod}
-              onEditPeriod={editing.openEditPeriod}
-              onEditSalaries={editing.openEditSalaries}
-              onDeletePeriod={editing.deletePeriodLocal}
-            />
-          )}
-        </div>
       </div>
+
+      <Drawer
+        open={showPdfViewer && !!cnis?.downloadUrl}
+        onClose={() => setShowPdfViewer(false)}
+        title="Documento CNIS Original"
+        description="Compare as informações cadastradas com a visualização do arquivo original"
+        className="max-w-xl md:max-w-2xl lg:max-w-3xl xl:max-w-4xl"
+      >
+        <div className="flex flex-col h-full -m-6 overflow-hidden">
+          <div className="px-6 py-3 bg-slate-50 border-b border-slate-200 flex items-center justify-end shrink-0">
+            <a
+              href={cnis?.downloadUrl ?? '#'}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 rounded border border-amber-250 bg-amber-50/50 px-3 py-1.5 text-xs font-bold text-amber-700 hover:text-amber-800 focus-visible:outline-none"
+            >
+              <ExternalLink className="w-3.5 h-3.5" />
+              Abrir em Nova Aba
+            </a>
+          </div>
+          <iframe
+            src={pdfBlobUrl ?? ''}
+            className="w-full grow border-0 bg-slate-100 min-h-[calc(100vh-12rem)]"
+            title="Extrato CNIS Original"
+          />
+        </div>
+      </Drawer>
 
       <DeleteModal
         open={showDeleteModal}

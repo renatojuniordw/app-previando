@@ -11,11 +11,12 @@ import { Button } from '@/components/ui/Button'
 import { ActionsDropdown } from '@/components/ui/ActionsDropdown'
 import { useToast } from '@/store/toast'
 import { downloadPdf } from '@/lib/download-pdf'
-import { Search, SlidersHorizontal, X, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Search, SlidersHorizontal, X, ChevronLeft, ChevronRight, Briefcase, ArrowLeft } from 'lucide-react'
 import { formatDate, formatCurrency } from '@/lib/utils'
 import { BENEFIT_SHORT_LABELS, STATUS_LABELS } from '@/lib/constants'
 import { DatePicker } from '@/components/ui/DatePicker'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
+import { cn } from '@/lib/utils'
 
 const STATUS_OPTIONS = [
   { value: 'PROSPECCAO', label: 'Prospecção' },
@@ -51,6 +52,19 @@ const PRIORITY_LABEL: Record<string, string> = {
   NORMAL: 'Normal',
 }
 
+const STATUS_BADGE_STYLE: Record<string, string> = {
+  PROSPECCAO: 'bg-slate-50 text-slate-600 border-slate-250',
+  PROSPECTING: 'bg-slate-50 text-slate-600 border-slate-250',
+  ANALISE: 'bg-blue-50 text-blue-700 border-blue-150',
+  ANALYSIS: 'bg-blue-50 text-blue-700 border-blue-150',
+  PRONTO_PARA_REQUERER: 'bg-amber-50 text-amber-700 border-amber-150',
+  READY_TO_REQUEST: 'bg-amber-50 text-amber-700 border-amber-150',
+  EM_PROCESSAMENTO: 'bg-lime-50 text-lime-700 border-lime-150',
+  PROCESSING: 'bg-lime-50 text-lime-700 border-lime-150',
+  FINALIZADO: 'bg-emerald-50 text-emerald-700 border-emerald-150',
+  FINISHED: 'bg-emerald-50 text-emerald-700 border-emerald-150',
+}
+
 export default function CasesPage() {
   useEffect(() => { document.title = 'Casos — Previando' }, [])
   const searchParams = useSearchParams()
@@ -76,7 +90,6 @@ export default function CasesPage() {
   const [createdFrom, setCreatedFrom] = useState('')
   const [createdTo, setCreatedTo] = useState('')
 
-  // Debounce search: aguarda 350ms após o usuário parar de digitar
   useEffect(() => {
     const t = setTimeout(() => setDebouncedSearch(search), 350)
     return () => clearTimeout(t)
@@ -145,42 +158,69 @@ export default function CasesPage() {
   }
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6">
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-        <div>
-          <h1 className="font-serif font-bold text-3xl text-slate-900 tracking-tight">Todos os Casos</h1>
-          <p className="font-sans text-sm text-slate-500 mt-1">{total} caso{total !== 1 ? 's' : ''} encontrado{total !== 1 ? 's' : ''}</p>
+    <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6 lg:space-y-8 animate-fade-in">
+      
+      {/* Header */}
+      <div className="flex items-center gap-4 border-b border-slate-200 pb-6">
+        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center shadow-lg flex-shrink-0">
+          <Briefcase className="w-7 h-7 text-white" />
         </div>
-        <div className="flex items-center gap-3 w-full md:w-auto">
-          <div className="relative w-full md:w-64">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-            <input
-              value={search}
-              onChange={(e) => { setSearch(e.target.value); setPage(1) }}
-              placeholder="Buscar por cliente..."
-              aria-label="Buscar casos por nome do cliente"
-              className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-sans focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-slate-400 transition-all placeholder:text-slate-400 text-slate-900 shadow-sm"
-            />
+        <div>
+          <div className="flex items-center gap-1.5 text-xs font-bold text-amber-600 uppercase tracking-wider mb-0.5">
+            <Link href="/dashboard" className="flex items-center gap-1 hover:text-amber-700 transition-colors">
+              <ArrowLeft className="w-3.5 h-3.5" /> Voltar ao Dashboard
+            </Link>
           </div>
-          <button
-            onClick={() => setShowFilters(!showFilters)}
-            aria-expanded={showFilters}
-            className={`flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg border transition-colors shrink-0 ${hasActiveFilters ? 'bg-amber-50 border-amber-300 text-amber-700' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'}`}
-          >
-            <SlidersHorizontal className="w-4 h-4" />
-            Filtros
-            {hasActiveFilters && <span className="w-2 h-2 rounded-full bg-amber-500" />}
-          </button>
+          <h1 className="font-serif font-bold text-3xl text-slate-900 tracking-tight">Todos os Casos</h1>
+          <p className="font-sans text-sm text-slate-550 mt-0.5 font-medium">
+            {total} {total === 1 ? 'caso encontrado' : 'casos encontrados'} em andamento no escritório.
+          </p>
         </div>
       </div>
 
-      {/* Filtros avançados */}
+      {/* Control Area (Search & Filters button) */}
+      <div className="flex flex-col sm:flex-row gap-4 items-center justify-between bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
+        {/* Search */}
+        <div className="relative w-full sm:w-80">
+          <Search className="absolute left-3.5 top-3 w-4 h-4 text-slate-400" />
+          <input
+            value={search}
+            onChange={(e) => { setSearch(e.target.value); setPage(1) }}
+            placeholder="Buscar por cliente..."
+            aria-label="Buscar casos por nome do cliente"
+            className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-sans focus:outline-none focus:border-slate-400 focus:ring-1 focus:ring-slate-400 transition-all placeholder:text-slate-400 text-slate-900"
+          />
+        </div>
+
+        {/* Action Button */}
+        <button
+          onClick={() => setShowFilters(!showFilters)}
+          aria-expanded={showFilters}
+          className={cn(
+            'flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold rounded-lg border transition-all duration-200 shrink-0 w-full sm:w-auto',
+            showFilters || hasActiveFilters
+              ? 'bg-slate-900 text-white border-slate-900 shadow-sm'
+              : 'bg-white border-slate-200 text-slate-650 hover:bg-slate-50 hover:text-slate-850'
+          )}
+        >
+          <SlidersHorizontal className="w-3.5 h-3.5" />
+          Filtros Avançados
+          {hasActiveFilters && <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />}
+        </button>
+      </div>
+
+      {/* Advanced Filters Card */}
       {showFilters && (
-        <Card variant="light" className="p-5">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <Card variant="light" className="p-6 border-slate-200/80 space-y-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-5">
             <div>
-              <label htmlFor="filter-status" className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Status</label>
-              <select id="filter-status" value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setPage(1) }} className="neo-input">
+              <label htmlFor="filter-status" className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-2">Status</label>
+              <select 
+                id="filter-status" 
+                value={statusFilter} 
+                onChange={(e) => { setStatusFilter(e.target.value); setPage(1) }} 
+                className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-sm text-slate-800 focus:outline-none focus:border-slate-400 focus:ring-1 focus:ring-slate-400 transition-all"
+              >
                 <option value="">Todos</option>
                 {STATUS_OPTIONS.map((s) => (
                   <option key={s.value} value={s.value}>{s.label}</option>
@@ -188,8 +228,13 @@ export default function CasesPage() {
               </select>
             </div>
             <div>
-              <label htmlFor="filter-priority" className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Prioridade</label>
-              <select id="filter-priority" value={priority} onChange={(e) => { setPriority(e.target.value); setPage(1) }} className="neo-input">
+              <label htmlFor="filter-priority" className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-2">Prioridade</label>
+              <select 
+                id="filter-priority" 
+                value={priority} 
+                onChange={(e) => { setPriority(e.target.value); setPage(1) }} 
+                className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-sm text-slate-800 focus:outline-none focus:border-slate-400 focus:ring-1 focus:ring-slate-400 transition-all"
+              >
                 <option value="">Todas</option>
                 <option value="CRITICAL">Crítico</option>
                 <option value="ATTENTION">Atenção</option>
@@ -197,8 +242,13 @@ export default function CasesPage() {
               </select>
             </div>
             <div>
-              <label htmlFor="filter-benefit" className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Tipo de Benefício</label>
-              <select id="filter-benefit" value={benefitType} onChange={(e) => { setBenefitType(e.target.value); setPage(1) }} className="neo-input">
+              <label htmlFor="filter-benefit" className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-2">Tipo de Benefício</label>
+              <select 
+                id="filter-benefit" 
+                value={benefitType} 
+                onChange={(e) => { setBenefitType(e.target.value); setPage(1) }} 
+                className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-sm text-slate-800 focus:outline-none focus:border-slate-400 focus:ring-1 focus:ring-slate-400 transition-all"
+              >
                 <option value="">Todos</option>
                 {ALL_BENEFIT_TYPES.map((t) => (
                   <option key={t} value={t}>{BENEFIT_SHORT_LABELS[t]}</option>
@@ -206,26 +256,43 @@ export default function CasesPage() {
               </select>
             </div>
             <div>
-              <label htmlFor="filter-rmi-min" className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">RMI mínima (R$)</label>
-              <input id="filter-rmi-min" type="number" value={rmiMin} onChange={(e) => { setRmiMin(e.target.value); setPage(1) }} placeholder="0,00" className="neo-input" />
+              <label htmlFor="filter-rmi-min" className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-2">RMI mínima (R$)</label>
+              <input 
+                id="filter-rmi-min" 
+                type="number" 
+                value={rmiMin} 
+                onChange={(e) => { setRmiMin(e.target.value); setPage(1) }} 
+                placeholder="0,00" 
+                className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-sm text-slate-850 placeholder-slate-400 focus:outline-none focus:border-slate-400 focus:ring-1 focus:ring-slate-400 transition-all" 
+              />
             </div>
             <div>
-              <label htmlFor="filter-rmi-max" className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">RMI máxima (R$)</label>
-              <input id="filter-rmi-max" type="number" value={rmiMax} onChange={(e) => { setRmiMax(e.target.value); setPage(1) }} placeholder="99999,00" className="neo-input" />
+              <label htmlFor="filter-rmi-max" className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-2">RMI máxima (R$)</label>
+              <input 
+                id="filter-rmi-max" 
+                type="number" 
+                value={rmiMax} 
+                onChange={(e) => { setRmiMax(e.target.value); setPage(1) }} 
+                placeholder="99999,00" 
+                className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-sm text-slate-850 placeholder-slate-400 focus:outline-none focus:border-slate-400 focus:ring-1 focus:ring-slate-400 transition-all" 
+              />
             </div>
             <div>
-              <label htmlFor="filter-created-from" className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Criado a partir de</label>
+              <label htmlFor="filter-created-from" className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-2">Criado a partir de</label>
               <DatePicker value={createdFrom} onChange={(d) => { setCreatedFrom(d ? d.toISOString().split('T')[0] : ''); setPage(1) }} />
             </div>
             <div>
-              <label htmlFor="filter-created-to" className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Criado até</label>
+              <label htmlFor="filter-created-to" className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-2">Criado até</label>
               <DatePicker value={createdTo} onChange={(d) => { setCreatedTo(d ? d.toISOString().split('T')[0] : ''); setPage(1) }} />
             </div>
-            <div className="col-span-2 flex items-end">
+            <div className="flex items-end justify-start sm:col-span-2 md:col-span-1 py-1">
               {hasActiveFilters && (
-                <button onClick={clearFilters} className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-700 transition-colors">
+                <button 
+                  onClick={clearFilters} 
+                  className="flex items-center gap-1.5 text-xs font-bold text-red-600 hover:text-red-750 transition-colors"
+                >
                   <X className="w-4 h-4" />
-                  Limpar filtros
+                  Limpar Filtros
                 </button>
               )}
             </div>
@@ -234,154 +301,175 @@ export default function CasesPage() {
       )}
 
       <ErrorBoundary>
-      {/* Tabela */}
-      <Card variant="light" className="p-0 overflow-hidden">
-        {loading ? (
-          <div className="py-16 flex items-center justify-center">
-            <div className="w-6 h-6 border-4 border-amber-500 border-t-transparent animate-spin rounded-full" />
-          </div>
-        ) : cases.length === 0 ? (
-          <div className="py-16 text-center">
-            <p className="font-semibold text-slate-700">Nenhum caso encontrado</p>
-            <p className="text-sm text-slate-500 mt-1">Ajuste os filtros ou cadastre um cliente.</p>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left">
-              <thead>
-                <tr className="bg-slate-50 border-b border-slate-200">
-                  {([
-                    { label: 'Cliente', field: 'client' },
-                    { label: 'Benefício', field: null },
-                    { label: 'Status', field: 'status' },
-                    { label: 'Prioridade', field: 'priority' },
-                    { label: 'RMI Calculada', field: null },
-                    { label: 'Prazo', field: 'deadlineDate' },
-                    { label: 'Criado em', field: 'createdAt' },
-                  ] as { label: string; field: typeof sortField | null }[]).map(({ label, field }) => (
-                    <th
-                      key={label}
-                      className={`px-5 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wider ${field ? 'cursor-pointer select-none hover:text-slate-700' : ''}`}
-                      onClick={field ? () => handleSort(field) : undefined}
-                    >
-                      <span className="inline-flex items-center gap-1">
-                        {label}
-                        {field && sortField === field && (
-                          <span className="text-amber-500">{sortDir === 'asc' ? '↑' : '↓'}</span>
+        {/* Table Card */}
+        <Card variant="light" className="p-0 border-slate-200/80 shadow-sm overflow-hidden">
+          {loading ? (
+            <div className="py-20 flex flex-col items-center justify-center">
+              <div className="w-8 h-8 border-4 border-amber-500 border-t-transparent animate-spin rounded-full" />
+              <p className="font-sans font-medium text-slate-500 animate-pulse mt-4">Carregando processos...</p>
+            </div>
+          ) : cases.length === 0 ? (
+            <div className="py-20 text-center flex flex-col items-center justify-center px-4">
+              <div className="w-16 h-16 rounded-2xl bg-slate-50 flex items-center justify-center mb-4 border border-slate-200/60 shadow-sm text-slate-350">
+                <Briefcase className="w-8 h-8" />
+              </div>
+              <p className="font-serif font-bold text-slate-900 text-lg">Nenhum caso encontrado</p>
+              <p className="font-sans text-slate-500 text-sm mt-1 max-w-sm font-medium">
+                Tente ajustar seus filtros de busca ou adicione um novo caso a partir do cadastro do cliente.
+              </p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-slate-50/50 border-b border-slate-200">
+                    {([
+                      { label: 'Cliente', field: 'client' },
+                      { label: 'Benefício', field: null },
+                      { label: 'Status', field: 'status' },
+                      { label: 'Prioridade', field: 'priority' },
+                      { label: 'RMI Calculada', field: null },
+                      { label: 'Prazo', field: 'deadlineDate' },
+                      { label: 'Criado em', field: 'createdAt' },
+                    ] as { label: string; field: typeof sortField | null }[]).map(({ label, field }) => (
+                      <th
+                        key={label}
+                        className={cn(
+                          'px-6 py-4 font-sans font-bold text-[10px] text-slate-400 uppercase tracking-wider',
+                          field && 'cursor-pointer select-none hover:text-slate-700 transition-colors'
                         )}
-                        {field && sortField !== field && <span className="text-slate-300">↕</span>}
-                      </span>
-                    </th>
-                  ))}
-                  <th className="px-5 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wider text-right">Ações</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {cases.map((c) => (
-                  <tr key={c.id} className="hover:bg-slate-50 transition-colors">
-                    <td className="px-5 py-4">
-                      <Link href={`/cases/${c.id}`} className="font-semibold text-sm text-slate-900 hover:text-amber-600 transition-colors">
-                        {c.client.name}
-                      </Link>
-                    </td>
-                    <td className="px-5 py-4 text-sm text-slate-700">{BENEFIT_SHORT_LABELS[c.benefitType] ?? c.benefitType}</td>
-                    <td className="px-5 py-4">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700">
-                        {STATUS_LABELS[c.status] ?? c.status}
-                      </span>
-                    </td>
-                    <td className="px-5 py-4">
-                      <Badge variant={PRIORITY_VARIANT[c.priority] ?? 'slate'}>
-                        {PRIORITY_LABEL[c.priority] ?? c.priority}
-                      </Badge>
-                    </td>
-                    <td className="px-5 py-4 text-sm font-semibold text-green-700">{c.selectedRmi ? formatCurrency(c.selectedRmi) : '—'}</td>
-                    <td className="px-5 py-4 text-sm text-slate-500">
-                      {c.deadlineDate ? formatDate(c.deadlineDate) : '—'}
-                    </td>
-                    <td className="px-5 py-4 text-sm text-slate-500">{formatDate(c.createdAt)}</td>
-                    <td className="px-5 py-4 text-right">
-                      <ActionsDropdown
-                        ariaLabel={`Ações para caso de ${c.client.name}`}
-                        actions={[
-                          {
-                            label: 'Alterar Status',
-                            onClick: () => setStatusTarget({ id: c.id, status: c.status }),
-                          },
-                          {
-                            label: 'Exportar PDF',
-                            onClick: () => downloadPdf(c.id).then((ok) => {
-                              if (!ok) addToast({ type: 'error', title: 'Erro', message: 'Não foi possível gerar o PDF.' })
-                            }),
-                          },
-                          {
-                            label: 'Acessar Cálculo',
-                            onClick: () => router.push(`/cases/${c.id}/calculator`),
-                          },
-                        ]}
-                      />
-                    </td>
+                        onClick={field ? () => handleSort(field) : undefined}
+                      >
+                        <span className="inline-flex items-center gap-1.5">
+                          {label}
+                          {field && sortField === field && (
+                            <span className="text-amber-600 font-extrabold">{sortDir === 'asc' ? '↑' : '↓'}</span>
+                          )}
+                          {field && sortField !== field && <span className="text-slate-300">↕</span>}
+                        </span>
+                      </th>
+                    ))}
+                    <th className="px-6 py-4 font-sans font-bold text-[10px] text-slate-400 uppercase tracking-wider text-right">Ações</th>
                   </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {cases.map((c) => (
+                    <tr key={c.id} className="hover:bg-slate-50/40 transition-colors group">
+                      <td className="px-6 py-4">
+                        <Link 
+                          href={`/cases/${c.id}`} 
+                          className="font-sans font-bold text-sm text-slate-800 hover:text-amber-700 transition-colors"
+                        >
+                          {c.client.name}
+                        </Link>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-slate-650 font-medium">
+                        {BENEFIT_SHORT_LABELS[c.benefitType] ?? c.benefitType}
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={cn(
+                          'inline-flex items-center px-2.5 py-1 rounded-md border text-[9px] font-extrabold uppercase tracking-wider',
+                          STATUS_BADGE_STYLE[c.status] || 'bg-slate-50 text-slate-600 border-slate-200'
+                        )}>
+                          {STATUS_LABELS[c.status] ?? c.status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <Badge variant={PRIORITY_VARIANT[c.priority] ?? 'slate'}>
+                          {PRIORITY_LABEL[c.priority] ?? c.priority}
+                        </Badge>
+                      </td>
+                      <td className="px-6 py-4 text-sm font-bold text-emerald-700 font-mono">
+                        {c.selectedRmi ? formatCurrency(c.selectedRmi) : '—'}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-slate-500 font-mono">
+                        {c.deadlineDate ? formatDate(c.deadlineDate) : '—'}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-slate-500 font-medium">
+                        {formatDate(c.createdAt)}
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <ActionsDropdown
+                          ariaLabel={`Ações para caso de ${c.client.name}`}
+                          actions={[
+                            {
+                              label: 'Alterar Status',
+                              onClick: () => setStatusTarget({ id: c.id, status: c.status }),
+                            },
+                            {
+                              label: 'Exportar PDF',
+                              onClick: () => downloadPdf(c.id).then((ok) => {
+                                if (!ok) addToast({ type: 'error', title: 'Erro', message: 'Não foi possível gerar o PDF.' })
+                              }),
+                            },
+                            {
+                              label: 'Acessar Cálculo',
+                              onClick: () => router.push(`/cases/${c.id}/calculator`),
+                            },
+                          ]}
+                        />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </Card>
+
+        {/* Modal Alterar Status */}
+        <Modal open={!!statusTarget} onClose={() => setStatusTarget(null)} title="Alterar Status do Caso">
+          <div className="space-y-4">
+            <div>
+              <label className="block font-sans font-extrabold text-[10px] text-slate-400 uppercase tracking-wider mb-2">Novo Status</label>
+              <select
+                value={statusTarget?.status ?? ''}
+                onChange={(e) => setStatusTarget((prev) => prev ? { ...prev, status: e.target.value } : null)}
+                className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-2.5 text-sm text-slate-805 focus:outline-none focus:border-slate-400 focus:ring-1 focus:ring-slate-400 transition-all"
+              >
+                {STATUS_OPTIONS.map((s) => (
+                  <option key={s.value} value={s.value}>{s.label}</option>
                 ))}
-              </tbody>
-            </table>
+              </select>
+            </div>
+            <div className="flex gap-3 pt-2">
+              <Button type="button" variant="outline" onClick={() => setStatusTarget(null)} className="flex-1 font-sans font-bold text-xs h-10">
+                Cancelar
+              </Button>
+              <Button onClick={handleStatusChange} loading={updatingStatus} className="flex-1 bg-slate-900 hover:bg-slate-850 border-slate-900 font-sans font-bold text-xs h-10 shadow-sm text-white">
+                Salvar
+              </Button>
+            </div>
+          </div>
+        </Modal>
+
+        {/* Paginação */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between pt-2">
+            <span className="text-xs text-slate-500 font-medium">{total} casos no total</span>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={page === 1}
+                className="p-2 rounded-lg border border-slate-250 bg-white hover:bg-slate-50 hover:text-slate-850 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-xs"
+                aria-label="Página anterior"
+              >
+                <ChevronLeft className="w-4 h-4" aria-hidden="true" />
+              </button>
+              <span className="text-xs text-slate-700 font-bold font-mono bg-white border border-slate-200 px-3 py-1.5 rounded-lg shadow-xs">
+                {page} / {totalPages}
+              </span>
+              <button
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                disabled={page === totalPages}
+                className="p-2 rounded-lg border border-slate-250 bg-white hover:bg-slate-50 hover:text-slate-850 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-xs"
+                aria-label="Próxima página"
+              >
+                <ChevronRight className="w-4 h-4" aria-hidden="true" />
+              </button>
+            </div>
           </div>
         )}
-      </Card>
-
-      {/* Modal Alterar Status */}
-      <Modal open={!!statusTarget} onClose={() => setStatusTarget(null)} title="Alterar Status do Caso">
-        <div className="space-y-4">
-          <div>
-            <label className="block font-sans font-medium text-sm text-slate-700 mb-1">Novo Status</label>
-            <select
-              value={statusTarget?.status ?? ''}
-              onChange={(e) => setStatusTarget((prev) => prev ? { ...prev, status: e.target.value } : null)}
-              className="neo-input"
-            >
-              {STATUS_OPTIONS.map((s) => (
-                <option key={s.value} value={s.value}>{s.label}</option>
-              ))}
-            </select>
-          </div>
-          <div className="flex gap-3">
-            <Button onClick={handleStatusChange} loading={updatingStatus} className="flex-1">
-              SALVAR
-            </Button>
-            <Button variant="outline" onClick={() => setStatusTarget(null)} className="flex-1">
-              CANCELAR
-            </Button>
-          </div>
-        </div>
-      </Modal>
-
-      {/* Paginação */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-slate-500">{total} casos no total</span>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-              disabled={page === 1}
-              className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-              aria-label="Página anterior"
-            >
-              <ChevronLeft className="w-4 h-4" aria-hidden="true" />
-            </button>
-            <span className="text-sm text-slate-700 font-medium">
-              {page} / {totalPages}
-            </span>
-            <button
-              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-              disabled={page === totalPages}
-              className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-              aria-label="Próxima página"
-            >
-              <ChevronRight className="w-4 h-4" aria-hidden="true" />
-            </button>
-          </div>
-        </div>
-      )}
       </ErrorBoundary>
     </div>
   )

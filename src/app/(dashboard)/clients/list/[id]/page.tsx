@@ -1,13 +1,13 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { useParams } from 'next/navigation'
+import { useEffect, useState, useCallback } from 'react'
+import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import api from '@/lib/api'
 import { useToast } from '@/store/toast'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
-import { Card, CardHeader } from '@/components/ui/Card'
+import { Card } from '@/components/ui/Card'
 import { maskCPF } from '@/lib/sanitize'
 import { formatDate } from '@/lib/utils'
 import { Modal } from '@/components/ui/Modal'
@@ -18,7 +18,8 @@ import { BENEFIT_SHORT_LABELS, STATUS_LABELS, PRIORITY_LABELS, BENEFIT_DB_LABELS
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { ClientFloatingActions } from '@/components/client/ClientFloatingActions'
 import { ClientPortalCard } from '@/components/client/ClientPortalCard'
-import { Briefcase, Clock, CheckCircle } from 'lucide-react'
+import { Briefcase, Clock, CheckCircle, ArrowLeft, User, FileText, ChevronRight } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 const getCaseStatusLabel = (status: string) => {
   const dbToLabel: Record<string, string> = {
@@ -59,8 +60,6 @@ interface ClientDetail {
   }>
 }
 
-
-
 const caseSchema = z.object({
   benefitType: z.string().min(1, 'Selecione o tipo de benefício'),
   priority: z.enum(['CRITICAL', 'ATTENTION', 'NORMAL']).default('NORMAL'),
@@ -70,6 +69,7 @@ type CaseForm = z.infer<typeof caseSchema>
 
 export default function ClientDetailPage() {
   const params = useParams()
+  const router = useRouter()
   const [client, setClient] = useState<ClientDetail | null>(null)
   const [loading, setLoading] = useState(true)
   const [showCaseModal, setShowCaseModal] = useState(false)
@@ -79,22 +79,28 @@ export default function ClientDetailPage() {
   const [notesText, setNotesText] = useState('')
   const { addToast } = useToast()
 
-  const { register, handleSubmit, formState: { errors } } = useForm<CaseForm>({
+  const { register, handleSubmit, formState: { errors }, reset } = useForm<CaseForm>({
     resolver: zodResolver(caseSchema),
   })
 
-  useEffect(() => {
+  const loadClient = useCallback(() => {
+    setLoading(true)
     api.get(`/clients/${params.id}`)
       .then((r) => setClient(r.data.client))
       .catch(() => null)
       .finally(() => setLoading(false))
   }, [params.id])
 
+  useEffect(() => {
+    loadClient()
+  }, [loadClient])
+
   const createCase = async (data: CaseForm) => {
     setCreatingCase(true)
     try {
       await api.post('/cases', { clientId: params.id, ...data })
       setShowCaseModal(false)
+      reset()
       addToast({ type: 'success', title: 'Caso criado', message: 'Novo caso vinculado ao cliente.' })
       const r = await api.get(`/clients/${params.id}`)
       setClient(r.data.client)
@@ -126,13 +132,25 @@ export default function ClientDetailPage() {
     addToast({ type: 'success', title: 'Copiado', message: 'CPF copiado.' })
   }
 
-
   if (loading) {
-    return <div className="p-8 font-sans font-medium text-slate-500 animate-pulse">Carregando...</div>
+    return (
+      <div className="flex items-center justify-center py-32">
+        <div className="w-8 h-8 border-4 border-amber-500 border-t-transparent animate-spin rounded-full" />
+      </div>
+    )
   }
 
   if (!client) {
-    return <div className="p-8 font-sans text-slate-500">Cliente não encontrado.</div>
+    return (
+      <div className="p-8 max-w-7xl mx-auto text-center py-20 bg-white border border-slate-200 rounded-xl shadow-sm">
+        <User className="w-10 h-10 text-slate-300 mx-auto mb-3" />
+        <h3 className="font-serif font-bold text-slate-850 text-base">Cliente não encontrado</h3>
+        <p className="font-sans text-slate-500 text-sm mt-1">Este registro pode ter sido excluído ou não existe.</p>
+        <button onClick={() => router.push('/clients/list')} className="mt-4 font-sans font-bold text-xs text-amber-600 hover:underline">
+          Voltar à lista de clientes
+        </button>
+      </div>
+    )
   }
 
   const totalCases = client.cases.length
@@ -141,144 +159,160 @@ export default function ClientDetailPage() {
 
   return (
     <ErrorBoundary>
-    <div className="p-4 sm:p-6 space-y-6">
-      <div className="flex items-start justify-between">
-        <div>
-          <div className="flex items-center gap-3 mb-1">
-            <Link href="/clients/list" className="font-sans text-sm font-medium text-slate-500 hover:text-slate-900">
-              ← Clientes
-            </Link>
-          </div>
-          <h1 className="font-serif font-bold text-3xl text-slate-900 tracking-tight">{client.name}</h1>
-          <p className="font-sans text-sm text-slate-500 font-medium">CPF: {maskCPF(client.cpf)}</p>
-        </div>
-      </div>
-
-      {/* Dados do cliente */}
-      <Card variant="dark">
-        <CardHeader title="Dados do Segurado" />
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm font-sans">
-          <div>
-            <span className="text-slate-500 text-xs font-medium uppercase tracking-wide">Data de nascimento</span>
-            <p className="text-slate-900 font-medium">{formatDate(client.birthDate)}</p>
-          </div>
-          <div>
-            <span className="text-slate-500 text-xs font-medium uppercase tracking-wide">Telefone</span>
-            <p className="text-slate-900 font-medium">{client.phone ?? '—'}</p>
-          </div>
-          <div>
-            <span className="text-slate-500 text-xs font-medium uppercase tracking-wide">Email</span>
-            <p className="text-slate-900 font-medium">{client.email ?? '—'}</p>
-          </div>
-          <div>
-            <span className="text-slate-500 text-xs font-medium uppercase tracking-wide">Estado Civil</span>
-            <p className="text-slate-900 font-medium">{client.maritalStatus ? client.maritalStatus.charAt(0).toUpperCase() + client.maritalStatus.slice(1) : '—'}</p>
-          </div>
-          <div>
-            <span className="text-slate-500 text-xs font-medium uppercase tracking-wide">Profissão</span>
-            <p className="text-slate-900 font-medium">{client.profession ?? '—'}</p>
-          </div>
-          <div>
-            <span className="text-slate-500 text-xs font-medium uppercase tracking-wide">Endereço</span>
-            <p className="text-slate-900 font-medium">
-              {[client.street, client.streetNumber].filter(Boolean).join(', ')}
-              {client.complement ? ` - ${client.complement}` : ''}
-              {client.neighborhood ? `, ${client.neighborhood}` : ''}
-              {client.city ? `, ${client.city}` : ''}
-              {client.state ? ` - ${client.state}` : ''}
-              {client.zipCode ? `, CEP ${client.zipCode}` : ''}
-              {![client.street, client.city].some(Boolean) && '—'}
-            </p>
-          </div>
-          <div>
-            <span className="text-slate-500 text-xs font-medium uppercase tracking-wide">Prioridade</span>
-            <div className="mt-0.5">
-              <Badge variant={client.priority === 'CRITICAL' ? 'red' : client.priority === 'ATTENTION' ? 'yellow' : 'slate'}>
-                {PRIORITY_LABELS[client.priority] ?? client.priority}
-              </Badge>
+      <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6 lg:space-y-8 animate-fade-in">
+        
+        {/* Header */}
+        <div className="flex items-center justify-between border-b border-slate-200 pb-6">
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center shadow-lg flex-shrink-0 text-white font-serif font-bold text-xl">
+              {client.name.charAt(0).toUpperCase()}
+            </div>
+            <div>
+              <div className="flex items-center gap-1.5 text-xs font-bold text-amber-600 uppercase tracking-wider mb-0.5">
+                <Link href="/clients/list" className="flex items-center gap-1 hover:text-amber-700 transition-colors">
+                  <ArrowLeft className="w-3.5 h-3.5" /> Clientes
+                </Link>
+              </div>
+              <h1 className="font-serif font-bold text-3xl text-slate-900 tracking-tight">{client.name}</h1>
+              <p className="font-sans text-sm text-slate-550 mt-0.5 font-medium">CPF: {maskCPF(client.cpf)}</p>
             </div>
           </div>
         </div>
-        {client.notes && (
-          <div className="mt-4 p-3 border border-slate-200 bg-slate-50 rounded-md font-sans text-sm text-slate-700">
-            {client.notes}
-          </div>
-        )}
-      </Card>
 
-      {/* Resumo de Casos */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <Card variant="light" className="p-6 flex items-center gap-4">
-          <div className="w-12 h-12 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-600 shrink-0">
-            <Briefcase className="w-5 h-5" />
+        {/* Informações Pessoais */}
+        <Card variant="light" className="p-6 border-slate-200/80">
+          <h2 className="font-serif font-bold text-lg text-slate-900 border-b border-slate-100 pb-3 mb-4">
+            Dados do Segurado
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 text-sm font-sans">
+            <div>
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Data de Nascimento</span>
+              <p className="text-slate-800 font-semibold mt-1">{formatDate(client.birthDate)}</p>
+            </div>
+            <div>
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Telefone</span>
+              <p className="text-slate-800 font-semibold mt-1">{client.phone ?? '—'}</p>
+            </div>
+            <div>
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Email</span>
+              <p className="text-slate-800 font-semibold mt-1 truncate">{client.email ?? '—'}</p>
+            </div>
+            <div>
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Estado Civil</span>
+              <p className="text-slate-800 font-semibold mt-1">
+                {client.maritalStatus ? client.maritalStatus.charAt(0).toUpperCase() + client.maritalStatus.slice(1) : '—'}
+              </p>
+            </div>
+            <div>
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Profissão</span>
+              <p className="text-slate-800 font-semibold mt-1">{client.profession ?? '—'}</p>
+            </div>
+            <div className="lg:col-span-2">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Endereço Completo</span>
+              <p className="text-slate-800 font-semibold mt-1 leading-relaxed">
+                {[client.street, client.streetNumber].filter(Boolean).join(', ')}
+                {client.complement ? ` - ${client.complement}` : ''}
+                {client.neighborhood ? `, ${client.neighborhood}` : ''}
+                {client.city ? `, ${client.city}` : ''}
+                {client.state ? ` - ${client.state}` : ''}
+                {client.zipCode ? `, CEP ${client.zipCode}` : ''}
+                {![client.street, client.city].some(Boolean) && '—'}
+              </p>
+            </div>
+            <div>
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Prioridade</span>
+              <div className="mt-1">
+                <Badge variant={client.priority === 'CRITICAL' ? 'red' : client.priority === 'ATTENTION' ? 'yellow' : 'slate'}>
+                  {PRIORITY_LABELS[client.priority] ?? client.priority}
+                </Badge>
+              </div>
+            </div>
           </div>
-          <div>
-            <p className="font-sans text-xs text-slate-500 uppercase font-bold tracking-wider">Total de Casos</p>
-            <p className="font-sans font-bold text-2xl text-slate-900 mt-0.5">{totalCases}</p>
-          </div>
-        </Card>
-        <Card variant="light" className="p-6 flex items-center gap-4">
-          <div className="w-12 h-12 rounded-full bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-600 shrink-0">
-            <Clock className="w-5 h-5" />
-          </div>
-          <div>
-            <p className="font-sans text-xs text-slate-500 uppercase font-bold tracking-wider">Em Andamento</p>
-            <p className="font-sans font-bold text-2xl text-slate-900 mt-0.5">{activeCases}</p>
-          </div>
-        </Card>
-        <Card variant="light" className="p-6 flex items-center gap-4">
-          <div className="w-12 h-12 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 shrink-0">
-            <CheckCircle className="w-5 h-5" />
-          </div>
-          <div>
-            <p className="font-sans text-xs text-slate-500 uppercase font-bold tracking-wider">Finalizados</p>
-            <p className="font-sans font-bold text-2xl text-slate-900 mt-0.5">{finishedCases}</p>
-          </div>
-        </Card>
-      </div>
 
-      {/* Portal do Cliente */}
-      <ClientPortalCard
-        cases={client.cases}
-      />
+          {client.notes && (
+            <div className="mt-6 p-4 border border-slate-200/80 bg-slate-50/50 rounded-xl font-sans text-xs text-slate-700 leading-relaxed font-medium">
+              <span className="block text-[9px] font-extrabold text-slate-400 uppercase tracking-wider mb-1.5">Observações Internas</span>
+              {client.notes}
+            </div>
+          )}
+        </Card>
 
-      {/* Casos */}
-      <Card variant="dark">
-        <CardHeader
-          title={`Casos (${client.cases.length})`}
-          action={
-            <Button size="sm" onClick={() => setShowCaseModal(true)}>
-              + Caso
+        {/* Resumo de Casos */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs flex items-center gap-4 hover:shadow-sm transition-shadow">
+            <div className="w-11 h-11 rounded-lg bg-slate-50 border border-slate-250 flex items-center justify-center text-slate-500 shrink-0 shadow-sm">
+              <Briefcase className="w-5 h-5" />
+            </div>
+            <div>
+              <p className="font-sans text-[10px] text-slate-400 uppercase font-bold tracking-wider">Total de Casos</p>
+              <p className="font-mono font-bold text-2xl text-slate-900 mt-0.5">{totalCases}</p>
+            </div>
+          </div>
+          <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs flex items-center gap-4 hover:shadow-sm transition-shadow">
+            <div className="w-11 h-11 rounded-lg bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-600 shrink-0 shadow-sm">
+              <Clock className="w-5 h-5" />
+            </div>
+            <div>
+              <p className="font-sans text-[10px] text-slate-400 uppercase font-bold tracking-wider">Em Andamento</p>
+              <p className="font-mono font-bold text-2xl text-slate-900 mt-0.5">{activeCases}</p>
+            </div>
+          </div>
+          <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs flex items-center gap-4 hover:shadow-sm transition-shadow">
+            <div className="w-11 h-11 rounded-lg bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 shrink-0 shadow-sm">
+              <CheckCircle className="w-5 h-5" />
+            </div>
+            <div>
+              <p className="font-sans text-[10px] text-slate-400 uppercase font-bold tracking-wider">Finalizados</p>
+              <p className="font-mono font-bold text-2xl text-slate-900 mt-0.5">{finishedCases}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Portal do Cliente */}
+        <ClientPortalCard cases={client.cases} />
+
+        {/* Casos / Processos */}
+        <Card variant="light" className="p-6 border-slate-200/80 space-y-4">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+            <h2 className="font-serif font-bold text-lg text-slate-900">
+              Processos Vinculados ({client.cases.length})
+            </h2>
+            <Button size="sm" onClick={() => setShowCaseModal(true)} className="bg-slate-900 hover:bg-slate-800 text-white border-slate-900 h-9 font-sans font-bold text-xs shadow-sm">
+              + Adicionar Processo
             </Button>
-          }
-        />
-
-        {client.cases.length === 0 ? (
-          <div className="py-8 text-center border border-dashed border-slate-300 bg-slate-50 rounded-lg">
-            <p className="font-sans text-slate-500 text-sm">Nenhum caso criado.</p>
-            <Button size="sm" onClick={() => setShowCaseModal(true)} className="mt-3">
-              + Criar Caso
-            </Button>
           </div>
-        ) : (
-          <div className="space-y-2">
-            {client.cases.map((caso) => (
-              <Link key={caso.id} href={`/cases/${caso.id}`}>
-                <div className="border border-slate-200 bg-white rounded-md p-3 hover:border-amber-600 shadow-sm transition-colors cursor-pointer">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-sans font-semibold text-sm text-slate-900">
+
+          {client.cases.length === 0 ? (
+            <div className="py-12 text-center border-2 border-dashed border-slate-200 bg-slate-50/20 rounded-xl">
+              <FileText className="w-8 h-8 text-slate-350 mx-auto mb-2" />
+              <p className="font-sans text-slate-500 text-sm font-medium">Nenhum caso cadastrado para este cliente.</p>
+              <Button size="sm" onClick={() => setShowCaseModal(true)} className="mt-3.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs h-8">
+                Criar Caso
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {client.cases.map((caso) => (
+                <Link key={caso.id} href={`/cases/${caso.id}`} className="block">
+                  <div className="border border-slate-200 bg-white rounded-xl p-4.5 hover:border-slate-300 hover:shadow-md transition-all duration-300 flex items-center justify-between group shadow-sm">
+                    <div className="space-y-1">
+                      <p className="font-serif font-bold text-sm text-slate-800 group-hover:text-amber-700 transition-colors">
                         {BENEFIT_DB_LABELS[caso.benefitType] ?? BENEFIT_SHORT_LABELS[caso.benefitType] ?? caso.benefitType}
                       </p>
-                      <p className="font-sans text-sm text-slate-500">
-                        {formatDate(caso.createdAt)}
+                      <p className="font-mono text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                        Criado em: {formatDate(caso.createdAt)}
                       </p>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-3">
                       {caso.cnisDocument && (
-                        <Badge variant={['PROCESSED', 'PROCESSADO'].includes(caso.cnisDocument.processingStatus.toUpperCase()) ? 'lime' : 'yellow'}>
-                          CNIS {['PROCESSED', 'PROCESSADO'].includes(caso.cnisDocument.processingStatus.toUpperCase()) ? '✅' : '⏳'}
-                        </Badge>
+                        <span className={cn(
+                          'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-[9px] font-extrabold uppercase tracking-wider',
+                          ['PROCESSED', 'PROCESSADO'].includes(caso.cnisDocument.processingStatus.toUpperCase()) 
+                            ? 'bg-emerald-50 text-emerald-700 border-emerald-100/60' 
+                            : 'bg-amber-50 text-amber-700 border-amber-100/60'
+                        )}>
+                          CNIS {['PROCESSED', 'PROCESSADO'].includes(caso.cnisDocument.processingStatus.toUpperCase()) ? 'Lido' : 'Pendente'}
+                        </span>
                       )}
                       <Badge variant={caso.priority === 'CRITICAL' ? 'red' : caso.priority === 'ATTENTION' ? 'yellow' : 'slate'}>
                         {PRIORITY_LABELS[caso.priority] ?? caso.priority}
@@ -294,81 +328,87 @@ export default function ClientDetailPage() {
                       >
                         {getCaseStatusLabel(caso.status)}
                       </Badge>
+                      <ChevronRight className="w-4 h-4 text-slate-350 group-hover:text-slate-700 transition-colors ml-1 shrink-0" />
                     </div>
                   </div>
-                </div>
-              </Link>
-            ))}
-          </div>
-        )}
-      </Card>
-
-      {/* Modal Novo Caso */}
-      <Modal open={showCaseModal} onClose={() => setShowCaseModal(false)} title="Novo Caso">
-        <form onSubmit={handleSubmit(createCase)} className="space-y-4">
-          <div>
-            <label className="neo-label">Tipo de Benefício</label>
-            <select {...register('benefitType')} className="neo-input">
-              <option value="">Selecione...</option>
-              {Object.entries(BENEFIT_SHORT_LABELS).map(([value, label]) => (
-                <option key={value} value={value}>{label}</option>
+                </Link>
               ))}
-            </select>
-            {errors.benefitType && (
-              <p className="mt-1 font-sans text-xs text-red-500">{errors.benefitType.message}</p>
-            )}
-          </div>
-          <div>
-            <label className="neo-label">Prioridade</label>
-            <select {...register('priority')} className="neo-input">
-              <option value="NORMAL">Normal</option>
-              <option value="ATTENTION">Atenção</option>
-              <option value="CRITICAL">Crítico</option>
-            </select>
-          </div>
-          <div>
-            <label className="neo-label">Observações</label>
-            <textarea
-              {...register('notes')}
-              className="neo-input min-h-[80px] resize-none"
-              placeholder="Detalhes do caso..."
-            />
-          </div>
-          <div className="flex gap-3">
-            <Button type="submit" loading={creatingCase} className="flex-1">Criar</Button>
-            <Button type="button" variant="outline" onClick={() => setShowCaseModal(false)} className="flex-1">Cancelar</Button>
-          </div>
-        </form>
-      </Modal>
+            </div>
+          )}
+        </Card>
 
-      {/* Modal Editar Notas */}
-      <Modal open={showNotesModal} onClose={() => setShowNotesModal(false)} title="Editar Observações">
-        <form onSubmit={saveNotes} className="space-y-4">
-          <div>
-            <textarea
-              value={notesText}
-              onChange={(e) => setNotesText(e.target.value)}
-              className="neo-input min-h-[120px] resize-none"
-              placeholder="Digite as observações do cliente..."
-            />
-          </div>
-          <div className="flex gap-3">
-            <Button type="submit" loading={editingNotes} className="flex-1">Salvar</Button>
-            <Button type="button" variant="outline" onClick={() => setShowNotesModal(false)} className="flex-1">Cancelar</Button>
-          </div>
-        </form>
-      </Modal>
+        {/* Modal Novo Caso */}
+        <Modal open={showCaseModal} onClose={() => setShowCaseModal(false)} title="Novo Processo">
+          <form onSubmit={handleSubmit(createCase)} className="space-y-5">
+            <div>
+              <label className="block text-[11px] font-extrabold text-slate-400 uppercase tracking-wider mb-2">Tipo de Benefício</label>
+              <select 
+                {...register('benefitType')} 
+                className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-2.5 text-sm text-slate-800 focus:outline-none focus:border-slate-400 focus:ring-1 focus:ring-slate-400 transition-all"
+              >
+                <option value="">Selecione...</option>
+                {Object.entries(BENEFIT_SHORT_LABELS).map(([value, label]) => (
+                  <option key={value} value={value}>{label}</option>
+                ))}
+              </select>
+              {errors.benefitType && (
+                <p className="mt-1 font-sans text-xs text-red-500 font-medium">{errors.benefitType.message}</p>
+              )}
+            </div>
+            <div>
+              <label className="block text-[11px] font-extrabold text-slate-400 uppercase tracking-wider mb-2">Prioridade</label>
+              <select 
+                {...register('priority')} 
+                className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-2.5 text-sm text-slate-800 focus:outline-none focus:border-slate-400 focus:ring-1 focus:ring-slate-400 transition-all"
+              >
+                <option value="NORMAL">Normal — Padrão</option>
+                <option value="ATTENTION">Atenção — Prioridade Média</option>
+                <option value="CRITICAL">Crítico — Prioridade Alta (Urgente)</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-[11px] font-extrabold text-slate-400 uppercase tracking-wider mb-2">Observações</label>
+              <textarea
+                {...register('notes')}
+                className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-2.5 text-sm text-slate-800 focus:outline-none focus:border-slate-400 focus:ring-1 focus:ring-slate-400 transition-all min-h-[90px] resize-none"
+                placeholder="Detalhes adicionais do caso..."
+              />
+            </div>
+            <div className="flex gap-3 pt-2">
+              <Button type="button" variant="outline" onClick={() => setShowCaseModal(false)} className="flex-1 font-sans font-bold text-xs h-10">Cancelar</Button>
+              <Button type="submit" loading={creatingCase} className="flex-1 bg-slate-900 hover:bg-slate-850 border-slate-900 font-sans font-bold text-xs h-10 shadow-sm text-white">Criar Caso</Button>
+            </div>
+          </form>
+        </Modal>
 
-      <ClientFloatingActions
-        email={client.email}
-        cpf={client.cpf}
-        onEdit={() => {
-          setNotesText(client.notes || '')
-          setShowNotesModal(true)
-        }}
-        onCopyCpf={handleCopyCpf}
-      />
-    </div>
+        {/* Modal Editar Notas */}
+        <Modal open={showNotesModal} onClose={() => setShowNotesModal(false)} title="Editar Observações">
+          <form onSubmit={saveNotes} className="space-y-4">
+            <div>
+              <textarea
+                value={notesText}
+                onChange={(e) => setNotesText(e.target.value)}
+                className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-2.5 text-sm text-slate-800 focus:outline-none focus:border-slate-400 focus:ring-1 focus:ring-slate-400 transition-all min-h-[140px] resize-none"
+                placeholder="Digite observações importantes sobre este cliente..."
+              />
+            </div>
+            <div className="flex gap-3">
+              <Button type="button" variant="outline" onClick={() => setShowNotesModal(false)} className="flex-1 font-sans font-bold text-xs h-10">Cancelar</Button>
+              <Button type="submit" loading={editingNotes} className="flex-1 bg-slate-900 hover:bg-slate-850 border-slate-900 font-sans font-bold text-xs h-10 shadow-sm text-white">Salvar</Button>
+            </div>
+          </form>
+        </Modal>
+
+        <ClientFloatingActions
+          email={client.email}
+          cpf={client.cpf}
+          onEdit={() => {
+            setNotesText(client.notes || '')
+            setShowNotesModal(true)
+          }}
+          onCopyCpf={handleCopyCpf}
+        />
+      </div>
     </ErrorBoundary>
   )
 }

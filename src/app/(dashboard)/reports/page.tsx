@@ -1,32 +1,33 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { Card, CardHeader } from '@/components/ui/Card'
-import { Loader2, BarChart3 } from 'lucide-react'
+import { Card } from '@/components/ui/Card'
+import { Loader2, BarChart3, ArrowLeft } from 'lucide-react'
 import api from '@/lib/api'
 import { formatCurrency } from '@/lib/utils'
 import { ReportKpiCard, ReportPeriodSelector } from '@/components/reports'
 import dynamic from 'next/dynamic'
+import Link from 'next/link'
 
 const ReportBarChart = dynamic(() => import('@/components/reports').then(m => m.ReportBarChart), {
-  loading: () => <div className="h-[300px] bg-slate-100 rounded-xl animate-pulse" />,
+  loading: () => <div className="h-[300px] bg-slate-50 border border-slate-200 rounded-xl animate-pulse" />,
 })
 
 const ReportPieChart = dynamic(() => import('@/components/reports').then(m => m.ReportPieChart), {
-  loading: () => <div className="h-[300px] bg-slate-100 rounded-xl animate-pulse" />,
+  loading: () => <div className="h-[300px] bg-slate-50 border border-slate-200 rounded-xl animate-pulse" />,
 })
 
 const ReportHorizontalBar = dynamic(() => import('@/components/reports').then(m => m.ReportHorizontalBar), {
-  loading: () => <div className="h-[260px] bg-slate-100 rounded-xl animate-pulse" />,
+  loading: () => <div className="h-[260px] bg-slate-50 border border-slate-200 rounded-xl animate-pulse" />,
 })
 
 const ConversionFunnel = dynamic(() => import('@/components/reports').then(m => m.ConversionFunnel), {
-  loading: () => <div className="h-[300px] bg-slate-100 rounded-xl animate-pulse" />,
+  loading: () => <div className="h-[300px] bg-slate-50 border border-slate-200 rounded-xl animate-pulse" />,
 })
+
 import type { PeriodOption } from '@/components/reports'
 import { STATUS_LABELS } from '@/lib/constants'
 
-// ── Types ──────────────────────────────────────────────────────────────────
 interface OverviewData {
   totalClients: number
   totalCases: number
@@ -53,12 +54,10 @@ interface OperacionalData {
   casesCreatedByMonth: Array<{ month: string; count: number }>
 }
 
-// ── Helpers ────────────────────────────────────────────────────────────────
 function formatNumber(val: number) {
   return val.toLocaleString('pt-BR')
 }
 
-// ── Main Page ──────────────────────────────────────────────────────────────
 export default function ReportsPage() {
   useEffect(() => { document.title = 'Relatórios — Previando' }, [])
   const [period, setPeriod] = useState<PeriodOption>(90)
@@ -80,7 +79,7 @@ export default function ReportsPage() {
       if (financeiroRes.data) setFinanceiro(financeiroRes.data)
       if (operacionalRes.data) setOperacional(operacionalRes.data)
     } catch {
-      // Silently fail — data stays null
+      // Silently fail
     } finally {
       setLoading(false)
     }
@@ -102,29 +101,36 @@ export default function ReportsPage() {
   }
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6 lg:space-y-8">
-      {/* ── Header ─────────────────────────────────────────────────────── */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="font-serif font-bold text-3xl text-slate-900">
-            Relatórios Gerenciais
-          </h1>
-          <p className="font-sans text-sm text-slate-500 mt-1">
-            Métricas e indicadores de desempenho do escritório
-          </p>
+    <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-8 lg:space-y-10 animate-fade-in">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-200 pb-6">
+        <div className="flex items-center gap-4">
+          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center shadow-lg flex-shrink-0">
+            <BarChart3 className="w-7 h-7 text-white" />
+          </div>
+          <div>
+            <div className="flex items-center gap-1.5 text-xs font-bold text-amber-600 uppercase tracking-wider mb-0.5">
+              <Link href="/dashboard" className="flex items-center gap-1 hover:text-amber-700 transition-colors">
+                <ArrowLeft className="w-3.5 h-3.5" /> Voltar ao Dashboard
+              </Link>
+            </div>
+            <h1 className="font-serif font-bold text-3xl text-slate-900 tracking-tight">Relatórios Gerenciais</h1>
+            <p className="font-sans text-sm text-slate-500 mt-0.5 font-medium">
+              Métricas detalhadas de performance e saúde financeira do escritório.
+            </p>
+          </div>
         </div>
-        <ReportPeriodSelector value={period} onChange={setPeriod} />
+        <div className="bg-white p-2 rounded-xl border border-slate-200 shadow-sm self-start sm:self-center">
+          <ReportPeriodSelector value={period} onChange={setPeriod} />
+        </div>
       </div>
 
-      {/* ── KPI Cards ──────────────────────────────────────────────────── */}
-      <section>
-        <div className="flex items-center gap-2 mb-4">
-          <BarChart3 className="w-5 h-5 text-amber-500" />
-          <h2 className="font-sans font-semibold text-lg text-slate-900">
-            Indicadores de Performance (KPIs)
-          </h2>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* KPI Cards */}
+      <section className="space-y-4">
+        <h2 className="font-serif font-bold text-lg text-slate-800 tracking-wide">
+          Indicadores de Performance (KPIs)
+        </h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
           <ReportKpiCard
             label="Total de Clientes"
             value={formatNumber(overview?.totalClients ?? 0)}
@@ -141,7 +147,7 @@ export default function ReportsPage() {
             label="Cálculos Realizados"
             value={formatNumber(overview?.totalCalculations ?? 0)}
             icon="calculator"
-            color="purple"
+            color="amber"
           />
           <ReportKpiCard
             label="RMI Médio"
@@ -171,12 +177,12 @@ export default function ReportsPage() {
             label="Taxa de Conversão"
             value={`${financeiro?.conversionRate ?? 0}%`}
             icon="trending"
-            color="purple"
+            color="amber"
           />
         </div>
       </section>
 
-      {/* ── Casos por Mês + Distribuição ───────────────────────────────── */}
+      {/* Casos por Mês + Distribuição */}
       <section className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
           <ReportBarChart
@@ -201,7 +207,7 @@ export default function ReportsPage() {
         />
       </section>
 
-      {/* ── Honorários + Funil + Tempo médio ───────────────────────────── */}
+      {/* Honorários + Funil + Tempo médio */}
       <section className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
           {financeiro?.feesByMonth && financeiro.feesByMonth.length > 0 && (
@@ -230,7 +236,7 @@ export default function ReportsPage() {
         />
       </section>
 
-      {/* ── Tempo médio por fase + Métricas Financeiras ────────────────── */}
+      {/* Tempo médio por fase + Métricas Financeiras */}
       <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <ReportHorizontalBar
           title="Tempo Médio por Fase (dias)"
@@ -246,52 +252,52 @@ export default function ReportsPage() {
           }
         />
 
-        <Card variant="light" className="p-6">
-          <CardHeader
-            title="Resumo Financeiro"
-            subtitle="Métricas consolidadas de honorários"
-          />
-          <div className="space-y-4">
-            <div className="flex items-center justify-between py-3 border-b border-slate-100">
-              <span className="font-sans text-sm text-slate-600">
-                Receita Potencial (honorários estimados)
-              </span>
-              <span className="font-sans font-semibold text-sm text-slate-900">
-                {formatCurrency(financeiro?.potentialRevenue ?? 0)}
-              </span>
-            </div>
-            <div className="flex items-center justify-between py-3 border-b border-slate-100">
-              <span className="font-sans text-sm text-slate-600">
-                Total de Honorários Previstos
-              </span>
-              <span className="font-sans font-semibold text-sm text-slate-900">
-                {formatCurrency(financeiro?.totalFeesExpected ?? 0)}
-              </span>
-            </div>
-            <div className="flex items-center justify-between py-3 border-b border-slate-100">
-              <span className="font-sans text-sm text-slate-600">
-                Total de Honorários Recebidos
-              </span>
-              <span className="font-sans font-semibold text-sm text-green-600">
-                {formatCurrency(financeiro?.totalFeesReceived ?? 0)}
-              </span>
-            </div>
-            <div className="flex items-center justify-between py-3">
-              <span className="font-sans text-sm text-slate-600">
-                Ticket Médio por Honorário
-              </span>
-              <span className="font-sans font-semibold text-sm text-slate-900">
-                {formatCurrency(financeiro?.averageTicket ?? 0)}
-              </span>
+        <Card variant="light" className="p-6 border-slate-200/80 bg-white shadow-sm flex flex-col justify-between">
+          <div>
+            <h3 className="font-serif font-bold text-base text-slate-800 border-b border-slate-100 pb-3 mb-4">
+              Resumo Financeiro
+            </h3>
+            <div className="space-y-1.5 text-sm font-sans">
+              <div className="flex items-center justify-between py-3 border-b border-slate-100">
+                <span className="text-slate-500 font-semibold text-xs uppercase tracking-wider">
+                  Receita Potencial (estimada)
+                </span>
+                <span className="font-mono font-bold text-sm text-slate-800">
+                  {formatCurrency(financeiro?.potentialRevenue ?? 0)}
+                </span>
+              </div>
+              <div className="flex items-center justify-between py-3 border-b border-slate-100">
+                <span className="text-slate-500 font-semibold text-xs uppercase tracking-wider">
+                  Total de Honorários Previstos
+                </span>
+                <span className="font-mono font-bold text-sm text-slate-800">
+                  {formatCurrency(financeiro?.totalFeesExpected ?? 0)}
+                </span>
+              </div>
+              <div className="flex items-center justify-between py-3 border-b border-slate-100">
+                <span className="text-slate-500 font-semibold text-xs uppercase tracking-wider">
+                  Total de Honorários Recebidos
+                </span>
+                <span className="font-mono font-bold text-sm text-emerald-700">
+                  {formatCurrency(financeiro?.totalFeesReceived ?? 0)}
+                </span>
+              </div>
+              <div className="flex items-center justify-between py-3">
+                <span className="text-slate-500 font-semibold text-xs uppercase tracking-wider">
+                  Ticket Médio por Honorário
+                </span>
+                <span className="font-mono font-bold text-sm text-slate-800">
+                  {formatCurrency(financeiro?.averageTicket ?? 0)}
+                </span>
+              </div>
             </div>
           </div>
         </Card>
       </section>
 
-      {/* ── Rodapé com data da última atualização ──────────────────────── */}
-      <p className="text-center text-xs text-slate-400 pb-8">
-        Os dados são atualizados automaticamente a cada 5 minutos.
-        Período selecionado: {period} dias.
+      {/* Rodapé com data da última atualização */}
+      <p className="text-center font-sans font-medium text-[10px] text-slate-400 pb-6 uppercase tracking-wider">
+        Os dados são atualizados automaticamente a cada 5 minutos. Período selecionado: {period} dias.
       </p>
     </div>
   )

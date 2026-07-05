@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Card, CardHeader } from '@/components/ui/Card'
+import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import api from '@/lib/api'
 import {
@@ -15,6 +15,7 @@ import {
   Shield,
 } from 'lucide-react'
 import type { CaseDetail } from '../_types'
+import { cn } from '@/lib/utils'
 
 interface Props {
   caseId: string
@@ -67,7 +68,6 @@ export function PortalConfigCard({ caseId, portalConfig, onUpdate: _onUpdate }: 
     try {
       await api.patch(`/cases/${caseId}/portal/config`, { [key]: newConfig[key] })
     } catch {
-      // Reverte em caso de erro
       setConfig(config)
     } finally {
       setSaving(false)
@@ -87,30 +87,35 @@ export function PortalConfigCard({ caseId, portalConfig, onUpdate: _onUpdate }: 
   }
 
   return (
-    <Card variant="light">
-      <CardHeader
-        title={
-          <div className="flex items-center gap-2">
-            <Globe className="w-4 h-4 text-slate-500" />
-            <span>Portal do Cliente</span>
-            {saving && (
-              <span className="flex items-center gap-1 text-[10px] text-slate-400">
-                <Loader2 className="w-3 h-3 animate-spin" />
-                salvando
-              </span>
-            )}
+    <Card variant="light" className="p-0 overflow-hidden border-slate-200/80 shadow-sm bg-white">
+      <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+        <div className="flex items-center gap-2">
+          <div className="w-10 h-10 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center shrink-0 text-slate-550 shadow-xs">
+            <Globe className="w-5 h-5" />
           </div>
-        }
-        action={
-          link ? (
+          <div>
+            <h3 className="font-serif font-bold text-base text-slate-900 tracking-tight">Portal do Cliente</h3>
+            <p className="font-sans text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">
+              {saving ? (
+                <span className="flex items-center gap-1">
+                  <Loader2 className="w-3 h-3 animate-spin text-amber-500" /> salvando...
+                </span>
+              ) : (
+                'Compartilhamento e Acesso'
+              )}
+            </p>
+          </div>
+        </div>
+        <div>
+          {link ? (
             <a
               href={link}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-amber-700 bg-amber-50 border border-amber-200 rounded-lg hover:bg-amber-100 transition-colors"
+              className="inline-flex items-center gap-1.5 px-4.5 py-2.5 text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200 rounded-lg hover:bg-amber-100 transition-colors shadow-sm"
             >
-              <ExternalLink className="w-3 h-3" />
-              Abrir portal
+              <ExternalLink className="w-3.5 h-3.5" />
+              Abrir Portal
             </a>
           ) : (
             <Button
@@ -118,110 +123,117 @@ export function PortalConfigCard({ caseId, portalConfig, onUpdate: _onUpdate }: 
               size="sm"
               onClick={generateLink}
               loading={loadingLink}
+              className="font-sans font-bold text-xs h-9.5"
             >
               <Eye className="w-3.5 h-3.5 mr-1.5" />
-              Gerar link
+              Gerar Link
             </Button>
-          )
-        }
-      />
+          )}
+        </div>
+      </div>
 
-      <div className="p-6 space-y-4">
+      <div className="p-6 space-y-6">
         {!anyEnabled && (
-          <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
-            <p className="text-xs text-amber-800">
-              Nenhuma informação está visível para o cliente. Ative pelo menos uma opção acima.
+          <div className="p-4 bg-amber-50 border border-amber-150 rounded-xl">
+            <p className="text-xs text-amber-800 leading-relaxed font-medium">
+              Nenhuma informação está configurada como visível para o cliente no momento. Ative pelo menos uma das opções de compartilhamento para que o portal funcione corretamente.
             </p>
           </div>
         )}
 
-        <div className="space-y-2">
-          <p className="font-sans text-[10px] uppercase font-bold tracking-wider text-slate-400 mb-2">
-            O que o cliente pode ver
+        <div className="space-y-3">
+          <p className="font-sans text-[10px] uppercase font-extrabold tracking-wider text-slate-400 mb-1">
+            Informações Disponibilizadas
           </p>
-          {CONFIG_ITEMS.map(({ key, label, description }) => (
-            <button
-              key={key}
-              onClick={() => toggle(key)}
-              className="w-full flex items-center gap-3 p-3 rounded-lg border border-slate-100 hover:border-slate-200 hover:bg-slate-50 transition-all text-left group"
-            >
-              <div
-                className={`w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-colors ${
-                  config[key]
-                    ? 'bg-emerald-500 border-emerald-500 text-white'
-                    : 'border-slate-300 group-hover:border-slate-400'
-                }`}
+          <div className="grid grid-cols-1 gap-3">
+            {CONFIG_ITEMS.map(({ key, label, description }) => (
+              <button
+                key={key}
+                onClick={() => toggle(key)}
+                className="w-full flex items-center gap-3.5 p-4 rounded-xl border border-slate-200 hover:border-slate-350 hover:bg-slate-50/40 transition-all duration-300 text-left group"
               >
-                {config[key] ? <Check className="w-3.5 h-3.5" /> : <X className="w-3 h-3 text-slate-300" />}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className={`text-sm font-semibold ${config[key] ? 'text-slate-900' : 'text-slate-400'}`}>
-                  {label}
-                </p>
-                <p className={`text-xs ${config[key] ? 'text-slate-500' : 'text-slate-400'}`}>
-                  {description}
-                </p>
-              </div>
-              {config[key] ? (
-                <Eye className="w-4 h-4 text-emerald-500 shrink-0" />
-              ) : (
-                <EyeOff className="w-4 h-4 text-slate-300 shrink-0" />
-              )}
-            </button>
-          ))}
+                <div
+                  className={cn(
+                    "w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-colors",
+                    config[key]
+                      ? 'bg-emerald-500 border-emerald-500 text-white'
+                      : 'border-slate-200 group-hover:border-slate-350'
+                  )}
+                >
+                  {config[key] ? <Check className="w-3.5 h-3.5" /> : <X className="w-3 h-3 text-slate-300" />}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className={cn("text-sm font-bold leading-tight", config[key] ? 'text-slate-800' : 'text-slate-400')}>
+                    {label}
+                  </p>
+                  <p className={cn("text-xs mt-1 font-medium", config[key] ? 'text-slate-500' : 'text-slate-400')}>
+                    {description}
+                  </p>
+                </div>
+                {config[key] ? (
+                  <Eye className="w-4 h-4 text-emerald-500 shrink-0" />
+                ) : (
+                  <EyeOff className="w-4 h-4 text-slate-300 shrink-0" />
+                )}
+              </button>
+            ))}
+          </div>
         </div>
 
         {link && (
-          <div className="p-3 bg-slate-50 rounded-lg border border-slate-100">
-            <p className="font-sans text-[10px] uppercase font-bold tracking-wider text-slate-400 mb-1">
-              Link do portal
+          <div className="p-4 bg-slate-50 rounded-xl border border-slate-200">
+            <p className="font-sans text-[10px] uppercase font-extrabold tracking-wider text-slate-400 mb-2">
+              Link de Acesso Direto
             </p>
             <div className="flex items-center gap-2">
-              <code className="flex-1 text-xs text-slate-700 bg-white px-2 py-1.5 rounded border border-slate-200 truncate">
+              <code className="flex-1 text-xs text-slate-700 bg-white px-3 py-2 rounded-lg border border-slate-250 truncate font-mono">
                 {link}
               </code>
               <button
                 onClick={() => navigator.clipboard.writeText(link)}
-                className="shrink-0 px-3 py-1.5 text-xs font-semibold text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
+                className="shrink-0 px-4 py-2 text-xs font-bold text-slate-700 bg-white border border-slate-250 rounded-lg hover:border-slate-350 hover:bg-slate-50 transition-colors h-9.5 shadow-xs"
               >
                 Copiar
               </button>
             </div>
           </div>
-        )}          {/* Verificação de identidade */}
-          <div className="pt-2 border-t border-slate-100">
-            <button
-              onClick={() => toggle('requireIdentity' as keyof typeof config)}
-              className="w-full flex items-center gap-3 p-3 rounded-lg border border-slate-100 hover:border-slate-200 hover:bg-slate-50 transition-all text-left group"
-            >
-              <div
-                className={`w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-colors ${
-                  config.requireIdentity
-                    ? 'bg-amber-500 border-amber-500 text-white'
-                    : 'border-slate-300 group-hover:border-slate-400'
-                }`}
-              >
-                {config.requireIdentity ? (
-                  <Check className="w-3.5 h-3.5" />
-                ) : (
-                  <X className="w-3 h-3 text-slate-300" />
-                )}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className={`text-sm font-semibold ${config.requireIdentity ? 'text-slate-900' : 'text-slate-400'}`}>
-                  Exigir verificação de identidade
-                </p>
-                <p className={`text-xs ${config.requireIdentity ? 'text-slate-500' : 'text-slate-400'}`}>
-                  Cliente informa CPF + data de nascimento para acessar dados sensíveis (retroativos, cálculos)
-                </p>
-              </div>
-              <Shield className={`w-4 h-4 shrink-0 ${config.requireIdentity ? 'text-amber-500' : 'text-slate-300'}`} />
-            </button>
-          </div>
+        )}
 
-          <p className="text-[10px] text-slate-400 leading-relaxed">
-            O cliente acessa os dados via link único com validade de 30 dias. Respeita a LGPD — você controla exatamente o que é compartilhado.
-          </p>
+        {/* Verificação de identidade */}
+        <div className="pt-4 border-t border-slate-100 space-y-3">
+          <button
+            onClick={() => toggle('requireIdentity' as keyof typeof config)}
+            className="w-full flex items-center gap-3.5 p-4 rounded-xl border border-slate-200 hover:border-slate-350 hover:bg-slate-50/40 transition-all duration-300 text-left group"
+          >
+            <div
+              className={cn(
+                "w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-colors",
+                config.requireIdentity
+                  ? 'bg-amber-500 border-amber-500 text-white'
+                  : 'border-slate-200 group-hover:border-slate-350'
+              )}
+            >
+              {config.requireIdentity ? (
+                <Check className="w-3.5 h-3.5" />
+              ) : (
+                <X className="w-3 h-3 text-slate-300" />
+              )}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className={cn("text-sm font-bold leading-tight", config.requireIdentity ? 'text-slate-800' : 'text-slate-400')}>
+                Exigir verificação de identidade
+              </p>
+              <p className={cn("text-xs mt-1 font-medium", config.requireIdentity ? 'text-slate-500' : 'text-slate-400')}>
+                Cliente informa CPF + data de nascimento para acessar dados sensíveis (retroativos, cálculos)
+              </p>
+            </div>
+            <Shield className={cn("w-4 h-4 shrink-0", config.requireIdentity ? 'text-amber-500' : 'text-slate-300')} />
+          </button>
+        </div>
+
+        <p className="text-[10px] text-slate-400 leading-relaxed font-medium">
+          O cliente acessa os dados via link único com validade de 30 dias. Respeita a LGPD — você controla exatamente o que é compartilhado.
+        </p>
       </div>
     </Card>
   )

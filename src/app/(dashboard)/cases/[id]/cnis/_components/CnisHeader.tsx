@@ -1,4 +1,5 @@
-import { Eye, EyeOff, Loader2, Trash2, Upload, ExternalLink, BookOpen } from 'lucide-react'
+import { Eye, EyeOff, ExternalLink, BookOpen } from 'lucide-react'
+import { Button } from '@/components/ui/Button'
 
 interface Props {
   hasCnis: boolean
@@ -17,78 +18,59 @@ interface Props {
 }
 
 export function CnisHeader({
-  hasCnis, downloadUrl, showPdfViewer, uploading, isProcessing, deleting,
-  processingStatus, onTogglePdf, onDeleteClick, onUploadClick, fileRef, onFileChange,
+  hasCnis,
+  downloadUrl,
+  showPdfViewer,
+  fileRef,
+  onTogglePdf,
+  onFileChange,
   onOpenDictionary,
 }: Props) {
-  const showUploadButton = !hasCnis || processingStatus === 'FAILED'
-
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-5">
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-5">
       <div>
-        <h2 className="font-serif font-bold text-2xl text-slate-900 tracking-tight">Extrato do CNIS</h2>
-        <p className="font-sans text-sm text-slate-500 mt-1">Gerencie, analise e corrija os vínculos e salários extraídos do segurado.</p>
+        <h1 className="font-serif font-bold text-2xl md:text-3xl text-slate-900 tracking-tight leading-none">Extrato do CNIS</h1>
+        <p className="font-sans text-xs text-slate-500 mt-2 font-medium leading-relaxed">
+          Gerencie, analise e corrija os vínculos e salários extraídos automaticamente do segurado.
+        </p>
       </div>
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex items-center gap-2 shrink-0">
         <input ref={fileRef} type="file" accept=".pdf" className="hidden" onChange={onFileChange} />
 
         {hasCnis && downloadUrl && (
           <>
-            <button
+            <Button
+              variant="outline"
+              size="sm"
               onClick={onTogglePdf}
-              className="hidden lg:flex border border-slate-200 hover:bg-slate-50 text-slate-700 font-sans font-semibold text-sm px-4 py-2 rounded-lg transition-colors shadow-sm items-center gap-2 focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:outline-none"
+              className="hidden lg:inline-flex"
               aria-label={showPdfViewer ? 'Ocultar PDF original' : 'Exibir PDF original lado a lado'}
             >
-              {showPdfViewer ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-              {showPdfViewer ? 'Ocultar PDF' : 'Ver PDF Lado a Lado'}
-            </button>
+              {showPdfViewer ? <EyeOff className="w-4 h-4 text-slate-555" /> : <Eye className="w-4 h-4 text-slate-555" />}
+              <span>{showPdfViewer ? 'Ocultar PDF' : 'Ver PDF Lado a Lado'}</span>
+            </Button>
             <a
               href={downloadUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex lg:hidden border border-slate-200 hover:bg-slate-50 text-slate-700 font-sans font-semibold text-sm px-4 py-2 rounded-lg transition-colors shadow-sm items-center gap-2 focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:outline-none"
+              className="flex lg:hidden items-center justify-center gap-2 font-sans font-medium border rounded-md transition-colors duration-200 bg-white text-slate-900 border-slate-300 hover:bg-slate-50 px-3 py-1.5 text-xs shadow-sm focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:outline-none"
             >
-              <ExternalLink className="w-4 h-4" />
-              Abrir PDF Original
+              <ExternalLink className="w-4 h-4 text-slate-555" />
+              <span>Abrir PDF Original</span>
             </a>
           </>
         )}
 
         {hasCnis && (
-          <button
-            type="button"
+          <Button
+            variant="outline"
+            size="sm"
             onClick={onOpenDictionary}
-            className="border border-slate-200 hover:bg-slate-50 text-slate-700 font-sans font-semibold text-sm px-4 py-2 rounded-lg transition-colors shadow-sm flex items-center gap-2 focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:outline-none"
             title="Dicionário de Indicadores"
           >
-            <BookOpen className="w-4 h-4 text-amber-500" />
-            Dicionário
-          </button>
-        )}
-
-        {hasCnis && (
-          <button
-            onClick={onDeleteClick}
-            disabled={uploading || deleting}
-            className="border border-red-200 text-red-600 hover:bg-red-50 font-sans font-semibold text-sm px-4 py-2 rounded-lg transition-colors disabled:opacity-50 shadow-sm flex items-center gap-2 focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:outline-none"
-          >
-            <Trash2 className="w-4 h-4" aria-hidden="true" />
-            Excluir CNIS
-          </button>
-        )}
-
-        {showUploadButton && (
-          <button
-            onClick={onUploadClick}
-            disabled={uploading || isProcessing || deleting}
-            className="bg-amber-600 text-white font-sans font-semibold text-sm px-5 py-2.5 rounded-lg hover:bg-amber-700 transition-colors disabled:opacity-50 shadow-sm flex items-center gap-2 focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:outline-none"
-          >
-            {uploading ? (
-              <><Loader2 className="w-4 h-4 animate-spin" />Enviando…</>
-            ) : (
-              <><Upload className="w-4 h-4" />Enviar Novo CNIS (PDF)</>
-            )}
-          </button>
+            <BookOpen className="w-4 h-4 text-slate-555" />
+            <span>Dicionário</span>
+          </Button>
         )}
       </div>
     </div>

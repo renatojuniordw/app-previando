@@ -6,9 +6,10 @@ import { useState } from 'react'
 import api from '@/lib/api'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
-import { Card, CardHeader } from '@/components/ui/Card'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { formatCPF, stripNonDigits } from '@/lib/masks'
+import { User, Shield, CreditCard, CheckCircle2, ChevronRight } from 'lucide-react'
+import Link from 'next/link'
 
 const ESTADOS = [
   'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO',
@@ -23,6 +24,10 @@ const ESTADO_CIVIL = [
   { value: 'viuvo(a)', label: 'Viúvo(a)' },
   { value: 'uniao estavel', label: 'União Estável' },
 ]
+
+// Common styling for native selects to match <Input> component
+const selectClasses = "w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 disabled:cursor-not-allowed disabled:opacity-50 transition-colors"
+const labelClasses = "block text-sm font-semibold text-slate-700 mb-1"
 
 export default function ProfilePage() {
   const { data: session, update } = useSession()
@@ -90,123 +95,216 @@ export default function ProfilePage() {
 
   return (
     <ErrorBoundary>
-    <div className="space-y-6 max-w-2xl">
-      <h1 className="font-serif font-bold text-3xl text-slate-900 tracking-tight">Perfil</h1>
-
-      <Card variant="dark">
-        <CardHeader title="Dados da Conta" />
-        <div className="space-y-4">
+      <div className="p-4 sm:p-6 lg:p-8 max-w-5xl mx-auto space-y-10">
+        
+        {/* Header */}
+        <div className="flex items-center gap-4 border-b border-slate-200 pb-6">
+          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center shadow-lg">
+            <User className="w-7 h-7 text-white" />
+          </div>
           <div>
-            <label htmlFor="email" className="neo-label">Email</label>
-            <input
-              id="email"
-              value={session?.user?.email ?? ''}
-              disabled
-              className="neo-input opacity-50 cursor-not-allowed"
-            />
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <Input label="Nome" value={name} onChange={(e) => setName(e.target.value)} />
-            <Input label="OAB" value={oabNumber} onChange={(e) => setOabNumber(e.target.value)} placeholder="Ex: 123.456" />
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <Input
-              label="CPF"
-              value={formatCPF(cpf)}
-              onChange={(e) => {
-                const raw = stripNonDigits(e.target.value).slice(0, 11)
-                setCpf(formatCPF(raw))
-              }}
-              placeholder="000.000.000-00"
-            />
-            <Input label="Telefone" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="(11) 99999-9999" />
+            <h1 className="font-serif font-bold text-3xl text-slate-900 tracking-tight">Perfil</h1>
+            <p className="text-sm font-medium text-slate-500 mt-0.5">Gerencie suas informações pessoais e configurações de segurança.</p>
           </div>
         </div>
-      </Card>
 
-      <Card variant="dark">
-        <CardHeader title="Dados Pessoais" />
-        <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label htmlFor="maritalStatus" className="neo-label">Estado Civil</label>
-              <select id="maritalStatus" value={maritalStatus} onChange={(e) => setMaritalStatus(e.target.value)} className="neo-input">
-                <option value="">Selecione...</option>
-                {ESTADO_CIVIL.map((e) => (
-                  <option key={e.value} value={e.value}>{e.label}</option>
-                ))}
-              </select>
+        {/* Section: Dados da Conta */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
+          <div className="md:col-span-1">
+            <h3 className="text-base font-bold text-slate-900">Dados da Conta</h3>
+            <p className="mt-1 text-sm text-slate-500 leading-relaxed">
+              Informações principais de contato e identificação profissional.
+            </p>
+          </div>
+          <div className="md:col-span-2">
+            <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-6 space-y-5">
+              <div>
+                <label htmlFor="email" className={labelClasses}>Email</label>
+                <input
+                  id="email"
+                  value={session?.user?.email ?? ''}
+                  disabled
+                  className={selectClasses}
+                />
+                <p className="text-xs text-slate-400 mt-1.5">O e-mail de acesso não pode ser alterado por aqui.</p>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <Input label="Nome" value={name} onChange={(e) => setName(e.target.value)} />
+                <Input label="OAB" value={oabNumber} onChange={(e) => setOabNumber(e.target.value)} placeholder="Ex: 123.456" />
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <Input
+                  label="CPF"
+                  value={formatCPF(cpf)}
+                  onChange={(e) => {
+                    const raw = stripNonDigits(e.target.value).slice(0, 11)
+                    setCpf(formatCPF(raw))
+                  }}
+                  placeholder="000.000.000-00"
+                />
+                <Input label="Telefone" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="(11) 99999-9999" />
+              </div>
             </div>
-            <Input label="Profissão" value={profession} onChange={(e) => setProfession(e.target.value)} placeholder="Ex: Advogado" />
           </div>
         </div>
-      </Card>
 
-      <Card variant="dark">
-        <CardHeader title="Endereço" />
-        <div className="space-y-4">
-          <div className="grid grid-cols-[1fr_120px] gap-4">
-            <Input label="Logradouro" value={street} onChange={(e) => setStreet(e.target.value)} placeholder="Rua, Avenida..." />
-            <Input label="Número" value={streetNumber} onChange={(e) => setStreetNumber(e.target.value)} placeholder="S/N" />
+        <hr className="border-slate-100" />
+
+        {/* Section: Dados Pessoais */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
+          <div className="md:col-span-1">
+            <h3 className="text-base font-bold text-slate-900">Dados Pessoais</h3>
+            <p className="mt-1 text-sm text-slate-500 leading-relaxed">
+              Usados para o preenchimento automático de peças e documentos.
+            </p>
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <Input label="Complemento" value={complement} onChange={(e) => setComplement(e.target.value)} placeholder="Apto, Bloco..." />
-            <Input label="Bairro" value={neighborhood} onChange={(e) => setNeighborhood(e.target.value)} placeholder="Bairro" />
-          </div>
-          <div className="grid grid-cols-[1fr_100px_120px] gap-4">
-            <Input label="Cidade" value={city} onChange={(e) => setCity(e.target.value)} placeholder="Cidade" />
-            <div>
-              <label htmlFor="state" className="neo-label">UF</label>
-              <select id="state" value={state} onChange={(e) => setState(e.target.value)} className="neo-input">
-                <option value="">UF</option>
-                {ESTADOS.map((e) => (
-                  <option key={e} value={e}>{e}</option>
-                ))}
-              </select>
+          <div className="md:col-span-2">
+            <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-6 space-y-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <div>
+                  <label htmlFor="maritalStatus" className={labelClasses}>Estado Civil</label>
+                  <select id="maritalStatus" value={maritalStatus} onChange={(e) => setMaritalStatus(e.target.value)} className={selectClasses}>
+                    <option value="">Selecione...</option>
+                    {ESTADO_CIVIL.map((e) => (
+                      <option key={e.value} value={e.value}>{e.label}</option>
+                    ))}
+                  </select>
+                </div>
+                <Input label="Profissão" value={profession} onChange={(e) => setProfession(e.target.value)} placeholder="Ex: Advogado" />
+              </div>
             </div>
-            <Input label="CEP" value={zipCode} onChange={(e) => setZipCode(e.target.value)} placeholder="00000-000" />
           </div>
-          <Button onClick={handleSaveProfile} loading={savingProfile}>Salvar Perfil</Button>
         </div>
-      </Card>
 
-      <Card variant="dark">
-        <CardHeader title="Alterar Senha" />
-        <div className="space-y-4">
-          <Input
-            label="Senha atual"
-            type="password"
-            value={currentPassword}
-            onChange={(e) => setCurrentPassword(e.target.value)}
-          />
-          <Input
-            label="Nova senha"
-            type="password"
-            value={newPassword}
-            onChange={(e) => setNewPassword(e.target.value)}
-            hint="Mínimo 8 caracteres, com maiúscula e número"
-          />
-          <Button onClick={handleChangePassword} loading={savingPassword} variant="outline">
-            Alterar Senha
-          </Button>
-        </div>
-      </Card>
+        <hr className="border-slate-100" />
 
-      <Card variant="dark">
-        <CardHeader title="Plano Atual" />
-        <div className="font-sans">
-          <p className="text-slate-500 text-xs font-medium uppercase tracking-wide">Plano</p>
-          <p className="text-slate-900 text-xl font-bold mt-1">{session?.user?.plan ?? 'FREE'}</p>
-          <p className="text-slate-500 text-sm mt-2">
-            Para alterar o plano, acesse{' '}
-            <a href="/settings/billing" className="text-amber-600 font-semibold hover:underline">
-              Assinatura
-            </a>
-            .
-          </p>
+        {/* Section: Endereço */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
+          <div className="md:col-span-1">
+            <h3 className="text-base font-bold text-slate-900">Endereço Profissional</h3>
+            <p className="mt-1 text-sm text-slate-500 leading-relaxed">
+              O endereço que aparecerá nos cabeçalhos das suas procurações e contratos.
+            </p>
+          </div>
+          <div className="md:col-span-2">
+            <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-6 space-y-5">
+              <div className="grid grid-cols-1 sm:grid-cols-[1fr_120px] gap-5">
+                <Input label="Logradouro" value={street} onChange={(e) => setStreet(e.target.value)} placeholder="Rua, Avenida..." />
+                <Input label="Número" value={streetNumber} onChange={(e) => setStreetNumber(e.target.value)} placeholder="S/N" />
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <Input label="Complemento" value={complement} onChange={(e) => setComplement(e.target.value)} placeholder="Apto, Bloco..." />
+                <Input label="Bairro" value={neighborhood} onChange={(e) => setNeighborhood(e.target.value)} placeholder="Bairro" />
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-[1fr_100px_120px] gap-5">
+                <Input label="Cidade" value={city} onChange={(e) => setCity(e.target.value)} placeholder="Cidade" />
+                <div>
+                  <label htmlFor="state" className={labelClasses}>UF</label>
+                  <select id="state" value={state} onChange={(e) => setState(e.target.value)} className={selectClasses}>
+                    <option value="">UF</option>
+                    {ESTADOS.map((e) => (
+                      <option key={e} value={e}>{e}</option>
+                    ))}
+                  </select>
+                </div>
+                <Input label="CEP" value={zipCode} onChange={(e) => setZipCode(e.target.value)} placeholder="00000-000" />
+              </div>
+              
+              <div className="pt-2 flex justify-end">
+                <Button onClick={handleSaveProfile} loading={savingProfile}>
+                  <CheckCircle2 className="w-4 h-4 mr-1.5" />
+                  Salvar Perfil
+                </Button>
+              </div>
+            </div>
+          </div>
         </div>
-      </Card>
-    </div>
+
+        <hr className="border-slate-100" />
+
+        {/* Section: Segurança */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
+          <div className="md:col-span-1 flex items-start gap-3">
+            <div className="mt-0.5">
+              <Shield className="w-5 h-5 text-slate-400" />
+            </div>
+            <div>
+              <h3 className="text-base font-bold text-slate-900">Segurança</h3>
+              <p className="mt-1 text-sm text-slate-500 leading-relaxed">
+                Atualize sua senha para manter sua conta protegida.
+              </p>
+            </div>
+          </div>
+          <div className="md:col-span-2">
+            <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-6 space-y-5">
+              <Input
+                label="Senha atual"
+                type="password"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+              />
+              <Input
+                label="Nova senha"
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                hint="Mínimo de 8 caracteres. Recomendamos usar letras, números e símbolos."
+              />
+              <div className="pt-2 flex justify-end">
+                <Button onClick={handleChangePassword} loading={savingPassword} variant="outline">
+                  Alterar Senha
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <hr className="border-slate-100" />
+
+        {/* Section: Assinatura */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 pb-10">
+          <div className="md:col-span-1 flex items-start gap-3">
+            <div className="mt-0.5">
+              <CreditCard className="w-5 h-5 text-slate-400" />
+            </div>
+            <div>
+              <h3 className="text-base font-bold text-slate-900">Plano Atual</h3>
+              <p className="mt-1 text-sm text-slate-500 leading-relaxed">
+                Gerencie sua assinatura e métodos de pagamento.
+              </p>
+            </div>
+          </div>
+          <div className="md:col-span-2">
+            <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">Status do Plano</p>
+                <div className="flex items-center gap-2.5">
+                  <span className={`inline-flex items-center justify-center px-3 py-1 rounded-md text-sm font-bold uppercase tracking-wider ${
+                    session?.user?.plan === 'PRO' || session?.user?.plan === 'PREMIUM'
+                      ? 'bg-amber-100 text-amber-800 border border-amber-200'
+                      : 'bg-slate-100 text-slate-600 border border-slate-200'
+                  }`}>
+                    {session?.user?.plan ?? 'FREE'}
+                  </span>
+                  {(session?.user?.plan === 'PRO' || session?.user?.plan === 'PREMIUM') && (
+                    <span className="text-emerald-600 text-sm font-medium flex items-center gap-1">
+                      <CheckCircle2 className="w-4 h-4" /> Ativo
+                    </span>
+                  )}
+                </div>
+              </div>
+              <Link 
+                href="/settings/billing"
+                className="inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-slate-50 border border-slate-200 text-slate-700 font-semibold text-sm rounded-lg hover:bg-slate-100 hover:text-slate-900 transition-colors"
+              >
+                Gerenciar Assinatura
+                <ChevronRight className="w-4 h-4 text-slate-400" />
+              </Link>
+            </div>
+          </div>
+        </div>
+
+      </div>
     </ErrorBoundary>
   )
 }

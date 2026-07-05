@@ -6,6 +6,8 @@ import { Card } from '@/components/ui/Card'
 import { CalendarEventCard } from '@/components/calendar/CalendarEventCard'
 import { CalendarDays, ChevronLeft, ChevronRight, X, Clock, AlertTriangle, CalendarCheck, ListTodo, ExternalLink } from 'lucide-react'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
+import Link from 'next/link'
+import { cn } from '@/lib/utils'
 
 interface CalendarEvent {
   id: string
@@ -24,9 +26,9 @@ interface CalendarData {
 }
 
 const FILTER_OPTIONS = [
-  { value: 'deadline', label: 'Prazos', dotColor: 'bg-amber-500', bgColor: 'bg-amber-50', textColor: 'text-amber-700' },
-  { value: 'google_event', label: 'Google Agenda', dotColor: 'bg-blue-500', bgColor: 'bg-blue-50', textColor: 'text-blue-700' },
-  { value: 'prescription', label: 'Prescrições', dotColor: 'bg-red-500', bgColor: 'bg-red-50', textColor: 'text-red-700' },
+  { value: 'deadline', label: 'Prazos', dotColor: 'bg-amber-500', bgColor: 'bg-amber-50/80 text-amber-700 border border-amber-200/50' },
+  { value: 'google_event', label: 'Google Agenda', dotColor: 'bg-blue-500', bgColor: 'bg-blue-50/80 text-blue-700 border border-blue-200/50' },
+  { value: 'prescription', label: 'Prescrições', dotColor: 'bg-red-500', bgColor: 'bg-red-50/80 text-red-700 border border-red-200/50' },
 ] as const
 
 const WEEKDAYS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
@@ -200,25 +202,28 @@ export default function CalendarPage() {
   const todayEventsCount = eventCountByDay[todayDateKey] ?? 0
 
   const stats = [
-    { label: 'Total de eventos', value: totalEventsCount, icon: CalendarCheck, color: 'text-amber-600', bg: 'bg-amber-50' },
-    { label: 'Eventos hoje', value: todayEventsCount, icon: Clock, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-    { label: 'Prazos', value: totalEvents.deadline, icon: ListTodo, color: 'text-amber-600', bg: 'bg-amber-50' },
-    { label: 'Prescrições', value: totalEvents.prescription, icon: AlertTriangle, color: 'text-red-600', bg: 'bg-red-50' },
+    { label: 'Total de eventos', value: totalEventsCount, icon: CalendarCheck, borderHover: 'hover:border-amber-250', bgIcon: 'bg-amber-50 border-amber-100/50', colorIcon: 'text-amber-600' },
+    { label: 'Eventos hoje', value: todayEventsCount, icon: Clock, borderHover: 'hover:border-emerald-250', bgIcon: 'bg-emerald-50 border-emerald-100/50', colorIcon: 'text-emerald-600' },
+    { label: 'Prazos', value: totalEvents.deadline, icon: ListTodo, borderHover: 'hover:border-amber-250', bgIcon: 'bg-amber-50 border-amber-100/50', colorIcon: 'text-amber-600' },
+    { label: 'Prescrições', value: totalEvents.prescription, icon: AlertTriangle, borderHover: 'hover:border-red-250', bgIcon: 'bg-red-50 border-red-100/50', colorIcon: 'text-red-650' },
   ]
 
   return (
     <ErrorBoundary>
-    <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6 lg:space-y-8">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6 lg:space-y-8 animate-fade-in">
       {/* Premium Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center shadow-lg shadow-amber-200/50">
-            <CalendarDays className="w-6 h-6 text-white" />
+      <div className="flex items-center gap-4 border-b border-slate-200 pb-6">
+        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center shadow-lg flex-shrink-0">
+          <CalendarDays className="w-7 h-7 text-white" />
+        </div>
+        <div>
+          <div className="flex items-center gap-1.5 text-xs font-bold text-amber-600 uppercase tracking-wider mb-0.5">
+            <Link href="/dashboard" className="flex items-center gap-1 hover:text-amber-700 transition-colors">
+              <ChevronLeft className="w-3.5 h-3.5" /> Voltar ao Dashboard
+            </Link>
           </div>
-          <div>
-            <h1 className="font-serif font-bold text-3xl text-slate-900 tracking-tight">Calendário</h1>
-            <p className="text-sm font-medium text-slate-500">Visão unificada de prazos e eventos</p>
-          </div>
+          <h1 className="font-serif font-bold text-3xl text-slate-900 tracking-tight">Calendário Integrado</h1>
+          <p className="font-sans text-sm text-slate-500 mt-0.5 font-medium">Visão unificada de prazos, notificações e eventos do escritório.</p>
         </div>
       </div>
 
@@ -229,15 +234,18 @@ export default function CalendarPage() {
           return (
             <div
               key={stat.label}
-              className="relative overflow-hidden rounded-xl border border-slate-200 bg-white p-5 shadow-sm"
+              className={cn(
+                "relative overflow-hidden rounded-xl border border-slate-200 bg-white p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300",
+                stat.borderHover
+              )}
             >
-              <div className="flex items-start justify-between">
+              <div className="flex items-start justify-between gap-3">
                 <div>
-                  <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">{stat.label}</p>
-                  <p className="text-2xl font-bold text-slate-900 mt-1 tabular-nums">{stat.value}</p>
+                  <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">{stat.label}</p>
+                  <p className="text-2xl font-bold text-slate-900 mt-2 font-mono leading-none">{stat.value}</p>
                 </div>
-                <div className={`w-10 h-10 rounded-lg ${stat.bg} flex items-center justify-center`}>
-                  <Icon className={`w-5 h-5 ${stat.color}`} />
+                <div className={cn("w-9 h-9 rounded-lg border flex items-center justify-center shrink-0 shadow-xs", stat.bgIcon)}>
+                  <Icon className={cn("w-4.5 h-4.5", stat.colorIcon)} />
                 </div>
               </div>
             </div>
@@ -253,20 +261,22 @@ export default function CalendarPage() {
             <button
               key={opt.value}
               onClick={() => toggleFilter(opt.value)}
-              className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+              className={cn(
+                "inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all duration-200 border",
                 isActive
-                  ? `${opt.bgColor} ${opt.textColor} shadow-sm`
-                  : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'
-              }`}
+                  ? `${opt.bgColor} shadow-sm`
+                  : 'bg-white border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-50'
+              )}
             >
-              <span className={`w-2 h-2 rounded-full ${opt.dotColor} ${!isActive && 'opacity-40'}`} />
+              <span className={cn("w-2 h-2 rounded-full", opt.dotColor, !isActive && 'opacity-40')} />
               {opt.label}
               {totalEvents[opt.value] > 0 && (
-                <span className={`inline-flex items-center justify-center min-w-[20px] h-[20px] px-1.5 rounded-full text-[10px] font-bold tabular-nums ${
+                <span className={cn(
+                  "inline-flex items-center justify-center min-w-[20px] h-[20px] px-1.5 rounded-full text-[9px] font-bold font-mono tracking-tight",
                   isActive
-                    ? `${opt.bgColor} ${opt.textColor}`
+                    ? 'bg-white/80 border border-slate-200/50'
                     : 'bg-slate-100 text-slate-500'
-                }`}>
+                )}>
                   {totalEvents[opt.value]}
                 </span>
               )}
@@ -278,60 +288,60 @@ export default function CalendarPage() {
             <div className="w-px h-6 bg-slate-200 mx-2" />
             <button
               onClick={() => setActiveFilters(new Set())}
-              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold text-slate-500 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold text-red-600 hover:text-red-750 transition-colors"
             >
               <X className="w-4 h-4" />
-              Limpar filtros
+              Limpar Filtros
             </button>
           </div>
         )}
       </div>
 
       {/* Main Grid Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
         
         {/* Left Column: Calendar Grid */}
         <div className="lg:col-span-2">
-          <Card variant="light" className="p-0 overflow-hidden shadow-sm">
+          <Card variant="light" className="p-0 overflow-hidden shadow-sm border-slate-200/80">
             
             {/* Header: Month Navigation */}
-            <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100 bg-gradient-to-r from-amber-50/50 to-white">
+            <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100 bg-slate-50/50">
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => navigateMonth(-1)}
-                  className="p-2 rounded-lg bg-white border border-slate-200 shadow-sm hover:border-slate-300 hover:bg-slate-50 transition-all text-slate-600 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-1"
+                  className="p-2 rounded-lg bg-white border border-slate-200 shadow-sm hover:border-slate-350 hover:bg-slate-50 transition-all text-slate-650 focus:outline-none focus:ring-1 focus:ring-slate-400"
                   aria-label="Mês anterior"
                 >
-                  <ChevronLeft className="w-5 h-5" />
+                  <ChevronLeft className="w-4.5 h-4.5" />
                 </button>
                 <button
                   onClick={() => navigateMonth(1)}
-                  className="p-2 rounded-lg bg-white border border-slate-200 shadow-sm hover:border-slate-300 hover:bg-slate-50 transition-all text-slate-600 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-1"
+                  className="p-2 rounded-lg bg-white border border-slate-200 shadow-sm hover:border-slate-350 hover:bg-slate-50 transition-all text-slate-655 focus:outline-none focus:ring-1 focus:ring-slate-400"
                   aria-label="Próximo mês"
                 >
-                  <ChevronRight className="w-5 h-5" />
+                  <ChevronRight className="w-4.5 h-4.5" />
                 </button>
               </div>
 
               <div className="text-center select-none">
-                <h2 className="font-serif font-bold text-xl text-slate-900 tracking-tight">
-                  {MONTH_NAMES[selectedMonth]} <span className="text-slate-400 font-normal">{selectedYear}</span>
+                <h2 className="font-serif font-bold text-lg text-slate-900 tracking-tight">
+                  {MONTH_NAMES[selectedMonth]} <span className="text-slate-400 font-normal font-sans text-base ml-1">{selectedYear}</span>
                 </h2>
               </div>
 
               <button
                 onClick={goToToday}
-                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold bg-white border border-slate-200 text-slate-700 hover:text-amber-700 hover:border-amber-300 hover:bg-amber-50 shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-1"
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold bg-white border border-slate-250 text-slate-700 hover:text-slate-900 hover:border-slate-350 shadow-sm transition-all focus:outline-none focus:ring-1 focus:ring-slate-400"
               >
-                <Clock className="w-4 h-4" />
+                <Clock className="w-4 h-4 text-slate-500" />
                 Hoje
               </button>
             </div>
 
             {loading ? (
               <div className="py-40 flex flex-col items-center justify-center gap-4">
-                <div className="w-10 h-10 border-4 border-amber-200 border-t-amber-600 animate-spin rounded-full" />
-                <p className="text-sm font-medium text-slate-500">Sincronizando calendário...</p>
+                <div className="w-8 h-8 border-4 border-amber-500 border-t-transparent animate-spin rounded-full" />
+                <p className="text-sm font-medium text-slate-550">Sincronizando calendário...</p>
               </div>
             ) : (
               <div className="bg-white">
@@ -339,7 +349,7 @@ export default function CalendarPage() {
                   {WEEKDAYS.map((wd) => (
                     <div
                       key={wd}
-                      className="px-2 py-3.5 text-center text-[11px] font-bold text-slate-400 uppercase tracking-widest"
+                      className="px-2 py-3.5 text-center text-[10px] font-bold text-slate-400 uppercase tracking-widest"
                     >
                       {wd}
                     </div>
@@ -351,7 +361,7 @@ export default function CalendarPage() {
                     <div key={weekIdx} className="grid grid-cols-7">
                       {week.map((cell, cellIdx) => {
                         if (cell.empty) {
-                          return <div key={`e-${weekIdx}-${cellIdx}`} className="min-h-[120px] bg-slate-50/40 border-r border-slate-100 last:border-r-0" />
+                          return <div key={`e-${weekIdx}-${cellIdx}`} className="min-h-[120px] bg-slate-50/20 border-r border-slate-100 last:border-r-0" />
                         }
 
                         const isCurrentDay = isToday(selectedYear, selectedMonth, cell.day)
@@ -369,38 +379,41 @@ export default function CalendarPage() {
                                   : { dateKey: cell.dateKey, day: cell.day }
                               )
                             }
-                            className={`min-h-[120px] p-2 border-r border-slate-100 last:border-r-0 relative text-left transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-inset ${
+                            className={cn(
+                              "min-h-[120px] p-2 border-r border-slate-100 last:border-r-0 relative text-left transition-all duration-200 focus:outline-none",
                               isSelected
-                                ? 'bg-amber-50 ring-2 ring-inset ring-amber-400 z-10'
+                                ? 'bg-amber-50/20 ring-1 ring-inset ring-amber-400/80 z-10 shadow-inner'
                                 : isCurrentDay
-                                  ? 'bg-amber-50/20 hover:bg-amber-50/50'
-                                  : 'bg-white hover:bg-slate-50'
-                            }`}
+                                  ? 'bg-slate-50/30 hover:bg-slate-50/60'
+                                  : 'bg-white hover:bg-slate-50/60'
+                            )}
                           >
                             <span
-                              className={`inline-flex items-center justify-center w-8 h-8 rounded-full text-sm font-semibold transition-all duration-200 ${
+                              className={cn(
+                                "inline-flex items-center justify-center w-7 h-7 rounded-lg text-xs font-bold font-mono transition-all duration-200",
                                 isCurrentDay
-                                  ? 'bg-amber-600 text-white shadow-md shadow-amber-200/50'
+                                  ? 'bg-amber-600 text-white shadow-sm'
                                   : isSelected
-                                    ? 'bg-amber-200 text-amber-800'
+                                    ? 'bg-amber-100 text-amber-800'
                                     : 'text-slate-700'
-                              }`}
+                              )}
                             >
                               {cell.day}
                             </span>
 
                             {eventCount > 0 && (
-                              <div className="mt-1.5 space-y-1">
+                              <div className="mt-2 space-y-1">
                                 {events?.slice(0, 3).map((ev) => (
                                   <div
                                     key={ev.id}
                                     className="flex items-center gap-1.5 overflow-hidden"
                                   >
-                                    <span className={`shrink-0 w-1.5 h-1.5 rounded-full ${
+                                    <span className={cn(
+                                      "shrink-0 w-1.5 h-1.5 rounded-full",
                                       ev.type === 'deadline' ? 'bg-amber-500' :
                                       ev.type === 'prescription' ? 'bg-red-500' : 'bg-blue-500'
-                                    }`} />
-                                    <span className="text-[10px] font-medium text-slate-600 truncate">
+                                    )} />
+                                    <span className="text-[10px] font-semibold text-slate-600 truncate leading-relaxed">
                                       {ev.title}
                                     </span>
                                   </div>
@@ -408,7 +421,7 @@ export default function CalendarPage() {
                                 {eventCount > 3 && (
                                   <div className="flex items-center gap-1 px-1 mt-1">
                                     <ExternalLink className="w-2.5 h-2.5 text-slate-400" />
-                                    <span className="text-[9px] font-bold text-slate-500 uppercase">
+                                    <span className="text-[9px] font-bold text-slate-550 uppercase">
                                       +{eventCount - 3} mais
                                     </span>
                                   </div>
@@ -428,29 +441,27 @@ export default function CalendarPage() {
 
         {/* Right Column: Timeline Stream */}
         <div className="lg:col-span-1">
-          <Card variant="light" className="p-0 overflow-hidden flex flex-col h-[calc(100vh-250px)] lg:h-full max-h-[800px] shadow-sm">
-            <div className="px-6 py-5 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white shrink-0">
+          <Card variant="light" className="p-0 overflow-hidden flex flex-col h-[calc(100vh-250px)] lg:h-full max-h-[800px] shadow-sm border-slate-200/80">
+            <div className="px-6 py-5 border-b border-slate-100 bg-slate-50 shrink-0">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="font-serif font-bold text-lg text-slate-900 tracking-tight">
+                  <h3 className="font-serif font-bold text-base text-slate-900 tracking-tight">
                     {selectedDate
                       ? `${selectedDate.getDate()} de ${MONTH_NAMES[selectedDate.getMonth()].toLowerCase()}`
                       : 'Eventos do Dia'}
                   </h3>
                   {selectedDate && (
                     <div className="flex items-center gap-2 mt-1">
-                      <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                         {DAY_NAMES[selectedDate.getDay()]}
                       </p>
                       {!isSameDate(selectedDate, today) && (
-                        <span className={`inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${
+                        <span className={cn(
+                          "inline-flex items-center gap-1 text-[8px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded border",
                           selectedDate < today
-                            ? 'bg-red-50 text-red-600 border border-red-100'
-                            : 'bg-emerald-50 text-emerald-600 border border-emerald-100'
-                        }`}>
-                          <span className={`w-1 h-1 rounded-full ${
-                            selectedDate < today ? 'bg-red-500' : 'bg-emerald-500'
-                          }`} />
+                            ? 'bg-red-50 text-red-700 border-red-100'
+                            : 'bg-emerald-50 text-emerald-700 border-emerald-100'
+                        )}>
                           {selectedDate < today ? 'Passado' : 'Futuro'}
                         </span>
                       )}
@@ -460,7 +471,7 @@ export default function CalendarPage() {
                 {selectedDay && (
                   <button
                     onClick={() => setSelectedDay(null)}
-                    className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-1"
+                    className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-150 transition-colors focus:outline-none"
                     aria-label="Fechar detalhes"
                   >
                     <X className="w-5 h-5" />
@@ -469,22 +480,22 @@ export default function CalendarPage() {
               </div>
               
               {selectedDay && selectedDayEvents.length > 0 && (
-                <div className="mt-4 pt-3 border-t border-slate-100 flex items-center gap-2">
-                  <div className="w-6 h-6 rounded-md bg-amber-100 flex items-center justify-center">
-                    <ListTodo className="w-3.5 h-3.5 text-amber-700" />
+                <div className="mt-4 pt-3 border-t border-slate-150 flex items-center gap-2">
+                  <div className="w-6 h-6 rounded-md bg-amber-50 border border-amber-100/50 flex items-center justify-center shrink-0">
+                    <ListTodo className="w-3.5 h-3.5 text-amber-600" />
                   </div>
-                  <span className="text-xs font-bold text-slate-700 tabular-nums">{selectedDayEvents.length}</span>
-                  <span className="text-xs font-medium text-slate-500">
+                  <span className="text-xs font-bold text-slate-800 font-mono">{selectedDayEvents.length}</span>
+                  <span className="text-xs font-semibold text-slate-500">
                     evento{selectedDayEvents.length > 1 ? 's' : ''} agendado{selectedDayEvents.length > 1 ? 's' : ''}
                   </span>
                 </div>
               )}
             </div>
 
-            <div className="p-5 overflow-y-auto flex-1 bg-slate-50/30">
+            <div className="p-5 overflow-y-auto flex-1 bg-slate-50/30 custom-scrollbar scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent">
               {loading ? (
-                <div className="py-20 flex flex-col items-center justify-center gap-3">
-                  <div className="w-8 h-8 border-3 border-amber-200 border-t-amber-500 animate-spin rounded-full" />
+                <div className="py-20 flex flex-col items-center justify-center">
+                  <div className="w-8 h-8 border-4 border-amber-500 border-t-transparent animate-spin rounded-full" />
                 </div>
               ) : selectedDay && selectedDayEvents.length > 0 ? (
                 <div className="space-y-4">
@@ -500,22 +511,22 @@ export default function CalendarPage() {
                 </div>
               ) : selectedDay ? (
                 <div className="py-20 text-center px-4">
-                  <div className="w-14 h-14 rounded-2xl bg-slate-100 flex items-center justify-center mx-auto mb-4 border border-slate-200">
+                  <div className="w-14 h-14 rounded-2xl bg-slate-50 flex items-center justify-center mx-auto mb-4 border border-slate-200">
                     <CalendarDays className="w-6 h-6 text-slate-400" />
                   </div>
-                  <p className="text-sm font-bold text-slate-900">Nenhum evento</p>
-                  <p className="text-xs text-slate-500 mt-1.5 leading-relaxed">
-                    A agenda está livre neste dia.
+                  <p className="text-sm font-bold text-slate-900">Agenda vazia</p>
+                  <p className="text-xs text-slate-500 mt-1.5 leading-relaxed font-medium">
+                    Nenhum compromisso ou prazo programado para esta data.
                   </p>
                 </div>
               ) : (
                 <div className="py-20 text-center px-4">
-                  <div className="w-14 h-14 rounded-2xl bg-amber-100 flex items-center justify-center mx-auto mb-4 shadow-sm border border-amber-200/50">
+                  <div className="w-14 h-14 rounded-2xl bg-amber-50 border border-amber-100 flex items-center justify-center mx-auto mb-4 shadow-xs">
                     <CalendarDays className="w-6 h-6 text-amber-600" />
                   </div>
                   <p className="text-sm font-bold text-slate-900">Selecione um dia</p>
-                  <p className="text-xs text-slate-500 mt-1.5 leading-relaxed">
-                    Clique na grade ao lado para visualizar os detalhes dos eventos.
+                  <p className="text-xs text-slate-500 mt-1.5 leading-relaxed font-medium">
+                    Clique em qualquer data da grade para visualizar a listagem completa de eventos detalhados.
                   </p>
                 </div>
               )}

@@ -1,35 +1,36 @@
 import { Card } from '@/components/ui/Card'
 import { MessageSquare, Scale, CheckSquare } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 interface Props {
   counts: { caseNotes: number; calculations: number; checklists: number }
 }
 
 const ITEMS = [
-  { key: 'caseNotes' as const, label: 'Anotações', icon: MessageSquare, color: 'blue' },
-  { key: 'calculations' as const, label: 'Cálculos', icon: Scale, color: 'amber' },
-  { key: 'checklists' as const, label: 'Checklist', icon: CheckSquare, color: 'emerald' },
+  { key: 'caseNotes' as const, label: 'Anotações', icon: MessageSquare, borderHover: 'hover:border-blue-250', bgIcon: 'bg-blue-50 border-blue-100/50', colorIcon: 'text-blue-600' },
+  { key: 'calculations' as const, label: 'Cálculos', icon: Scale, borderHover: 'hover:border-amber-250', bgIcon: 'bg-amber-50 border-amber-100/50', colorIcon: 'text-amber-600' },
+  { key: 'checklists' as const, label: 'Checklist', icon: CheckSquare, borderHover: 'hover:border-emerald-250', bgIcon: 'bg-emerald-50 border-emerald-100/50', colorIcon: 'text-emerald-600' },
 ] as const
-
-const COLOR_MAP: Record<string, { bg: string; border: string; text: string }> = {
-  blue: { bg: 'bg-blue-50', border: 'border-blue-100', text: 'text-blue-600' },
-  amber: { bg: 'bg-amber-50', border: 'border-amber-100', text: 'text-amber-600' },
-  emerald: { bg: 'bg-emerald-50', border: 'border-emerald-100', text: 'text-emerald-600' },
-}
 
 export function ActivitySummary({ counts }: Props) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-      {ITEMS.map(({ key, label, icon: Icon, color }) => {
-        const c = COLOR_MAP[color]
+      {ITEMS.map(({ key, label, icon: Icon, borderHover, bgIcon, colorIcon }) => {
         return (
-          <Card key={key} variant="light" className="p-6 flex items-center gap-4">
-            <div className={`w-12 h-12 rounded-full ${c.bg} border ${c.border} flex items-center justify-center ${c.text} shrink-0`}>
-              <Icon className="w-5 h-5" />
+          <Card 
+            key={key} 
+            variant="light" 
+            className={cn(
+              "p-5 flex items-center justify-between border-slate-200/80 bg-white hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 shadow-sm",
+              borderHover
+            )}
+          >
+            <div className="space-y-1">
+              <p className="font-sans text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">{label}</p>
+              <p className="font-mono font-bold text-2xl text-slate-800 leading-none mt-2">{counts[key]}</p>
             </div>
-            <div>
-              <p className="font-sans text-xs text-slate-500 uppercase font-bold tracking-wider">{label}</p>
-              <p className="font-sans font-bold text-2xl text-slate-900 mt-0.5">{counts[key]}</p>
+            <div className={cn("w-9 h-9 rounded-lg border flex items-center justify-center shrink-0 shadow-xs", bgIcon)}>
+              <Icon className={cn("w-4.5 h-4.5", colorIcon)} />
             </div>
           </Card>
         )

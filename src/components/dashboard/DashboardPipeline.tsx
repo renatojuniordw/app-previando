@@ -11,37 +11,37 @@ interface PipelineData {
 
 export const DashboardPipeline = memo(function DashboardPipeline({ data }: { data: PipelineData }) {
   return (
-    <Card variant="light" className="p-0 overflow-hidden lg:col-span-2">
+    <Card variant="light" className="p-0 overflow-hidden lg:col-span-2 bg-white border-slate-200 shadow-sm rounded-xl">
       <div className="p-6 border-b border-slate-100 flex items-center justify-between">
-        <h3 className="font-serif font-bold text-lg text-slate-900">Pipeline</h3>
+        <h3 className="font-serif font-bold text-lg text-slate-900">Pipeline de Processos</h3>
         <Activity className="w-5 h-5 text-slate-400" />
       </div>
-      <div className="p-6 bg-slate-50/50">
-        <div className="grid grid-cols-5 gap-3">
+      <div className="p-6 bg-slate-50/30 border-b border-slate-100">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
           {Object.entries(STATUS_LABELS).map(([status, label]) => (
-            <div key={status} className="flex flex-col items-center p-4 bg-white rounded-xl border border-slate-200 shadow-sm">
-              <div className="font-sans font-bold text-2xl text-slate-800 mb-2">
+            <div key={status} className="flex flex-col items-center p-4 bg-white rounded-xl border border-slate-200/80 shadow-sm hover:shadow transition-shadow duration-200">
+              <div className="font-sans font-extrabold text-2xl text-slate-800 mb-1.5 tracking-tight">
                 {data.byStatus[status] ?? 0}
               </div>
-              <div className="font-sans text-xs text-slate-500 text-center leading-tight">{label}</div>
+              <div className="font-sans text-[10px] font-bold text-slate-400 text-center uppercase tracking-wider leading-snug">{label}</div>
             </div>
           ))}
         </div>
       </div>
 
       {data.byBenefitType.length > 0 && (
-        <div className="p-6 border-t border-slate-100">
-          <h4 className="font-sans font-semibold text-sm text-slate-700 mb-3">Distribuição por Tipo de Benefício</h4>
-          <div className="space-y-2">
+        <div className="p-6">
+          <h4 className="font-sans font-bold text-xs uppercase tracking-wider text-slate-400 mb-4">Distribuição por Tipo de Benefício</h4>
+          <div className="space-y-3.5">
             {data.byBenefitType.map((b) => {
               const pct = data.total ? Math.round((b.count / data.total) * 100) : 0
               return (
                 <div key={b.name} className="flex items-center gap-3">
-                  <span className="text-xs text-slate-500 w-24 truncate">{b.name}</span>
-                  <div className="flex-1 bg-slate-100 rounded-full h-1.5">
-                    <div className="bg-amber-500 h-1.5 rounded-full" style={{ width: `${pct}%` }} />
+                  <span className="text-xs font-semibold text-slate-600 w-24 truncate">{b.name}</span>
+                  <div className="flex-1 bg-slate-100 rounded-full h-2 overflow-hidden">
+                    <div className="bg-gradient-to-r from-amber-400 to-amber-500 h-full rounded-full" style={{ width: `${pct}%` }} />
                   </div>
-                  <span className="text-xs text-slate-700 font-semibold w-6 text-right">{b.count}</span>
+                  <span className="text-xs font-bold text-slate-800 w-8 text-right">{b.count}</span>
                 </div>
               )
             })}
