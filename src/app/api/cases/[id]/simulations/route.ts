@@ -45,7 +45,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 
     if (hasOldSimulations) {
       const cnis = await prisma.cnisDocument.findFirst({
-        where: { caseId: params.id, processingStatus: { in: ['COMPLETED', 'SUMMARY_READY'] } },
+        where: { client: { cases: { some: { id: params.id } } }, processingStatus: { in: ['COMPLETED', 'SUMMARY_READY'] } },
       })
       const extracted = cnis?.extractedData as CnisExtractedData | null
       const birthDate = extracted?.dataNascimento

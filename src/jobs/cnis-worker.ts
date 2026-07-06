@@ -15,18 +15,12 @@ export function createCnisWorker(redis: Redis): Worker {
   return new Worker(
     'cnis-processing',
     async (job) => {
-      const { cnisDocumentId, r2Key, caseId } = job.data
+      const { cnisDocumentId, r2Key, clientId, userId } = job.data
 
-      logger.info(`Processing CNIS: ${cnisDocumentId}`, { cnisDocumentId, r2Key, caseId })
+      logger.info(`Processing CNIS: ${cnisDocumentId}`, { cnisDocumentId, r2Key, clientId })
 
-      // ─── Validar documento e buscar dados do caso ───────────────────
-      let caseRecord: { userId: string } | null = null
+      // ─── Validar documento ───────────────────────────────────────────
       try {
-        caseRecord = await prisma.case.findUnique({
-          where: { id: caseId },
-          select: { userId: true },
-        })
-
         await prisma.cnisDocument.update({
           where: { id: cnisDocumentId },
           data: { processingStatus: 'PROCESSING' },
@@ -121,27 +115,26 @@ export function createCnisWorker(redis: Redis): Worker {
         })
 
         // ─── Criar Notificação de Sucesso ────────────────────────────
-        if (caseRecord?.userId) {
+        if (userId) {
           await prisma.notification.create({
             data: {
-              userId: caseRecord.userId,
+              userId,
               type: 'CNIS_PROCESSED',
-              caseId,
               message: `O CNIS de ${extractedData.nome || 'Segurado'} foi processado com sucesso!${isProgrammatic ? ' (Instantâneo)' : ''}`,
             },
           }).catch((err) => {
-            logger.error(`Failed to create success notification for case ${caseId}`, err)
+            logger.error(`Failed to create success notification for client ${clientId}`, err)
           })
 
           await writeAuditDirect({
-            userId: caseRecord.userId,
+            userId,
             action: 'cnis.processed',
             resource: `CNIS processado para ${extractedData.nome || 'Segurado'}`,
             ipAddress: null,
             userAgent: null,
-            metadata: { caseId, cnisDocumentId, isProgrammatic },
+            metadata: { clientId, cnisDocumentId, isProgrammatic },
           }).catch((err) => {
-            logger.error(`Failed to write success audit log for case ${caseId}`, err)
+            logger.error(`Failed to write success audit log for client ${clientId}`, err)
           })
         }
 
@@ -161,27 +154,26 @@ export function createCnisWorker(redis: Redis): Worker {
         })
 
         // ─── Criar Notificação de Falha ──────────────────────────────
-        if (caseRecord?.userId) {
+        if (userId) {
           await prisma.notification.create({
             data: {
-              userId: caseRecord.userId,
+              userId,
               type: 'CNIS_FAILED',
-              caseId,
-              message: `Falha ao processar o CNIS do caso: ${error.message}`,
+              message: `Falha ao processar o CNIS: ${error.message}`,
             },
           }).catch((err) => {
-            logger.error(`Failed to create fail notification for case ${caseId}`, err)
+            logger.error(`Failed to create fail notification for client ${clientId}`, err)
           })
 
           await writeAuditDirect({
-            userId: caseRecord.userId,
+            userId,
             action: 'cnis.failed',
             resource: `Falha no processamento CNIS`,
             ipAddress: null,
             userAgent: null,
-            metadata: { caseId, cnisDocumentId, error: error.message },
+            metadata: { clientId, cnisDocumentId, error: error.message },
           }).catch((err) => {
-            logger.error(`Failed to write failure audit log for case ${caseId}`, err)
+            logger.error(`Failed to write failure audit log for client ${clientId}`, err)
           })
         }
 

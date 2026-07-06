@@ -51,6 +51,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       gender: parsed.data.gender,
       tempoEspecialAnos: parsed.data.tempoEspecialAnos,
       dependentesPensao: parsed.data.dependentesPensao,
+      disabilityDegree: parsed.data.disabilityDegree,
     })
 
     // Incrementa contador mensal de uso do plano (atômico — evita estourar o limite em corridas)

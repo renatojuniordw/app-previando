@@ -9,6 +9,7 @@ export interface RunRetroativoInput {
   valorMensalBruto: number
   valorDescontos?: number
   descricaoDescontos?: string
+  percentualHonorarios?: number
 }
 
 /**
@@ -21,7 +22,7 @@ export class RetroativoOrchestrator {
    * e salva no banco de dados.
    */
   static async run(input: RunRetroativoInput) {
-    const { caseId, dataInicioDireito, dataRequerimento, valorMensalBruto, valorDescontos = 0, descricaoDescontos } = input
+    const { caseId, dataInicioDireito, dataRequerimento, valorMensalBruto, valorDescontos = 0, descricaoDescontos, percentualHonorarios } = input
 
     // 1. Busca todos os índices INPC históricos parametrizados no banco
     const dbIndices = await prisma.inpcIndex.findMany()
@@ -45,25 +46,45 @@ export class RetroativoOrchestrator {
       valorMensalBruto,
       valorDescontos,
       descricaoDescontos,
+      percentualHonorarios,
       indicesINPC,
     })
 
-    // 3. Salva o retroativo no banco de dados — tipagem segura via Prisma.InputJsonValue
-    const retroativo = await prisma.retroactive.create({
-      data: {
-        caseId,
-        entitlementStartDate: new Date(result.dataInicioDireito),
-        requestDate: new Date(result.dataRequerimento),
-        monthsLate: result.mesesAtraso,
-        monthlyGrossValue: result.valorMensalBruto,
-        totalGrossValue: result.valorTotalBruto,
-        totalCorrectedValue: result.valorTotalCorrigido,
-        correctionIndex: result.indiceCorrecao,
-        discountValue: result.valorDescontos,
-        discountDescription: result.descricaoDescontos ?? null,
-        finalNetValue: result.valorLiquidoFinal,
-        calculationMemory: result.memoriaCalculo as unknown as Prisma.InputJsonValue,
-      },
+    // 3. Salva o retroativo e, se houver percentual de honorários, o honorário vinculado numa única transação
+    const retroativo = await prisma.$transaction(async (tx) => {
+      const created = await tx.retroactive.create({
+        data: {
+          caseId,
+          entitlementStartDate: new Date(result.dataInicioDireito),
+          requestDate: new Date(result.dataRequerimento),
+          monthsLate: result.mesesAtraso,
+          monthlyGrossValue: result.valorMensalBruto,
+          totalGrossValue: result.valorTotalBruto,
+          totalCorrectedValue: result.valorTotalCorrigido,
+          correctionIndex: result.indiceCorrecao,
+          discountValue: result.valorDescontos,
+          discountDescription: result.descricaoDescontos ?? null,
+          finalNetValue: result.valorLiquidoFinal,
+          feePercentage: result.percentualHonorarios ?? null,
+          feeValue: result.valorHonorarios ?? null,
+          clientNetValue: result.valorLiquidoCliente ?? null,
+          calculationMemory: result.memoriaCalculo as unknown as Prisma.InputJsonValue,
+        },
+      })
+
+      if (result.percentualHonorarios !== undefined && result.valorHonorarios !== undefined) {
+        await tx.fee.create({
+          data: {
+            caseId,
+            retroactiveId: created.id,
+            description: `Honorários sobre retroativo (${result.percentualHonorarios}%)`,
+            type: 'PERCENTAGE',
+            totalAmount: result.valorHonorarios,
+          },
+        })
+      }
+
+      return created
     })
 
     return retroativo

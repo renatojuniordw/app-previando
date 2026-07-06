@@ -46,6 +46,7 @@ const createSchema = z.object({
     'APOSENTADORIA_ESPECIAL',
     'APOSENTADORIA_HIBRIDA',
     'APOSENTADORIA_PONTOS',
+    'APOSENTADORIA_PCD',
     'AUXILIO_DOENCA',
     'AUXILIO_ACIDENTE',
     'SALARIO_MATERNIDADE',
@@ -120,8 +121,7 @@ export async function GET(req: NextRequest) {
         skip,
         take: limit,
         include: {
-          client: { select: { id: true, name: true, phone: true } },
-          cnisDocument: { select: { processingStatus: true } },
+          client: { select: { id: true, name: true, phone: true, cnisDocument: { select: { processingStatus: true } } } },
           calculations: {
             where: { isSelected: true },
             select: { id: true, modality: true, rmi: true, createdAt: true },
@@ -135,6 +135,7 @@ export async function GET(req: NextRequest) {
 
     const mapped = cases.map((c) => ({
       ...mapCaseToApi(c),
+      cnisDocument: c.client.cnisDocument,
       selectedRmi: c.calculations[0]?.rmi ?? null,
     }))
 

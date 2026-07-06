@@ -7,6 +7,7 @@ import {
   Pedagio50Strategy,
   Pedagio100Strategy,
   AposentadoriaEspecialStrategy,
+  AposentadoriaPCDStrategy,
   HibridaStrategy,
 } from '@/lib/strategies/retirement'
 
@@ -232,5 +233,54 @@ describe('HibridaStrategy', () => {
     const input = { ...baseInput, idadeNaApuracao: 50 }
     const result = new HibridaStrategy().evaluate(input)
     expect(result.elegivel).toBe(false)
+  })
+})
+
+describe('AposentadoriaPCDStrategy', () => {
+  it('modalidade correta', () => {
+    expect(new AposentadoriaPCDStrategy().modalidade).toBe('APOSENTADORIA_PCD')
+  })
+
+  it('coeficiente sempre fixo em 1.0 (100% da média)', () => {
+    const result = new AposentadoriaPCDStrategy().evaluate({ ...baseInput, disabilityDegree: 'GRAVE', tempoContribuicaoAnos: 25 })
+    expect(result.coeficiente).toBe(1.0)
+  })
+
+  it('elegível por tempo de contribuição — grau grave (25 anos homem)', () => {
+    const input = { ...baseInput, idadeNaApuracao: 45, tempoContribuicaoAnos: 25, disabilityDegree: 'GRAVE' as const }
+    const result = new AposentadoriaPCDStrategy().evaluate(input)
+    expect(result.elegivel).toBe(true)
+  })
+
+  it('não elegível por tempo — grau leve com apenas 25 anos (precisa de 33 para homem)', () => {
+    const input = { ...baseInput, idadeNaApuracao: 45, tempoContribuicaoAnos: 25, disabilityDegree: 'LEVE' as const }
+    const result = new AposentadoriaPCDStrategy().evaluate(input)
+    expect(result.elegivel).toBe(false)
+  })
+
+  it('elegível por idade — 60 anos homem + 15 anos contrib, independente do grau', () => {
+    const input = { ...baseInput, idadeNaApuracao: 60, tempoContribuicaoAnos: 15, disabilityDegree: undefined }
+    const result = new AposentadoriaPCDStrategy().evaluate(input)
+    expect(result.elegivel).toBe(true)
+  })
+
+  it('elegível por tempo — grau grave mulher com 20 anos', () => {
+    const input = { ...baseInput, gender: 'F' as const, idadeNaApuracao: 45, tempoContribuicaoAnos: 20, disabilityDegree: 'GRAVE' as const }
+    const result = new AposentadoriaPCDStrategy().evaluate(input)
+    expect(result.elegivel).toBe(true)
+  })
+
+  it('não elegível sem grau informado e sem atingir a via de idade', () => {
+    const input = { ...baseInput, idadeNaApuracao: 45, tempoContribuicaoAnos: 20, disabilityDegree: undefined }
+    const result = new AposentadoriaPCDStrategy().evaluate(input)
+    expect(result.elegivel).toBe(false)
+    expect(result.pendencias.some((p) => p.includes('Grau de deficiência não informado'))).toBe(true)
+  })
+
+  it('não elegível — carência insuficiente mesmo com tempo de contribuição ok', () => {
+    const input = { ...baseInput, idadeNaApuracao: 45, tempoContribuicaoAnos: 25, disabilityDegree: 'GRAVE' as const, carenciaMeses: 100 }
+    const result = new AposentadoriaPCDStrategy().evaluate(input)
+    expect(result.elegivel).toBe(false)
+    expect(result.pendencias.some((p) => p.includes('Carência'))).toBe(true)
   })
 })

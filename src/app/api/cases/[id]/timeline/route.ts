@@ -68,8 +68,12 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
           orderBy: { createdAt: 'desc' },
           select: { id: true, totalCorrectedValue: true, createdAt: true },
         },
-        cnisDocument: {
-          select: { createdAt: true, processingStatus: true, fileName: true },
+        client: {
+          select: {
+            cnisDocument: {
+              select: { createdAt: true, processingStatus: true, fileName: true },
+            },
+          },
         },
       },
     })
@@ -99,15 +103,15 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       date: caso.createdAt,
     })
 
-    if (caso.cnisDocument) {
+    if (caso.client.cnisDocument) {
       events.push({
         id: 'cnis-upload',
         type: 'CNIS_UPLOAD',
         category: 'cnis',
         title: 'CNIS enviado',
-        description: caso.cnisDocument.fileName,
-        date: caso.cnisDocument.createdAt,
-        meta: { status: caso.cnisDocument.processingStatus },
+        description: caso.client.cnisDocument.fileName,
+        date: caso.client.cnisDocument.createdAt,
+        meta: { status: caso.client.cnisDocument.processingStatus },
       })
     }
 

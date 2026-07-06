@@ -19,8 +19,8 @@ describe('BENEFIT_LABELS', () => {
     expect(BENEFIT_LABELS.PENSAO_POR_MORTE).toBe('Pensão por Morte')
   })
 
-  it('tem 12 benefícios', () => {
-    expect(Object.keys(BENEFIT_LABELS).length).toBe(12)
+  it('tem 13 benefícios', () => {
+    expect(Object.keys(BENEFIT_LABELS).length).toBe(13)
   })
 })
 

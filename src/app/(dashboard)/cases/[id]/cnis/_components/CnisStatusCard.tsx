@@ -1,4 +1,4 @@
-import { CnisData, CnisExtractedData } from '../_types'
+import { CnisData, CnisExtractedData } from '@/types/cnis'
 import { CnisProcessingStepper } from './CnisProcessingStepper'
 import { CnisExtractedDataView } from './CnisExtractedData'
 import { AlertCircle, RefreshCw } from 'lucide-react'

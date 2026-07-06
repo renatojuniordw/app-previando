@@ -12,14 +12,13 @@ import {
   FileText, Calculator, History, Info,
 } from 'lucide-react'
 import { CurrencyInput } from '@/components/ui/CurrencyInput'
-import { REVISION_LABELS, REVISION_DESCRIPTIONS } from '@/lib/strategies/revision-types'
+import { REVISION_LABELS } from '@/lib/strategies/revision-types'
 import type { RevisionType, RevisionResult } from '@/lib/strategies/revision-types'
 import { cn } from '@/lib/utils'
 
-const REVISAO_TYPES: RevisionType[] = ['REVISAO_VIDA_TODA', 'REVISAO_ART_29', 'REVISAO_BURACO_NEGRO']
+const TIPO_REVISAO: RevisionType = 'REVISAO_BENEFICIO'
 
 interface FormData {
-  tipoRevisao: RevisionType | ''
   rmiConcedido: string
   dibConcedido: string
 }
@@ -77,7 +76,7 @@ export default function RevisaoPage() {
   const params = useParams()
   const caseId = params.id as string
 
-  const [form, setForm] = useState<FormData>({ tipoRevisao: '', rmiConcedido: '', dibConcedido: '' })
+  const [form, setForm] = useState<FormData>({ rmiConcedido: '', dibConcedido: '' })
   const [result, setResult] = useState<RevisionResult | null>(null)
   const [history, setHistory] = useState<RevisionHistoryItem[]>([])
   const [loading, setLoading] = useState(false)
@@ -95,7 +94,7 @@ export default function RevisaoPage() {
     setError('')
     setResult(null)
 
-    if (!form.tipoRevisao || !form.rmiConcedido || !form.dibConcedido) {
+    if (!form.rmiConcedido || !form.dibConcedido) {
       setError('Preencha todos os campos.')
       return
     }
@@ -109,7 +108,7 @@ export default function RevisaoPage() {
     setLoading(true)
     try {
       const res = await api.post(`/cases/${caseId}/revisions`, {
-        tipoRevisao: form.tipoRevisao,
+        tipoRevisao: TIPO_REVISAO,
         rmiConcedido: rmi,
         dibConcedido: form.dibConcedido,
       })
@@ -131,7 +130,7 @@ export default function RevisaoPage() {
         <div>
           <h2 className="font-serif font-bold text-2xl text-slate-900 tracking-tight">Revisão de Benefícios</h2>
           <p className="font-sans text-sm text-slate-500 mt-1 leading-relaxed">
-            Calcule o impacto de diferentes tipos de revisão no benefício concedido.
+            Calcule o impacto da revisão do benefício concedido com base nos dados atuais do CNIS.
           </p>
         </div>
       </div>
@@ -145,52 +144,6 @@ export default function RevisaoPage() {
           {/* Formulário */}
           <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm space-y-5">
             <SectionHeader icon={Calculator} title="Nova Simulação de Revisão" />
-
-            <fieldset>
-              <legend className="font-sans text-[10px] uppercase font-extrabold tracking-wider text-slate-400 mb-2.5">
-                Tipo de Revisão
-              </legend>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                {REVISAO_TYPES.map((tipo) => {
-                  const selected = form.tipoRevisao === tipo
-                  return (
-                    <button
-                      key={tipo}
-                      onClick={() => setForm({ ...form, tipoRevisao: selected ? '' : tipo })}
-                      aria-pressed={selected}
-                      className={cn(
-                        'flex flex-col items-start gap-1.5 p-4 rounded-xl border text-left transition-all duration-300',
-                        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500',
-                        selected
-                          ? 'border-amber-500 bg-amber-50 shadow-sm'
-                          : 'border-slate-200/80 bg-white hover:border-slate-300/80 hover:shadow-md'
-                      )}
-                    >
-                      <span className="flex items-start justify-between gap-2 w-full">
-                        <span className={cn(
-                          'font-sans font-bold text-sm leading-snug',
-                          selected ? 'text-amber-800' : 'text-slate-800'
-                        )}>
-                          {REVISION_LABELS[tipo]}
-                        </span>
-                        <span
-                          aria-hidden="true"
-                          className={cn(
-                            'w-4 h-4 rounded-full border-2 shrink-0 mt-0.5 flex items-center justify-center transition-colors',
-                            selected ? 'border-amber-600 bg-white' : 'border-slate-300 bg-white'
-                          )}
-                        >
-                          {selected && <span className="w-2 h-2 rounded-full bg-amber-600" />}
-                        </span>
-                      </span>
-                      <span className="font-sans text-xs text-slate-500 leading-relaxed">
-                        {REVISION_DESCRIPTIONS[tipo]}
-                      </span>
-                    </button>
-                  )
-                })}
-              </div>
-            </fieldset>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
               <CurrencyInput
@@ -217,15 +170,12 @@ export default function RevisaoPage() {
 
             <div className="flex flex-col-reverse md:flex-row md:items-center md:justify-between gap-3 pt-4 border-t border-slate-100">
               <p className="font-sans text-xs text-slate-400 leading-relaxed" aria-live="polite">
-                {!form.tipoRevisao
-                  ? 'Selecione um tipo de revisão para habilitar o cálculo.'
-                  : 'A simulação será salva automaticamente no histórico.'}
+                A simulação será salva automaticamente no histórico.
               </p>
               <Button
                 variant="primary"
                 onClick={handleSubmit}
                 loading={loading}
-                disabled={!form.tipoRevisao}
                 className="w-full md:w-auto shrink-0 bg-amber-600 hover:bg-amber-700 border-amber-600"
               >
                 <Scale className="w-4 h-4" aria-hidden="true" />
@@ -309,8 +259,8 @@ export default function RevisaoPage() {
           <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm space-y-4">
             <SectionHeader icon={Info} title="Sobre a Revisão" />
             <p className="font-sans text-xs text-slate-500 leading-relaxed">
-              Calcule o impacto de diferentes tipos de revisão no benefício já concedido. Preencha os dados
-              originais da concessão (RMI e DIB) e selecione o tipo de revisão desejado. O resultado mostra
+              Calcule o impacto da revisão no benefício já concedido. Preencha os dados
+              originais da concessão (RMI e DIB). O resultado mostra
               a diferença mensal e o impacto retroativo estimado.
             </p>
           </div>

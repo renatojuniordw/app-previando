@@ -11,6 +11,7 @@ export interface RetroativoInput {
   valorMensalBruto: number
   valorDescontos?: number
   descricaoDescontos?: string
+  percentualHonorarios?: number // % sobre o valor líquido final (0-100)
   indicesINPC: Record<string, number> // SST: Recebe os índices do banco carregados pelo service
 }
 
@@ -33,6 +34,9 @@ export interface RetroativoResult {
   valorDescontos: number
   descricaoDescontos?: string
   valorLiquidoFinal: number
+  percentualHonorarios?: number
+  valorHonorarios?: number
+  valorLiquidoCliente?: number
   memoriaCalculo: {
     parcelas: ParcelaRetroativa[]
     acumuladoINPC: number
@@ -43,7 +47,7 @@ export interface RetroativoResult {
  * Executa o cálculo de parcelas atrasadas e atualização monetária pelo INPC
  */
 export function calculateRetroativos(input: RetroativoInput): RetroativoResult {
-  const { dataInicioDireito, dataRequerimento, valorMensalBruto, valorDescontos = 0, descricaoDescontos, indicesINPC } = input
+  const { dataInicioDireito, dataRequerimento, valorMensalBruto, valorDescontos = 0, descricaoDescontos, percentualHonorarios, indicesINPC } = input
 
   const start = new Date(dataInicioDireito)
   const end = new Date(dataRequerimento)
@@ -97,6 +101,16 @@ export function calculateRetroativos(input: RetroativoInput): RetroativoResult {
   const mesesAtrasoCount = parcelas.length
   const valorLiquidoFinal = Number((valorTotalCorrigido - valorDescontos).toFixed(2))
 
+  let valorHonorarios: number | undefined
+  let valorLiquidoCliente: number | undefined
+  if (percentualHonorarios !== undefined) {
+    if (percentualHonorarios < 0 || percentualHonorarios > 100) {
+      throw new Error('O percentual de honorários deve estar entre 0 e 100.')
+    }
+    valorHonorarios = Number((valorLiquidoFinal * (percentualHonorarios / 100)).toFixed(2))
+    valorLiquidoCliente = Number((valorLiquidoFinal - valorHonorarios).toFixed(2))
+  }
+
   return {
     dataInicioDireito,
     dataRequerimento,
@@ -108,6 +122,9 @@ export function calculateRetroativos(input: RetroativoInput): RetroativoResult {
     valorDescontos,
     descricaoDescontos,
     valorLiquidoFinal,
+    percentualHonorarios,
+    valorHonorarios,
+    valorLiquidoCliente,
     memoriaCalculo: {
       parcelas,
       // Evita divisão por zero: se valorTotalBruto for 0, o acumulado é 0

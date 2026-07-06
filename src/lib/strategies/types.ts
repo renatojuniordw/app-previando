@@ -13,6 +13,7 @@ export interface ModalidadeEvaluationInput {
   gender: 'M' | 'F'
   dependentesPensao: number
   tempoEspecialAnos: number
+  disabilityDegree?: 'LEVE' | 'MODERADO' | 'GRAVE'
   regra?: {
     idadeMinima?: number
     tempoContribuicaoAnos?: number

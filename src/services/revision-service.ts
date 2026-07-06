@@ -24,8 +24,7 @@ export async function runAndSaveRevision(input: RunRevisionInput): Promise<Revis
   const caso = await prisma.case.findUnique({
     where: { id: caseId },
     include: {
-      client: { select: { birthDate: true } },
-      cnisDocument: { select: { extractedData: true } },
+      client: { select: { birthDate: true, cnisDocument: { select: { extractedData: true } } } },
     },
   })
 
@@ -43,7 +42,7 @@ export async function runAndSaveRevision(input: RunRevisionInput): Promise<Revis
     dibConcedido,
     birthDate: caso.client.birthDate.toISOString().slice(0, 10),
     gender: 'M',
-    extractedData: (caso.cnisDocument?.extractedData ?? null) as Parameters<typeof calcularRevisao>[0]['extractedData'],
+    extractedData: (caso.client.cnisDocument?.extractedData ?? null) as Parameters<typeof calcularRevisao>[0]['extractedData'],
     salarioMinimo,
     tetoPrevidenciario: teto,
   })

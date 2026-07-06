@@ -13,18 +13,16 @@ export interface RevisionInput {
   tetoPrevidenciario: number
 }
 
-export type RevisionType = 'REVISAO_VIDA_TODA' | 'REVISAO_ART_29' | 'REVISAO_BURACO_NEGRO'
+// As teses de Vida Toda (Tema 1.102/STF), Art. 29 (Tema 999/STJ) e Buraco Negro (EC 103/2019)
+// foram superadas/pacificadas pelo STF e removidas. Mantém-se apenas a revisão genérica.
+export type RevisionType = 'REVISAO_BENEFICIO'
 
 export const REVISION_LABELS: Record<RevisionType, string> = {
-  REVISAO_VIDA_TODA: 'Revisão da Vida Toda (Tema 1.102/STF)',
-  REVISAO_ART_29: 'Revisão do Art. 29 (Tema 999/STJ)',
-  REVISAO_BURACO_NEGRO: 'Revisão do Buraco Negro (EC 103/2019)',
+  REVISAO_BENEFICIO: 'Revisão de Benefício',
 }
 
 export const REVISION_DESCRIPTIONS: Record<RevisionType, string> = {
-  REVISAO_VIDA_TODA: 'Inclui contribuições anteriores a julho de 1994 no cálculo da média dos salários de contribuição, conforme decidido pelo STF no Tema 1.102.',
-  REVISAO_ART_29: 'Revisão com base no Art. 29 da Lei 8.213/91 (Tema 999/STJ) — exclui os 20% menores salários de contribuição do período base.',
-  REVISAO_BURACO_NEGRO: 'Revisão decorrente da EC 103/2019 — corrige distorções no cálculo do salário de benefício para segurados que tiveram o cálculo impactado pela Reforma.',
+  REVISAO_BENEFICIO: 'Recalcula o benefício concedido com base nos dados atuais do CNIS, comparando o valor original com o valor recalculado.',
 }
 
 export interface RevisionResult {

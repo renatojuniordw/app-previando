@@ -13,6 +13,7 @@ import {
   Pedagio50Strategy,
   Pedagio100Strategy,
   AposentadoriaEspecialStrategy,
+  AposentadoriaPCDStrategy,
   HibridaStrategy,
 } from './retirement'
 import {
@@ -23,11 +24,7 @@ import {
   PensaoMorteStrategy,
   BpcLoasStrategy,
 } from './assistenciais'
-import {
-  RevisaoVidaTodaStrategy,
-  RevisaoArtigo29Strategy,
-  RevisaoBuracoNegroStrategy,
-} from './revision'
+import { RevisaoBeneficioStrategy } from './revision'
 
 /**
  * Default strategy used when no strategy is registered for a given modality.
@@ -59,6 +56,7 @@ const STRATEGIES: Map<string, ModalidadeStrategy> = new Map<string, ModalidadeSt
   ['PEDAGIO_50', new Pedagio50Strategy()],
   ['PEDAGIO_100', new Pedagio100Strategy()],
   ['APOSENTADORIA_ESPECIAL', new AposentadoriaEspecialStrategy()],
+  ['APOSENTADORIA_PCD', new AposentadoriaPCDStrategy()],
   ['HIBRIDA', new HibridaStrategy()],
   ['AUXILIO_DOENCA_B31', new AuxilioDoencaB31Strategy()],
   ['AUXILIO_DOENCA_B91', new AuxilioDoencaB91Strategy()],
@@ -66,9 +64,7 @@ const STRATEGIES: Map<string, ModalidadeStrategy> = new Map<string, ModalidadeSt
   ['AUXILIO_RECLUSAO', new AuxilioReclusaoStrategy()],
   ['PENSAO_MORTE', new PensaoMorteStrategy()],
   ['BPC_LOAS', new BpcLoasStrategy()],
-  ['REVISAO_VIDA_TODA', new RevisaoVidaTodaStrategy()],
-  ['REVISAO_ART_29', new RevisaoArtigo29Strategy()],
-  ['REVISAO_BURACO_NEGRO', new RevisaoBuracoNegroStrategy()],
+  ['REVISAO_BENEFICIO', new RevisaoBeneficioStrategy()],
 ])
 
 /**

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
-import { verifyCaseOwnership } from '@/lib/ownership'
+import { verifyClientOwnership } from '@/lib/ownership'
 import { Queue } from 'bullmq'
 import { bullmqConnection } from '@/lib/redis'
 import { handleApiError } from '@/lib/api-error'
@@ -9,23 +9,23 @@ import { logAudit } from '@/lib/audit'
 
 const cnisQueue = new Queue('cnis-processing', { connection: bullmqConnection })
 
-export async function POST(req: NextRequest, { params }: { params: { caseId: string } }) {
+export async function POST(req: NextRequest, { params }: { params: { clientId: string } }) {
   try {
     const session = await auth()
     if (!session?.user?.id) return NextResponse.json({ error: 'Não autorizado.' }, { status: 401 })
 
-    await verifyCaseOwnership(params.caseId, session.user.id)
+    await verifyClientOwnership(params.clientId, session.user.id)
 
     const doc = await prisma.cnisDocument.findUnique({
-      where: { caseId: params.caseId },
-      select: { id: true, r2Key: true, fileName: true, caseId: true }
+      where: { clientId: params.clientId },
+      select: { id: true, r2Key: true, fileName: true, clientId: true }
     })
 
     if (!doc) return NextResponse.json({ error: 'CNIS não encontrado.' }, { status: 404 })
 
     // Atualizar status para PENDING, limpar erros e limpar dados extraídos
     const updatedDoc = await prisma.cnisDocument.update({
-      where: { caseId: params.caseId },
+      where: { clientId: params.clientId },
       data: {
         processingStatus: 'PENDING',
         processingError: null,
@@ -38,9 +38,9 @@ export async function POST(req: NextRequest, { params }: { params: { caseId: str
     await logAudit({
       userId: session.user.id,
       action: 'cnis.reprocess',
-      resource: `Reprocessamento do CNIS iniciado para o caso ${params.caseId}`,
+      resource: `Reprocessamento do CNIS iniciado para o cliente ${params.clientId}`,
       req,
-      metadata: { caseId: doc.caseId, fileName: doc.fileName },
+      metadata: { clientId: doc.clientId, fileName: doc.fileName },
     })
 
     // Enfileirar processamento no BullMQ com auto-retry
@@ -49,7 +49,8 @@ export async function POST(req: NextRequest, { params }: { params: { caseId: str
       {
         cnisDocumentId: updatedDoc.id,
         r2Key: doc.r2Key,
-        caseId: doc.caseId,
+        clientId: doc.clientId,
+        userId: session.user.id,
       },
       {
         attempts: 3,

@@ -18,8 +18,7 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
     const caso = await prisma.case.findUnique({
       where: { id: params.id },
       include: {
-        client: { select: { birthDate: true } },
-        cnisDocument: { select: { extractedData: true } },
+        client: { select: { birthDate: true, cnisDocument: { select: { extractedData: true } } } },
       },
     })
 
@@ -29,8 +28,7 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
 
     const caseData = caso as unknown as {
       createdAt: Date
-      client: { birthDate: Date } | null
-      cnisDocument: { extractedData: unknown } | null
+      client: { birthDate: Date; cnisDocument: { extractedData: unknown } | null } | null
     }
 
     if (!caseData.client?.birthDate) {
@@ -44,7 +42,7 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
       birthDate: caseData.client.birthDate.toISOString().slice(0, 10),
       gender: 'M',
       dib,
-      extractedData: (caseData.cnisDocument?.extractedData ?? null) as Parameters<typeof calcularViabilityScore>[0]['extractedData'],
+      extractedData: (caseData.client.cnisDocument?.extractedData ?? null) as Parameters<typeof calcularViabilityScore>[0]['extractedData'],
       salarioMinimo,
       tetoPrevidenciario: teto,
     })

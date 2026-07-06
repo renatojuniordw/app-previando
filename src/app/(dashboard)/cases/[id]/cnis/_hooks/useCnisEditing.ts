@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import api from '@/lib/api'
 import { useToast } from '@/store/toast'
-import { CnisData, CnisExtractedData, Periodo } from '../_types'
+import { CnisData, CnisExtractedData, Periodo } from '@/types/cnis'
 
 export function useCnisEditing(cnis: CnisData | null, setCnis: (doc: CnisData) => void) {
   const { addToast } = useToast()
@@ -148,11 +148,11 @@ export function useCnisEditing(cnis: CnisData | null, setCnis: (doc: CnisData) =
     addToast({ type: 'success', title: 'Vínculo removido localmente' })
   }
 
-  const handleSaveToDb = async (caseId: string) => {
+  const handleSaveToDb = async (clientId: string) => {
     setSavingData(true)
     setSaveError('')
     try {
-      const response = await api.put(`/cnis/${caseId}`, { extractedData: tempExtractedData })
+      const response = await api.put(`/cnis/${clientId}`, { extractedData: tempExtractedData })
       setCnis(response.data.cnisDocument)
       setIsModified(false)
       setShowSaveConfirmModal(false)

@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { Briefcase, Edit3, FileSpreadsheet, Plus, Search, User, FileText, Calendar, CheckCircle2, Trash2 } from 'lucide-react'
-import { CnisExtractedData as ExtractedData } from '../_types'
+import { CnisExtractedData as ExtractedData } from '@/types/cnis'
 import { formatDateString, getPeriodWarnings } from '../_utils'
 import { PeriodItem } from './PeriodItem'
 import { EditFieldModal } from './modals/EditFieldModal'
@@ -10,7 +10,7 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { formatDate, cn } from '@/lib/utils'
-import { STATUS_CONFIG } from '../_constants'
+import { STATUS_CONFIG } from '@/lib/cnis-status'
 
 interface Props {
   data: ExtractedData

@@ -9,8 +9,8 @@ import type { CnisExtractedData } from '@/services/cnis/types'
  * @returns Um objeto contendo os dados extraídos do CNIS e a data de nascimento validada
  */
 export async function findAndValidateCnis(caseId: string) {
-  const cnisDoc = await prisma.cnisDocument.findUnique({
-    where: { caseId },
+  const cnisDoc = await prisma.cnisDocument.findFirst({
+    where: { client: { cases: { some: { id: caseId } } } },
   })
 
   if (!cnisDoc) {
@@ -47,8 +47,8 @@ export async function resolveBirthDateForCalculation(caseId: string, modalidade:
     return findAndValidateCnis(caseId)
   }
 
-  const cnisDoc = await prisma.cnisDocument.findUnique({
-    where: { caseId },
+  const cnisDoc = await prisma.cnisDocument.findFirst({
+    where: { client: { cases: { some: { id: caseId } } } },
   })
 
   const extracted = cnisDoc?.processingStatus === 'COMPLETED'

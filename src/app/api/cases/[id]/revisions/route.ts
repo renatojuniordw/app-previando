@@ -9,7 +9,7 @@ import { handleApiError } from '@/lib/api-error'
 import { runAndSaveRevision } from '@/services/revision-service'
 
 const createRevisionSchema = z.object({
-  tipoRevisao: z.enum(['REVISAO_VIDA_TODA', 'REVISAO_ART_29', 'REVISAO_BURACO_NEGRO']),
+  tipoRevisao: z.enum(['REVISAO_BENEFICIO']),
   rmiConcedido: z.number().positive('RMI concedido deve ser positivo'),
   dibConcedido: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Formato inválido (YYYY-MM-DD)'),
 })

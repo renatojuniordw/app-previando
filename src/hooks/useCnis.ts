@@ -3,10 +3,14 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import api from '@/lib/api'
 import { useToast } from '@/store/toast'
-import { CnisData } from '../_types'
-import { isProcessingStatus } from '../_constants'
+import { CnisData } from '@/types/cnis'
+import { isProcessingStatus } from '@/lib/cnis-status'
 
-export function useCnis(caseId: string) {
+/**
+ * O CNIS pertence ao cliente (1 por segurado) — este hook opera sempre por clientId,
+ * nunca por caseId, mesmo quando usado a partir de uma tela de caso específico.
+ */
+export function useCnis(clientId: string) {
   const [cnis, setCnis] = useState<CnisData | null>(null)
   const [loading, setLoading] = useState(true)
   const [showSuccessBanner, setShowSuccessBanner] = useState(false)
@@ -17,8 +21,9 @@ export function useCnis(caseId: string) {
   const stuckRef = useRef<NodeJS.Timeout | null>(null)
 
   const load = useCallback(async () => {
+    if (!clientId) return null
     try {
-      const r = await api.get(`/cnis/${caseId}`)
+      const r = await api.get(`/cnis/${clientId}`)
       const cnisDoc = r.data.cnisDocument
       setCnis(cnisDoc)
       return cnisDoc as CnisData | null
@@ -27,7 +32,7 @@ export function useCnis(caseId: string) {
     } finally {
       setLoading(false)
     }
-  }, [caseId])
+  }, [clientId])
 
   useEffect(() => {
     load()
@@ -67,7 +72,7 @@ export function useCnis(caseId: string) {
   const handleDelete = async (onSuccess: () => void, onError: (msg: string) => void, setDeleting: (v: boolean) => void) => {
     setDeleting(true)
     try {
-      await api.delete(`/cnis/${caseId}`)
+      await api.delete(`/cnis/${clientId}`)
       setCnis(null)
       addToast({ type: 'success', title: 'CNIS excluído' })
       onSuccess()
@@ -81,7 +86,7 @@ export function useCnis(caseId: string) {
   const handleReprocess = async (onSuccess: (doc: CnisData) => void, onError: (msg: string) => void, setReprocessing: (v: boolean) => void) => {
     setReprocessing(true)
     try {
-      const response = await api.post(`/cnis/${caseId}/reprocess`)
+      const response = await api.post(`/cnis/${clientId}/reprocess`)
       const doc = response.data.cnisDocument as CnisData
       setCnis(doc)
       addToast({ type: 'info', title: 'Processamento reiniciado', message: 'Fila de análise do CNIS relançada!' })

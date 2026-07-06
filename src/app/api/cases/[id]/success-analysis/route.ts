@@ -42,13 +42,18 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     const caso = await prisma.case.findUnique({
       where: { id: params.id },
       include: {
-        client: { select: { name: true, birthDate: true } },
-        cnisDocument: {
+        client: {
           select: {
-            totalContributions: true,
-            firstContribution: true,
-            lastContribution: true,
-            processingStatus: true,
+            name: true,
+            birthDate: true,
+            cnisDocument: {
+              select: {
+                totalContributions: true,
+                firstContribution: true,
+                lastContribution: true,
+                processingStatus: true,
+              },
+            },
           },
         },
         calculations: {
@@ -78,7 +83,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 Tipo de benefício: ${BENEFIT_LABELS[caso.benefitType] ?? caso.benefitType}
 Status do caso: ${caso.status}
 Idade do cliente: ${ageYears != null ? `${ageYears} anos` : 'desconhecida'}
-CNIS: ${caso.cnisDocument ? `processado (${caso.cnisDocument.totalContributions ?? 'N/A'} contribuições)` : 'não enviado'}
+CNIS: ${caso.client.cnisDocument ? `processado (${caso.client.cnisDocument.totalContributions ?? 'N/A'} contribuições)` : 'não enviado'}
 Modalidades elegíveis: ${eligible.length > 0 ? eligible.map((c) => c.modality).join(', ') : 'nenhuma identificada'}
 Pendências do checklist: ${pending.length > 0 ? pending.join('; ') : 'nenhuma'}
 Pendências dos cálculos: ${Array.from(new Set(calcPending)).slice(0, 5).join('; ') || 'nenhuma'}

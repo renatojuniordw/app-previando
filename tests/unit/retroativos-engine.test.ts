@@ -83,6 +83,30 @@ describe('calculateRetroativos', () => {
     expect(result.valorTotalCorrigido).toBeGreaterThan(0)
   })
 
+  it('deve calcular percentual de honorários e valor líquido do cliente', () => {
+    const result = calculateRetroativos({
+      dataInicioDireito: '2023-01-01',
+      dataRequerimento: '2023-03-31',
+      valorMensalBruto: 3000.00,
+      percentualHonorarios: 20,
+      indicesINPC: mockINPC,
+    })
+
+    expect(result.percentualHonorarios).toBe(20)
+    expect(result.valorHonorarios).toBe(Number((result.valorLiquidoFinal * 0.2).toFixed(2)))
+    expect(result.valorLiquidoCliente).toBe(Number((result.valorLiquidoFinal - (result.valorHonorarios ?? 0)).toFixed(2)))
+  })
+
+  it('deve lançar erro quando percentual de honorários está fora do intervalo 0-100', () => {
+    expect(() => calculateRetroativos({
+      dataInicioDireito: '2023-01-01',
+      dataRequerimento: '2023-03-31',
+      valorMensalBruto: 3000.00,
+      percentualHonorarios: 150,
+      indicesINPC: mockINPC,
+    })).toThrow('percentual de honorários deve estar entre 0 e 100')
+  })
+
   it('deve lidar com período longo de retroativos', () => {
     const result = calculateRetroativos({
       dataInicioDireito: '2022-01-01',

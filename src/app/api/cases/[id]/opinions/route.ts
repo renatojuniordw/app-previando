@@ -60,8 +60,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     const caso = await prisma.case.findUnique({
       where: { id: params.id },
       include: {
-        client: { select: { name: true } },
-        cnisDocument: { select: { markdownContent: true } },
+        client: { select: { name: true, cnisDocument: { select: { markdownContent: true } } } },
         calculations: {
           where: { eligible: true },
           orderBy: { createdAt: 'desc' },
@@ -85,7 +84,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       clientName: caso.client?.name ?? 'Cliente',
       benefitType: caso.benefitType,
       caseStatus: caso.status,
-      cnisSummary: caso.cnisDocument?.markdownContent ?? undefined,
+      cnisSummary: caso.client?.cnisDocument?.markdownContent ?? undefined,
       calculations: caso.calculations.map((c) => ({
         modalidade: c.modality,
         rmi: c.rmi != null ? String(c.rmi) : '0',

@@ -8,7 +8,7 @@ describe('getRegisteredModalities', () => {
     expect(modalities.length).toBeGreaterThan(10)
     expect(modalities).toContain('APOSENTADORIA_IDADE')
     expect(modalities).toContain('AUXILIO_DOENCA_B31')
-    expect(modalities).toContain('REVISAO_VIDA_TODA')
+    expect(modalities).toContain('REVISAO_BENEFICIO')
   })
 })
 

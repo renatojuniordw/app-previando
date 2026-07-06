@@ -21,7 +21,7 @@ export async function GET() {
     prisma.user.findUnique({ where: { id: userId }, select: { firstLoginAt: true } }),
     prisma.client.count({ where: { userId } }),
     prisma.case.count({ where: { userId } }),
-    prisma.cnisDocument.count({ where: { case: { userId }, processingStatus: 'COMPLETED' } }),
+    prisma.cnisDocument.count({ where: { client: { userId }, processingStatus: 'COMPLETED' } }),
     prisma.calculation.count({ where: { case: { userId } } }),
     prisma.opinion.count({ where: { case: { userId } } }),
   ])

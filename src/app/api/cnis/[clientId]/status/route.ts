@@ -1,18 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
-import { verifyCaseOwnership } from '@/lib/ownership'
+import { verifyClientOwnership } from '@/lib/ownership'
 import { handleApiError } from '@/lib/api-error'
 
-export async function GET(req: NextRequest, { params }: { params: { caseId: string } }) {
+export async function GET(req: NextRequest, { params }: { params: { clientId: string } }) {
   try {
     const session = await auth()
     if (!session?.user?.id) return NextResponse.json({ error: 'Não autorizado.' }, { status: 401 })
 
-    await verifyCaseOwnership(params.caseId, session.user.id)
+    await verifyClientOwnership(params.clientId, session.user.id)
 
     const doc = await prisma.cnisDocument.findUnique({
-      where: { caseId: params.caseId },
+      where: { clientId: params.clientId },
       select: {
         id: true,
         processingStatus: true,

@@ -86,7 +86,7 @@ model User {
   firstLoginAt      DateTime?
   passwordChangedAt DateTime? // usado para invalidar sessões JWT emitidas antes de um reset de senha
   createdAt         DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  updatedAt         DateTime  @updatedAt
 
   accounts      Account[]
   sessions      Session[]
@@ -131,23 +131,22 @@ model PlanLimit {
   maxOpinionsPerMonth     Int // -1 = ilimitado
   maxNotesPerCase         Int // -1 = ilimitado | FREE = 10
 
-  simulatorEnabled   Boolean @default(false)
-  retroactiveEnabled Boolean @default(false)
-  exportPdfEnabled   Boolean @default(false)
-  watermarkEnabled   Boolean @default(true)
-  diagnosisEnabled   Boolean @default(false)
-  bpcEnabled                  Boolean @default(false)
-  bpcAnalysesPerMonth         Int     @default(0)
-  bpcSocialMediaPerMonth      Int     @default(0)
+  simulatorEnabled       Boolean @default(false)
+  retroactiveEnabled     Boolean @default(false)
+  exportPdfEnabled       Boolean @default(false)
+  watermarkEnabled       Boolean @default(true)
+  diagnosisEnabled       Boolean @default(false)
+  bpcEnabled             Boolean @default(false)
+  bpcAnalysesPerMonth    Int     @default(0)
+  bpcSocialMediaPerMonth Int     @default(0)
 
-  peticaoEnabled              Boolean @default(false)
-  maxPeticoesPerMonth         Int     @default(0) // -1 = ilimitado | 0 = bloqueado
+  peticaoEnabled      Boolean @default(false)
+  maxPeticoesPerMonth Int     @default(0) // -1 = ilimitado | 0 = bloqueado
 
-  revisionEnabled                Boolean @default(false)
-  maxRevisionsPerMonth           Int     @default(0) // -1 = ilimitado | 0 = bloqueado
-  gpsEnabled                     Boolean @default(false)
-  viabilityScoreEnabled          Boolean @default(false)
-
+  revisionEnabled       Boolean @default(false)
+  maxRevisionsPerMonth  Int     @default(0) // -1 = ilimitado | 0 = bloqueado
+  gpsEnabled            Boolean @default(false)
+  viabilityScoreEnabled Boolean @default(false)
 
   updatedAt DateTime @updatedAt
 
@@ -163,14 +162,14 @@ model UsageRecord {
   userId String @unique
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  totalClients          Int      @default(0)
-  calculationsThisMonth Int      @default(0)
-  opinionsThisMonth     Int      @default(0)
+  totalClients            Int      @default(0)
+  calculationsThisMonth   Int      @default(0)
+  opinionsThisMonth       Int      @default(0)
   bpcAnalysesThisMonth    Int      @default(0)
   bpcSocialMediaThisMonth Int      @default(0)
-  peticoesThisMonth              Int      @default(0)
-  revisionsThisMonth             Int      @default(0)
-  usageMonthRef                  DateTime @default(now())
+  peticoesThisMonth       Int      @default(0)
+  revisionsThisMonth      Int      @default(0)
+  usageMonthRef           DateTime @default(now())
 
   updatedAt DateTime @updatedAt
 
@@ -207,7 +206,8 @@ model Client {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  cases Case[]
+  cases        Case[]
+  cnisDocument CnisDocument?
 
   @@index([userId])
   @@map("clients")
@@ -230,13 +230,13 @@ model Case {
   user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   client   Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
 
-  status       CaseStatus  @default(PROSPECTING)
-  priority     Priority    @default(NORMAL)
-  benefitType  BenefitType
-  deadlineDays           Int?
-  deadlineDate           DateTime?
-  googleCalendarEventId  String?
-  notes                  String?
+  status                CaseStatus  @default(PROSPECTING)
+  priority              Priority    @default(NORMAL)
+  benefitType           BenefitType
+  deadlineDays          Int?
+  deadlineDate          DateTime?
+  googleCalendarEventId String?
+  notes                 String?
 
   // Configuração do Portal do Cliente — define quais abas o cliente pode ver
   portalConfig Json @default("{\"showCalculations\":true,\"showRetroactives\":false,\"showInterpretation\":false}")
@@ -244,21 +244,19 @@ model Case {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  cnisDocument CnisDocument?
-  calculations Calculation[]
-  retroactives Retroactive[]
+  calculations           Calculation[]
+  retroactives           Retroactive[]
   causeValueCalculations CauseValueCalculation[]
-  opinions     Opinion[]
-  checklists   Checklist[]
-  simulations  Simulation[]
-  caseNotes    CaseNote[]
-  bpcAnalysis  BpcAnalysis?
-  clientAccess ClientAccess?
-  fees         Fee[]
-  revisions    Revision[]
-  gpsGuides    GpsGuide[]
-  documents    Document[]
-
+  opinions               Opinion[]
+  checklists             Checklist[]
+  simulations            Simulation[]
+  caseNotes              CaseNote[]
+  bpcAnalysis            BpcAnalysis?
+  clientAccess           ClientAccess?
+  fees                   Fee[]
+  revisions              Revision[]
+  gpsGuides              GpsGuide[]
+  documents              Document[]
 
   @@index([userId])
   @@index([clientId])
@@ -288,6 +286,7 @@ enum BenefitType {
   DEATH_PENSION
   BPC_LOAS
   BENEFIT_REVIEW
+  PCD_RETIREMENT
 }
 
 // ─────────────────────────────────────────
@@ -329,9 +328,9 @@ enum NoteType {
 // ─────────────────────────────────────────
 
 model CnisDocument {
-  id     String @id @default(cuid())
-  caseId String @unique
-  case   Case   @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  id       String @id @default(cuid())
+  clientId String @unique
+  client   Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
 
   r2Key         String
   fileName      String
@@ -371,15 +370,15 @@ model Calculation {
   caseId String
   case   Case   @relation(fields: [caseId], references: [id], onDelete: Cascade)
 
-  modality   CalculationModality
-  isSelected Boolean             @default(false)
+  modality    CalculationModality
+  isSelected  Boolean             @default(false)
   inputParams Json
 
-  benefitSalary       Decimal  @db.Decimal(12, 2)
-  rmi                 Decimal  @db.Decimal(12, 2)
-  rma                 Decimal  @db.Decimal(12, 2)
+  benefitSalary        Decimal  @db.Decimal(12, 2)
+  rmi                  Decimal  @db.Decimal(12, 2)
+  rma                  Decimal  @db.Decimal(12, 2)
   socialSecurityFactor Decimal? @db.Decimal(6, 4)
-  coefficient         Decimal? @db.Decimal(6, 4)
+  coefficient          Decimal? @db.Decimal(6, 4)
 
   expectedDib      DateTime?
   gracePeriodMet   Boolean   @default(false)
@@ -413,6 +412,7 @@ enum CalculationModality {
   PRISONER_BENEFIT
   DEATH_PENSION
   BPC_LOAS
+  PCD
 }
 
 // ─────────────────────────────────────────
@@ -436,7 +436,13 @@ model Retroactive {
   discountDescription String?
   finalNetValue       Decimal @db.Decimal(12, 2)
 
+  feePercentage  Decimal? @db.Decimal(5, 2)
+  feeValue       Decimal? @db.Decimal(12, 2)
+  clientNetValue Decimal? @db.Decimal(12, 2)
+
   calculationMemory Json
+
+  fee Fee?
 
   createdAt DateTime @default(now())
 
@@ -485,9 +491,9 @@ model Checklist {
   caseId String
   case   Case   @relation(fields: [caseId], references: [id], onDelete: Cascade)
 
-  benefitType BenefitType
-  items       Json
-  eligible    Boolean
+  benefitType   BenefitType
+  items         Json
+  eligible      Boolean
   pendingIssues String[]
 
   createdAt DateTime @default(now())
@@ -586,14 +592,14 @@ enum PaymentStatus {
 // ─────────────────────────────────────────
 
 model WebhookEvent {
-  id           String    @id @default(cuid())
-  provider     String // 'mercadopago'
-  eventType    String
-  externalId   String? // data.id do provedor (ex: subscription id, payment id)
-  payload      Json
-  processedAt  DateTime?
-  error        String?
-  createdAt    DateTime  @default(now())
+  id          String    @id @default(cuid())
+  provider    String // 'mercadopago'
+  eventType   String
+  externalId  String? // data.id do provedor (ex: subscription id, payment id)
+  payload     Json
+  processedAt DateTime?
+  error       String?
+  createdAt   DateTime  @default(now())
 
   @@index([provider, externalId])
   @@index([processedAt])
@@ -605,14 +611,14 @@ model WebhookEvent {
 // ─────────────────────────────────────────
 
 model MinimumWage {
-  id           String   @id @default(cuid())
+  id            String   @id @default(cuid())
   effectiveDate DateTime @unique // Data de início da vigência
-  value        Decimal  @db.Decimal(10, 2) // Salário mínimo
-  ceiling      Decimal  @db.Decimal(10, 2) // Teto do RGPS
-  legislation  String   // Ex: "Decreto 12.797/2025"
-  readjustment Float?   // Percentual de reajuste (ex: 6.79)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  value         Decimal  @db.Decimal(10, 2) // Salário mínimo
+  ceiling       Decimal  @db.Decimal(10, 2) // Teto do RGPS
+  legislation   String // Ex: "Decreto 12.797/2025"
+  readjustment  Float? // Percentual de reajuste (ex: 6.79)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   @@index([effectiveDate])
   @@map("minimum_wages")
@@ -623,19 +629,19 @@ model MinimumWage {
 // ─────────────────────────────────────────
 
 model RetirementRule {
-  id         String   @id @default(cuid())
-  modality   String   // Ex: IDADE_MINIMA_65_62, PONTOS_86_96, PEDAGIO_50, etc.
-  gender     String   // 'M', 'F' ou 'AMBOS'
+  id            String   @id @default(cuid())
+  modality      String // Ex: IDADE_MINIMA_65_62, PONTOS_86_96, PEDAGIO_50, etc.
+  gender        String // 'M', 'F' ou 'AMBOS'
   effectiveDate DateTime // Data de início da vigência desta regra
 
-  minimumAge           Decimal? @db.Decimal(5, 1) // Ex: 62.0, 59.5
-  contributionYears    Int?
-  minimumPoints        Int?     // Apenas para a regra por pontos
-  gracePeriodMonths    Int?
+  minimumAge        Decimal? @db.Decimal(5, 1) // Ex: 62.0, 59.5
+  contributionYears Int?
+  minimumPoints     Int? // Apenas para a regra por pontos
+  gracePeriodMonths Int?
 
-  description String   // Nome legível da regra
-  legislation String   // Ex: "EC 103/2019"
-  notes       String?  @db.Text
+  description String // Nome legível da regra
+  legislation String // Ex: "EC 103/2019"
+  notes       String? @db.Text
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -673,31 +679,31 @@ enum BpcFaixaEtaria {
 // ─────────────────────────────────────────
 
 model BpcAnalysis {
-  id               String         @id @default(cuid())
-  caseId           String         @unique
-  case             Case           @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  id     String @id @default(cuid())
+  caseId String @unique
+  case   Case   @relation(fields: [caseId], references: [id], onDelete: Cascade)
 
-  patologia        String
-  cid              String?
-  idade            Int
-  faixaEtaria      BpcFaixaEtaria
+  patologia      String
+  cid            String?
+  idade          Int
+  faixaEtaria    BpcFaixaEtaria
   // Decimal (não Float) — é o critério de elegibilidade do BPC/LOAS; erro de
   // arredondamento de ponto flutuante aqui pode mudar o resultado da análise.
-  rendaFamiliar    Decimal        @db.Decimal(12, 2)
-  membrosGrupo     Int
-  rendaPerCapita   Decimal        @db.Decimal(12, 2)
-  barreiras        String?        @db.Text
-  resumoLaudos     String?        @db.Text
+  rendaFamiliar  Decimal        @db.Decimal(12, 2)
+  membrosGrupo   Int
+  rendaPerCapita Decimal        @db.Decimal(12, 2)
+  barreiras      String?        @db.Text
+  resumoLaudos   String?        @db.Text
 
-  preAnalise       String?        @db.Text
-  analiseLaudo     String?        @db.Text
-  perguntasSocial  String?        @db.Text
-  perguntasMedicas String?        @db.Text
-  checklist        String?        @db.Text
+  preAnalise       String? @db.Text
+  analiseLaudo     String? @db.Text
+  perguntasSocial  String? @db.Text
+  perguntasMedicas String? @db.Text
+  checklist        String? @db.Text
   relatoSocial     Json?
 
-  createdAt        DateTime       @default(now())
-  updatedAt        DateTime       @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@map("bpc_analyses")
 }
@@ -743,13 +749,16 @@ model Fee {
   caseId String
   case   Case   @relation(fields: [caseId], references: [id], onDelete: Cascade)
 
-  description   String
-  type          FeeType   @default(FIXED)
-  totalAmount   Decimal   @db.Decimal(12, 2)
-  paidAmount    Decimal   @default(0) @db.Decimal(12, 2)
-  dueDate       DateTime?
-  status        FeeStatus @default(PENDING)
-  notes         String?   @db.Text
+  retroactiveId String?      @unique
+  retroactive   Retroactive? @relation(fields: [retroactiveId], references: [id], onDelete: SetNull)
+
+  description String
+  type        FeeType   @default(FIXED)
+  totalAmount Decimal   @db.Decimal(12, 2)
+  paidAmount  Decimal   @default(0) @db.Decimal(12, 2)
+  dueDate     DateTime?
+  status      FeeStatus @default(PENDING)
+  notes       String?   @db.Text
 
   payments FeePayment[]
 
@@ -761,9 +770,9 @@ model Fee {
 }
 
 model FeePayment {
-  id     String @id @default(cuid())
-  feeId  String
-  fee    Fee    @relation(fields: [feeId], references: [id], onDelete: Cascade)
+  id    String @id @default(cuid())
+  feeId String
+  fee   Fee    @relation(fields: [feeId], references: [id], onDelete: Cascade)
 
   amount Decimal  @db.Decimal(12, 2)
   paidAt DateTime @default(now())
@@ -873,19 +882,19 @@ model InpcIndex {
 // ─────────────────────────────────────────
 
 model Revision {
-  id                String   @id @default(cuid())
-  caseId            String
-  case              Case     @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  id     String @id @default(cuid())
+  caseId String
+  case   Case   @relation(fields: [caseId], references: [id], onDelete: Cascade)
 
-  tipoRevisao       String   // REVISAO_VIDA_TODA | REVISAO_ART_29 | REVISAO_BURACO_NEGRO
-  rmiConcedido      Decimal  @db.Decimal(10, 2)
-  rmiRevisado       Decimal  @db.Decimal(10, 2)
-  diferencaMensal   Decimal  @db.Decimal(10, 2)
+  tipoRevisao         String // REVISAO_VIDA_TODA | REVISAO_ART_29 | REVISAO_BURACO_NEGRO
+  rmiConcedido        Decimal  @db.Decimal(10, 2)
+  rmiRevisado         Decimal  @db.Decimal(10, 2)
+  diferencaMensal     Decimal  @db.Decimal(10, 2)
   diferencaPercentual Float
-  retroativos5Anos  Decimal  @db.Decimal(12, 2)
-  elegivel          Boolean
-  pendencias        String[]
-  createdAt         DateTime @default(now())
+  retroativos5Anos    Decimal  @db.Decimal(12, 2)
+  elegivel            Boolean
+  pendencias          String[]
+  createdAt           DateTime @default(now())
 
   @@index([caseId])
   @@map("revisions")
@@ -896,24 +905,23 @@ model Revision {
 // ─────────────────────────────────────────
 
 model GpsGuide {
-  id                  String   @id @default(cuid())
-  caseId              String
-  case                Case     @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  id     String @id @default(cuid())
+  caseId String
+  case   Case   @relation(fields: [caseId], references: [id], onDelete: Cascade)
 
-  categoria           String   // CI, FACULTATIVO, MEI, SEGURADO_ESPECIAL
-  plano               String   // NORMAL, SIMPLIFICADO, BAIXA_RENDA
+  categoria           String // CI, FACULTATIVO, MEI, SEGURADO_ESPECIAL
+  plano               String // NORMAL, SIMPLIFICADO, BAIXA_RENDA
   salarioContribuicao Decimal  @db.Decimal(10, 2)
   valorCalculado      Decimal  @db.Decimal(10, 2)
   aliquota            Float
   codigoPagamento     String
-  competencia         String   // "YYYY-MM"
+  competencia         String // "YYYY-MM"
   pdfUrl              String?
   createdAt           DateTime @default(now())
 
   @@index([caseId])
   @@map("gps_guides")
 }
-
 
 // ─────────────────────────────────────────
 // PORTAL DO CLIENTE
@@ -935,4 +943,3 @@ model ClientAccess {
   @@index([token])
   @@map("client_access")
 }
-

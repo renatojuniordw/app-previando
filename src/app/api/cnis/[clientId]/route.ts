@@ -1,19 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
-import { verifyCaseOwnership } from '@/lib/ownership'
+import { verifyClientOwnership } from '@/lib/ownership'
 import { getSignedDownloadUrl, deletePDF } from '@/services/r2'
 import { handleApiError } from '@/lib/api-error'
 
-export async function GET(req: NextRequest, { params }: { params: { caseId: string } }) {
+export async function GET(req: NextRequest, { params }: { params: { clientId: string } }) {
   try {
     const session = await auth()
     if (!session?.user?.id) return NextResponse.json({ error: 'Não autorizado.' }, { status: 401 })
 
-    await verifyCaseOwnership(params.caseId, session.user.id)
+    await verifyClientOwnership(params.clientId, session.user.id)
 
     const doc = await prisma.cnisDocument.findUnique({
-      where: { caseId: params.caseId },
+      where: { clientId: params.clientId },
     })
 
     if (!doc) return NextResponse.json({ cnisDocument: null })
@@ -29,29 +29,30 @@ export async function GET(req: NextRequest, { params }: { params: { caseId: stri
   }
 }
 
-export async function DELETE(req: NextRequest, { params }: { params: { caseId: string } }) {
+export async function DELETE(req: NextRequest, { params }: { params: { clientId: string } }) {
   try {
     const session = await auth()
     if (!session?.user?.id) return NextResponse.json({ error: 'Não autorizado.' }, { status: 401 })
 
-    await verifyCaseOwnership(params.caseId, session.user.id)
+    await verifyClientOwnership(params.clientId, session.user.id)
 
     const doc = await prisma.cnisDocument.findUnique({
-      where: { caseId: params.caseId },
+      where: { clientId: params.clientId },
     })
 
     if (!doc) return NextResponse.json({ error: 'CNIS não encontrado.' }, { status: 404 })
 
     await deletePDF(doc.r2Key)
 
-    // Executar em cascata a exclusão de todos os dados do caso que dependem deste CNIS
+    // Executa em cascata a exclusão de todos os dados de cálculo (por caso) que dependem deste CNIS,
+    // em todos os casos deste cliente.
     await prisma.$transaction([
-      prisma.calculation.deleteMany({ where: { caseId: params.caseId } }),
-      prisma.simulation.deleteMany({ where: { caseId: params.caseId } }),
-      prisma.retroactive.deleteMany({ where: { caseId: params.caseId } }),
-      prisma.opinion.deleteMany({ where: { caseId: params.caseId } }),
-      prisma.checklist.deleteMany({ where: { caseId: params.caseId } }),
-      prisma.cnisDocument.delete({ where: { caseId: params.caseId } }),
+      prisma.calculation.deleteMany({ where: { case: { clientId: params.clientId } } }),
+      prisma.simulation.deleteMany({ where: { case: { clientId: params.clientId } } }),
+      prisma.retroactive.deleteMany({ where: { case: { clientId: params.clientId } } }),
+      prisma.opinion.deleteMany({ where: { case: { clientId: params.clientId } } }),
+      prisma.checklist.deleteMany({ where: { case: { clientId: params.clientId } } }),
+      prisma.cnisDocument.delete({ where: { clientId: params.clientId } }),
     ])
 
     return NextResponse.json({ success: true })
@@ -60,12 +61,12 @@ export async function DELETE(req: NextRequest, { params }: { params: { caseId: s
   }
 }
 
-export async function PUT(req: NextRequest, { params }: { params: { caseId: string } }) {
+export async function PUT(req: NextRequest, { params }: { params: { clientId: string } }) {
   try {
     const session = await auth()
     if (!session?.user?.id) return NextResponse.json({ error: 'Não autorizado.' }, { status: 401 })
 
-    await verifyCaseOwnership(params.caseId, session.user.id)
+    await verifyClientOwnership(params.clientId, session.user.id)
 
     const body = await req.json()
     const { extractedData } = body
@@ -83,7 +84,7 @@ export async function PUT(req: NextRequest, { params }: { params: { caseId: stri
     const lastContribution = extractedData.ultimaContribuicao ? new Date(extractedData.ultimaContribuicao) : null
 
     const updated = await prisma.cnisDocument.update({
-      where: { caseId: params.caseId },
+      where: { clientId: params.clientId },
       data: {
         extractedData,
         nit,
@@ -98,4 +99,3 @@ export async function PUT(req: NextRequest, { params }: { params: { caseId: stri
     return handleApiError(err)
   }
 }
-

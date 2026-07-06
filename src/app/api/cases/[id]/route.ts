@@ -28,8 +28,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     const caso = await prisma.case.findUnique({
       where: { id: params.id },
       include: {
-        client: { select: { id: true, name: true, phone: true, email: true } },
-        cnisDocument: true,
+        client: { select: { id: true, name: true, phone: true, email: true, cnisDocument: true } },
         opinions: { orderBy: { createdAt: 'desc' }, select: { id: true, status: true, createdAt: true } },
         checklists: { orderBy: { createdAt: 'desc' }, take: 1 },
         _count: { select: { caseNotes: true } },
@@ -43,6 +42,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     return NextResponse.json({
       case: {
         ...mapCaseToApi(caso),
+        cnisDocument: caso.client.cnisDocument,
         portalConfig: caso.portalConfig,
         planLimits: {
           simulatorEnabled: planLimits.simulatorEnabled,

@@ -1,4 +1,4 @@
-import { Periodo, PeriodWarning } from './_types'
+import { Periodo, PeriodWarning } from '@/types/cnis'
 import { getIndicatorDetails } from '@/services/cnis/indicatorsDictionary'
 
 export const formatCompetencia = (comp: string) => {

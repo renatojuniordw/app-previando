@@ -196,6 +196,57 @@ export class AposentadoriaEspecialStrategy implements ModalidadeStrategy {
   }
 }
 
+// ─── Aposentadoria da Pessoa com Deficiência (LC 142/2013) ───────────────
+// RMI = 100% da média dos salários de contribuição (sem fator previdenciário
+// e sem o coeficiente progressivo 86/96). Duas vias de elegibilidade:
+// (a) por idade — 60 anos (H) / 55 anos (M) + 15 anos de contribuição, qualquer grau; ou
+// (b) por tempo de contribuição segundo o grau de deficiência.
+
+const TEMPO_CONTRIBUICAO_PCD_POR_GRAU: Record<'GRAVE' | 'MODERADO' | 'LEVE', Record<'M' | 'F', number>> = {
+  GRAVE: { M: 25, F: 20 },
+  MODERADO: { M: 29, F: 24 },
+  LEVE: { M: 33, F: 28 },
+}
+
+export class AposentadoriaPCDStrategy implements ModalidadeStrategy {
+  readonly modalidade = 'APOSENTADORIA_PCD'
+
+  evaluate(input: ModalidadeEvaluationInput): ModalidadeEvaluationResult {
+    const { idadeNaApuracao, tempoContribuicaoAnos, carenciaMeses, gender, disabilityDegree, regra } = input
+    const carenciaExigida = regra?.carenciaMeses ?? 180
+    const pendencias: string[] = []
+
+    // Coeficiente fixo de 100% — LC 142/2013 não aplica fator previdenciário nem 86/96
+    const coeficiente = 1.0
+
+    const idadeMinimaPorIdade = gender === 'M' ? 60 : 55
+    const elegivelPorIdade = idadeNaApuracao >= idadeMinimaPorIdade && tempoContribuicaoAnos >= 15
+
+    const tempoExigidoPorGrau = disabilityDegree ? TEMPO_CONTRIBUICAO_PCD_POR_GRAU[disabilityDegree][gender] : null
+    const elegivelPorTempo = tempoExigidoPorGrau !== null && tempoContribuicaoAnos >= tempoExigidoPorGrau
+
+    const carenciaOk = carenciaMeses >= carenciaExigida
+    const elegivel = (elegivelPorIdade || elegivelPorTempo) && carenciaOk
+
+    if (!elegivel) {
+      if (!disabilityDegree) {
+        pendencias.push('Grau de deficiência não informado — necessário para avaliar elegibilidade por tempo de contribuição.')
+      }
+      if (!elegivelPorIdade && !elegivelPorTempo) {
+        pendencias.push(
+          `Não atingiu a idade mínima de ${idadeMinimaPorIdade} anos (com 15 anos de contribuição) ` +
+          (disabilityDegree
+            ? `nem o tempo de contribuição de ${tempoExigidoPorGrau} anos exigido para o grau ${disabilityDegree.toLowerCase()}.`
+            : 'nem foi possível avaliar o tempo de contribuição por grau (grau não informado).')
+        )
+      }
+      if (!carenciaOk) pendencias.push(`Carência de ${carenciaExigida} contribuições mensais não cumprida (carência apurada: ${carenciaMeses}).`)
+    }
+
+    return { elegivel, coeficiente, pendencias }
+  }
+}
+
 // ─── Aposentadoria Híbrida ───────────────────────────────────────────────
 
 export class HibridaStrategy implements ModalidadeStrategy {

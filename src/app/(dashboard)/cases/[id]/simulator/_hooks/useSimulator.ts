@@ -56,9 +56,8 @@ export function useSimulator() {
 
   const load = useCallback(async () => {
     try {
-      const [rSim, rCnis, rModalidades, rCase] = await Promise.all([
+      const [rSim, rModalidades, rCase] = await Promise.all([
         api.get(`/cases/${params.id}/simulations`),
-        api.get(`/cnis/${params.id}`),
         api.get('/modalidades'),
         api.get(`/cases/${params.id}`),
       ])
@@ -71,8 +70,9 @@ export function useSimulator() {
       )
       setCaseBenefitType(rCase.data.case?.benefitType)
 
-      if (rCnis.data?.cnisDocument?.processingStatus === 'COMPLETED' || rCnis.data?.cnisDocument?.processingStatus === 'SUMMARY_READY') {
-        setCnisDocument(rCnis.data.cnisDocument)
+      const cnisDoc = rCase.data.case?.cnisDocument
+      if (cnisDoc?.processingStatus === 'COMPLETED' || cnisDoc?.processingStatus === 'SUMMARY_READY') {
+        setCnisDocument(cnisDoc)
       }
 
       const hoje = new Date().toISOString().slice(0, 10)

@@ -3,11 +3,12 @@
 import { useState, useEffect } from 'react'
 import { useParams, useSearchParams, useRouter, usePathname } from 'next/navigation'
 import { ExternalLink } from 'lucide-react'
+import api from '@/lib/api'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
-import { useCnis } from './_hooks/useCnis'
-import { useCnisUpload } from './_hooks/useCnisUpload'
+import { useCnis } from '@/hooks/useCnis'
+import { useCnisUpload } from '@/hooks/useCnisUpload'
 import { useCnisEditing } from './_hooks/useCnisEditing'
-import { isProcessingStatus } from './_constants'
+import { isProcessingStatus } from '@/lib/cnis-status'
 import { CnisHeader } from './_components/CnisHeader'
 import { CnisBanners } from './_components/CnisBanners'
 import { CnisUploadOverlay } from './_components/CnisUploadOverlay'
@@ -25,8 +26,17 @@ export default function CnisCasePage() {
   const params = useParams()
   const caseId = params.id as string
 
-  const { cnis, setCnis, loading, showSuccessBanner, setShowSuccessBanner, stuckWarning, load, handleDelete, handleReprocess } = useCnis(caseId)
-  const { uploading, uploadError, isDragging, fileRef, handleUpload, handleDragOver, handleDragLeave, handleDrop } = useCnisUpload(caseId, load)
+  // O CNIS pertence ao cliente (1 por segurado), não ao caso — resolve o clientId
+  // do caso atual antes de carregar/operar o CNIS.
+  const [clientId, setClientId] = useState('')
+  useEffect(() => {
+    api.get(`/cases/${caseId}`)
+      .then((r) => setClientId(r.data.case?.client?.id ?? ''))
+      .catch(() => setClientId(''))
+  }, [caseId])
+
+  const { cnis, setCnis, loading, showSuccessBanner, setShowSuccessBanner, stuckWarning, load, handleDelete, handleReprocess } = useCnis(clientId)
+  const { uploading, uploadError, isDragging, fileRef, handleUpload, handleDragOver, handleDragLeave, handleDrop } = useCnisUpload(clientId, load)
   const editing = useCnisEditing(cnis, setCnis)
 
   const [showPdfViewer, setShowPdfViewer] = useState(false)
@@ -180,7 +190,7 @@ export default function CnisCasePage() {
         saving={editing.savingData}
         saveError={editing.saveError}
         onClose={() => editing.setShowSaveConfirmModal(false)}
-        onConfirm={() => editing.handleSaveToDb(caseId)}
+        onConfirm={() => editing.handleSaveToDb(clientId)}
       />
 
       <ReprocessModal

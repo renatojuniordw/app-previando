@@ -9,6 +9,7 @@ import { uploadPDF, deletePDF } from '@/services/r2'
 import { validatePDFUpload } from '@/lib/upload-validator'
 import { rateLimit } from '@/lib/rate-limit'
 import { handleApiError } from '@/lib/api-error'
+import { verifyClientOwnership } from '@/lib/ownership'
 import { Queue } from 'bullmq'
 import { bullmqConnection } from '@/lib/redis'
 
@@ -27,18 +28,15 @@ export async function POST(req: NextRequest) {
 
     const formData = await req.formData()
     const file = formData.get('file') as File | null
-    const caseId = formData.get('caseId') as string | null
+    const clientId = formData.get('clientId') as string | null
 
-    if (!file || !caseId) {
-      return NextResponse.json({ error: 'Arquivo e caseId são obrigatórios.' }, { status: 400 })
+    if (!file || !clientId) {
+      return NextResponse.json({ error: 'Arquivo e clientId são obrigatórios.' }, { status: 400 })
     }
 
-    // Verificar ownership do caso
-    const caso = await prisma.case.findFirst({
-      where: { id: caseId, userId: session.user.id },
-      select: { id: true, client: { select: { name: true } } },
-    })
-    if (!caso) return NextResponse.json({ error: 'Caso não encontrado.' }, { status: 404 })
+    // Verificar ownership do cliente (anti-IDOR)
+    await verifyClientOwnership(clientId, session.user.id)
+    const client = await prisma.client.findUnique({ where: { id: clientId }, select: { name: true } })
 
     const buffer = Buffer.from(await file.arrayBuffer())
 
@@ -46,11 +44,11 @@ export async function POST(req: NextRequest) {
     await validatePDFUpload(buffer, file.name, file.type)
 
     // Upload para Cloudflare R2
-    const r2Key = await uploadPDF(buffer, session.user.id, caseId)
+    const r2Key = await uploadPDF(buffer, session.user.id, clientId)
 
-    // Se já existia um CNIS para esse caso, excluímos o arquivo antigo do R2 para não deixar lixo órfão
+    // Se já existia um CNIS para esse cliente, excluímos o arquivo antigo do R2 para não deixar lixo órfão
     const existingDoc = await prisma.cnisDocument.findUnique({
-      where: { caseId },
+      where: { clientId },
       select: { r2Key: true },
     })
     if (existingDoc) {
@@ -61,22 +59,23 @@ export async function POST(req: NextRequest) {
       }
 
       // Forçar a exclusão dos dados calculados em background para manter a consistência
+      // (dados de cálculo continuam por caso — todos os casos deste cliente são afetados)
       try {
         await prisma.$transaction([
-          prisma.calculation.deleteMany({ where: { caseId } }),
-          prisma.simulation.deleteMany({ where: { caseId } }),
-          prisma.retroactive.deleteMany({ where: { caseId } }),
-          prisma.opinion.deleteMany({ where: { caseId } }),
-          prisma.checklist.deleteMany({ where: { caseId } }),
+          prisma.calculation.deleteMany({ where: { case: { clientId } } }),
+          prisma.simulation.deleteMany({ where: { case: { clientId } } }),
+          prisma.retroactive.deleteMany({ where: { case: { clientId } } }),
+          prisma.opinion.deleteMany({ where: { case: { clientId } } }),
+          prisma.checklist.deleteMany({ where: { case: { clientId } } }),
         ])
       } catch (err) {
-        logger.error(`Failed to cascade delete old calculated data in background for case ${caseId}`, err)
+        logger.error(`Failed to cascade delete old calculated data in background for client ${clientId}`, err)
       }
     }
 
     // Criar/atualizar registro CNIS no banco (PENDING)
     const cnisDoc = await prisma.cnisDocument.upsert({
-      where: { caseId },
+      where: { clientId },
       update: {
         r2Key,
         fileName: file.name,
@@ -87,7 +86,7 @@ export async function POST(req: NextRequest) {
         extractedData: {},
       },
       create: {
-        caseId,
+        clientId,
         r2Key,
         fileName: file.name,
         fileSizeBytes: buffer.byteLength,
@@ -101,9 +100,9 @@ export async function POST(req: NextRequest) {
     await logAudit({
       userId: session.user.id,
       action: 'cnis.upload',
-      resource: `CNIS enviado para ${caso.client?.name ?? 'Cliente'}`,
+      resource: `CNIS enviado para ${client?.name ?? 'Cliente'}`,
       req,
-      metadata: { caseId, fileName: file.name, fileSize: buffer.byteLength },
+      metadata: { clientId, fileName: file.name, fileSize: buffer.byteLength },
     })
 
     // Enfileirar processamento no BullMQ com auto-retry (3 tentativas, exponential backoff)
@@ -112,7 +111,8 @@ export async function POST(req: NextRequest) {
       {
         cnisDocumentId: cnisDoc.id,
         r2Key,
-        caseId,
+        clientId,
+        userId: session.user.id,
       },
       {
         attempts: 3,

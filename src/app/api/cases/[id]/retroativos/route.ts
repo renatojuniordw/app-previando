@@ -14,6 +14,7 @@ const createSchema = z.object({
   valorMensalBruto: z.number().positive('O valor mensal deve ser maior que zero.'),
   valorDescontos: z.number().nonnegative('O desconto não pode ser negativo.').default(0),
   descricaoDescontos: z.string().optional(),
+  percentualHonorarios: z.number().min(0, 'O percentual não pode ser negativo.').max(100, 'O percentual não pode ser maior que 100.').optional(),
 }).strict()
 
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
@@ -58,6 +59,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       valorMensalBruto: parsed.data.valorMensalBruto,
       valorDescontos: parsed.data.valorDescontos,
       descricaoDescontos: parsed.data.descricaoDescontos,
+      percentualHonorarios: parsed.data.percentualHonorarios,
     })
 
     // Registrar log de atividade

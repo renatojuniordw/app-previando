@@ -18,6 +18,7 @@ import { BENEFIT_SHORT_LABELS, STATUS_LABELS, PRIORITY_LABELS, BENEFIT_DB_LABELS
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { ClientFloatingActions } from '@/components/client/ClientFloatingActions'
 import { ClientPortalCard } from '@/components/client/ClientPortalCard'
+import { ClientCnisCard } from '@/components/client/ClientCnisCard'
 import { Briefcase, Clock, CheckCircle, ArrowLeft, User, FileText, ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -236,6 +237,9 @@ export default function ClientDetailPage() {
             </div>
           )}
         </Card>
+
+        {/* CNIS do Segurado */}
+        <ClientCnisCard clientId={client.id} caseCount={totalCases} />
 
         {/* Resumo de Casos */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

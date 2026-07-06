@@ -51,7 +51,24 @@ export async function GET() {
       prisma.case.findMany({
         where: { userId },
         include: {
-          client: { select: { id: true, name: true } },
+          client: {
+            select: {
+              id: true,
+              name: true,
+              cnisDocument: {
+                select: {
+                  fileName: true,
+                  fileSizeBytes: true,
+                  processingStatus: true,
+                  nit: true,
+                  totalContributions: true,
+                  firstContribution: true,
+                  lastContribution: true,
+                  createdAt: true,
+                },
+              },
+            },
+          },
           calculations: {
             select: {
               modality: true,
@@ -101,18 +118,6 @@ export async function GET() {
               createdAt: true,
             },
             orderBy: { version: 'asc' },
-          },
-          cnisDocument: {
-            select: {
-              fileName: true,
-              fileSizeBytes: true,
-              processingStatus: true,
-              nit: true,
-              totalContributions: true,
-              firstContribution: true,
-              lastContribution: true,
-              createdAt: true,
-            },
           },
         },
         orderBy: { createdAt: 'desc' },
@@ -165,7 +170,7 @@ export async function GET() {
         notes: c.notes,
         createdAt: c.createdAt,
         updatedAt: c.updatedAt,
-        cnisDocument: c.cnisDocument,
+        cnisDocument: c.client.cnisDocument,
         calculations: c.calculations.map((calc) => ({
           ...calc,
           rmi: Number(calc.rmi),

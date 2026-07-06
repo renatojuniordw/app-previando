@@ -4,7 +4,10 @@ import { useRef, useState } from 'react'
 import api from '@/lib/api'
 import { useToast } from '@/store/toast'
 
-export function useCnisUpload(caseId: string, onUploaded: () => void) {
+/**
+ * O CNIS pertence ao cliente (1 por segurado) — upload é sempre feito por clientId.
+ */
+export function useCnisUpload(clientId: string, onUploaded: () => void) {
   const [uploading, setUploading] = useState(false)
   const [uploadError, setUploadError] = useState('')
   const [isDragging, setIsDragging] = useState(false)
@@ -12,6 +15,10 @@ export function useCnisUpload(caseId: string, onUploaded: () => void) {
   const { addToast } = useToast()
 
   const uploadFile = async (file: File) => {
+    if (!clientId) {
+      setUploadError('Cliente ainda não identificado. Aguarde o carregamento da página.')
+      return
+    }
     if (file.type !== 'application/pdf' && !file.name.endsWith('.pdf')) {
       setUploadError('Apenas arquivos PDF são aceitos.')
       return
@@ -26,7 +33,7 @@ export function useCnisUpload(caseId: string, onUploaded: () => void) {
     try {
       const formData = new FormData()
       formData.append('file', file)
-      formData.append('caseId', caseId)
+      formData.append('clientId', clientId)
       await api.post('/cnis/upload', formData, { headers: { 'Content-Type': 'multipart/form-data' } })
       addToast({ type: 'info', title: 'CNIS enviado', message: 'Processando extrato do segurado...' })
       await onUploaded()

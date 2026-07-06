@@ -42,6 +42,8 @@ export default function RetroativosPage() {
     setValorDescontos,
     descricaoDescontos,
     setDescricaoDescontos,
+    percentualHonorarios,
+    setPercentualHonorarios,
     showDeleteConfirm,
     setShowDeleteConfirm,
     setDeleteTarget,
@@ -220,6 +222,32 @@ export default function RetroativosPage() {
                   </KpiCell>
                 </div>
 
+                {/* Split Honorários vs Cliente */}
+                {retro.percentualHonorarios != null && (
+                  <div className="grid grid-cols-2 gap-0 border-t border-slate-100">
+                    <KpiCell
+                      label={`Honorários Advocatícios (${formatPercentage(Number(retro.percentualHonorarios))})`}
+                      icon={<PercentCircle className="h-4 w-4 text-indigo-500" />}
+                      highlight="indigo"
+                      border="right"
+                    >
+                      <span className="font-mono text-lg font-bold text-indigo-700">
+                        {formatCurrency(retro.valorHonorarios ?? 0)}
+                      </span>
+                    </KpiCell>
+
+                    <KpiCell
+                      label="Valor Líquido do Cliente"
+                      icon={<Banknote className="h-4 w-4 text-emerald-500" />}
+                      highlight="emerald"
+                    >
+                      <span className="font-mono text-lg font-bold text-emerald-700">
+                        {formatCurrency(retro.valorLiquidoCliente ?? 0)}
+                      </span>
+                    </KpiCell>
+                  </div>
+                )}
+
                 {/* Expanded: Calculation Memory */}
                 {isExpanded && retro.memoriaCalculo?.parcelas && (
                   <div className="animate-fade-in space-y-4 border-t border-slate-100 bg-slate-50/30 p-6">
@@ -363,6 +391,26 @@ export default function RetroativosPage() {
                 />
               </div>
             </div>
+
+            <div>
+              <label htmlFor="percentual-honorarios" className="neo-label">
+                Percentual de Honorários Advocatícios (%)
+              </label>
+              <input
+                id="percentual-honorarios"
+                type="number"
+                min={0}
+                max={100}
+                step="0.01"
+                value={percentualHonorarios}
+                onChange={(e) => setPercentualHonorarios(e.target.value)}
+                className="neo-input"
+                placeholder="Ex: 20"
+              />
+              <p className="mt-1 font-sans text-xs text-slate-400">
+                Opcional. Se informado, divide o valor líquido final entre honorários e cliente, e cria automaticamente um honorário vinculado.
+              </p>
+            </div>
           </div>
 
           <div className="flex gap-3 border-t border-slate-100 pt-4">
@@ -409,7 +457,7 @@ function KpiCell({
 }: {
   label: string
   icon: React.ReactNode
-  highlight?: 'amber' | 'emerald'
+  highlight?: 'amber' | 'emerald' | 'indigo'
   border?: 'right'
   children: React.ReactNode
 }) {
@@ -418,6 +466,7 @@ function KpiCell({
       'flex flex-col gap-1 p-5',
       highlight === 'amber' && 'bg-amber-50/20',
       highlight === 'emerald' && 'bg-emerald-50/20',
+      highlight === 'indigo' && 'bg-indigo-50/20',
       border === 'right' && 'border-b border-slate-100 sm:border-b-0 sm:border-r'
     )}>
       <div className="flex items-center gap-1.5">

@@ -55,6 +55,8 @@ export default function CalculatorPage() {
     setTempoEspecialAnos,
     dependentesPensao,
     setDependentesPensao,
+    disabilityDegree,
+    setDisabilityDegree,
     caseBenefitType,
     handleCreate,
     handleSelect,
@@ -444,6 +446,29 @@ export default function CalculatorPage() {
                 />
                 <p id="tempo-especial-hint" className="mt-1 font-sans text-[10px] text-slate-400">
                   Será adicionado o multiplicador de atividade insalubre correspondente ao gênero
+                </p>
+              </div>
+            )}
+
+            {modalidade === 'APOSENTADORIA_PCD' && (
+              <div className="animate-fade-in">
+                <label htmlFor="grau-deficiencia" className="neo-label">
+                  Grau de deficiência (LC 142/2013)
+                </label>
+                <select
+                  id="grau-deficiencia"
+                  value={disabilityDegree}
+                  onChange={(e) => setDisabilityDegree(e.target.value as 'LEVE' | 'MODERADO' | 'GRAVE' | '')}
+                  className="neo-input"
+                  aria-describedby="grau-deficiencia-hint"
+                >
+                  <option value="">Selecione o grau...</option>
+                  <option value="GRAVE">Grave (25 anos H / 20 anos M)</option>
+                  <option value="MODERADO">Moderado (29 anos H / 24 anos M)</option>
+                  <option value="LEVE">Leve (33 anos H / 28 anos M)</option>
+                </select>
+                <p id="grau-deficiencia-hint" className="mt-1 font-sans text-[10px] text-slate-400">
+                  Também é elegível quem atingir 60 anos (H) / 55 anos (M) com 15 anos de contribuição, independente do grau.
                 </p>
               </div>
             )}

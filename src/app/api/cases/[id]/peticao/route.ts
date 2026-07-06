@@ -28,9 +28,8 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     const caso = await prisma.case.findUnique({
       where: { id: params.id },
       include: {
-        client: { select: { name: true, birthDate: true, cpfHash: true, maritalStatus: true, profession: true, city: true } },
+        client: { select: { name: true, birthDate: true, cpfHash: true, maritalStatus: true, profession: true, city: true, cnisDocument: { select: { markdownContent: true } } } },
         user: { select: { name: true, oabNumber: true, maritalStatus: true, profession: true, city: true } },
-        cnisDocument: { select: { markdownContent: true } },
         calculations: {
           where: { isSelected: true },
           take: 1,
@@ -61,7 +60,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       benefitTypeLabel: BENEFIT_LABELS[caso.benefitType] ?? caso.benefitType,
       lawyerName: caso.user.name ?? 'Advogado',
       lawyerOab: caso.user.oabNumber,
-      cnisSummary: caso.cnisDocument?.markdownContent ?? undefined,
+      cnisSummary: caso.client?.cnisDocument?.markdownContent ?? undefined,
       calculation: {
         modalidade: calc.modality,
         rmi: Number(calc.rmi),

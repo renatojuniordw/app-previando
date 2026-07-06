@@ -39,6 +39,7 @@ export interface CalculationInput {
   // Parâmetros extras
   tempoEspecialAnos?: number
   dependentesPensao?: number
+  disabilityDegree?: 'LEVE' | 'MODERADO' | 'GRAVE'
   // Valores vigentes na DIB (buscados do banco pelo chamador)
   salarioMinimo?: number
   tetoPrevidenciario?: number
@@ -203,7 +204,7 @@ function calcularSalarioBeneficio(
  * Agora delega a lógica específica de cada modalidade para as estratégias registradas.
  */
 export function calculatePrevidenciario(input: CalculationInput): CalculationResult {
-  const { birthDate, gender, dib, modalidade, extractedData, tempoEspecialAnos = 0, dependentesPensao = 1, regrasVigentes } = input
+  const { birthDate, gender, dib, modalidade, extractedData, tempoEspecialAnos = 0, dependentesPensao = 1, disabilityDegree, regrasVigentes } = input
 
   function regra(mod: string) {
     return regrasVigentes?.[`${mod}_${gender}`] ?? regrasVigentes?.[`${mod}_AMBOS`]
@@ -242,6 +243,7 @@ export function calculatePrevidenciario(input: CalculationInput): CalculationRes
     gender,
     dependentesPensao,
     tempoEspecialAnos,
+    disabilityDegree,
     regra: regra(modalidade),
   }
 

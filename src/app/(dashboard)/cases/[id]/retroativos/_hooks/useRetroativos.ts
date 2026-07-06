@@ -25,6 +25,9 @@ interface Retroativo {
   valorDescontos: string | number
   descricaoDescontos?: string | null
   valorLiquidoFinal: string | number
+  percentualHonorarios?: string | number | null
+  valorHonorarios?: string | number | null
+  valorLiquidoCliente?: string | number | null
   memoriaCalculo: {
     parcelas: ParcelaRetroativa[]
     acumuladoINPC: number
@@ -46,6 +49,7 @@ export function useRetroativos() {
   const [valorMensalBruto, setValorMensalBruto] = useState('')
   const [valorDescontos, setValorDescontos] = useState('0')
   const [descricaoDescontos, setDescricaoDescontos] = useState('')
+  const [percentualHonorarios, setPercentualHonorarios] = useState('')
 
   const [errorMessage, setErrorMessage] = useState('')
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
@@ -66,6 +70,9 @@ export function useRetroativos() {
         discountValue: string | number
         discountDescription: string | null
         finalNetValue: string | number
+        feePercentage?: string | number | null
+        feeValue?: string | number | null
+        clientNetValue?: string | number | null
         calculationMemory: {
           parcelas: ParcelaRetroativa[]
           acumuladoINPC: number
@@ -83,6 +90,9 @@ export function useRetroativos() {
         valorDescontos: Number(r.discountValue),
         descricaoDescontos: r.discountDescription,
         valorLiquidoFinal: Number(r.finalNetValue),
+        percentualHonorarios: r.feePercentage != null ? Number(r.feePercentage) : null,
+        valorHonorarios: r.feeValue != null ? Number(r.feeValue) : null,
+        valorLiquidoCliente: r.clientNetValue != null ? Number(r.clientNetValue) : null,
         memoriaCalculo: r.calculationMemory,
         createdAt: r.createdAt
       }))
@@ -108,9 +118,15 @@ export function useRetroativos() {
 
     const valorBrutoNum = parseFloat(valorMensalBruto.replace(',', '.'))
     const valorDescontosNum = parseFloat(valorDescontos.replace(',', '.'))
+    const percentualHonorariosNum = percentualHonorarios.trim() === '' ? undefined : parseFloat(percentualHonorarios.replace(',', '.'))
 
     if (isNaN(valorBrutoNum) || valorBrutoNum <= 0) {
       setErrorMessage('O valor mensal deve ser um número positivo.')
+      return
+    }
+
+    if (percentualHonorariosNum !== undefined && (isNaN(percentualHonorariosNum) || percentualHonorariosNum < 0 || percentualHonorariosNum > 100)) {
+      setErrorMessage('O percentual de honorários deve ser um número entre 0 e 100.')
       return
     }
 
@@ -126,7 +142,8 @@ export function useRetroativos() {
         dataRequerimento,
         valorMensalBruto: valorBrutoNum,
         valorDescontos: isNaN(valorDescontosNum) ? 0 : valorDescontosNum,
-        descricaoDescontos: descricaoDescontos.trim() || undefined
+        descricaoDescontos: descricaoDescontos.trim() || undefined,
+        percentualHonorarios: percentualHonorariosNum
       })
 
       setShowModal(false)
@@ -135,6 +152,7 @@ export function useRetroativos() {
       setValorMensalBruto('')
       setValorDescontos('0')
       setDescricaoDescontos('')
+      setPercentualHonorarios('')
       addToast({ type: 'success', title: 'Retroativos calculados', message: 'Liquidação gerada com sucesso.' })
       load()
     } catch (err: unknown) {
@@ -180,6 +198,8 @@ export function useRetroativos() {
     setValorDescontos,
     descricaoDescontos,
     setDescricaoDescontos,
+    percentualHonorarios,
+    setPercentualHonorarios,
     showDeleteConfirm,
     setShowDeleteConfirm,
     deleteTarget,

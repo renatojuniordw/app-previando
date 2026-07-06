@@ -43,6 +43,7 @@ const NAV_SECTIONS = [
     label: 'Acompanhamento',
     items: [
       { href: '/reports', label: 'Relatórios', icon: BarChart3 },
+      { href: '/honorarios', label: 'Honorários', icon: DollarSign },
       { href: '/calendar', label: 'Calendário', icon: CalendarDays },
       { href: '/deadlines', label: 'Prazos', icon: Calendar },
       { href: '/activity', label: 'Atividade', icon: Activity },

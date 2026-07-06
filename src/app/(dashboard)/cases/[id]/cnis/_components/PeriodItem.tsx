@@ -1,7 +1,7 @@
 'use client'
 
 import { AlertCircle, Calendar, ChevronDown, ChevronUp, Plus, Pencil, Trash2 } from 'lucide-react'
-import { Periodo, PeriodWarning } from '../_types'
+import { Periodo, PeriodWarning } from '@/types/cnis'
 import { formatCompetencia, formatDateString } from '../_utils'
 import { formatCurrency, cn } from '@/lib/utils'
 import { getIndicatorDetails } from '@/services/cnis/indicatorsDictionary'

@@ -26,8 +26,7 @@ export async function POST(req: NextRequest, { params }: { params: { token: stri
       include: {
         case: {
           include: {
-            client: { select: { birthDate: true, gender: true } },
-            cnisDocument: { select: { extractedData: true, processingStatus: true } },
+            client: { select: { birthDate: true, gender: true, cnisDocument: { select: { extractedData: true, processingStatus: true } } } },
             user: { select: { plan: true } },
           },
         },
@@ -61,7 +60,7 @@ export async function POST(req: NextRequest, { params }: { params: { token: stri
     if (!c.client?.birthDate) {
       return NextResponse.json({ error: 'Dados do cliente incompletos.' }, { status: 422 })
     }
-    if (c.cnisDocument?.processingStatus !== 'COMPLETED') {
+    if (c.client?.cnisDocument?.processingStatus !== 'COMPLETED') {
       return NextResponse.json({ error: 'CNIS ainda não processado.' }, { status: 422 })
     }
 
@@ -85,7 +84,7 @@ export async function POST(req: NextRequest, { params }: { params: { token: stri
     }
     const salario = await getSalarioVigente(dibProjetada)
     const regras = await getRegrasVigentes(dibProjetada)
-    const extractedData = c.cnisDocument!.extractedData as unknown as CnisExtractedData
+    const extractedData = c.client.cnisDocument!.extractedData as unknown as CnisExtractedData
 
     // Roda cálculo atual (hoje)
     const hojeStr = new Date().toISOString().split('T')[0]

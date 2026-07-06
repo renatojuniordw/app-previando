@@ -37,16 +37,22 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     const client = await prisma.client.findUnique({
       where: { id: params.id },
       include: {
-        cases: {
-          orderBy: { createdAt: 'desc' },
-          include: { cnisDocument: { select: { processingStatus: true } } },
-        },
+        cnisDocument: { select: { processingStatus: true } },
+        cases: { orderBy: { createdAt: 'desc' } },
       },
     })
 
     if (!client) return NextResponse.json({ error: 'Cliente não encontrado.' }, { status: 404 })
 
-    const safe = { ...client } as Record<string, unknown>
+    // O CNIS pertence ao cliente (1 por segurado), mas cada caso ainda expõe
+    // o mesmo documento em `cnisDocument` para não quebrar telas que já
+    // exibem esse dado por caso.
+    const clientWithCasesCnis = {
+      ...client,
+      cases: client.cases.map((c) => ({ ...c, cnisDocument: client.cnisDocument })),
+    }
+
+    const safe = { ...clientWithCasesCnis } as Record<string, unknown>
     delete safe.cpfHash
     const maskCpf = req.nextUrl.searchParams.get('mask') !== 'false'
     return NextResponse.json({ client: { ...safe, cpf: maskCpf ? '***.***.**-**' : (client as Record<string, unknown>).cpf } }, {

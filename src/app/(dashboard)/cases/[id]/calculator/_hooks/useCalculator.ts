@@ -85,14 +85,14 @@ export function useCalculator() {
   const [dib, setDib] = useState(new Date().toISOString().split('T')[0])
   const [tempoEspecialAnos, setTempoEspecialAnos] = useState(0)
   const [dependentesPensao, setDependentesPensao] = useState(1)
+  const [disabilityDegree, setDisabilityDegree] = useState<'LEVE' | 'MODERADO' | 'GRAVE' | ''>('')
   const [errorMessage, setErrorMessage] = useState('')
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null)
 
   const load = useCallback(async () => {
     try {
-      const [rCalc, rCnis, rModalidades, rCase] = await Promise.all([
+      const [rCalc, rModalidades, rCase] = await Promise.all([
         api.get(`/cases/${params.id}/calculations`),
-        api.get(`/cnis/${params.id}`),
         api.get('/modalidades'),
         api.get(`/cases/${params.id}`),
       ])
@@ -101,11 +101,12 @@ export function useCalculator() {
       const benefitType = rCase.data.case?.benefitType
       setCaseBenefitType(benefitType)
 
+      const cnisDoc = rCase.data.case?.cnisDocument
       if (
-        rCnis.data?.cnisDocument?.processingStatus === 'COMPLETED' ||
-        rCnis.data?.cnisDocument?.processingStatus === 'SUMMARY_READY'
+        cnisDoc?.processingStatus === 'COMPLETED' ||
+        cnisDoc?.processingStatus === 'SUMMARY_READY'
       ) {
-        setCnisDocument(rCnis.data.cnisDocument)
+        setCnisDocument(cnisDoc)
       }
     } catch {
       addToast({ type: 'error', title: 'Erro', message: 'Erro ao carregar dados do cálculo.' })
@@ -152,11 +153,13 @@ export function useCalculator() {
         gender,
         tempoEspecialAnos: Number(tempoEspecialAnos),
         dependentesPensao: Number(dependentesPensao),
+        disabilityDegree: disabilityDegree || undefined,
       })
 
       setShowModal(false)
       setTempoEspecialAnos(0)
       setDependentesPensao(1)
+      setDisabilityDegree('')
       addToast({
         type: 'success',
         title: 'Cálculo criado',
@@ -226,6 +229,8 @@ export function useCalculator() {
     setTempoEspecialAnos,
     dependentesPensao,
     setDependentesPensao,
+    disabilityDegree,
+    setDisabilityDegree,
     caseBenefitType,
     handleCreate,
     handleSelect,

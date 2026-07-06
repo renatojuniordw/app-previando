@@ -37,8 +37,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     const fullCase = await prisma.case.findUnique({
       where: { id: params.id },
       include: {
-        client: { select: { birthDate: true } },
-        cnisDocument: { select: { extractedData: true, processingStatus: true } },
+        client: { select: { birthDate: true, cnisDocument: { select: { extractedData: true, processingStatus: true } } } },
       },
     })
 
@@ -46,7 +45,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       return NextResponse.json({ error: 'Data de nascimento do cliente não informada.' }, { status: 422 })
     }
 
-    if (fullCase.cnisDocument?.processingStatus !== 'COMPLETED') {
+    if (fullCase.client.cnisDocument?.processingStatus !== 'COMPLETED') {
       return NextResponse.json({ error: 'CNIS ainda não processado.' }, { status: 422 })
     }
 
@@ -60,7 +59,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       getRegrasVigentes(dib),
     ])
 
-    const extractedData = fullCase.cnisDocument!.extractedData as unknown as CnisExtractedData
+    const extractedData = fullCase.client.cnisDocument!.extractedData as unknown as CnisExtractedData
 
     const suggestions = ALL_MODALITIES.flatMap((modalidade) =>
       (['M', 'F'] as const).map((gender) => {
