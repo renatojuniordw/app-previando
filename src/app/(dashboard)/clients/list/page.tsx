@@ -7,7 +7,7 @@ import { ClientSwitcher } from '@/components/ClientSwitcher'
 import { Badge } from '@/components/ui/Badge'
 import { maskCPF } from '@/lib/sanitize'
 import { formatDate } from '@/lib/utils'
-import { Search, Plus, User, FileText, Phone, Mail, Share2, Upload } from 'lucide-react'
+import { Search, Plus, User, FileText, Phone, Mail, Upload } from 'lucide-react'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { ActionsDropdown } from '@/components/ui/ActionsDropdown'
 import { DeleteClientModal } from '@/components/client/DeleteClientModal'
@@ -205,14 +205,6 @@ export default function ClientsListPage() {
                       </td>
                       <td className="px-6 py-4 text-right">
                         <div className="flex items-center justify-end gap-1">
-                          <Link
-                            href={`/clients/list/${client.id}#portal`}
-                            className="p-2 text-slate-450 hover:text-emerald-700 hover:bg-emerald-50 border border-transparent hover:border-emerald-100 rounded-lg transition-all"
-                            aria-label={`Portal do cliente ${client.name}`}
-                            title="Portal do Cliente"
-                          >
-                            <Share2 className="w-4 h-4" aria-hidden="true" />
-                          </Link>
                           <Link
                             href={`/clients/list/${client.id}`}
                             className="p-2 text-slate-450 hover:text-amber-700 hover:bg-amber-50 border border-transparent hover:border-amber-100 rounded-lg transition-all"

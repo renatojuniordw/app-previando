@@ -38,7 +38,7 @@ export function ClientCnisCard({ clientId, caseCount }: Props) {
           <p className="font-sans text-xs text-slate-500 mt-0.5">
             {caseCount > 1
               ? `Documento único, compartilhado pelos ${caseCount} processos deste cliente.`
-              : 'Extrato de contribuições do segurado.'}
+              : 'Extrato de contribuições do segurado — base para os cálculos de qualquer processo deste cliente.'}
           </p>
         </div>
         {statusCfg && (
@@ -63,9 +63,21 @@ export function ClientCnisCard({ clientId, caseCount }: Props) {
       )}
 
       {showSuccessBanner && (
-        <div className="flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 p-3">
-          <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" aria-hidden="true" />
-          <p className="font-sans text-xs font-bold text-emerald-700">CNIS processado com sucesso!</p>
+        <div className="flex items-start gap-2 rounded-lg border border-emerald-200 bg-emerald-50 p-3">
+          <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" aria-hidden="true" />
+          <p className="font-sans text-xs font-bold text-emerald-700">
+            CNIS processado com sucesso! Os dados já estão disponíveis para criar ou atualizar os processos deste cliente.
+          </p>
+        </div>
+      )}
+
+      {cnis && isProcessing && (
+        <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3">
+          <Loader2 className="mt-0.5 h-4 w-4 shrink-0 animate-spin text-amber-600" aria-hidden="true" />
+          <p className="font-sans text-xs font-medium text-amber-700">
+            Lendo o extrato do segurado. Você já pode criar processos, mas os cálculos que dependem do CNIS
+            ficarão disponíveis assim que o processamento terminar.
+          </p>
         </div>
       )}
 
@@ -87,8 +99,13 @@ export function ClientCnisCard({ clientId, caseCount }: Props) {
         >
           <FileText className="mb-3 h-8 w-8 text-slate-350" aria-hidden="true" />
           <p className="mb-1 font-sans text-sm font-bold text-slate-700">Nenhum CNIS cadastrado</p>
-          <p className="mb-4 max-w-sm font-sans text-xs text-slate-500">
-            Envie o extrato em PDF — os dados ficarão disponíveis para todos os processos deste cliente.
+          <p className="mb-1.5 max-w-md font-sans text-xs text-slate-500">
+            Este extrato é a fonte única de dados do segurado: uma vez enviado, ele alimenta automaticamente
+            os cálculos, simulações e retroativos de <strong>qualquer</strong> processo criado para este cliente
+            (aposentadoria, BPC/LOAS, pensão etc.) — sem precisar reenviar o documento a cada novo caso.
+          </p>
+          <p className="mb-4 max-w-md font-sans text-[11px] text-slate-400">
+            Envie o PDF abaixo para liberar a criação de casos com dados já preenchidos.
           </p>
           <Button
             variant="primary"
