@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   CheckCircle2,
   Circle,
@@ -25,10 +25,21 @@ interface OnboardingProgress {
   isComplete: boolean
 }
 
+const DISMISSED_STORAGE_KEY = 'onboarding-checklist-dismissed'
+
 export function OnboardingChecklist() {
   const { data: progress } = useApi<OnboardingProgress>('/onboarding/progress')
   const [expanded, setExpanded] = useState(true)
   const [dismissed, setDismissed] = useState(false)
+
+  useEffect(() => {
+    setDismissed(localStorage.getItem(DISMISSED_STORAGE_KEY) === 'true')
+  }, [])
+
+  const handleDismiss = () => {
+    localStorage.setItem(DISMISSED_STORAGE_KEY, 'true')
+    setDismissed(true)
+  }
 
   if (!progress || dismissed || progress.isComplete) return null
 
@@ -164,7 +175,7 @@ export function OnboardingChecklist() {
           {/* Dismiss button at the bottom */}
           <div className="flex justify-end pt-2">
             <button
-              onClick={() => setDismissed(true)}
+              onClick={handleDismiss}
               className="flex items-center gap-1 py-1 font-sans text-[10px] font-bold text-slate-400 transition-colors hover:text-red-500 focus-visible:outline-none"
             >
               <X className="h-3 w-3" aria-hidden="true" />

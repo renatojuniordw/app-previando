@@ -1,16 +1,18 @@
 import { StyleSheet, Font } from '@react-pdf/renderer'
 
-// Register fonts - Inter supports Portuguese characters
+// Fontes servidas localmente (public/fonts): a URL anterior do Google Fonts
+// estava quebrada (404), o que travava a geração do PDF (fetch nunca resolvia
+// nem falhava de forma visível) e fazia o botão "Exportar PDF" parecer sem ação.
 Font.register({
   family: 'Inter',
   fonts: [
-    { src: 'https://fonts.gstatic.com/s/inter/v18/UcCo3EwrCARFiPpVS6uLyb7q.woff', fontWeight: 'normal' },
-    { src: 'https://fonts.gstatic.com/s/inter/v18/UcCo3EwrCARFiPpVS6uLyb7q.woff', fontWeight: 'bold' },
+    { src: '/fonts/Inter-Regular.woff', fontWeight: 'normal' },
+    { src: '/fonts/Inter-Bold.woff', fontWeight: 'bold' },
   ],
 })
 
-// Logo as base64 for PDF embedding
-const LOGO_BASE64 = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMjAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCAyMjAgNDAiPjx0ZXh0IHg9IjAiIHk9IjMwIiBmb250LWZhbWlseT0iQXJpYWwsIEhlbHZldGljYSwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIyOCIgZm9udC13ZWlnaHQ9ImJvbGQiIGZpbGw9IiNkOTc3MDYiPlBSRVZJQU5ETzwvdGV4dD48bGluZSB4MT0iMCIgeTE9IjM2IiB4Mj0iMjIwIiB5Mj0iMzYiIHN0cm9rZT0iI2Q5NzcwNiIgc3Ryb2tlLXdpZHRoPSIyIi8+Cjwvc3ZnPg=='
+// Logo as base64 for PDF embedding (accent line only — PREVIANDO text is rendered as <Text>)
+const LOGO_BASE64 = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMjAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCAyMjAgNDAiPjxsaW5lIHgxPSIwIiB5MT0iMzYiIHgyPSIyMjAiIHkyPSIzNiIgc3Ryb2tlPSIjZDk3NzA2IiBzdHJva2Utd2lkdGg9IjIiLz48L3N2Zz4='
 
 export const BRAND = {
   accent: '#d97706',

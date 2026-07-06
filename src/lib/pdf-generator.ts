@@ -24,13 +24,15 @@ function drawHeader(doc: PDFDocType, title: string) {
   doc.lineWidth(2).moveTo(40, 58).lineTo(550, 58).stroke(BRAND.accent)
 }
 
-function drawFooter(doc: PDFDocType, page: number, totalPages: number) {
-  // Border line
-  doc.lineWidth(0.5).moveTo(40, 260).lineTo(550, 260).stroke(BRAND.border)
+const FOOTER_Y = 770
+const PAGE_MAX_Y = 760
+const PAGE_MIN_Y = 60
 
+function drawFooter(doc: PDFDocType, page: number, totalPages: number) {
+  doc.lineWidth(0.5).moveTo(40, FOOTER_Y).lineTo(550, FOOTER_Y).stroke(BRAND.border)
   doc.fontSize(7).fill(BRAND.slate)
-  doc.text('Gerado por Previando', 40, 265)
-  doc.text(`Página ${page} de ${totalPages}`, 400, 265)
+  doc.text('Gerado por Previando', 40, FOOTER_Y + 5)
+  doc.text(`Página ${page} de ${totalPages}`, 400, FOOTER_Y + 5)
 }
 
 function getPageCount(doc: PDFDocType): number {
@@ -50,6 +52,24 @@ function drawDataRow(doc: PDFDocType, label: string, value: string, y: number) {
   doc.font('Helvetica').fontSize(9).fill(BRAND.dark).text(value || '—', 170, y, { width: 340 })
   doc.lineWidth(0.3).moveTo(40, y + 10).lineTo(550, y + 10).stroke(BRAND.border)
   return y + 16
+}
+
+function stripMarkdown(text: string): string {
+  return text
+    .split('\n')
+    .map((line) => line
+      .replace(/^#{1,6}\s+/, '')
+      .replace(/^\s*[-*]\s+/, '• ')
+      .replace(/^\s*\d+[.)]\s+/, '')
+      .replace(/\*\*(.+?)\*\*/g, '$1')
+      .replace(/(?<!\w)_(.+?)_(?!\w)/g, '$1')
+      .replace(/^---+$/gm, '')
+      .replace(/\|/g, '')
+    )
+    .filter((line) => line !== '' || true)
+    .join('\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim()
 }
 
 function splitTextIntoLines(doc: PDFDocType, text: string, maxWidth: number): string[] {
@@ -94,10 +114,18 @@ export interface CasePDFData {
   watermark?: boolean
 }
 
+function collectBuffer(doc: PDFKit.PDFDocument): Promise<Buffer> {
+  return new Promise<Buffer>((resolve, reject) => {
+    const chunks: Buffer[] = []
+    doc.on('data', (chunk: Buffer) => chunks.push(chunk))
+    doc.on('end', () => resolve(Buffer.concat(chunks)))
+    doc.on('error', reject)
+  })
+}
+
 export async function generateCasePDF(data: CasePDFData): Promise<Buffer> {
   const doc = new PDFDocument({ size: 'A4', margins: { top: 20, bottom: 30, left: 40, right: 40 } })
-  const buffers: Buffer[] = []
-  doc.pipe(buffers as unknown as NodeJS.WritableStream)
+  const pdfPromise = collectBuffer(doc)
 
   drawHeader(doc, 'Relatório do Caso')
 
@@ -140,17 +168,9 @@ export async function generateCasePDF(data: CasePDFData): Promise<Buffer> {
   // Opinion Section
   if (data.opinion) {
     y = drawSectionHeader(doc, 'Parecer Jurídico', y)
-    doc.font('Helvetica').fontSize(9).fill(BRAND.dark)
-    const lines = splitTextIntoLines(doc, data.opinion, 510)
-    for (const line of lines) {
-      if (y > 240) {
-        doc.addPage()
-        y = 40
-        drawFooter(doc, getPageCount(doc), getPageCount(doc))
-      }
-      doc.text(line, 40, y)
-      y += 12
-    }
+    renderTextPages(doc, data.opinion, y)
+  } else {
+    drawFooter(doc, 1, 1)
   }
 
   // Watermark
@@ -160,16 +180,9 @@ export async function generateCasePDF(data: CasePDFData): Promise<Buffer> {
     })
   }
 
-  // Footer
-  drawFooter(doc, 1, 1)
-
   doc.end()
 
-  return new Promise<Buffer>((resolve) => {
-    doc.on('end', () => {
-      resolve(Buffer.concat(buffers))
-    })
-  })
+  return pdfPromise
 }
 
 interface BpcPDFData {
@@ -178,10 +191,31 @@ interface BpcPDFData {
   generatedAt?: string
 }
 
+function renderTextPages(doc: PDFDocType, text: string, startY: number) {
+  const cleanText = stripMarkdown(text)
+  if (!cleanText) return
+  const lines = splitTextIntoLines(doc, cleanText, 510)
+  let y = startY
+  let pageNum = 1
+
+  doc.font('Helvetica').fontSize(9).fill(BRAND.dark)
+  for (const line of lines) {
+    if (y > PAGE_MAX_Y) {
+      drawFooter(doc, pageNum, 0)
+      doc.addPage()
+      pageNum++
+      y = PAGE_MIN_Y
+    }
+    doc.text(line, 40, y)
+    y += 12
+  }
+
+  drawFooter(doc, pageNum, pageNum)
+}
+
 export async function generateBpcPDF(data: BpcPDFData): Promise<Buffer> {
   const doc = new PDFDocument({ size: 'A4', margins: { top: 20, bottom: 30, left: 40, right: 40 } })
-  const buffers: Buffer[] = []
-  doc.pipe(buffers as unknown as NodeJS.WritableStream)
+  const pdfPromise = collectBuffer(doc)
 
   drawHeader(doc, 'Análise BPC/LOAS')
 
@@ -198,24 +232,8 @@ export async function generateBpcPDF(data: BpcPDFData): Promise<Buffer> {
   }
 
   y = drawSectionHeader(doc, 'Resultado da Análise', y)
-  doc.font('Helvetica').fontSize(9).fill(BRAND.dark)
-  const lines = splitTextIntoLines(doc, data.result, 510)
-  for (const line of lines) {
-    if (y > 240) {
-      doc.addPage()
-      y = 40
-        drawFooter(doc, getPageCount(doc), getPageCount(doc))
-    }
-    doc.text(line, 40, y)
-    y += 12
-  }
+  renderTextPages(doc, data.result, y)
 
-  drawFooter(doc, 1, 1)
   doc.end()
-
-  return new Promise<Buffer>((resolve) => {
-    doc.on('end', () => {
-      resolve(Buffer.concat(buffers))
-    })
-  })
+  return pdfPromise
 }

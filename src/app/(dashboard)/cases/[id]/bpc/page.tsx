@@ -6,19 +6,13 @@ import dynamic from 'next/dynamic'
 import api from '@/lib/api'
 import { Button } from '@/components/ui/Button'
 import { Modal } from '@/components/ui/Modal'
-import { ErrorBoundary } from '@/components/ErrorBoundary'
-
-import { FileText, Building2, Loader2, Copy } from 'lucide-react'
+import { FileText, Building2, Loader2, Copy, Eye, EyeOff } from 'lucide-react'
 import { BpcForm } from '@/components/bpc/BpcForm'
 import { HelpText } from '@/components/ui/HelpText'
 import { BpcSocialInterview } from '@/components/bpc/BpcSocialInterview'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { useToast } from '@/store/toast'
-
-const PDFDownloadLink = dynamic(
-  () => import('@react-pdf/renderer').then(m => ({ default: m.PDFDownloadLink })),
-  { ssr: false, loading: () => <span className="text-xs text-slate-400">Carregando...</span> }
-)
+import { downloadReactPdf } from '@/lib/download-pdf'
 
 const BpcResult = dynamic(
   () => import('@/components/bpc/BpcResult').then(m => ({ default: m.BpcResult })),
@@ -74,6 +68,9 @@ export default function BpcPage() {
   const [bpcNotesCount, setBpcNotesCount] = useState(0)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [isFormOpen, setIsFormOpen] = useState(true)
+
+  const [exportingPdf, setExportingPdf] = useState(false)
 
   const [activeTab, setActiveTab] = useState<AnalysisTab>('preAnalise')
   const [generatingTab, setGeneratingTab] = useState<AnalysisTab | null>(null)
@@ -116,6 +113,24 @@ export default function BpcPage() {
   }, [caseId])
 
   useEffect(() => { load() }, [load])
+
+  const handleExportConsolidatedPdf = () => {
+    setExportingPdf(true)
+    const parts = visibleTabs.flatMap((t) => {
+      if (t.id === 'social') return []
+      const content = tabResults[t.id]
+      if (!content) return []
+      return [`## ${t.label}\n\n${content}`]
+    })
+    const result = `# Relatório BPC/LOAS — Completo\n\n_Gerado em: ${new Date().toLocaleDateString('pt-BR')}_\n\n---\n\n${parts.join('\n\n---\n\n')}`
+    downloadReactPdf(
+      { result, type: 'Relatório Completo BPC/LOAS', generatedAt: new Date().toLocaleDateString('pt-BR') },
+      `previando-bpc-completo-${caseId}.pdf`
+    ).then((ok) => {
+      setExportingPdf(false)
+      if (!ok) addToast({ type: 'error', title: 'Erro', message: 'Não foi possível gerar o PDF.' })
+    })
+  }
 
   const handleSave = async (data: object) => {
     setSaving(true)
@@ -253,27 +268,24 @@ export default function BpcPage() {
 
   const headerActions = (
     <div className="flex items-center gap-3 flex-wrap shrink-0">
+      <Button
+        onClick={() => setIsFormOpen(!isFormOpen)}
+        className="inline-flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold rounded-full bg-slate-900 text-white hover:bg-slate-800 transition-colors shadow-sm"
+      >
+        {isFormOpen ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+        {isFormOpen ? 'Ocultar Formulário' : 'Visualizar Formulário'}
+      </Button>
+
       {completedCount > 0 && (
-        <ErrorBoundary fallback={null}>
-          <PDFDownloadLink
-            document={
-              <BpcConsolidatedPDFDocument
-                generatedAt={new Date().toLocaleDateString('pt-BR')}
-                sections={visibleTabs.flatMap((t) => {
-                  if (t.id === 'social') return []
-                  const content = tabResults[t.id]
-                  if (!content) return []
-                  return [{ type: t.id, label: t.label, content }]
-                })}
-              />
-            }
-            fileName={`previando-bpc-completo-${caseId}.pdf`}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold border border-slate-200 rounded-full bg-white text-slate-655 hover:bg-slate-50 hover:text-slate-800 transition-colors shadow-xs"
-          >
-            <FileText className="w-3.5 h-3.5 text-slate-450" />
-            Relatório Completo
-          </PDFDownloadLink>
-        </ErrorBoundary>
+        <Button
+          variant="outline"
+          onClick={handleExportConsolidatedPdf}
+          loading={exportingPdf}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold border border-slate-200 rounded-full bg-white text-slate-655 hover:bg-slate-50 hover:text-slate-800 transition-colors shadow-xs"
+        >
+          <FileText className="w-3.5 h-3.5 text-slate-450" />
+          Relatório Completo
+        </Button>
       )}
 
       {bpcNotesCount > 0 && (
@@ -309,19 +321,21 @@ export default function BpcPage() {
       </HelpText>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        {/* COLUNA ESQUERDA: DADOS (41%) */}
-        <div className="lg:col-span-5 flex flex-col gap-6">
-          <BpcForm
-            caseId={caseId}
-            analysis={analysis}
-            clientBirthDate={clientBirthDate}
-            onSave={handleSave}
-            saving={saving}
-          />
-        </div>
+        {/* COLUNA ESQUERDA: DADOS DO CASO (ocultável) */}
+        {isFormOpen && (
+          <div className="lg:col-span-5 flex flex-col gap-6">
+            <BpcForm
+              caseId={caseId}
+              analysis={analysis}
+              clientBirthDate={clientBirthDate}
+              onSave={handleSave}
+              saving={saving}
+            />
+          </div>
+        )}
 
-        {/* COLUNA DIREITA: COMMAND CENTER IA (58%) */}
-        <div className="lg:col-span-7">
+        {/* COLUNA DIREITA: COMMAND CENTER IA (ocupa 7 colunas se form aberto, ou 12 se fechado) */}
+        <div className={isFormOpen ? "lg:col-span-7" : "lg:col-span-12"}>
           <div className="bg-white rounded-2xl overflow-hidden flex flex-col h-full min-h-[650px] border border-slate-200 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
             {/* Header IA Command Center */}
             <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
@@ -363,70 +377,33 @@ export default function BpcPage() {
               </div>
             </div>
 
-            {/* Layout Interno do Command Center (Tabs na lateral vs Topo) */}
-            <div className="flex flex-col md:flex-row flex-1">
-              {/* Tabs / Menu Esquerdo do Command Center */}
-              <div className="w-full md:w-48 bg-slate-50/50 border-b md:border-b-0 md:border-r border-slate-100 p-3">
-                <div className="flex md:flex-col gap-1 overflow-x-auto no-scrollbar">
-                  {visibleTabs.map((tab) => {
-                    const hasSaved = tab.id === 'social'
-                      ? !!analysis?.relatoSocial
-                      : !!tabResults[tab.id]
-                    const isActive = activeTab === tab.id
-                    const isGenerating = generatingTab === tab.id
-                    
-                    return (
-                      <button
-                        key={tab.id}
-                        onClick={() => setActiveTab(tab.id)}
-                        className={`flex items-center justify-between w-full px-3 py-2.5 rounded-md text-xs font-sans font-medium transition-all text-left whitespace-nowrap ${
-                          isActive
-                            ? 'bg-amber-50 text-amber-700 shadow-sm border border-amber-100'
-                            : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100/80 border border-transparent'
-                        }`}
-                      >
-                        <span className="truncate">{tab.label}</span>
-                        {isGenerating ? (
-                          <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse ml-2 shrink-0" />
-                        ) : hasSaved ? (
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 ml-2 shrink-0 opacity-80" />
-                        ) : (
-                          <span className="w-1.5 h-1.5 rounded-full bg-slate-300 ml-2 shrink-0" />
-                        )}
-                      </button>
-                    )
-                  })}
-                </div>
+            <div className="flex flex-1 min-h-[500px]">
+              {/* Sidebar do Command Center */}
+              <div className="w-48 border-r border-slate-100 bg-slate-50/30 p-4 flex flex-col gap-1.5 shrink-0">
+                {visibleTabs.map((t) => {
+                  const active = activeTab === t.id
+                  const done = t.id === 'social' ? !!analysis?.relatoSocial : !!tabResults[t.id]
+                  return (
+                    <button
+                      key={t.id}
+                      onClick={() => setActiveTab(t.id)}
+                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold font-sans transition-all flex items-center justify-between gap-2 ${
+                        active
+                          ? "bg-amber-50 text-amber-700 border-l-2 border-amber-500"
+                          : "text-slate-550 hover:bg-slate-50 hover:text-slate-800"
+                      }`}
+                    >
+                      <span>{t.label}</span>
+                      <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${done ? "bg-emerald-500" : "bg-slate-300"}`} />
+                    </button>
+                  )
+                })}
               </div>
 
-              {/* Área Principal de Conteúdo IA */}
-              <div className="flex-1 flex flex-col bg-white relative">
-                {activeTab === 'social' ? (
-                  <div className="p-0 h-full [&>div]:h-full [&>div]:bg-transparent [&>div]:border-none [&>div]:shadow-none">
-                    <BpcSocialInterview
-                      caseId={caseId}
-                      analysisExists={!!analysis}
-                      relatoSocial={analysis?.relatoSocial ?? null}
-                      onRelatoChange={(relato) =>
-                        setAnalysis((prev) => prev ? { ...prev, relatoSocial: relato } : null)
-                      }
-                      onNoteSaved={setBpcNotesCount}
-                    />
-                  </div>
-                ) : !analysis ? (
-                  <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
-                    <div className="w-16 h-16 rounded-2xl bg-slate-50 flex items-center justify-center mb-4 border border-slate-100">
-                      <svg className="w-7 h-7 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25z" />
-                      </svg>
-                    </div>
-                    <h4 className="font-sans font-semibold text-slate-700 mb-2">Dados não preenchidos</h4>
-                    <p className="font-sans text-sm text-slate-500 max-w-sm">
-                      Preencha e salve os dados do caso na coluna ao lado para liberar as análises de inteligência artificial.
-                    </p>
-                  </div>
-                ) : generatingTab === activeTab ? (
-                  <div className="flex-1 flex flex-col p-8 bg-slate-50/50 justify-center">
+              {/* Área de conteúdo do Command Center */}
+              <div className="flex-1 bg-white flex flex-col">
+                {generatingTab === activeTab ? (
+                  <div className="flex-1 flex items-center justify-center p-8">
                     <div className="max-w-md mx-auto w-full space-y-6">
                       <div className="flex items-center gap-3">
                         <Loader2 className="w-5 h-5 text-amber-600 animate-spin shrink-0" />
@@ -442,7 +419,7 @@ export default function BpcPage() {
                             ? ['Identificando quesitos da perícia previdenciária...', 'Correlacionando com domínios CIF...', 'Gerando quesitos para a perícia médica...']
                             : activeTab === 'checklist'
                             ? ['Mapeando documentos obrigatórios...', 'Verificando pendências com base nos dados...', 'Estruturando checklist final de documentação...']
-                            : ['Mapeando dados socioeconômicos...', 'Verificando barreiras e limitações...', 'Formatando relatório de enquadramento...']
+                            : ['Mapeando dados socioeconômicos...', 'Verificando barreiras e limitations...', 'Formatando relatório de enquadramento...']
                           
                           return steps.map((step, idx) => (
                             <div key={idx} className="flex items-center gap-3 text-sm text-slate-500 animate-pulse">
@@ -455,6 +432,18 @@ export default function BpcPage() {
                         })()}
                       </div>
                     </div>
+                  </div>
+                ) : !analysis ? (
+                  <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
+                    <div className="w-16 h-16 rounded-2xl bg-slate-50 flex items-center justify-center mb-4 border border-slate-100">
+                      <svg className="w-7 h-7 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25z" />
+                      </svg>
+                    </div>
+                    <h4 className="font-sans font-semibold text-slate-700 mb-2">Dados não preenchidos</h4>
+                    <p className="font-sans text-sm text-slate-500 max-w-sm">
+                      Preencha e salve os dados do caso na coluna ao lado para liberar as análises de inteligência artificial.
+                    </p>
                   </div>
                 ) : activeResult ? (
                   <div className="flex-1 p-0 overflow-hidden [&>div]:h-full [&>div]:bg-transparent [&>div]:border-none [&>div]:shadow-none">
@@ -486,6 +475,18 @@ export default function BpcPage() {
                         Processar Laudo
                       </Button>
                     </div>
+                  </div>
+                ) : activeTab === 'social' ? (
+                  <div className="p-0 h-full [&>div]:h-full [&>div]:bg-transparent [&>div]:border-none [&>div]:shadow-none">
+                    <BpcSocialInterview
+                      caseId={caseId}
+                      analysisExists={!!analysis}
+                      relatoSocial={analysis?.relatoSocial ?? null}
+                      onRelatoChange={(relato) =>
+                        setAnalysis((prev) => prev ? { ...prev, relatoSocial: relato } : null)
+                      }
+                      onNoteSaved={setBpcNotesCount}
+                    />
                   </div>
                 ) : (
                   <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">

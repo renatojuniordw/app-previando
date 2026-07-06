@@ -5,17 +5,10 @@ import ReactMarkdown from 'react-markdown'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
-import { ErrorBoundary } from '@/components/ErrorBoundary'
-import dynamic from 'next/dynamic'
 import api from '@/lib/api'
-import { BpcPDFDocument } from '@/components/pdf/BpcPDFDocument'
 import { useToast } from '@/store/toast'
-import { Copy, FileText, RefreshCw, Check, AlertTriangle } from 'lucide-react'
-
-const PDFDownloadLink = dynamic(
-  () => import('@react-pdf/renderer').then(m => ({ default: m.PDFDownloadLink })),
-  { ssr: false, loading: () => <span className="text-xs text-slate-400">Carregando...</span> }
-)
+import { downloadReactPdf } from '@/lib/download-pdf'
+import { Copy, FileText, RefreshCw, Check, AlertTriangle, Loader2 } from 'lucide-react'
 
 type AnalysisType = 'preAnalise' | 'laudo' | 'social' | 'medical' | 'checklist' | null
 
@@ -84,6 +77,7 @@ function parseChecklistMarkdown(text: string): {
 export function BpcResult({ caseId, result, type, onCopy, onOpenChecklist, onRegenerate, checklistImported, onChecklistImported }: BpcResultProps) {
   const addToast = useToast((s) => s.addToast)
   const [importing, setImporting] = useState(false)
+  const [exporting, setExporting] = useState(false)
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
@@ -157,16 +151,24 @@ export function BpcResult({ caseId, result, type, onCopy, onOpenChecklist, onReg
           Copiar
         </Button>
         {mounted && (
-          <ErrorBoundary fallback={null}>
-            <PDFDownloadLink
-              document={<BpcPDFDocument result={result} type={type ? TYPE_LABELS[type] || 'BPC/LOAS' : 'BPC/LOAS'} />}
-              fileName={`previando-bpc-${caseId}.pdf`}
-              className="inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs border border-slate-200 rounded-md hover:bg-slate-100 text-slate-700 font-medium transition-colors"
-            >
-              <FileText className="w-3.5 h-3.5 text-slate-500" />
-              Exportar PDF
-            </PDFDownloadLink>
-          </ErrorBoundary>
+          <Button
+            variant="outline"
+            onClick={() => {
+              setExporting(true)
+              downloadReactPdf(
+                { result, type: type ? TYPE_LABELS[type] || 'BPC/LOAS' : 'BPC/LOAS' },
+                `previando-bpc-${caseId}.pdf`
+              ).then((ok) => {
+                setExporting(false)
+                if (!ok) addToast({ type: 'error', title: 'Erro', message: 'Não foi possível gerar o PDF.' })
+              })
+            }}
+            loading={exporting}
+            className="text-xs py-2 flex items-center gap-1.5"
+          >
+            <FileText className="w-3.5 h-3.5 text-slate-500" />
+            Exportar PDF
+          </Button>
         )}
         {onRegenerate && (
           <Button variant="outline" onClick={onRegenerate} className="text-xs py-2 border-slate-350 text-slate-655 hover:bg-slate-100 flex items-center gap-1.5">

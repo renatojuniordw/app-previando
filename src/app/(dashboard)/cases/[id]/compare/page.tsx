@@ -4,18 +4,9 @@ import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import api from '@/lib/api'
 import { Card } from '@/components/ui/Card'
-import { ErrorBoundary } from '@/components/ErrorBoundary'
-import dynamic from 'next/dynamic'
-
-const ComparePDFDocument = dynamic(
-  () => import('@/components/pdf/ComparePDFDocument').then(m => ({ default: m.ComparePDFDocument })),
-  { ssr: false }
-)
-
-const PDFDownloadLink = dynamic(
-  () => import('@react-pdf/renderer').then(mod => ({ default: mod.PDFDownloadLink })),
-  { ssr: false, loading: () => <span>Carregando...</span> }
-)
+import { Button } from '@/components/ui/Button'
+import { downloadReactPdf } from '@/lib/download-pdf'
+import { useToast } from '@/store/toast'
 import { CheckCircle2, XCircle, TrendingUp, AlertTriangle, Download } from 'lucide-react'
 import { formatCurrency } from '@/lib/utils'
 
@@ -52,9 +43,35 @@ const GENDER_LABEL: Record<string, string> = { M: 'Masculino', F: 'Feminino' }
 
 export default function ComparePage() {
   const { id } = useParams<{ id: string }>()
+  const addToast = useToast((s) => s.addToast)
   const [data, setData] = useState<SuggestionsData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [exportingPdf, setExportingPdf] = useState(false)
+
+  const handleExportPdf = () => {
+    if (!data) return
+    setExportingPdf(true)
+
+    const elegiveisText = data.elegiveis.map((m, i) => {
+      const bestLabel = i === 0 ? ' ★ Melhor RMI' : ''
+      return `### ${MODALITY_LABELS[m.modalidade] || m.modalidade} (${GENDER_LABEL[m.gender]})${bestLabel}\n- RMI: ${formatCurrency(m.rmi)}\n- Coeficiente: ${(m.coeficiente * 100).toFixed(1)}%\n- Tempo de Contribuição: ${m.tempoContribuicaoAnos.toFixed(1)} anos\n- Elegível: ✅`
+    }).join('\n\n')
+
+    const naoElegiveisText = data.naoElegiveis.slice(0, 6).map((m) => {
+      return `### ${MODALITY_LABELS[m.modalidade] || m.modalidade} (${GENDER_LABEL[m.gender]})\n- RMI potencial: ${formatCurrency(m.rmi)}\n- Pendências:\n${m.pendencias.slice(0, 3).map((p) => `  • ${p}`).join('\n')}`
+    }).join('\n\n')
+
+    const result = `# Comparativo de Modalidades\n\n_Gerado por Previando — ${new Date().toLocaleDateString('pt-BR')}_\n\n---\n\n## Modalidades Elegíveis\n\n${elegiveisText || 'Nenhuma modalidade elegível encontrada.'}\n\n---\n\n## Modalidades com Pendências\n\n${naoElegiveisText || 'Nenhuma modalidade com pendências.'}`
+
+    downloadReactPdf(
+      { result, type: 'Comparativo de Modalidades', generatedAt: new Date().toLocaleDateString('pt-BR') },
+      `previando-comparativo-${id}.pdf`
+    ).then((ok) => {
+      setExportingPdf(false)
+      if (!ok) addToast({ type: 'error', title: 'Erro', message: 'Não foi possível gerar o PDF.' })
+    })
+  }
 
   useEffect(() => {
     api.get(`/cases/${id}/suggest-modalities`)
@@ -91,16 +108,15 @@ export default function ComparePage() {
           <p className="text-sm text-slate-500 mt-1">Análise de elegibilidade para todas as modalidades com base no CNIS atual</p>
         </div>
         {data && (
-          <ErrorBoundary fallback={null}>
-            <PDFDownloadLink
-              document={<ComparePDFDocument elegiveis={data.elegiveis} naoElegiveis={data.naoElegiveis} />}
-              fileName={`previando-comparativo-${id}.pdf`}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
-            >
-              <Download className="w-4 h-4" />
-              Exportar PDF
-            </PDFDownloadLink>
-          </ErrorBoundary>
+          <Button
+            variant="outline"
+            onClick={handleExportPdf}
+            loading={exportingPdf}
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
+          >
+            <Download className="w-4 h-4" />
+            Exportar PDF
+          </Button>
         )}
       </div>
 

@@ -13,17 +13,19 @@ const isDev = process.env.NODE_ENV === 'development'
 export function buildCSP(nonce: string): string {
   return [
     "default-src 'self'",
+    // 'wasm-unsafe-eval' é necessário mesmo em produção: @react-pdf/renderer usa
+    // yoga-layout (WASM) para o layout dos PDFs (BPC, casos, comparativos etc).
     isDev
       ? `script-src 'self' 'nonce-${nonce}' 'unsafe-eval'`
-      : `script-src 'self' 'nonce-${nonce}'`,
+      : `script-src 'self' 'nonce-${nonce}' 'wasm-unsafe-eval'`,
     // style-src mantém 'unsafe-inline': Tailwind/MUI geram estilos inline em runtime
     // e não há suporte prático a nonce para <style> nesses stacks sem reescrever o CSS-in-JS.
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: https://images.unsplash.com https://lh3.googleusercontent.com",
     "font-src 'self'",
     isDev
-      ? "connect-src 'self' ws: wss: https://*.r2.cloudflarestorage.com"
-      : "connect-src 'self' https://*.r2.cloudflarestorage.com",
+      ? "connect-src 'self' data: ws: wss: https://*.r2.cloudflarestorage.com"
+      : "connect-src 'self' data: https://*.r2.cloudflarestorage.com",
     "frame-src 'self' blob:",
     "frame-ancestors 'none'",
     "base-uri 'self'",

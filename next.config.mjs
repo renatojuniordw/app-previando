@@ -5,7 +5,8 @@
 const nextConfig = {
   transpilePackages: ['@react-pdf/renderer'],
   experimental: {
-    serverComponentsExternalPackages: ['@prisma/client', 'prisma', 'pdf-parse', 'tesseract.js', 'bullmq', 'ioredis', 'isomorphic-dompurify', 'jsdom'],
+    serverExternalPackages: ['pdfkit'],
+    serverComponentsExternalPackages: ['@prisma/client', 'prisma', 'pdf-parse', 'tesseract.js', 'bullmq', 'ioredis', 'isomorphic-dompurify', 'jsdom', 'pdfkit'],
   },
   images: {
     remotePatterns: [

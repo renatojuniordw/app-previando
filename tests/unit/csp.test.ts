@@ -47,11 +47,11 @@ describe('buildCSP', () => {
     expect(csp).toContain("form-action 'self'")
   })
 
-  it('não inclui unsafe-eval em production', () => {
+  it('não inclui unsafe-eval em production (wasm-unsafe-eval é permitido, é mais restrito)', () => {
     const originalEnv = process.env.NODE_ENV
     process.env.NODE_ENV = 'production'
     const csp = buildCSP('abc')
-    expect(csp).not.toContain('unsafe-eval')
+    expect(csp).not.toContain("'unsafe-eval'")
     process.env.NODE_ENV = originalEnv
   })
 
