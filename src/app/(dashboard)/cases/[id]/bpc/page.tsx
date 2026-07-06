@@ -31,7 +31,8 @@ import type { RelatoSocial } from '@/types/bpc-social'
 
 interface BpcAnalysis {
   id: string
-  patologia: string
+  tipoBpc: 'IDOSO' | 'DEFICIENCIA'
+  patologia: string | null
   cid: string | null
   idade: number
   faixaEtaria: string
@@ -101,7 +102,8 @@ export default function BpcPage() {
             checklist: saved.checklist ?? undefined,
           })
           // Abre na primeira tab que já tem resultado (social usa relatoSocial, não tabResults)
-          const first = TABS.find((t) => t.id !== 'social' && saved[t.field])
+          const tabsForTipo = saved.tipoBpc === 'IDOSO' ? TABS.filter((t) => t.id !== 'laudo' && t.id !== 'medical') : TABS
+          const first = tabsForTipo.find((t) => t.id !== 'social' && saved[t.field])
           if (first) setActiveTab(first.id)
           else if (saved.relatoSocial) setActiveTab('social')
         }
@@ -190,12 +192,23 @@ export default function BpcPage() {
     router.replace(`${pathname}?${next.toString()}`)
   }
 
+  // BPC-idoso não exige laudo médico nem perícia médica — apenas critério de idade e renda.
+  const visibleTabs = analysis?.tipoBpc === 'IDOSO'
+    ? TABS.filter((t) => t.id !== 'laudo' && t.id !== 'medical')
+    : TABS
+
   const activeResult = tabResults[activeTab] ?? null
   const activeTabConfig = TABS.find((t) => t.id === activeTab)!
 
-  const completedCount = TABS.filter((t) =>
+  const completedCount = visibleTabs.filter((t) =>
     t.id === 'social' ? !!analysis?.relatoSocial : !!tabResults[t.id]
   ).length
+
+  useEffect(() => {
+    if (analysis?.tipoBpc === 'IDOSO' && (activeTab === 'laudo' || activeTab === 'medical')) {
+      setActiveTab('preAnalise')
+    }
+  }, [analysis?.tipoBpc, activeTab])
 
   const handleCopy = () => { if (activeResult) navigator.clipboard.writeText(activeResult) }
 
@@ -230,7 +243,7 @@ export default function BpcPage() {
                 document={
                   <BpcConsolidatedPDFDocument
                     generatedAt={new Date().toLocaleDateString('pt-BR')}
-                    sections={TABS.flatMap((t) => {
+                    sections={visibleTabs.flatMap((t) => {
                       if (t.id === 'social') return []
                       const content = tabResults[t.id]
                       if (!content) return []
@@ -293,7 +306,7 @@ export default function BpcPage() {
                 {analysis && (
                   <div className="flex items-center gap-2">
                     <div className="flex gap-0.5">
-                      {TABS.map((t) => {
+                      {visibleTabs.map((t) => {
                         const done = t.id === 'social' ? !!analysis?.relatoSocial : !!tabResults[t.id]
                         return (
                           <div
@@ -304,7 +317,7 @@ export default function BpcPage() {
                       })}
                     </div>
                     <span className="text-[10px] font-mono text-slate-400">
-                      {completedCount}/{TABS.length}
+                      {completedCount}/{visibleTabs.length}
                     </span>
                   </div>
                 )}
@@ -322,7 +335,7 @@ export default function BpcPage() {
               {/* Tabs / Menu Esquerdo do Command Center */}
               <div className="w-full md:w-48 bg-slate-50/50 border-b md:border-b-0 md:border-r border-slate-100 p-3">
                 <div className="flex md:flex-col gap-1 overflow-x-auto no-scrollbar">
-                  {TABS.map((tab) => {
+                  {visibleTabs.map((tab) => {
                     const hasSaved = tab.id === 'social'
                       ? !!analysis?.relatoSocial
                       : !!tabResults[tab.id]

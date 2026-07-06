@@ -14,6 +14,7 @@ export interface RunCalculationInput {
   tempoEspecialAnos: number
   dependentesPensao: number
   disabilityDegree?: 'LEVE' | 'MODERADO' | 'GRAVE'
+  converterTempoComumPCD?: boolean
 }
 
 /**
@@ -26,7 +27,7 @@ export class CalculationOrchestrator {
    * e salva o resultado final no banco de dados.
    */
   static async run(input: RunCalculationInput) {
-    const { caseId, modalidade, dib, gender, tempoEspecialAnos, dependentesPensao, disabilityDegree } = input
+    const { caseId, modalidade, dib, gender, tempoEspecialAnos, dependentesPensao, disabilityDegree, converterTempoComumPCD } = input
 
     // 1. Busca e valida o documento CNIS (ou, para BPC/LOAS, a data de nascimento do cliente)
     const { extracted, birthDate } = await resolveBirthDateForCalculation(caseId, modalidade)
@@ -47,6 +48,7 @@ export class CalculationOrchestrator {
       tempoEspecialAnos,
       dependentesPensao,
       disabilityDegree,
+      converterTempoComumPCD,
       salarioMinimo: salarioParam.valor,
       tetoPrevidenciario: salarioParam.teto,
       regrasVigentes,
@@ -65,6 +67,7 @@ export class CalculationOrchestrator {
           tempoEspecialAnos,
           dependentesPensao,
           disabilityDegree: disabilityDegree ?? null,
+          converterTempoComumPCD: converterTempoComumPCD ?? null,
           clientName: extracted?.nome ?? 'Segurado',
         } satisfies Prisma.InputJsonValue,
         benefitSalary: result.salarioBeneficio,

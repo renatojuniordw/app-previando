@@ -8,7 +8,8 @@ import { CurrencyInput } from '@/components/ui/CurrencyInput'
 import api from '@/lib/api'
 
 interface BpcAnalysis {
-  patologia: string
+  tipoBpc: 'IDOSO' | 'DEFICIENCIA'
+  patologia: string | null
   cid: string | null
   idade: number
   faixaEtaria: string
@@ -20,7 +21,8 @@ interface BpcAnalysis {
 }
 
 export interface BpcSavePayload {
-  patologia: string
+  tipoBpc: 'IDOSO' | 'DEFICIENCIA'
+  patologia?: string
   cid?: string
   idade: number
   faixaEtaria: string
@@ -53,6 +55,7 @@ function calcularIdade(birthDate: string): number {
 export function BpcForm({ caseId, analysis, clientBirthDate, onSave, saving }: BpcFormProps) {
   const suggestedIdade = clientBirthDate && !analysis ? calcularIdade(clientBirthDate) : null
 
+  const [tipoBpc, setTipoBpc] = useState<'IDOSO' | 'DEFICIENCIA'>(analysis?.tipoBpc ?? 'DEFICIENCIA')
   const [patologia, setPatologia] = useState(analysis?.patologia ?? '')
   const [cid, setCid] = useState(analysis?.cid ?? '')
   const [idade, setIdade] = useState(analysis?.idade?.toString() ?? (suggestedIdade?.toString() ?? ''))
@@ -71,7 +74,8 @@ export function BpcForm({ caseId, analysis, clientBirthDate, onSave, saving }: B
 
   useEffect(() => {
     if (analysis) {
-      setPatologia(analysis.patologia)
+      setTipoBpc(analysis.tipoBpc)
+      setPatologia(analysis.patologia ?? '')
       setCid(analysis.cid ?? '')
       setIdade(String(analysis.idade))
       setRendaFamiliar(analysis.rendaFamiliar.toString())
@@ -102,21 +106,24 @@ export function BpcForm({ caseId, analysis, clientBirthDate, onSave, saving }: B
   }
 
   const handleSave = () => {
-    if (!patologia.trim() || idade === '' || rendaFamiliar === '' || membrosGrupo === '') return
+    if (tipoBpc === 'DEFICIENCIA' && !patologia.trim()) return
+    if (idade === '' || rendaFamiliar === '' || membrosGrupo === '') return
     onSave({
-      patologia,
-      cid: cid || undefined,
+      tipoBpc,
+      patologia: tipoBpc === 'DEFICIENCIA' ? patologia : undefined,
+      cid: tipoBpc === 'DEFICIENCIA' ? (cid || undefined) : undefined,
       idade: parseInt(idade),
       faixaEtaria,
       rendaFamiliar: parseFloat(rendaFamiliar),
       membrosGrupo: parseInt(membrosGrupo),
       rendaPerCapita,
       barreirasRelatadas: barreiras,
-      resumoLaudos: resumoLaudos || undefined,
+      resumoLaudos: tipoBpc === 'DEFICIENCIA' ? (resumoLaudos || undefined) : undefined,
     })
   }
 
-  const isFormValid = patologia.trim() !== '' && idade !== '' && rendaFamiliar !== '' && membrosGrupo !== ''
+  const isFormValid = (tipoBpc === 'IDOSO' || patologia.trim() !== '') && idade !== '' && rendaFamiliar !== '' && membrosGrupo !== ''
+  const idadeAbaixoDoMinimoIdoso = tipoBpc === 'IDOSO' && idade !== '' && parseInt(idade) < 65
 
   return (
     <Card variant="light" className="p-0 overflow-hidden">
@@ -129,27 +136,59 @@ export function BpcForm({ caseId, analysis, clientBirthDate, onSave, saving }: B
 
       <div className="p-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          <div>
-            <label className="neo-label">Patologia</label>
-            <input
-              type="text"
-              value={patologia}
-              onChange={(e) => setPatologia(e.target.value)}
-              className="w-full neo-input font-sans text-sm"
-              placeholder="Ex: Autismo, TDAH, Esquizofrenia..."
-            />
+          <div className="md:col-span-2">
+            <label className="neo-label">Tipo de BPC/LOAS</label>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setTipoBpc('DEFICIENCIA')}
+                className={`flex-1 px-4 py-2 rounded-md text-xs font-sans font-semibold border transition-colors ${
+                  tipoBpc === 'DEFICIENCIA'
+                    ? 'bg-amber-50 text-amber-700 border-amber-200'
+                    : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'
+                }`}
+              >
+                Deficiência
+              </button>
+              <button
+                type="button"
+                onClick={() => setTipoBpc('IDOSO')}
+                className={`flex-1 px-4 py-2 rounded-md text-xs font-sans font-semibold border transition-colors ${
+                  tipoBpc === 'IDOSO'
+                    ? 'bg-amber-50 text-amber-700 border-amber-200'
+                    : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'
+                }`}
+              >
+                Idoso (65+)
+              </button>
+            </div>
           </div>
 
-          <div>
-            <label className="neo-label">CID (opcional)</label>
-            <input
-              type="text"
-              value={cid}
-              onChange={(e) => setCid(e.target.value)}
-              className="w-full neo-input font-sans text-sm"
-              placeholder="Ex: F84.0"
-            />
-          </div>
+          {tipoBpc === 'DEFICIENCIA' && (
+            <div>
+              <label className="neo-label">Patologia</label>
+              <input
+                type="text"
+                value={patologia}
+                onChange={(e) => setPatologia(e.target.value)}
+                className="w-full neo-input font-sans text-sm"
+                placeholder="Ex: Autismo, TDAH, Esquizofrenia..."
+              />
+            </div>
+          )}
+
+          {tipoBpc === 'DEFICIENCIA' && (
+            <div>
+              <label className="neo-label">CID (opcional)</label>
+              <input
+                type="text"
+                value={cid}
+                onChange={(e) => setCid(e.target.value)}
+                className="w-full neo-input font-sans text-sm"
+                placeholder="Ex: F84.0"
+              />
+            </div>
+          )}
 
           <div>
             <label className="neo-label flex items-center gap-2">
@@ -171,6 +210,11 @@ export function BpcForm({ caseId, analysis, clientBirthDate, onSave, saving }: B
               <span className="font-sans text-xs text-slate-500 mt-1 block">
                 {faixaEtaria === 'MENOR_16' ? 'Menor de 16 anos' : 'Maior de 16 anos'}
               </span>
+            )}
+            {idadeAbaixoDoMinimoIdoso && (
+              <Badge variant="red" className="font-mono mt-1.5">
+                Idade abaixo de 65 anos — BPC-idoso exige 65 anos ou mais.
+              </Badge>
             )}
           </div>
 
@@ -217,7 +261,9 @@ export function BpcForm({ caseId, analysis, clientBirthDate, onSave, saving }: B
 
           <div className="md:col-span-2 mt-2">
             <div className="flex items-center justify-between mb-1.5">
-              <label className="neo-label mb-0">Barreiras Relatadas</label>
+              <label className="neo-label mb-0">
+                {tipoBpc === 'IDOSO' ? 'Composição Familiar e Outros Fatores' : 'Barreiras Relatadas'}
+              </label>
               <button
                 type="button"
                 onClick={handleImportarProntuario}
@@ -231,19 +277,25 @@ export function BpcForm({ caseId, analysis, clientBirthDate, onSave, saving }: B
               value={barreiras}
               onChange={(e) => setBarreiras(e.target.value)}
               className="w-full neo-input min-h-[100px] resize-none font-sans text-sm"
-              placeholder="Descreva as barreiras enfrentadas: mobilidade, comunicação, acesso a serviços, preconceito..."
+              placeholder={
+                tipoBpc === 'IDOSO'
+                  ? 'Descreva a composição do grupo familiar, outras fontes de renda ou benefícios, dependência de terceiros...'
+                  : 'Descreva as barreiras enfrentadas: mobilidade, comunicação, acesso a serviços, preconceito...'
+              }
             />
           </div>
 
-          <div className="md:col-span-2">
-            <label className="neo-label mb-1.5">Resumo dos Laudos (opcional)</label>
-            <textarea
-              value={resumoLaudos}
-              onChange={(e) => setResumoLaudos(e.target.value)}
-              className="w-full neo-input min-h-[100px] resize-none font-sans text-sm"
-              placeholder="Resumo dos laudos médicos disponíveis, limitações e diagnósticos secundários..."
-            />
-          </div>
+          {tipoBpc === 'DEFICIENCIA' && (
+            <div className="md:col-span-2">
+              <label className="neo-label mb-1.5">Resumo dos Laudos (opcional)</label>
+              <textarea
+                value={resumoLaudos}
+                onChange={(e) => setResumoLaudos(e.target.value)}
+                className="w-full neo-input min-h-[100px] resize-none font-sans text-sm"
+                placeholder="Resumo dos laudos médicos disponíveis, limitações e diagnósticos secundários..."
+              />
+            </div>
+          )}
         </div>
       </div>
 

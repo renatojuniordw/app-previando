@@ -12,4 +12,5 @@ export const runCalculationSchema = z.object({
   tempoEspecialAnos: z.number().nonnegative().default(0),
   dependentesPensao: z.number().int().positive().default(1),
   disabilityDegree: z.enum(['LEVE', 'MODERADO', 'GRAVE']).optional(),
+  converterTempoComumPCD: z.boolean().optional(),
 }).strict() // Garante rejeição total se tentarem enviar propriedades extras como RMI

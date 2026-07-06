@@ -45,7 +45,8 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     if (!analysis) return NextResponse.json({ error: 'Dados do formulário BPC não encontrados.' }, { status: 400 })
 
     const paramsData = {
-      patologia: analysis.patologia,
+      tipoBpc: analysis.tipoBpc,
+      patologia: analysis.patologia ?? undefined,
       cid: analysis.cid ?? undefined,
       idade: analysis.idade,
       faixaEtaria: analysis.faixaEtaria as 'MENOR_16' | 'MAIOR_16',

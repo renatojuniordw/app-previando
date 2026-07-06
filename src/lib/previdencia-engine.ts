@@ -40,6 +40,7 @@ export interface CalculationInput {
   tempoEspecialAnos?: number
   dependentesPensao?: number
   disabilityDegree?: 'LEVE' | 'MODERADO' | 'GRAVE'
+  converterTempoComumPCD?: boolean
   // Valores vigentes na DIB (buscados do banco pelo chamador)
   salarioMinimo?: number
   tetoPrevidenciario?: number
@@ -73,6 +74,10 @@ export interface CalculationResult {
     tetoPrevidenciario: number
     detalhamentoMedia: Array<{ competencia: string; valorOriginal: number; valorAjustado: number }>
     detalhamentoMediaTotalCount: number
+    viaElegibilidade?: 'IDADE' | 'TEMPO_CONTRIBUICAO' | 'AMBAS' | null
+    converterTempoComumPCD?: boolean
+    tempoContribuicaoRawAnos?: number
+    tempoContribuicaoConvertidoAnos?: number
   }
   periodosSalarios: {
     totalContribuicoes: number
@@ -204,7 +209,7 @@ function calcularSalarioBeneficio(
  * Agora delega a lógica específica de cada modalidade para as estratégias registradas.
  */
 export function calculatePrevidenciario(input: CalculationInput): CalculationResult {
-  const { birthDate, gender, dib, modalidade, extractedData, tempoEspecialAnos = 0, dependentesPensao = 1, disabilityDegree, regrasVigentes } = input
+  const { birthDate, gender, dib, modalidade, extractedData, tempoEspecialAnos = 0, dependentesPensao = 1, disabilityDegree, converterTempoComumPCD, regrasVigentes } = input
 
   function regra(mod: string) {
     return regrasVigentes?.[`${mod}_${gender}`] ?? regrasVigentes?.[`${mod}_AMBOS`]
@@ -244,11 +249,12 @@ export function calculatePrevidenciario(input: CalculationInput): CalculationRes
     dependentesPensao,
     tempoEspecialAnos,
     disabilityDegree,
+    converterTempoComumPCD,
     regra: regra(modalidade),
   }
 
   const strategyResult = strategy.evaluate(strategyInput)
-  const { elegivel, coeficiente, fatorPrevidenciario, pendencias } = strategyResult
+  const { elegivel, coeficiente, fatorPrevidenciario, pendencias, viaElegibilidade, tempoContribuicaoRawAnos, tempoContribuicaoConvertidoAnos } = strategyResult
 
   // 5. Cálculo Final da RMI e RMA
   let rmi = Number((salarioBeneficio * coeficiente).toFixed(2))
@@ -300,7 +306,11 @@ export function calculatePrevidenciario(input: CalculationInput): CalculationRes
       pisoNacional: SALARIO_MINIMO,
       tetoPrevidenciario: TETO_PREVIDENCIARIO,
       detalhamentoMedia: baseCalculo.slice(0, 15),
-      detalhamentoMediaTotalCount: baseCalculo.length
+      detalhamentoMediaTotalCount: baseCalculo.length,
+      viaElegibilidade: modalidade === 'APOSENTADORIA_PCD' ? viaElegibilidade : undefined,
+      converterTempoComumPCD: modalidade === 'APOSENTADORIA_PCD' ? converterTempoComumPCD : undefined,
+      tempoContribuicaoRawAnos: modalidade === 'APOSENTADORIA_PCD' ? tempoContribuicaoRawAnos : undefined,
+      tempoContribuicaoConvertidoAnos: modalidade === 'APOSENTADORIA_PCD' ? tempoContribuicaoConvertidoAnos : undefined,
     },
     periodosSalarios: {
       totalContribuicoes: totalContribuicoesCount,

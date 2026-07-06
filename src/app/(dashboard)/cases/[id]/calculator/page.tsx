@@ -57,6 +57,8 @@ export default function CalculatorPage() {
     setDependentesPensao,
     disabilityDegree,
     setDisabilityDegree,
+    converterTempoComumPCD,
+    setConverterTempoComumPCD,
     caseBenefitType,
     handleCreate,
     handleSelect,
@@ -335,6 +337,33 @@ export default function CalculatorPage() {
                             ))}
                           </div>
 
+                          {/* PCD — via de elegibilidade e conversão de tempo comum */}
+                          {calc.calculationMemory.viaElegibilidade && (
+                            <div className="grid grid-cols-2 gap-px border-b border-slate-100 bg-slate-50 sm:grid-cols-3">
+                              {[
+                                {
+                                  label: 'Via de Elegibilidade',
+                                  value: calc.calculationMemory.viaElegibilidade === 'AMBAS'
+                                    ? 'Idade e Tempo de Contribuição'
+                                    : calc.calculationMemory.viaElegibilidade === 'IDADE'
+                                      ? 'Idade (60H / 55M + 15 anos)'
+                                      : 'Tempo de Contribuição (por grau)',
+                                },
+                                ...(calc.calculationMemory.converterTempoComumPCD
+                                  ? [
+                                      { label: 'Tempo Comum Apurado', value: `${calc.calculationMemory.tempoContribuicaoRawAnos ?? '—'} anos` },
+                                      { label: 'Tempo Convertido (PCD)', value: `${calc.calculationMemory.tempoContribuicaoConvertidoAnos ?? '—'} anos` },
+                                    ]
+                                  : []),
+                              ].map(({ label, value }) => (
+                                <div key={label} className="flex flex-col gap-0.5 px-4 py-3">
+                                  <span className="font-sans text-[10px] font-extrabold uppercase tracking-wider text-slate-400">{label}</span>
+                                  <span className="font-mono text-sm font-bold text-slate-800">{value}</span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+
                           {/* Salary Table */}
                           {calc.calculationMemory.detalhamentoMedia && calc.calculationMemory.detalhamentoMedia.length > 0 && (
                             <div className="p-4 space-y-2">
@@ -470,6 +499,20 @@ export default function CalculatorPage() {
                 <p id="grau-deficiencia-hint" className="mt-1 font-sans text-[10px] text-slate-400">
                   Também é elegível quem atingir 60 anos (H) / 55 anos (M) com 15 anos de contribuição, independente do grau.
                 </p>
+
+                {disabilityDegree && (
+                  <label className="mt-3 flex items-start gap-2 font-sans text-xs text-slate-600">
+                    <input
+                      type="checkbox"
+                      checked={converterTempoComumPCD}
+                      onChange={(e) => setConverterTempoComumPCD(e.target.checked)}
+                      className="mt-0.5"
+                    />
+                    <span>
+                      Converter todo o tempo de contribuição comum em tempo equivalente PCD (proporcional ao grau, LC 142/2013), mesmo que a deficiência tenha surgido após o início da atividade.
+                    </span>
+                  </label>
+                )}
               </div>
             )}
 

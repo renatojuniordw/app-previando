@@ -4,7 +4,8 @@ Quando houver contexto de análises anteriores, use-o para personalizar
 os documentos listados — priorize lacunas e pontos críticos já identificados.`
 
 export function buildChecklistUserPrompt(params: {
-  patologia: string
+  tipoBpc?: 'IDOSO' | 'DEFICIENCIA'
+  patologia?: string
   cid?: string
   faixaEtaria: string
   relatoSocial?: string
@@ -12,6 +13,7 @@ export function buildChecklistUserPrompt(params: {
   analiseLaudo?: string
   perguntasMedicas?: string
 }): string {
+  const tipoBpc = params.tipoBpc ?? 'DEFICIENCIA'
   const faixaLabel = params.faixaEtaria === 'MENOR_16'
     ? 'Menor de 16 anos — foco em casa, escola, apoio familiar, desenvolvimento'
     : 'Maior de 16 anos — foco em trabalho, autonomia, vida comunitária, atividades diárias'
@@ -32,9 +34,24 @@ export function buildChecklistUserPrompt(params: {
     ? `\nORIENTAÇÕES DA PERÍCIA MÉDICA (inclua documentos que fortaleçam os aspectos que o perito vai avaliar):\n${params.perguntasMedicas}\n`
     : ''
 
+  if (tipoBpc === 'IDOSO') {
+    return `Gere checklist de documentação para BPC/LOAS-idoso (sem exigência de laudo médico):
+
+Faixa: ${faixaLabel}
+${preAnaliseSection}${relatoSection}
+Liste:
+1. Documentos obrigatórios (comprovação de idade, renda e composição do grupo familiar)
+2. Documentos recomendados (fortalecem a prova de miserabilidade)
+3. Documentos opcionais (podem ajudar em casos específicos)
+4. Documentos que frequentemente estão incompletos neste tipo de pedido
+5. O que verificar em cada documento antes de juntar ao processo
+
+Formato: lista objetiva, sem enrolação. Não inclua documentos médicos/laudos — esta modalidade não exige comprovação de deficiência.`
+  }
+
   return `Gere checklist de documentação para BPC/LOAS:
 
-Patologia: ${params.patologia} | CID: ${params.cid || 'N/A'} | Faixa: ${faixaLabel}
+Patologia: ${params.patologia ?? 'Não informado'} | CID: ${params.cid || 'N/A'} | Faixa: ${faixaLabel}
 ${preAnaliseSection}${laudoSection}${relatoSection}${medicoSection}
 Liste:
 1. Documentos obrigatórios (sem eles o pedido não prospera)

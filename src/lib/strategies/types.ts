@@ -14,6 +14,7 @@ export interface ModalidadeEvaluationInput {
   dependentesPensao: number
   tempoEspecialAnos: number
   disabilityDegree?: 'LEVE' | 'MODERADO' | 'GRAVE'
+  converterTempoComumPCD?: boolean
   regra?: {
     idadeMinima?: number
     tempoContribuicaoAnos?: number
@@ -27,6 +28,9 @@ export interface ModalidadeEvaluationResult {
   coeficiente: number
   fatorPrevidenciario?: number
   pendencias: string[]
+  viaElegibilidade?: 'IDADE' | 'TEMPO_CONTRIBUICAO' | 'AMBAS' | null
+  tempoContribuicaoRawAnos?: number
+  tempoContribuicaoConvertidoAnos?: number
 }
 
 export interface ModalidadeStrategy {

@@ -1,6 +1,6 @@
 import { getOpenAI } from '@/lib/openai'
 import { sanitizeForAI } from '@/lib/sanitize'
-import { BPC_PRE_ANALYSIS_SYSTEM_PROMPT, buildPreAnalysisUserPrompt } from '@/lib/prompts/bpc/pre-analysis'
+import { BPC_PRE_ANALYSIS_SYSTEM_PROMPT, BPC_PRE_ANALYSIS_SYSTEM_PROMPT_IDOSO, buildPreAnalysisUserPrompt } from '@/lib/prompts/bpc/pre-analysis'
 import { BPC_LAUDO_SYSTEM_PROMPT, buildLaudoAnalysisUserPrompt } from '@/lib/prompts/bpc/laudo-analysis'
 import { BPC_SOCIAL_QUESTIONS_SYSTEM_PROMPT, BPC_MEDICAL_QUESTIONS_SYSTEM_PROMPT, buildSocialQuestionsUserPrompt, buildMedicalQuestionsUserPrompt } from '@/lib/prompts/bpc/questions'
 import { BPC_CHECKLIST_SYSTEM_PROMPT, buildChecklistUserPrompt } from '@/lib/prompts/bpc/checklist'
@@ -14,7 +14,8 @@ function s(input: string | undefined, maxLen: number = 3000): string {
 }
 
 export interface BpcAnalysisParams {
-  patologia: string
+  tipoBpc?: 'IDOSO' | 'DEFICIENCIA'
+  patologia?: string
   cid?: string
   idade: number
   faixaEtaria: 'MENOR_16' | 'MAIOR_16'
@@ -31,7 +32,7 @@ export interface BpcAnalysisParams {
 }
 
 export async function gerarPreAnalise(params: BpcAnalysisParams): Promise<string> {
-  const { patologia, cid, idade, faixaEtaria, rendaFamiliar, membrosGrupo, rendaPerCapita, barreirasRelatadas, resumoLaudos, relatoSocial, analiseLaudo } = params
+  const { tipoBpc = 'DEFICIENCIA', patologia, cid, idade, faixaEtaria, rendaFamiliar, membrosGrupo, rendaPerCapita, barreirasRelatadas, resumoLaudos, relatoSocial, analiseLaudo } = params
   const p = s(patologia, 500)
   const c = s(cid, 50)
   const b = s(barreirasRelatadas, 3000)
@@ -40,7 +41,8 @@ export async function gerarPreAnalise(params: BpcAnalysisParams): Promise<string
   const al = s(analiseLaudo, 2000)
 
   const userPrompt = buildPreAnalysisUserPrompt({
-    patologia: p,
+    tipoBpc,
+    patologia: p || undefined,
     cid: c,
     idade,
     faixaEtaria,
@@ -59,7 +61,7 @@ export async function gerarPreAnalise(params: BpcAnalysisParams): Promise<string
     temperature: 0.3,
     max_tokens: 3000,
     messages: [
-      { role: 'system', content: BPC_PRE_ANALYSIS_SYSTEM_PROMPT },
+      { role: 'system', content: tipoBpc === 'IDOSO' ? BPC_PRE_ANALYSIS_SYSTEM_PROMPT_IDOSO : BPC_PRE_ANALYSIS_SYSTEM_PROMPT },
       { role: 'user', content: userPrompt },
     ],
   })
@@ -94,7 +96,7 @@ export async function analisarLaudo(laudo: string, params: BpcAnalysisParams): P
 }
 
 export async function gerarPerguntasSocial(params: BpcAnalysisParams): Promise<RelatoSocialFromAI> {
-  const { patologia, cid, idade, faixaEtaria, barreirasRelatadas, preAnalise, analiseLaudo } = params
+  const { tipoBpc = 'DEFICIENCIA', patologia, cid, idade, faixaEtaria, barreirasRelatadas, preAnalise, analiseLaudo } = params
   const p = s(patologia, 500)
   const c = s(cid, 50)
   const b = s(barreirasRelatadas, 3000)
@@ -102,7 +104,8 @@ export async function gerarPerguntasSocial(params: BpcAnalysisParams): Promise<R
   const al = s(analiseLaudo, 2000)
 
   const userPrompt = buildSocialQuestionsUserPrompt({
-    patologia: p,
+    tipoBpc,
+    patologia: p || undefined,
     cid: c,
     idade,
     faixaEtaria,
@@ -162,7 +165,7 @@ export async function gerarPerguntasMedicas(params: BpcAnalysisParams): Promise<
 }
 
 export async function gerarChecklist(params: BpcAnalysisParams): Promise<string> {
-  const { patologia, cid, faixaEtaria, relatoSocial, preAnalise, analiseLaudo, perguntasMedicas } = params
+  const { tipoBpc = 'DEFICIENCIA', patologia, cid, faixaEtaria, relatoSocial, preAnalise, analiseLaudo, perguntasMedicas } = params
   const p = s(patologia, 500)
   const c = s(cid, 50)
   const rs = s(relatoSocial, 5000)
@@ -171,7 +174,8 @@ export async function gerarChecklist(params: BpcAnalysisParams): Promise<string>
   const pm = s(perguntasMedicas, 2000)
 
   const userPrompt = buildChecklistUserPrompt({
-    patologia: p,
+    tipoBpc,
+    patologia: p || undefined,
     cid: c,
     faixaEtaria,
     relatoSocial: rs || undefined,

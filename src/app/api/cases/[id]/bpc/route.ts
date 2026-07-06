@@ -8,7 +8,8 @@ import { NoteType } from '@prisma/client'
 import { z } from 'zod'
 
 const BpcSchema = z.object({
-  patologia: z.string().min(1).max(500),
+  tipoBpc: z.enum(['IDOSO', 'DEFICIENCIA']).default('DEFICIENCIA'),
+  patologia: z.string().min(1).max(500).optional(),
   cid: z.string().max(50).optional(),
   idade: z.number().int().positive(),
   faixaEtaria: z.enum(['MENOR_16', 'MAIOR_16']),
@@ -17,6 +18,9 @@ const BpcSchema = z.object({
   rendaPerCapita: z.number().positive(),
   barreirasRelatadas: z.string().max(5000),
   resumoLaudos: z.string().max(10000).optional(),
+}).refine((data) => data.tipoBpc !== 'DEFICIENCIA' || !!data.patologia?.trim(), {
+  message: 'Patologia é obrigatória para BPC por deficiência.',
+  path: ['patologia'],
 })
 
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {

@@ -674,6 +674,11 @@ enum BpcFaixaEtaria {
   MAIOR_16
 }
 
+enum BpcTipo {
+  IDOSO
+  DEFICIENCIA
+}
+
 // ─────────────────────────────────────────
 // ANÁLISE BPC/LOAS
 // ─────────────────────────────────────────
@@ -683,7 +688,8 @@ model BpcAnalysis {
   caseId String @unique
   case   Case   @relation(fields: [caseId], references: [id], onDelete: Cascade)
 
-  patologia      String
+  tipoBpc        BpcTipo        @default(DEFICIENCIA)
+  patologia      String?
   cid            String?
   idade          Int
   faixaEtaria    BpcFaixaEtaria

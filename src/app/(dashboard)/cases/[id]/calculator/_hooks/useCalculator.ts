@@ -25,6 +25,10 @@ interface MemoriaCalculo {
     valorAjustado: number
     valorOriginal: number
   }>
+  viaElegibilidade?: 'IDADE' | 'TEMPO_CONTRIBUICAO' | 'AMBAS' | null
+  converterTempoComumPCD?: boolean
+  tempoContribuicaoRawAnos?: number
+  tempoContribuicaoConvertidoAnos?: number
 }
 
 interface PeriodosSalarios {
@@ -86,6 +90,7 @@ export function useCalculator() {
   const [tempoEspecialAnos, setTempoEspecialAnos] = useState(0)
   const [dependentesPensao, setDependentesPensao] = useState(1)
   const [disabilityDegree, setDisabilityDegree] = useState<'LEVE' | 'MODERADO' | 'GRAVE' | ''>('')
+  const [converterTempoComumPCD, setConverterTempoComumPCD] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null)
 
@@ -154,12 +159,14 @@ export function useCalculator() {
         tempoEspecialAnos: Number(tempoEspecialAnos),
         dependentesPensao: Number(dependentesPensao),
         disabilityDegree: disabilityDegree || undefined,
+        converterTempoComumPCD: disabilityDegree ? converterTempoComumPCD : undefined,
       })
 
       setShowModal(false)
       setTempoEspecialAnos(0)
       setDependentesPensao(1)
       setDisabilityDegree('')
+      setConverterTempoComumPCD(false)
       addToast({
         type: 'success',
         title: 'Cálculo criado',
@@ -231,6 +238,8 @@ export function useCalculator() {
     setDependentesPensao,
     disabilityDegree,
     setDisabilityDegree,
+    converterTempoComumPCD,
+    setConverterTempoComumPCD,
     caseBenefitType,
     handleCreate,
     handleSelect,

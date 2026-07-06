@@ -6,7 +6,8 @@ perícia médica. As perguntas são para o ADVOGADO entender o que o perito
 vai avaliar — não são scripts para o cliente.`
 
 export function buildSocialQuestionsUserPrompt(params: {
-  patologia: string
+  tipoBpc?: 'IDOSO' | 'DEFICIENCIA'
+  patologia?: string
   cid?: string
   idade: number
   faixaEtaria: string
@@ -14,13 +15,48 @@ export function buildSocialQuestionsUserPrompt(params: {
   preAnalise?: string
   analiseLaudo?: string
 }): string {
-  const faixaLabel = params.faixaEtaria === 'MENOR_16'
-    ? 'Menor de 16 anos — foco em casa, escola, apoio familiar, desenvolvimento'
-    : 'Maior de 16 anos — foco em trabalho, autonomia, vida comunitária, atividades diárias'
+  const tipoBpc = params.tipoBpc ?? 'DEFICIENCIA'
 
   const preAnaliseSection = params.preAnalise?.trim()
     ? `\nPRÉ-ANÁLISE DO CASO (use as lacunas e pontos críticos para direcionar perguntas específicas):\n${params.preAnalise}\n`
     : ''
+
+  if (tipoBpc === 'IDOSO') {
+    return `Gere perguntas para roteiro de entrevista social (BPC/LOAS-idoso) para este caso:
+
+Idade: ${params.idade}
+Composição familiar / fatores relatados: ${params.barreiras}
+${preAnaliseSection}
+Retorne JSON com exatamente este schema:
+{
+  "dominios": [
+    {
+      "id": "string único snake_case",
+      "categoria": "I. RENDA E COMPOSIÇÃO FAMILIAR" ou "II. CONDIÇÕES DE VIDA",
+      "titulo": "a) Nome do Domínio",
+      "aspectosRelevantes": "O que tende a ser mais crítico neste domínio para o critério de miserabilidade",
+      "lacunas": "O que o advogado deve investigar com atenção",
+      "perguntas": ["pergunta 1", "pergunta 2", ...]
+    }
+  ]
+}
+
+Crie exatamente 5 domínios, nesta ordem, focados em renda e composição do grupo familiar (não em deficiência/CIF):
+1. id: "renda_familiar" | categoria: "I. RENDA E COMPOSIÇÃO FAMILIAR" | titulo: "a) Renda Familiar e Fontes de Sustento"
+2. id: "composicao_grupo" | categoria: "I. RENDA E COMPOSIÇÃO FAMILIAR" | titulo: "b) Composição do Grupo Familiar"
+3. id: "outras_fontes" | categoria: "I. RENDA E COMPOSIÇÃO FAMILIAR" | titulo: "c) Outras Fontes de Sustento ou Benefícios"
+4. id: "condicoes_moradia" | categoria: "II. CONDIÇÕES DE VIDA" | titulo: "a) Condições de Moradia"
+5. id: "rede_apoio" | categoria: "II. CONDIÇÕES DE VIDA" | titulo: "b) Rede de Apoio e Dependência de Terceiros"
+
+Regras:
+- Mínimo 6 perguntas por domínio, máximo 10
+- Perguntas abertas focadas em renda, miserabilidade e composição do grupo familiar
+- aspectosRelevantes e lacunas devem ser concisos (1-2 frases)`
+  }
+
+  const faixaLabel = params.faixaEtaria === 'MENOR_16'
+    ? 'Menor de 16 anos — foco em casa, escola, apoio familiar, desenvolvimento'
+    : 'Maior de 16 anos — foco em trabalho, autonomia, vida comunitária, atividades diárias'
 
   const laudoSection = params.analiseLaudo?.trim()
     ? `\nANÁLISE DO LAUDO MÉDICO (use para aprofundar perguntas sobre aspectos funcionais identificados):\n${params.analiseLaudo}\n`
@@ -28,7 +64,7 @@ export function buildSocialQuestionsUserPrompt(params: {
 
   return `Gere perguntas para roteiro de entrevista social (BPC/LOAS) para este caso:
 
-Patologia: ${params.patologia} | CID: ${params.cid || 'N/A'} | Idade: ${params.idade} | Faixa: ${faixaLabel}
+Patologia: ${params.patologia ?? 'Não informado'} | CID: ${params.cid || 'N/A'} | Idade: ${params.idade} | Faixa: ${faixaLabel}
 Barreiras relatadas: ${params.barreiras}
 ${preAnaliseSection}${laudoSection}
 Retorne JSON com exatamente este schema:
@@ -58,13 +94,13 @@ Crie exatamente 9 domínios, nesta ordem:
 
 Regras:
 - Mínimo 6 perguntas por domínio, máximo 10
-- Perguntas abertas e específicas para a patologia "${params.patologia}"
+- Perguntas abertas e específicas para a patologia "${params.patologia ?? 'não informada'}"
 - Adapte para faixa etária: ${faixaLabel}
 - aspectosRelevantes e lacunas devem ser concisos (1-2 frases)`
 }
 
 export function buildMedicalQuestionsUserPrompt(params: {
-  patologia: string
+  patologia?: string
   cid?: string
   idade: number
   faixaEtaria: string

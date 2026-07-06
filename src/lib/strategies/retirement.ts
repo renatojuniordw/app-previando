@@ -201,6 +201,13 @@ export class AposentadoriaEspecialStrategy implements ModalidadeStrategy {
 // e sem o coeficiente progressivo 86/96). Duas vias de elegibilidade:
 // (a) por idade — 60 anos (H) / 55 anos (M) + 15 anos de contribuição, qualquer grau; ou
 // (b) por tempo de contribuição segundo o grau de deficiência.
+//
+// Conversão de tempo comum em tempo PCD: quando `converterTempoComumPCD` está
+// ativo, todo o tempo de contribuição (comum ou não, ainda que anterior ao
+// surgimento da deficiência) é convertido proporcionalmente ao tempo exigido
+// pelo grau informado, usando como base o tempo comum de aposentadoria por
+// tempo de contribuição (35 anos H / 30 anos M) já adotado nas demais
+// modalidades deste arquivo — fatorConversao = tempoExigidoPorGrau / base.
 
 const TEMPO_CONTRIBUICAO_PCD_POR_GRAU: Record<'GRAVE' | 'MODERADO' | 'LEVE', Record<'M' | 'F', number>> = {
   GRAVE: { M: 25, F: 20 },
@@ -212,7 +219,7 @@ export class AposentadoriaPCDStrategy implements ModalidadeStrategy {
   readonly modalidade = 'APOSENTADORIA_PCD'
 
   evaluate(input: ModalidadeEvaluationInput): ModalidadeEvaluationResult {
-    const { idadeNaApuracao, tempoContribuicaoAnos, carenciaMeses, gender, disabilityDegree, regra } = input
+    const { idadeNaApuracao, tempoContribuicaoAnos, carenciaMeses, gender, disabilityDegree, converterTempoComumPCD, regra } = input
     const carenciaExigida = regra?.carenciaMeses ?? 180
     const pendencias: string[] = []
 
@@ -223,10 +230,25 @@ export class AposentadoriaPCDStrategy implements ModalidadeStrategy {
     const elegivelPorIdade = idadeNaApuracao >= idadeMinimaPorIdade && tempoContribuicaoAnos >= 15
 
     const tempoExigidoPorGrau = disabilityDegree ? TEMPO_CONTRIBUICAO_PCD_POR_GRAU[disabilityDegree][gender] : null
-    const elegivelPorTempo = tempoExigidoPorGrau !== null && tempoContribuicaoAnos >= tempoExigidoPorGrau
+
+    const tempoComumBase = gender === 'M' ? 35 : 30
+    const tempoConvertidoAnos = tempoExigidoPorGrau !== null
+      ? Number((tempoContribuicaoAnos * (tempoExigidoPorGrau / tempoComumBase)).toFixed(1))
+      : undefined
+    const tempoParaComparacao = converterTempoComumPCD && tempoConvertidoAnos !== undefined
+      ? tempoConvertidoAnos
+      : tempoContribuicaoAnos
+
+    const elegivelPorTempo = tempoExigidoPorGrau !== null && tempoParaComparacao >= tempoExigidoPorGrau
 
     const carenciaOk = carenciaMeses >= carenciaExigida
     const elegivel = (elegivelPorIdade || elegivelPorTempo) && carenciaOk
+
+    const viaElegibilidade: ModalidadeEvaluationResult['viaElegibilidade'] =
+      elegivelPorIdade && elegivelPorTempo ? 'AMBAS'
+        : elegivelPorIdade ? 'IDADE'
+        : elegivelPorTempo ? 'TEMPO_CONTRIBUICAO'
+        : null
 
     if (!elegivel) {
       if (!disabilityDegree) {
@@ -236,14 +258,22 @@ export class AposentadoriaPCDStrategy implements ModalidadeStrategy {
         pendencias.push(
           `Não atingiu a idade mínima de ${idadeMinimaPorIdade} anos (com 15 anos de contribuição) ` +
           (disabilityDegree
-            ? `nem o tempo de contribuição de ${tempoExigidoPorGrau} anos exigido para o grau ${disabilityDegree.toLowerCase()}.`
+            ? `nem o tempo de contribuição de ${tempoExigidoPorGrau} anos exigido para o grau ${disabilityDegree.toLowerCase()}` +
+              (converterTempoComumPCD ? ` (considerando a conversão de tempo comum: ${tempoConvertidoAnos} anos equivalentes).` : '.')
             : 'nem foi possível avaliar o tempo de contribuição por grau (grau não informado).')
         )
       }
       if (!carenciaOk) pendencias.push(`Carência de ${carenciaExigida} contribuições mensais não cumprida (carência apurada: ${carenciaMeses}).`)
     }
 
-    return { elegivel, coeficiente, pendencias }
+    return {
+      elegivel,
+      coeficiente,
+      pendencias,
+      viaElegibilidade,
+      tempoContribuicaoRawAnos: tempoContribuicaoAnos,
+      tempoContribuicaoConvertidoAnos: tempoConvertidoAnos,
+    }
   }
 }
 

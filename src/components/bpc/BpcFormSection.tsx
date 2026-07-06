@@ -10,7 +10,8 @@ interface BpcFormSectionProps {
   clientBirthDate?: string | null
   analysis: {
     id: string
-    patologia: string
+    tipoBpc: 'IDOSO' | 'DEFICIENCIA'
+    patologia: string | null
     cid: string | null
     idade: number
     faixaEtaria: string

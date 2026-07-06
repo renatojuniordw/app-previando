@@ -32,9 +32,13 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
     const analysis = await prisma.bpcAnalysis.findUnique({ where: { caseId: params.id } })
     if (!analysis) return NextResponse.json({ error: 'Dados do formulário BPC não encontrados.' }, { status: 400 })
+    if (analysis.tipoBpc === 'IDOSO') {
+      return NextResponse.json({ error: 'Análise de laudo médico não se aplica a BPC-idoso.' }, { status: 400 })
+    }
 
     const paramsData = {
-      patologia: analysis.patologia,
+      tipoBpc: analysis.tipoBpc,
+      patologia: analysis.patologia ?? undefined,
       cid: analysis.cid ?? undefined,
       idade: analysis.idade,
       faixaEtaria: analysis.faixaEtaria as 'MENOR_16' | 'MAIOR_16',
