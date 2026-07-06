@@ -37,8 +37,8 @@ export function ClientCasesListCard({ cases, onNewCase }: Props) {
   return (
     <Card variant="light" className="p-6 border-slate-200/80 space-y-4">
       <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-        <h2 className="font-serif font-bold text-lg text-slate-900">
-          Processos Vinculados ({cases.length})
+        <h2 className="font-serif font-bold text-lg text-slate-900 lowercase">
+          processos vinculados ({cases.length})
         </h2>
         <Button size="sm" onClick={onNewCase} className="bg-slate-900 hover:bg-slate-800 text-white border-slate-900 h-9 font-sans font-bold text-xs shadow-sm">
           + Adicionar Processo
@@ -55,39 +55,43 @@ export function ClientCasesListCard({ cases, onNewCase }: Props) {
         </div>
       ) : (
         <div className="space-y-3">
-          {cases.map((caso) => (
-            <Link key={caso.id} href={`/cases/${caso.id}`} className="block">
-              <div className="border border-slate-200 bg-white rounded-xl p-4.5 hover:border-slate-300 hover:shadow-md transition-all duration-300 flex items-center justify-between group shadow-sm">
-                <div className="space-y-1">
-                  <p className="font-serif font-bold text-sm text-slate-800 group-hover:text-amber-700 transition-colors">
-                    {BENEFIT_DB_LABELS[caso.benefitType] ?? BENEFIT_SHORT_LABELS[caso.benefitType] ?? caso.benefitType}
-                  </p>
-                  <p className="font-mono text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-                    Criado em: {formatDate(caso.createdAt)}
-                  </p>
+          {cases.map((caso) => {
+            const isCnisLido = caso.cnisDocument && ['PROCESSED', 'PROCESSADO'].includes(caso.cnisDocument.processingStatus.toUpperCase());
+            return (
+              <Link key={caso.id} href={`/cases/${caso.id}`} className="block">
+                <div className="border border-slate-200/80 bg-white rounded-xl p-5 md:p-6 hover:border-slate-300 hover:shadow-elevation-md transition-all duration-300 hover:-translate-y-0.5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 group shadow-elevation-sm">
+                  <div className="space-y-1.5">
+                    <p className="font-serif font-bold text-base text-slate-900 group-hover:text-amber-700 transition-colors tracking-tight">
+                      {BENEFIT_DB_LABELS[caso.benefitType] ?? BENEFIT_SHORT_LABELS[caso.benefitType] ?? caso.benefitType}
+                    </p>
+                    <p className="font-mono text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                      Criado em: {formatDate(caso.createdAt)}
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2.5 sm:gap-3">
+                    {caso.cnisDocument && (
+                      <span className={cn(
+                        'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-[9px] font-extrabold uppercase tracking-wider',
+                        isCnisLido
+                          ? 'bg-emerald-50 text-emerald-700 border-emerald-100/60'
+                          : 'bg-amber-50 text-amber-700 border-amber-100/60'
+                      )}>
+                        <span className={cn('w-1.5 h-1.5 rounded-full shrink-0', isCnisLido ? 'bg-emerald-500' : 'bg-amber-500')} />
+                        CNIS {isCnisLido ? 'Lido' : 'Pendente'}
+                      </span>
+                    )}
+                    <Badge variant={caso.priority === 'CRITICAL' ? 'red' : caso.priority === 'ATTENTION' ? 'yellow' : 'slate'}>
+                      {PRIORITY_LABELS[caso.priority] ?? caso.priority}
+                    </Badge>
+                    <Badge variant={getCaseStatusVariant(caso.status)}>
+                      {getCaseStatusLabel(caso.status)}
+                    </Badge>
+                    <ChevronRight className="w-4 h-4 text-slate-350 group-hover:text-slate-700 group-hover:translate-x-1 transition-all duration-300 ml-1 shrink-0" />
+                  </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  {caso.cnisDocument && (
-                    <span className={cn(
-                      'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-[9px] font-extrabold uppercase tracking-wider',
-                      ['PROCESSED', 'PROCESSADO'].includes(caso.cnisDocument.processingStatus.toUpperCase())
-                        ? 'bg-emerald-50 text-emerald-700 border-emerald-100/60'
-                        : 'bg-amber-50 text-amber-700 border-amber-100/60'
-                    )}>
-                      CNIS {['PROCESSED', 'PROCESSADO'].includes(caso.cnisDocument.processingStatus.toUpperCase()) ? 'Lido' : 'Pendente'}
-                    </span>
-                  )}
-                  <Badge variant={caso.priority === 'CRITICAL' ? 'red' : caso.priority === 'ATTENTION' ? 'yellow' : 'slate'}>
-                    {PRIORITY_LABELS[caso.priority] ?? caso.priority}
-                  </Badge>
-                  <Badge variant={getCaseStatusVariant(caso.status)}>
-                    {getCaseStatusLabel(caso.status)}
-                  </Badge>
-                  <ChevronRight className="w-4 h-4 text-slate-350 group-hover:text-slate-700 transition-colors ml-1 shrink-0" />
-                </div>
-              </div>
-            </Link>
-          ))}
+              </Link>
+            );
+          })}
         </div>
       )}
     </Card>

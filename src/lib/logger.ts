@@ -1,3 +1,20 @@
+const BR_TIMEZONE = 'America/Sao_Paulo'
+
+function formatBrasiliaTimestamp(date: Date): string {
+  const parts = new Intl.DateTimeFormat('sv-SE', {
+    timeZone: BR_TIMEZONE,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false,
+  }).format(date)
+  const ms = String(date.getMilliseconds()).padStart(3, '0')
+  return `${parts.replace(' ', 'T')}.${ms} BRT`
+}
+
 export class Logger {
   private context: string
   private isProduction = process.env.NODE_ENV === 'production'
@@ -7,7 +24,7 @@ export class Logger {
   }
 
   private format(level: 'INFO' | 'WARN' | 'ERROR' | 'DEBUG', message: string, meta?: unknown) {
-    const timestamp = new Date().toISOString()
+    const timestamp = formatBrasiliaTimestamp(new Date())
 
     if (this.isProduction) {
       // JSON Estruturado para Produção
