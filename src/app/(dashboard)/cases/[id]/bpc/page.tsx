@@ -8,10 +8,12 @@ import { Button } from '@/components/ui/Button'
 import { Modal } from '@/components/ui/Modal'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 
-import { FileText } from 'lucide-react'
+import { FileText, Building2, Loader2, Copy } from 'lucide-react'
 import { BpcForm } from '@/components/bpc/BpcForm'
 import { HelpText } from '@/components/ui/HelpText'
 import { BpcSocialInterview } from '@/components/bpc/BpcSocialInterview'
+import { PageHeader } from '@/components/ui/PageHeader'
+import { useToast } from '@/store/toast'
 
 const PDFDownloadLink = dynamic(
   () => import('@react-pdf/renderer').then(m => ({ default: m.PDFDownloadLink })),
@@ -60,6 +62,7 @@ const TABS: { id: AnalysisTab; label: string; field: keyof BpcAnalysis; endpoint
 ]
 
 export default function BpcPage() {
+  const addToast = useToast((s) => s.addToast)
   const params = useParams()
   const router = useRouter()
   const pathname = usePathname()
@@ -119,8 +122,17 @@ export default function BpcPage() {
     try {
       const r = await api.post(`/cases/${caseId}/bpc`, data)
       setAnalysis(r.data)
+      addToast({
+        type: 'success',
+        title: 'dados salvos',
+        message: 'os dados do caso bpc/loas foram salvos e atualizados com sucesso.'
+      })
     } catch {
-      // error handled by api interceptor
+      addToast({
+        type: 'error',
+        title: 'erro ao salvar',
+        message: 'não foi possível salvar os dados do caso.'
+      })
     } finally {
       setSaving(false)
     }
@@ -141,8 +153,17 @@ export default function BpcPage() {
       setTabResults((prev) => ({ ...prev, [tab]: r.data.result }))
       if (tab === 'checklist') setChecklistImported(false)
       if (r.data.bpcNotesCount !== undefined) setBpcNotesCount(r.data.bpcNotesCount)
+      addToast({
+        type: 'success',
+        title: 'análise concluída',
+        message: `a ${tabConfig.label} do caso foi processada com sucesso.`
+      })
     } catch {
-      // error handled by api interceptor
+      addToast({
+        type: 'error',
+        title: 'erro na análise',
+        message: `não foi possível processar a ${tabConfig.label} com inteligência artificial.`
+      })
     } finally {
       setGeneratingTab(null)
     }
@@ -173,8 +194,17 @@ export default function BpcPage() {
       setActiveTab('laudo')
       if (r.data.bpcNotesCount !== undefined) setBpcNotesCount(r.data.bpcNotesCount)
       setLaudoText('')
+      addToast({
+        type: 'success',
+        title: 'laudo analisado',
+        message: 'o laudo médico foi processado pela inteligência artificial com sucesso.'
+      })
     } catch {
-      // error handled by api interceptor
+      addToast({
+        type: 'error',
+        title: 'erro no processamento',
+        message: 'ocorreu um erro ao tentar processar o texto do laudo médico.'
+      })
     } finally {
       setLaudoAnalyzing(false)
     }
@@ -221,63 +251,66 @@ export default function BpcPage() {
     )
   }
 
+  const headerActions = (
+    <div className="flex items-center gap-3 flex-wrap shrink-0">
+      {completedCount > 0 && (
+        <ErrorBoundary fallback={null}>
+          <PDFDownloadLink
+            document={
+              <BpcConsolidatedPDFDocument
+                generatedAt={new Date().toLocaleDateString('pt-BR')}
+                sections={visibleTabs.flatMap((t) => {
+                  if (t.id === 'social') return []
+                  const content = tabResults[t.id]
+                  if (!content) return []
+                  return [{ type: t.id, label: t.label, content }]
+                })}
+              />
+            }
+            fileName={`previando-bpc-completo-${caseId}.pdf`}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold border border-slate-200 rounded-full bg-white text-slate-655 hover:bg-slate-50 hover:text-slate-800 transition-colors shadow-xs"
+          >
+            <FileText className="w-3.5 h-3.5 text-slate-450" />
+            Relatório Completo
+          </PDFDownloadLink>
+        </ErrorBoundary>
+      )}
+
+      {bpcNotesCount > 0 && (
+        <div className="flex items-center gap-2 bg-slate-900 text-slate-200 px-3 py-1.5 rounded-full text-xs font-medium shadow-xs">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+          <span>
+            {bpcNotesCount} {bpcNotesCount === 1 ? 'registro no prontuário' : 'registros no prontuário'}
+          </span>
+          <button
+            onClick={openNotes}
+            className="ml-2 pl-2 border-l border-slate-700 text-amber-400 hover:text-amber-300 font-semibold transition-colors"
+          >
+            Visualizar
+          </button>
+        </div>
+      )}
+    </div>
+  )
+
   return (
     <div className="space-y-6 max-w-[1400px] mx-auto font-sans">
-      <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-200 pb-4 gap-4">
-        <div>
-          <h2 className="font-serif font-semibold text-2xl text-slate-900 tracking-tight">BPC/LOAS</h2>
-          <p className="font-sans text-sm text-slate-500 mt-1">Análise técnica e documental com Inteligência Artificial</p>
-        </div>
+      <PageHeader
+        icon={Building2}
+        title="BPC/LOAS"
+        description="Análise técnica e documental com Inteligência Artificial"
+        action={headerActions}
+      />
 
-        <HelpText title="Sobre o BPC/LOAS" variant="info" collapsible>
-          <p>O Benefício de Prestação Continuada (BPC/LOAS) é um benefício assistencial no valor de um
-          salário mínimo. Utilize esta ferramenta para analisar requisitos de miserabilidade, deficiência
-          ou idade, e gerar pareceres técnicos completos com apoio de IA.</p>
-        </HelpText>
-        
-        <div className="flex items-center gap-3 flex-wrap shrink-0">
-          {/* PDF consolidado — aparece quando há ao menos 1 análise concluída */}
-          {completedCount > 0 && (
-            <ErrorBoundary fallback={null}>
-              <PDFDownloadLink
-                document={
-                  <BpcConsolidatedPDFDocument
-                    generatedAt={new Date().toLocaleDateString('pt-BR')}
-                    sections={visibleTabs.flatMap((t) => {
-                      if (t.id === 'social') return []
-                      const content = tabResults[t.id]
-                      if (!content) return []
-                      return [{ type: t.id, label: t.label, content }]
-                    })}
-                  />
-                }
-                fileName={`previando-bpc-completo-${caseId}.pdf`}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border border-slate-200 rounded-full bg-white text-slate-600 hover:bg-slate-50 transition-colors"
-              >
-                <FileText className="w-3.5 h-3.5" />
-                Relatório Completo
-              </PDFDownloadLink>
-            </ErrorBoundary>
-          )}
-
-          {bpcNotesCount > 0 && (
-            <div className="flex items-center gap-2 bg-slate-900 text-slate-200 px-3 py-1.5 rounded-full text-xs font-medium">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              {bpcNotesCount} {bpcNotesCount === 1 ? 'registro no prontuário' : 'registros no prontuário'}
-              <button
-                onClick={openNotes}
-                className="ml-2 pl-2 border-l border-slate-700 text-amber-400 hover:text-amber-300 transition-colors"
-              >
-                Visualizar
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
+      <HelpText title="Sobre o BPC/LOAS" variant="info" collapsible>
+        <p>O Benefício de Prestação Continuada (BPC/LOAS) é um benefício assistencial no valor de um
+        salário mínimo. Utilize esta ferramenta para analisar requisitos de miserabilidade, deficiência
+        ou idade, e gerar pareceres técnicos completos com apoio de IA.</p>
+      </HelpText>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        {/* COLUNA ESQUERDA: DADOS (33%) */}
-        <div className="lg:col-span-4 flex flex-col gap-6">
+        {/* COLUNA ESQUERDA: DADOS (41%) */}
+        <div className="lg:col-span-5 flex flex-col gap-6">
           <BpcForm
             caseId={caseId}
             analysis={analysis}
@@ -287,8 +320,8 @@ export default function BpcPage() {
           />
         </div>
 
-        {/* COLUNA DIREITA: COMMAND CENTER IA (66%) */}
-        <div className="lg:col-span-8">
+        {/* COLUNA DIREITA: COMMAND CENTER IA (58%) */}
+        <div className="lg:col-span-7">
           <div className="bg-white rounded-2xl overflow-hidden flex flex-col h-full min-h-[650px] border border-slate-200 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
             {/* Header IA Command Center */}
             <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
@@ -323,8 +356,8 @@ export default function BpcPage() {
                 )}
                 {generatingTab && (
                   <div className="flex items-center gap-2">
-                    <span className="w-2 h-2 bg-amber-500 rounded-full animate-ping" />
-                    <span className="text-xs font-mono text-amber-500/80">PROCESSANDO</span>
+                    <Loader2 className="w-3.5 h-3.5 text-amber-500 animate-spin" />
+                    <span className="text-xs font-mono text-amber-500/80">processando</span>
                   </div>
                 )}
               </div>
@@ -393,17 +426,34 @@ export default function BpcPage() {
                     </p>
                   </div>
                 ) : generatingTab === activeTab ? (
-                  <div className="flex-1 flex flex-col p-8">
-                    <div className="flex items-center gap-3 mb-8">
-                      <span className="w-4 h-4 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
-                      <span className="text-sm font-mono text-amber-500">GERANDO ANÁLISE...</span>
-                    </div>
-                    <div className="space-y-4 max-w-2xl">
-                      <div className="h-4 bg-slate-100 rounded w-3/4 animate-pulse" />
-                      <div className="h-4 bg-slate-100 rounded w-full animate-pulse" style={{ animationDelay: '150ms' }} />
-                      <div className="h-4 bg-slate-100 rounded w-5/6 animate-pulse" style={{ animationDelay: '300ms' }} />
-                      <div className="h-4 bg-slate-100 rounded w-full animate-pulse" />
-                      <div className="h-4 bg-slate-100 rounded w-4/6 animate-pulse" style={{ animationDelay: '150ms' }} />
+                  <div className="flex-1 flex flex-col p-8 bg-slate-50/50 justify-center">
+                    <div className="max-w-md mx-auto w-full space-y-6">
+                      <div className="flex items-center gap-3">
+                        <Loader2 className="w-5 h-5 text-amber-600 animate-spin shrink-0" />
+                        <span className="text-xs font-sans font-bold text-amber-700 tracking-wider uppercase">analisando caso com inteligência artificial...</span>
+                      </div>
+                      <div className="bg-white p-5 rounded-xl border border-slate-200/80 shadow-sm space-y-4">
+                        {(() => {
+                          const steps = activeTab === 'preAnalise'
+                            ? ['Analisando idade e critérios socioeconômicos...', 'Verificando requisitos previdenciários e do INSS...', 'Elaborando pré-análise de viabilidade...']
+                            : activeTab === 'laudo'
+                            ? ['Extraindo patologias e CIDs descritos...', 'Mapeando restrições de longo prazo...', 'Elaborando parecer do laudo médico...']
+                            : activeTab === 'medical'
+                            ? ['Identificando quesitos da perícia previdenciária...', 'Correlacionando com domínios CIF...', 'Gerando quesitos para a perícia médica...']
+                            : activeTab === 'checklist'
+                            ? ['Mapeando documentos obrigatórios...', 'Verificando pendências com base nos dados...', 'Estruturando checklist final de documentação...']
+                            : ['Mapeando dados socioeconômicos...', 'Verificando barreiras e limitações...', 'Formatando relatório de enquadramento...']
+                          
+                          return steps.map((step, idx) => (
+                            <div key={idx} className="flex items-center gap-3 text-sm text-slate-500 animate-pulse">
+                              <div className="w-5 h-5 rounded-full bg-slate-100 flex items-center justify-center text-[10px] text-slate-500 font-bold border border-slate-200 shrink-0">
+                                {idx + 1}
+                              </div>
+                              <span className="truncate">{step}</span>
+                            </div>
+                          ))
+                        })()}
+                      </div>
                     </div>
                   </div>
                 ) : activeResult ? (
@@ -439,8 +489,8 @@ export default function BpcPage() {
                   </div>
                 ) : (
                   <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
-                    <div className="w-16 h-16 rounded-2xl bg-amber-50 flex items-center justify-center mb-4 border border-amber-100">
-                      <span className="text-2xl">✨</span>
+                    <div className="w-16 h-16 rounded-2xl bg-amber-55/15 flex items-center justify-center mb-4 border border-amber-100 text-amber-600">
+                      <Building2 className="w-8 h-8" />
                     </div>
                     <h4 className="font-sans font-semibold text-slate-800 mb-2">
                       Pronto para Análise

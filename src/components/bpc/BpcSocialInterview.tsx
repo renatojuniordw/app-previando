@@ -4,6 +4,8 @@ import { useState } from 'react'
 import api from '@/lib/api'
 import { Button } from '@/components/ui/Button'
 import type { RelatoSocial } from '@/types/bpc-social'
+import { useToast } from '@/store/toast'
+import { Lock, ClipboardList, AlertTriangle, ChevronDown, Maximize2, Minimize2, RefreshCw, Save } from 'lucide-react'
 
 interface BpcSocialInterviewProps {
   caseId: string
@@ -20,6 +22,7 @@ export function BpcSocialInterview({
   onRelatoChange,
   onNoteSaved,
 }: BpcSocialInterviewProps) {
+  const addToast = useToast((s) => s.addToast)
   const [generating, setGenerating] = useState(false)
   const [saving, setSaving] = useState(false)
   const [localRelato, setLocalRelato] = useState<RelatoSocial | null>(relatoSocial)
@@ -40,8 +43,17 @@ export function BpcSocialInterview({
       if (relato.dominios?.[0]) {
         setExpandedIds(new Set([relato.dominios[0].id]))
       }
+      addToast({
+        type: 'success',
+        title: 'roteiro gerado',
+        message: 'o roteiro de entrevista social foi gerado com sucesso.'
+      })
     } catch {
-      // tratado pelo interceptor
+      addToast({
+        type: 'error',
+        title: 'erro ao gerar',
+        message: 'não foi possível gerar o roteiro de entrevista social.'
+      })
     } finally {
       setGenerating(false)
     }
@@ -72,8 +84,17 @@ export function BpcSocialInterview({
       onRelatoChange(localRelato)
       setDirty(false)
       if (r.data.bpcNotesCount !== undefined) onNoteSaved?.(r.data.bpcNotesCount)
+      addToast({
+        type: 'success',
+        title: 'respostas salvas',
+        message: 'as respostas da entrevista social foram salvas com sucesso.'
+      })
     } catch {
-      // tratado pelo interceptor
+      addToast({
+        type: 'error',
+        title: 'erro ao salvar',
+        message: 'ocorreu um erro ao salvar as respostas.'
+      })
     } finally {
       setSaving(false)
     }
@@ -100,7 +121,7 @@ export function BpcSocialInterview({
   if (!analysisExists) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center py-16 text-center px-6">
-        <span className="text-4xl mb-4 grayscale opacity-50">🔒</span>
+        <Lock className="w-10 h-10 text-slate-350 mb-4" />
         <h4 className="font-sans font-semibold text-slate-700 mb-1">Análises Bloqueadas</h4>
         <p className="font-sans text-sm text-slate-500 max-w-sm">
           Preencha e salve os dados do caso na aba ao lado para liberar as análises.
@@ -112,7 +133,7 @@ export function BpcSocialInterview({
   if (!localRelato) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center py-16 text-center px-6">
-        <span className="text-3xl mb-3">📋</span>
+        <ClipboardList className="w-10 h-10 text-slate-350 mb-4" />
         <h4 className="font-sans font-semibold text-slate-700 mb-1">Roteiro de Entrevista Social</h4>
         <p className="font-sans text-sm text-slate-500 max-w-sm mb-6">
           Gere o roteiro personalizado para a patologia do cliente. Depois registre as respostas durante a entrevista.
@@ -138,7 +159,7 @@ export function BpcSocialInterview({
           </span>
           {dirty && (
             <span className="text-[10px] font-mono uppercase tracking-wider text-amber-600">
-              • não salvo
+              • Não Salvo
             </span>
           )}
         </div>
@@ -149,13 +170,9 @@ export function BpcSocialInterview({
             title={fullscreen ? 'Sair do modo entrevista' : 'Modo entrevista (tela cheia)'}
           >
             {fullscreen ? (
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 9V4.5M9 9H4.5M9 9L3.75 3.75M9 15v4.5M9 15H4.5M9 15l-5.25 5.25M15 9h4.5M15 9V4.5M15 9l5.25-5.25M15 15h4.5M15 15v4.5m0-4.5l5.25 5.25" />
-              </svg>
+              <Minimize2 className="w-4 h-4" />
             ) : (
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" />
-              </svg>
+              <Maximize2 className="w-4 h-4" />
             )}
           </button>
           {confirmingRegenerate ? (
@@ -183,8 +200,9 @@ export function BpcSocialInterview({
               variant="outline"
               onClick={() => setConfirmingRegenerate(true)}
               loading={generating}
-              className="text-xs py-1.5"
+              className="text-xs py-1.5 flex items-center gap-1"
             >
+              <RefreshCw className="w-3 h-3 text-slate-500" />
               Regenerar
             </Button>
           )}
@@ -192,8 +210,9 @@ export function BpcSocialInterview({
             onClick={handleSave}
             loading={saving}
             disabled={!dirty}
-            className="text-xs py-1.5"
+            className="text-xs py-1.5 flex items-center gap-1"
           >
+            <Save className="w-3.5 h-3.5 text-white" />
             Salvar Respostas
           </Button>
         </div>
@@ -292,8 +311,8 @@ export function BpcSocialInterview({
       </div>
 
       {/* Footer de aviso */}
-      <div className="border-t border-slate-100 px-5 py-2.5 shrink-0 flex items-center gap-1.5">
-        <span className="text-amber-500 text-xs">⚠</span>
+      <div className="border-t border-slate-100 px-5 py-2.5 shrink-0 flex items-center gap-2 bg-amber-50/10">
+        <AlertTriangle className="w-3.5 h-3.5 text-amber-500 shrink-0" />
         <p className="text-[11px] text-slate-400 leading-relaxed">
           As respostas são de responsabilidade do advogado responsável pelo caso.
         </p>

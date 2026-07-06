@@ -9,6 +9,8 @@ import { ErrorBoundary } from '@/components/ErrorBoundary'
 import dynamic from 'next/dynamic'
 import api from '@/lib/api'
 import { BpcPDFDocument } from '@/components/pdf/BpcPDFDocument'
+import { useToast } from '@/store/toast'
+import { Copy, FileText, RefreshCw, Check, AlertTriangle } from 'lucide-react'
 
 const PDFDownloadLink = dynamic(
   () => import('@react-pdf/renderer').then(m => ({ default: m.PDFDownloadLink })),
@@ -80,6 +82,7 @@ function parseChecklistMarkdown(text: string): {
 }
 
 export function BpcResult({ caseId, result, type, onCopy, onOpenChecklist, onRegenerate, checklistImported, onChecklistImported }: BpcResultProps) {
+  const addToast = useToast((s) => s.addToast)
   const [importing, setImporting] = useState(false)
   const [mounted, setMounted] = useState(false)
 
@@ -99,22 +102,40 @@ export function BpcResult({ caseId, result, type, onCopy, onOpenChecklist, onReg
       })
       onChecklistImported?.()
       onOpenChecklist?.()
+      addToast({
+        type: 'success',
+        title: 'checklist importado',
+        message: 'os itens de documentação recomendados foram importados para o checklist do caso.'
+      })
     } catch {
-      // noop
+      addToast({
+        type: 'error',
+        title: 'erro ao importar',
+        message: 'não foi possível importar os itens do checklist.'
+      })
     } finally {
       setImporting(false)
     }
   }
 
+  const handleCopyAction = () => {
+    onCopy()
+    addToast({
+      type: 'success',
+      title: 'copiado',
+      message: 'o conteúdo da análise foi copiado para a área de transferência.'
+    })
+  }
+
   return (
-    <Card variant="light" className="p-0 overflow-hidden">
+    <Card variant="light" className="p-0 overflow-hidden border-slate-200/80 shadow-sm">
       <div className="bg-slate-50 px-5 py-3 border-b border-slate-200 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <span className="font-mono font-bold text-[10px] uppercase tracking-wider text-slate-400">
             RESULTADO
           </span>
           {type && (
-            <Badge variant="blue">{TYPE_LABELS[type] ?? type}</Badge>
+            <Badge variant="blue" className="text-[10px] font-bold">{TYPE_LABELS[type] ?? type}</Badge>
           )}
         </div>
       </div>
@@ -131,23 +152,26 @@ export function BpcResult({ caseId, result, type, onCopy, onOpenChecklist, onReg
       </div>
 
       <div className="border-t border-slate-100 bg-slate-50/50 px-6 py-4 flex flex-wrap gap-3">
-        <Button variant="outline" onClick={onCopy} className="text-xs py-2">
-          📋 Copiar
+        <Button variant="outline" onClick={handleCopyAction} className="text-xs py-2 flex items-center gap-1.5">
+          <Copy className="w-3.5 h-3.5 text-slate-500" />
+          Copiar
         </Button>
         {mounted && (
           <ErrorBoundary fallback={null}>
             <PDFDownloadLink
               document={<BpcPDFDocument result={result} type={type ? TYPE_LABELS[type] || 'BPC/LOAS' : 'BPC/LOAS'} />}
               fileName={`previando-bpc-${caseId}.pdf`}
-              className="inline-flex items-center justify-center px-3 py-2 text-xs border border-slate-200 rounded-md hover:bg-slate-100 transition-colors"
+              className="inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs border border-slate-200 rounded-md hover:bg-slate-100 text-slate-700 font-medium transition-colors"
             >
-              📄 Exportar PDF
+              <FileText className="w-3.5 h-3.5 text-slate-500" />
+              Exportar PDF
             </PDFDownloadLink>
           </ErrorBoundary>
         )}
         {onRegenerate && (
-          <Button variant="outline" onClick={onRegenerate} className="text-xs py-2 border-slate-300 text-slate-600 hover:bg-slate-100">
-            🔄 Regenerar
+          <Button variant="outline" onClick={onRegenerate} className="text-xs py-2 border-slate-350 text-slate-655 hover:bg-slate-100 flex items-center gap-1.5">
+            <RefreshCw className="w-3.5 h-3.5 text-slate-500" />
+            Regenerar
           </Button>
         )}
         {type === 'checklist' && (
@@ -156,16 +180,17 @@ export function BpcResult({ caseId, result, type, onCopy, onOpenChecklist, onReg
             onClick={handleImportChecklist}
             loading={importing}
             disabled={!!checklistImported}
-            className="text-xs py-2 border-emerald-300 text-emerald-700 hover:bg-emerald-50"
+            className="text-xs py-2 border-emerald-250 text-emerald-700 hover:bg-emerald-50 flex items-center gap-1.5"
           >
-            {checklistImported ? '✅ Importado' : '✅ Importar para Checklist'}
+            <Check className="w-3.5 h-3.5 text-emerald-600" />
+            {checklistImported ? 'Importado' : 'Importar para Checklist'}
           </Button>
         )}
       </div>
 
-      <div className="border-t border-slate-100 px-6 py-2.5 flex items-center gap-1.5">
-        <span className="text-amber-500 text-xs">⚠</span>
-        <p className="text-[11px] text-slate-400 leading-relaxed">
+      <div className="border-t border-slate-100 px-6 py-2.5 flex items-center gap-2 bg-amber-50/20">
+        <AlertTriangle className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+        <p className="text-[11px] text-slate-450 leading-relaxed">
           Gerado por IA — não substitui análise jurídica profissional. Responsabilidade exclusiva do advogado.
         </p>
       </div>
