@@ -134,7 +134,10 @@ export function useCalculator() {
   const handleCreate = async () => {
     setErrorMessage('')
 
-    if (!cnisDocument) {
+    // BPC/LOAS é benefício assistencial e não depende de tempo de contribuição, logo dispensa o CNIS.
+    const requiresCnis = caseBenefitType !== 'BPC_LOAS'
+
+    if (requiresCnis && !cnisDocument) {
       setErrorMessage(
         'Para realizar o cálculo, primeiro envie e processe o extrato do CNIS do cliente na aba CNIS.'
       )

@@ -33,3 +33,44 @@ export async function findAndValidateCnis(caseId: string) {
     birthDate,
   }
 }
+
+/**
+ * Resolve a data de nascimento e os dados extraídos do CNIS a serem usados no cálculo.
+ *
+ * Para modalidades contributivas, o CNIS processado é obrigatório (delega para findAndValidateCnis).
+ * Para BPC/LOAS — benefício assistencial que não depende de tempo de contribuição —
+ * o CNIS é opcional: se existir e estiver processado ele é aproveitado, caso contrário
+ * a data de nascimento é obtida do cadastro do cliente.
+ */
+export async function resolveBirthDateForCalculation(caseId: string, modalidade: string) {
+  if (modalidade !== 'BPC_LOAS') {
+    return findAndValidateCnis(caseId)
+  }
+
+  const cnisDoc = await prisma.cnisDocument.findUnique({
+    where: { caseId },
+  })
+
+  const extracted = cnisDoc?.processingStatus === 'COMPLETED'
+    ? (cnisDoc.extractedData as unknown as CnisExtractedData)
+    : null
+
+  const birthDateFromCnis = extracted?.dataNascimento as string | undefined
+  if (birthDateFromCnis) {
+    return { extracted, birthDate: birthDateFromCnis }
+  }
+
+  const clientCase = await prisma.case.findUnique({
+    where: { id: caseId },
+    select: { client: { select: { birthDate: true } } },
+  })
+
+  if (!clientCase?.client?.birthDate) {
+    throw new Error('Data de nascimento do segurado não encontrada. Cadastre a data de nascimento do cliente ou envie o CNIS.')
+  }
+
+  return {
+    extracted,
+    birthDate: clientCase.client.birthDate.toISOString().slice(0, 10),
+  }
+}

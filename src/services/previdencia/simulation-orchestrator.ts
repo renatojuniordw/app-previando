@@ -2,7 +2,7 @@ import { prisma } from '@/lib/prisma'
 import { projectSimulations } from '@/lib/previdencia-engine'
 import { getSalarioVigente } from '@/lib/salario-minimo'
 import { getRegrasVigentes } from '@/lib/regras-aposentadoria'
-import { findAndValidateCnis } from './helpers'
+import { resolveBirthDateForCalculation } from './helpers'
 import type { Prisma } from '@prisma/client'
 
 export interface RunSimulationInput {
@@ -27,13 +27,8 @@ export class SimulationOrchestrator {
   static async run(input: RunSimulationInput) {
     const { caseId, scenarioName, gender, dibProjetada, valorContribuicaoFutura, modalidade, tempoEspecialAnos = 0 } = input
 
-    // 1. Busca e valida o documento CNIS utilizando o helper centralizado
-    const { extracted } = await findAndValidateCnis(caseId)
-    const birthDate = extracted?.dataNascimento
-
-    if (!birthDate) {
-      throw new Error('Data de nascimento do segurado ausente ou não identificada no CNIS.')
-    }
+    // 1. Busca e valida o documento CNIS (ou, para BPC/LOAS, a data de nascimento do cliente)
+    const { extracted, birthDate } = await resolveBirthDateForCalculation(caseId, modalidade)
 
     // 2. Busca parâmetros legais na DIB projetada (e hoje para comparação)
     const hojeStr = new Date().toISOString().slice(0, 10)

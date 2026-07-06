@@ -63,6 +63,9 @@ export default function CalculatorPage() {
 
   const [expandedCalc, setExpandedCalc] = useState<string | null>(null)
 
+  // BPC/LOAS é benefício assistencial e não depende de tempo de contribuição, logo dispensa o CNIS.
+  const requiresCnis = caseBenefitType !== 'BPC_LOAS'
+
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center py-24">
@@ -90,7 +93,7 @@ export default function CalculatorPage() {
         {calculations.length > 0 && (
           <Button
             onClick={() => {
-              if (!cnisDocument) {
+              if (requiresCnis && !cnisDocument) {
                 addToast({ type: 'error', title: 'CNIS necessário', message: 'Faça upload do CNIS para realizar os cálculos.' })
                 return
               }
@@ -127,7 +130,7 @@ export default function CalculatorPage() {
           </p>
           <Button
             onClick={() => {
-              if (!cnisDocument) {
+              if (requiresCnis && !cnisDocument) {
                 addToast({ type: 'error', title: 'CNIS necessário', message: 'Faça upload do CNIS para realizar os cálculos.' })
                 return
               }

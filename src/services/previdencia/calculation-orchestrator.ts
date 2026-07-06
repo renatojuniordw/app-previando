@@ -2,7 +2,7 @@ import { prisma } from '@/lib/prisma'
 import { calculatePrevidenciario } from '@/lib/previdencia-engine'
 import { getSalarioVigente } from '@/lib/salario-minimo'
 import { getRegrasVigentes } from '@/lib/regras-aposentadoria'
-import { findAndValidateCnis } from './helpers'
+import { resolveBirthDateForCalculation } from './helpers'
 import { mapModalidadeToDb } from '@/lib/mappers'
 import type { Prisma } from '@prisma/client'
 
@@ -27,8 +27,8 @@ export class CalculationOrchestrator {
   static async run(input: RunCalculationInput) {
     const { caseId, modalidade, dib, gender, tempoEspecialAnos, dependentesPensao } = input
 
-    // 1. Busca e valida o documento CNIS utilizando o helper centralizado
-    const { extracted, birthDate } = await findAndValidateCnis(caseId)
+    // 1. Busca e valida o documento CNIS (ou, para BPC/LOAS, a data de nascimento do cliente)
+    const { extracted, birthDate } = await resolveBirthDateForCalculation(caseId, modalidade)
 
     // 2. Busca alíquotas de salário mínimo, teto previdenciário e regras de elegibilidade na DIB
     const [salarioParam, regrasVigentes] = await Promise.all([
