@@ -10,9 +10,13 @@ import {
   RetroativoOrchestrator,
   RunRetroativoInput,
 } from './previdencia/retroativo-orchestrator'
+import {
+  CauseValueOrchestrator,
+  RunCauseValueInput,
+} from './previdencia/cause-value-orchestrator'
 
 // Exportando novamente as interfaces para manter compatibilidade de tipos absoluta com outros arquivos
-export type { RunCalculationInput, RunSimulationInput, RunRetroativoInput }
+export type { RunCalculationInput, RunSimulationInput, RunRetroativoInput, RunCauseValueInput }
 
 /**
  * Classe Fachada (Facade) que centraliza e delega as operações previdenciárias.
@@ -44,5 +48,13 @@ export class PrevidenciaService {
    */
   static async runAndSaveRetroativo(input: RunRetroativoInput) {
     return RetroativoOrchestrator.run(input)
+  }
+
+  /**
+   * Orquestra e calcula de forma segura o valor da causa para ações de BPC/LOAS
+   * e salva o resultado no banco de dados.
+   */
+  static async runAndSaveCauseValue(input: RunCauseValueInput) {
+    return CauseValueOrchestrator.run(input)
   }
 }

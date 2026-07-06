@@ -12,6 +12,7 @@ import { ModalitySelect } from '@/components/case/ModalitySelect'
 import { CnisInfoCard } from '@/components/cases/CnisInfoCard'
 import { useToast } from '@/store/toast'
 import { useCalculator } from './_hooks/useCalculator'
+import { CauseValueSection } from './_components/CauseValueSection'
 import {
   Scale,
   ShieldCheck,
@@ -115,6 +116,9 @@ export default function CalculatorPage() {
           Use a aba <strong>Comparar</strong> para visualizar modalidades lado a lado antes de decidir.
         </p>
       </div>
+
+      {/* Valor da Causa (exclusivo de BPC/LOAS) */}
+      {caseBenefitType === 'BPC_LOAS' && <CauseValueSection />}
 
       {/* Empty State */}
       {calculations.length === 0 ? (

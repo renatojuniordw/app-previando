@@ -247,6 +247,7 @@ model Case {
   cnisDocument CnisDocument?
   calculations Calculation[]
   retroactives Retroactive[]
+  causeValueCalculations CauseValueCalculation[]
   opinions     Opinion[]
   checklists   Checklist[]
   simulations  Simulation[]
@@ -441,6 +442,38 @@ model Retroactive {
 
   @@index([caseId])
   @@map("retroactives")
+}
+
+// ─────────────────────────────────────────
+// VALOR DA CAUSA (BPC/LOAS)
+// ─────────────────────────────────────────
+
+model CauseValueCalculation {
+  id     String @id @default(cuid())
+  caseId String
+  case   Case   @relation(fields: [caseId], references: [id], onDelete: Cascade)
+
+  administrativeRequestDate DateTime
+  lawsuitFilingDate         DateTime
+  entitlementStartDate      DateTime
+
+  monthlyGrossValue   Decimal @db.Decimal(12, 2)
+  monthsLate          Int
+  totalCorrectedValue Decimal @db.Decimal(12, 2)
+  correctionIndex     String
+
+  futureInstallmentsCount Int     @default(12)
+  futureInstallmentsValue Decimal @db.Decimal(12, 2)
+  futureInstallmentsTotal Decimal @db.Decimal(12, 2)
+
+  totalCauseValue Decimal @db.Decimal(12, 2)
+
+  calculationMemory Json
+
+  createdAt DateTime @default(now())
+
+  @@index([caseId])
+  @@map("cause_value_calculations")
 }
 
 // ─────────────────────────────────────────
