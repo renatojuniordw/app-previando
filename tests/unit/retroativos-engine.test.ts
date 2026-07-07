@@ -25,11 +25,11 @@ describe('calculateRetroativos', () => {
       indicesINPC: mockINPC,
     })
 
-    expect(result.mesesAtraso).toBe(7)
+    expect(result.mesesAtraso).toBe(6)
     expect(result.valorMensalBruto).toBe(2000.00)
-    expect(result.valorTotalBruto).toBe(14000.00)
+    expect(result.valorTotalBruto).toBe(12000.00)
     expect(result.valorTotalCorrigido).toBeGreaterThan(result.valorTotalBruto)
-    expect(result.memoriaCalculo.parcelas.length).toBe(7)
+    expect(result.memoriaCalculo.parcelas.length).toBe(6)
     expect(result.memoriaCalculo.acumuladoINPC).toBeGreaterThan(0)
     expect(result.valorLiquidoFinal).toBe(result.valorTotalCorrigido)
   })
@@ -47,7 +47,7 @@ describe('calculateRetroativos', () => {
     expect(result.valorDescontos).toBe(500)
     expect(result.descricaoDescontos).toBe('Honorários advocatícios')
     expect(result.valorLiquidoFinal).toBe(result.valorTotalCorrigido - 500)
-    expect(result.mesesAtraso).toBe(4)
+    expect(result.mesesAtraso).toBe(3)
   })
 
   it('deve lançar erro quando dataInicioDireito > dataRequerimento', () => {
@@ -67,8 +67,8 @@ describe('calculateRetroativos', () => {
       indicesINPC: mockINPC,
     })
 
-    expect(result.mesesAtraso).toBe(2)
-    expect(result.memoriaCalculo.parcelas.length).toBe(2)
+    expect(result.mesesAtraso).toBe(1)
+    expect(result.memoriaCalculo.parcelas.length).toBe(1)
   })
 
   it('deve usar fallback INPC quando índice não encontrado', () => {
@@ -79,7 +79,7 @@ describe('calculateRetroativos', () => {
       indicesINPC: {}, // Sem índices — usa fallback
     })
 
-    expect(result.mesesAtraso).toBe(2)
+    expect(result.mesesAtraso).toBe(1)
     expect(result.valorTotalCorrigido).toBeGreaterThan(0)
   })
 
@@ -115,8 +115,8 @@ describe('calculateRetroativos', () => {
       indicesINPC: mockINPC,
     })
 
-    expect(result.mesesAtraso).toBe(37)
-    expect(result.memoriaCalculo.parcelas.length).toBe(37)
+    expect(result.mesesAtraso).toBe(36)
+    expect(result.memoriaCalculo.parcelas.length).toBe(36)
     expect(result.valorTotalCorrigido).toBeGreaterThan(result.valorTotalBruto)
   })
 })

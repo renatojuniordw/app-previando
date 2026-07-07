@@ -46,39 +46,45 @@ export interface RetroativoResult {
 /**
  * Executa o cálculo de parcelas atrasadas e atualização monetária pelo INPC
  */
+function parseDateUtc(dateStr: string): { year: number; month: number; day: number } {
+  const [year, month, day] = dateStr.split('-').map(Number)
+  return { year, month, day }
+}
+
 export function calculateRetroativos(input: RetroativoInput): RetroativoResult {
   const { dataInicioDireito, dataRequerimento, valorMensalBruto, valorDescontos = 0, descricaoDescontos, percentualHonorarios, indicesINPC } = input
 
-  const start = new Date(dataInicioDireito)
-  const end = new Date(dataRequerimento)
+  const { year: startYear, month: startMonth, day: startDay } = parseDateUtc(dataInicioDireito)
+  const { year: endYear, month: endMonth, day: endDay } = parseDateUtc(dataRequerimento)
+
+  const start = new Date(Date.UTC(startYear, startMonth - 1, startDay))
+  const end = new Date(Date.UTC(endYear, endMonth - 1, endDay))
 
   if (start > end) {
     throw new Error('A data de início do direito não pode ser posterior à data de requerimento.')
   }
 
   const parcelas: ParcelaRetroativa[] = []
-  const current = new Date(start.getFullYear(), start.getMonth(), 1)
-  const limit = new Date(end.getFullYear(), end.getMonth(), 1)
-
+  let currentYear = startYear
+  let currentMonth = startMonth
   let valorTotalBruto = 0
   let valorTotalCorrigido = 0
 
-  while (current <= limit) {
-    const competenciaLabel = `${String(current.getMonth() + 1).padStart(2, '0')}/${current.getFullYear()}`
+  while (currentYear < endYear || (currentYear === endYear && currentMonth <= endMonth)) {
+    const competenciaLabel = `${String(currentMonth).padStart(2, '0')}/${currentYear}`
 
-    // Calcula os meses de atraso desta parcela em relação à DDB
-    const diffMeses = (limit.getFullYear() - current.getFullYear()) * 12 + (limit.getMonth() - current.getMonth())
+    const diffMeses = (endYear - currentYear) * 12 + (endMonth - currentMonth)
 
-    // Aplica correção pelo INPC acumulado de forma simplificada
-    // Para cada mês de atraso, aplicamos o índice do histórico do banco ou a média de 0.35%
     let fatorCorrecao = 1.0
-    const tempDate = new Date(current.getFullYear(), current.getMonth(), 1)
+    let tempYear = currentYear
+    let tempMonth = currentMonth
 
-    while (tempDate < limit) {
-      const stepKey = `${tempDate.getFullYear()}-${String(tempDate.getMonth() + 1).padStart(2, '0')}`
+    while (tempYear < endYear || (tempYear === endYear && tempMonth < endMonth)) {
+      const stepKey = `${tempYear}-${String(tempMonth).padStart(2, '0')}`
       const indiceMes = indicesINPC[stepKey] ?? FALLBACK_INPC_MENSAL
       fatorCorrecao *= (1 + indiceMes)
-      tempDate.setMonth(tempDate.getMonth() + 1)
+      tempMonth++
+      if (tempMonth > 12) { tempMonth = 1; tempYear++ }
     }
 
     const valorCorrigido = Number((valorMensalBruto * fatorCorrecao).toFixed(2))
@@ -86,7 +92,7 @@ export function calculateRetroativos(input: RetroativoInput): RetroativoResult {
     parcelas.push({
       competencia: competenciaLabel,
       valorOriginal: valorMensalBruto,
-      indiceINPC: Number((fatorCorrecao - 1).toFixed(4)), // Percentual acumulado
+      indiceINPC: Number((fatorCorrecao - 1).toFixed(4)),
       valorCorrigido,
       mesesAtraso: diffMeses
     })
@@ -94,8 +100,8 @@ export function calculateRetroativos(input: RetroativoInput): RetroativoResult {
     valorTotalBruto += valorMensalBruto
     valorTotalCorrigido += valorCorrigido
 
-    // Incrementa 1 mês
-    current.setMonth(current.getMonth() + 1)
+    currentMonth++
+    if (currentMonth > 12) { currentMonth = 1; currentYear++ }
   }
 
   const mesesAtrasoCount = parcelas.length
