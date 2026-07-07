@@ -53,6 +53,7 @@ async function enrichSessionUser(userId: string) {
 }
 
 export const authConfig = {
+  trustHost: true,
   session: { strategy: 'jwt', maxAge: SESSION_MAX_AGE },
 
   callbacks: {
