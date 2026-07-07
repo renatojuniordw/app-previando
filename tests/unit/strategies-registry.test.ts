@@ -67,6 +67,16 @@ describe('registerStrategy', () => {
     }
     registerStrategy(overrideStrategy)
     const strategy = getStrategy('APOSENTADORIA_IDADE')
-    expect(strategy.evaluate().coeficiente).toBe(0.99)
+    expect(strategy.evaluate({
+      idadeNaApuracao: 65,
+      tempoContribuicaoAnos: 35,
+      carenciaMeses: 200,
+      salarioBeneficio: 3000,
+      salarioMinimo: 1412,
+      tetoPrevidenciario: 7500,
+      gender: 'M',
+      dependentesPensao: 0,
+      tempoEspecialAnos: 0,
+    }).coeficiente).toBe(0.99)
   })
 })

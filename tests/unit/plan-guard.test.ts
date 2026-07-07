@@ -7,7 +7,7 @@ vi.mock('@/lib/prisma', () => ({
     planLimit: { findUnique: vi.fn() },
     usageRecord: { findUnique: vi.fn(), update: vi.fn(), upsert: vi.fn(), updateMany: vi.fn() },
     client: { count: vi.fn(), findMany: vi.fn(), updateMany: vi.fn() },
-    notification: { create: vi.fn() },
+    notification: { create: vi.fn().mockResolvedValue({}) },
     $transaction: vi.fn(),
   },
 }))
@@ -261,7 +261,7 @@ describe('guardPeticaoLimit', () => {
       ...mockPlanLimitSolo,
       peticaoEnabled: true,
       maxPeticoesPerMonth: -1,
-    }
+    } as any
     vi.mocked(prisma.planLimit.findUnique).mockResolvedValueOnce(unlimitedPlan)
     await expect(guardPeticaoLimit('user-1', 'SOLO')).resolves.toBeUndefined()
   })

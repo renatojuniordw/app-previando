@@ -1,7 +1,23 @@
 import { describe, it, expect } from 'vitest'
 import { parseCnisProgrammatically } from '@/services/cnis/programmatic-parser'
 
-function buildCnisText(overrides = {}) {
+interface CnisSalary {
+  competencia: string
+  valor: string
+}
+
+interface CnisPeriod {
+  salarios: CnisSalary[]
+}
+
+interface CnisOverride {
+  nit?: string
+  nome?: string
+  nasc?: string
+  periods?: CnisPeriod[]
+}
+
+function buildCnisText(overrides: CnisOverride = {}) {
   const { nit = '123.45678.90-1', nome = 'João Silva', nasc = '', periods = [] } = overrides
   const salaryLines = periods.flatMap(p =>
     p.salarios.map(s => `${s.competencia} ${s.valor}`)
@@ -122,7 +138,7 @@ Seq: 1
       }],
     })
     const result = parseCnisProgrammatically(text)
-    const gaps = result?.extractedData.periodos[0]?.gaps
+    const gaps = result?.extractedData.periodos?.[0]?.gaps ?? []
     expect(gaps).toContain('2020-02')
   })
 })
