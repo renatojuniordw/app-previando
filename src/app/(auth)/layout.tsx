@@ -38,7 +38,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
 
         <div className="relative z-10">
           <p className="font-sans text-sm text-slate-400">
-            © {new Date().getFullYear()} Previando. Um produto Unificando.
+            © {new Date().getFullYear()} Previando.
           </p>
         </div>
       </div>

@@ -17,8 +17,7 @@ function wrapper(content: string): string {
       </div>
       ${content}
       <div style="margin-top:32px; padding-top:16px; border-top:1px solid #e2e8f0; font-size:12px; color:#94a3b8;">
-        <p>Previando é um produto <a href="https://unificando.com.br" style="color:#94a3b8; text-decoration:underline;">Unificando</a></p>
-        <p style="margin-top:4px;">contato@previando.com.br · app.previando.com.br</p>
+        <p>contato@previando.com.br · app.previando.com.br</p>
       </div>
     </div>
   `

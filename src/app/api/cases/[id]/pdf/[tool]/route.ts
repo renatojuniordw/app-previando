@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
+import { rateLimit } from '@/lib/rate-limit'
 import { verifyCaseOwnershipAndActive } from '@/lib/ownership'
 import { uploadDocument } from '@/services/r2'
 import { mapNoteTypeToDb } from '@/lib/mappers'
@@ -15,8 +16,12 @@ export async function POST(req: NextRequest, { params }: { params: { id: string;
     }
 
     const { id: caseId, tool } = params
-    
-    // Validar propriedade do caso
+
+    const { success: limitOk } = await rateLimit(`pdf:case:${session.user.id}`, 20, 3600)
+    if (!limitOk) {
+      return NextResponse.json({ error: 'Muitas tentativas. Tente novamente em 1 hora.' }, { status: 429 })
+    }
+
     await verifyCaseOwnershipAndActive(caseId, session.user.id)
 
     const allowedTools = ['compress', 'merge', 'split', 'from-jpg', 'to-markdown']

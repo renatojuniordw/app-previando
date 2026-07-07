@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/auth'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
+import { rateLimit } from '@/lib/rate-limit'
 import { mpPreApproval, MP_PLAN_IDS, PLAN_PRICES } from '@/services/mercadopago'
 import { handleApiError } from '@/lib/api-error'
 
@@ -13,6 +14,9 @@ export async function POST(req: NextRequest) {
   try {
     const session = await auth()
     if (!session?.user?.id) return NextResponse.json({ error: 'Não autorizado.' }, { status: 401 })
+
+    const { success: limitOk } = await rateLimit(`subscribe:${session.user.id}`, 5, 3600)
+    if (!limitOk) return NextResponse.json({ error: 'Muitas tentativas. Tente novamente em 1 hora.' }, { status: 429 })
 
     const parsed = schema.safeParse(await req.json())
     if (!parsed.success) {

@@ -6,7 +6,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'CEP inválido.' }, { status: 400 })
   }
 
-  const r = await fetch(`https://viacep.com.br/ws/${cep}/json/`)
+  const r = await fetch(`https://viacep.com.br/ws/${cep}/json/`, { signal: AbortSignal.timeout(5000) })
   const data = await r.json()
 
   if (data.erro) {

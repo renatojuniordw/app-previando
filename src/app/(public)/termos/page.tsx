@@ -60,13 +60,28 @@ export default function TermosPage() {
           apresentados a clientes e órgãos competentes são exclusivas do advogado usuário.
         </p>
 
-        <h2 className="font-serif text-xl font-bold text-slate-900 mt-8 mb-3">7. Alterações nos termos</h2>
+        <h2 className="font-serif text-xl font-bold text-slate-900 mt-8 mb-3">7. Suspensão e cancelamento</h2>
+        <p>
+          Podemos suspender ou encerrar sua conta em caso de violação destes Termos, uso indevido da
+          plataforma ou inadimplência de valores devidos, mediante aviso prévio quando possível. Você
+          pode cancelar sua conta a qualquer momento, nos termos da nossa{' '}
+          <a href="/privacidade" className="text-amber-700 hover:text-amber-800">Política de Privacidade</a>.
+        </p>
+
+        <h2 className="font-serif text-xl font-bold text-slate-900 mt-8 mb-3">8. Alterações nos termos</h2>
         <p>
           Podemos atualizar estes Termos periodicamente. Alterações relevantes serão comunicadas por
           e-mail ou através da própria plataforma.
         </p>
 
-        <h2 className="font-serif text-xl font-bold text-slate-900 mt-8 mb-3">8. Contato</h2>
+        <h2 className="font-serif text-xl font-bold text-slate-900 mt-8 mb-3">9. Legislação aplicável e foro</h2>
+        <p>
+          Estes Termos são regidos pelas leis da República Federativa do Brasil. Fica eleito o foro da
+          comarca do domicílio do usuário para dirimir eventuais controvérsias, salvo disposição legal
+          em contrário.
+        </p>
+
+        <h2 className="font-serif text-xl font-bold text-slate-900 mt-8 mb-3">10. Contato</h2>
         <p>
           Dúvidas sobre estes Termos podem ser enviadas para o suporte da plataforma.
         </p>

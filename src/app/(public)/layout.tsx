@@ -26,7 +26,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
       <footer className="border-t border-slate-200 bg-white">
         <div className="max-w-3xl mx-auto px-6 py-6">
           <p className="font-sans text-sm text-slate-500">
-            © {new Date().getFullYear()} Previando. Um produto Unificando.
+            © {new Date().getFullYear()} Previando.
           </p>
         </div>
       </footer>

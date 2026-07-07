@@ -56,7 +56,22 @@ export default function PrivacidadePage() {
           registros é protegido contra acesso indevido entre contas (controle anti-IDOR).
         </p>
 
-        <h2 className="font-serif text-xl font-bold text-slate-900 mt-8 mb-3">6. Retenção de dados</h2>
+        <h2 className="font-serif text-xl font-bold text-slate-900 mt-8 mb-3">6. Cookies</h2>
+        <p>
+          Utilizamos apenas o cookie de sessão essencial à autenticação (necessário para você
+          permanecer logado na plataforma). Não utilizamos cookies de rastreamento, publicidade ou
+          análise de terceiros (ex.: Google Analytics, pixels de redes sociais).
+        </p>
+
+        <h2 className="font-serif text-xl font-bold text-slate-900 mt-8 mb-3">7. Transferência internacional de dados</h2>
+        <p>
+          Alguns de nossos provedores de infraestrutura (hospedagem e armazenamento de arquivos) podem
+          processar dados em servidores localizados fora do Brasil. Nesses casos, exigimos contratualmente
+          que os provedores adotem salvaguardas adequadas de proteção de dados, em conformidade com o
+          Art. 33 da LGPD.
+        </p>
+
+        <h2 className="font-serif text-xl font-bold text-slate-900 mt-8 mb-3">8. Retenção de dados</h2>
         <p>
           Dados de clientes e casos são mantidos enquanto sua conta estiver ativa ou até que você os
           exclua ou anonimize. Registros de pagamento são retidos por 5 anos após sua criação, mesmo
@@ -65,7 +80,7 @@ export default function PrivacidadePage() {
           após a exclusão da conta associada.
         </p>
 
-        <h2 className="font-serif text-xl font-bold text-slate-900 mt-8 mb-3">7. Seus direitos como titular de dados</h2>
+        <h2 className="font-serif text-xl font-bold text-slate-900 mt-8 mb-3">9. Seus direitos como titular de dados</h2>
         <p>Nos termos do Art. 18 da LGPD, você pode, a qualquer momento e diretamente pela plataforma:</p>
         <ul className="list-disc pl-6 space-y-1">
           <li>Confirmar a existência de tratamento e acessar seus dados;</li>
@@ -77,13 +92,17 @@ export default function PrivacidadePage() {
           <li>Anonimizar um cliente específico, mantendo o histórico de casos sem dados identificáveis.</li>
         </ul>
 
-        <h2 className="font-serif text-xl font-bold text-slate-900 mt-8 mb-3">8. Encarregado de proteção de dados (DPO)</h2>
+        <h2 className="font-serif text-xl font-bold text-slate-900 mt-8 mb-3">10. Encarregado de proteção de dados (DPO)</h2>
         <p>
-          Dúvidas sobre esta Política ou solicitações relacionadas aos seus dados podem ser enviadas
-          para o suporte da plataforma.
+          Dúvidas sobre esta Política ou solicitações relacionadas aos seus dados pessoais podem ser
+          enviadas para{' '}
+          <a href="mailto:contato@previando.com.br" className="text-amber-700 hover:text-amber-800">
+            contato@previando.com.br
+          </a>
+          , canal responsável por encaminhar sua solicitação ao Encarregado de Proteção de Dados (DPO).
         </p>
 
-        <h2 className="font-serif text-xl font-bold text-slate-900 mt-8 mb-3">9. Alterações nesta política</h2>
+        <h2 className="font-serif text-xl font-bold text-slate-900 mt-8 mb-3">11. Alterações nesta política</h2>
         <p>
           Esta Política pode ser atualizada periodicamente. Alterações relevantes serão comunicadas por
           e-mail ou através da própria plataforma.

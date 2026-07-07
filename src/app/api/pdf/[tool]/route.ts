@@ -1,11 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/auth'
+import { rateLimit } from '@/lib/rate-limit'
 
 export async function POST(req: NextRequest, { params }: { params: { tool: string } }) {
   try {
     const session = await auth()
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Não autorizado.' }, { status: 401 })
+    }
+
+    const { success: limitOk } = await rateLimit(`pdf:user:${session.user.id}`, 20, 3600)
+    if (!limitOk) {
+      return NextResponse.json({ error: 'Muitas tentativas. Tente novamente em 1 hora.' }, { status: 429 })
     }
 
     const { tool } = params

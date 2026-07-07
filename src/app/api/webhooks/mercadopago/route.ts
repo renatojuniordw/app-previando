@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { createHmac } from 'crypto'
+import { createHmac, timingSafeEqual } from 'crypto'
 import { prisma } from '@/lib/prisma'
 import { redis } from '@/lib/redis'
 import { invalidatePlanLimitCache, reconcileClientActivation } from '@/lib/plan-guard'
@@ -48,7 +48,13 @@ function verifyWebhookSignature(req: NextRequest, _rawBody: string): boolean {
   const manifest = `id:${dataId};request-id:${xRequestId};ts:${ts};`
   const expected = createHmac('sha256', secret).update(manifest).digest('hex')
 
-  return expected === v1
+  try {
+    const expectedBuf = Buffer.from(expected, 'utf-8')
+    const actualBuf = Buffer.from(v1, 'utf-8')
+    return expectedBuf.length === actualBuf.length && timingSafeEqual(expectedBuf, actualBuf)
+  } catch {
+    return false
+  }
 }
 
 function mapMpSubscriptionStatus(mpStatus: string): string {
