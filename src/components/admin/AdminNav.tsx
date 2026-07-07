@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
-import { LayoutDashboard, Users, CreditCard, Activity, Package, DollarSign, BookOpen, Tags } from 'lucide-react'
+import { LayoutDashboard, Users, CreditCard, Activity, Package, DollarSign, BookOpen, Tags, Headphones } from 'lucide-react'
 
 const NAV_ITEMS = [
   { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -14,6 +14,7 @@ const NAV_ITEMS = [
   { href: '/admin/salario-minimo', label: 'Salário Mínimo', icon: DollarSign },
   { href: '/admin/modalidades', label: 'Modalidades', icon: Tags },
   { href: '/admin/regras-aposentadoria', label: 'Regras Previdenciárias', icon: BookOpen },
+  { href: '/admin/suporte', label: 'Suporte', icon: Headphones },
 ]
 
 export function AdminNav() {

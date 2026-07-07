@@ -20,8 +20,8 @@ import {
   Files,
   BarChart3,
   DollarSign,
-  Tags,
-  Package,
+  Headphones,
+  Shield,
 } from 'lucide-react'
 import { UsageBar } from '@/components/UsageBar'
 import { useSidebarStore } from '@/store/sidebar'
@@ -61,6 +61,7 @@ const NAV_SECTIONS = [
     items: [
       { href: '/settings/billing', label: 'Plano', icon: CreditCard },
       { href: '/settings/profile', label: 'Perfil', icon: Settings },
+      { href: '/suporte', label: 'Suporte', icon: Headphones },
     ],
   },
 ]
@@ -68,14 +69,7 @@ const NAV_SECTIONS = [
 const ADMIN_SECTION = {
   label: 'Administração',
   items: [
-    { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { href: '/admin/users', label: 'Usuários', icon: Users },
-    { href: '/admin/payments', label: 'Pagamentos', icon: CreditCard },
-    { href: '/admin/metrics', label: 'Métricas', icon: Activity },
-    { href: '/admin/plans', label: 'Planos', icon: Package },
-    { href: '/admin/salario-minimo', label: 'Salário Mínimo', icon: DollarSign },
-    { href: '/admin/modalidades', label: 'Modalidades', icon: Tags },
-    { href: '/admin/regras-aposentadoria', label: 'Regras Previdenciárias', icon: BookOpen },
+    { href: '/admin', label: 'Painel Administrativo', icon: Shield },
   ],
 }
 
