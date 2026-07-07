@@ -1,5 +1,11 @@
 import { Scale } from 'lucide-react'
 
+// Precisa ser renderizado por requisição: se o Next pré-renderizar estas
+// páginas estaticamente, o nonce fica fixo no HTML gerado no build e nunca
+// bate com o nonce novo do CSP que o middleware gera a cada requisição
+// (src/middleware.ts), bloqueando os próprios scripts inline do Next.
+export const dynamic = 'force-dynamic'
+
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row">
