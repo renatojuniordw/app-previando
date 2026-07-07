@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { authWithFreshPlan as auth } from '@/lib/auth-server'
 import { prisma } from '@/lib/prisma'
-import { verifyCaseOwnership } from '@/lib/ownership'
+import { verifyCaseOwnership, verifyCaseOwnershipAndActive } from '@/lib/ownership'
 import { guardFeature } from '@/lib/plan-guard'
 import { handleApiError } from '@/lib/api-error'
 import { logAudit } from '@/lib/audit'
@@ -114,7 +114,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     if (!session?.user?.id) return NextResponse.json({ error: 'Não autorizado.' }, { status: 401 })
 
     await guardFeature(session.user.plan, 'SIMULATOR')
-    await verifyCaseOwnership(params.id, session.user.id)
+    await verifyCaseOwnershipAndActive(params.id, session.user.id)
 
     const parsed = runSimulationSchema.safeParse(await req.json())
     if (!parsed.success) {

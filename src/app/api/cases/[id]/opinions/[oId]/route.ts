@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/auth'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
-import { verifyCaseOwnership } from '@/lib/ownership'
+import { verifyCaseOwnershipAndActive } from '@/lib/ownership'
 import { sanitizeInput } from '@/lib/sanitize-server'
 import { handleApiError } from '@/lib/api-error'
 import { Logger } from '@/lib/logger'
@@ -24,7 +24,7 @@ export async function PUT(
     const session = await auth()
     if (!session?.user?.id) return NextResponse.json({ error: 'Não autorizado.' }, { status: 401 })
 
-    await verifyCaseOwnership(params.id, session.user.id)
+    await verifyCaseOwnershipAndActive(params.id, session.user.id)
 
     const opinion = await prisma.opinion.findFirst({
       where: { id: params.oId, caseId: params.id },

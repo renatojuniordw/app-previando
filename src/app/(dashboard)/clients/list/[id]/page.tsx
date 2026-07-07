@@ -14,7 +14,7 @@ import { ClientCasesListCard } from '@/components/client/ClientCasesListCard'
 import { NewCaseModal } from '@/components/client/NewCaseModal'
 import { EditNotesModal } from '@/components/client/EditNotesModal'
 import { useClientDetail } from '@/hooks/useClientDetail'
-import { User } from 'lucide-react'
+import { User, Lock } from 'lucide-react'
 
 export default function ClientDetailPage() {
   const params = useParams()
@@ -54,10 +54,32 @@ export default function ClientDetailPage() {
   const totalCases = client.cases.length
   const finishedCases = client.cases.filter(c => ['FINISHED', 'FINALIZADO'].includes(c.status.toUpperCase())).length
   const activeCases = totalCases - finishedCases
+  const isBlocked = client.active === false
+
+  const notifyBlocked = () => {
+    addToast({
+      type: 'error',
+      title: 'Cliente bloqueado',
+      message: 'Este cliente excedeu o limite do seu plano e está somente-leitura. Ative outro cliente, exclua algum ou faça upgrade.',
+    })
+  }
 
   return (
     <ErrorBoundary>
       <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6 lg:space-y-8 animate-fade-in">
+        {isBlocked && (
+          <div className="flex items-start gap-3 border border-amber-200 bg-amber-50 p-4 rounded-xl shadow-sm">
+            <Lock className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
+            <div>
+              <p className="font-sans font-bold text-sm text-amber-900">Cliente bloqueado — somente leitura</p>
+              <p className="font-sans text-sm text-amber-700 mt-0.5">
+                Este cliente excedeu o limite de clientes ativos do seu plano. Não é possível editar dados, criar casos, cálculos ou pareceres para ele.
+                Ative-o na listagem de clientes (desativando outro) ou faça upgrade do plano.
+              </p>
+            </div>
+          </div>
+        )}
+
         <ClientHeader name={client.name} cpf={client.cpf} />
 
         <ClientPersonalInfoCard client={client} />
@@ -68,7 +90,7 @@ export default function ClientDetailPage() {
 
         <ClientPortalCard cases={client.cases} />
 
-        <ClientCasesListCard cases={client.cases} onNewCase={() => setShowCaseModal(true)} />
+        <ClientCasesListCard cases={client.cases} onNewCase={() => (isBlocked ? notifyBlocked() : setShowCaseModal(true))} />
 
         <NewCaseModal
           clientId={client.id}
@@ -87,7 +109,7 @@ export default function ClientDetailPage() {
         <ClientFloatingActions
           email={client.email}
           cpf={client.cpf}
-          onEdit={() => setShowNotesModal(true)}
+          onEdit={() => (isBlocked ? notifyBlocked() : setShowNotesModal(true))}
           onCopyCpf={handleCopyCpf}
         />
       </div>

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
 import { guardFeature } from '@/lib/plan-guard'
+import { assertClientActive } from '@/lib/ownership'
 import { generateCasePDF } from '@/lib/pdf-generator'
 import { logAudit } from '@/lib/audit'
 
@@ -44,6 +45,8 @@ export async function GET(
   if (!caso) {
     return new NextResponse('Caso não encontrado', { status: 404 })
   }
+
+  assertClientActive(caso.client)
 
   // Plan guard - FREE plans get watermark, SOLO+ need feature enabled
   const watermark = session.user.plan === 'FREE'

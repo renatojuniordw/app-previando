@@ -3,7 +3,7 @@ import { auth } from '@/auth'
 import { z } from 'zod'
 import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
-import { verifyClientOwnership } from '@/lib/ownership'
+import { verifyClientOwnershipAndActive } from '@/lib/ownership'
 import { sanitizeInput } from '@/lib/sanitize-server'
 import { handleApiError } from '@/lib/api-error'
 import { logAudit } from '@/lib/audit'
@@ -167,7 +167,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Dados inválidos.' }, { status: 400 })
     }
 
-    await verifyClientOwnership(parsed.data.clientId, session.user.id)
+    await verifyClientOwnershipAndActive(parsed.data.clientId, session.user.id)
 
     const deadlineDate = parsed.data.deadlineDate ? new Date(parsed.data.deadlineDate) : null
 

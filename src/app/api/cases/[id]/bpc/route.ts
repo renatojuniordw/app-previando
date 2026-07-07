@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
-import { verifyCaseOwnership } from '@/lib/ownership'
+import { verifyCaseOwnership, verifyCaseOwnershipAndActive } from '@/lib/ownership'
 import { guardFeature, guardBpcAnalysisLimit, tryConsumeMonthlyUsage } from '@/lib/plan-guard'
 import { handleApiError } from '@/lib/api-error'
 import { NoteType } from '@prisma/client'
@@ -58,7 +58,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
     await guardFeature(session.user.plan, 'USE_BPC_MODULE')
     await guardBpcAnalysisLimit(session.user.id, session.user.plan)
-    await verifyCaseOwnership(params.id, session.user.id)
+    await verifyCaseOwnershipAndActive(params.id, session.user.id)
 
     const body = await req.json()
     const { barreirasRelatadas, ...rest } = BpcSchema.parse(body)

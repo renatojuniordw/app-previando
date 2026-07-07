@@ -3,6 +3,8 @@ import { auth } from '@/auth'
 import { generateBpcPDF, generateBpcConsolidatedPDF, type ClientInfo } from '@/lib/pdf-generator'
 import { fetchClientInfo } from '@/lib/fetch-client-info'
 import { guardFeature } from '@/lib/plan-guard'
+import { verifyCaseOwnershipAndActive } from '@/lib/ownership'
+import { PlanLimitError } from '@/lib/api-error'
 
 export async function POST(request: NextRequest) {
   try {
@@ -19,6 +21,7 @@ export async function POST(request: NextRequest) {
     let clientName = ''
     let clientInfo: ClientInfo | undefined
     if (caseId) {
+      await verifyCaseOwnershipAndActive(caseId, session.user.id)
       clientInfo = await fetchClientInfo(caseId, session.user.id)
       if (clientInfo) clientName = clientInfo.name
     }
@@ -55,6 +58,12 @@ export async function POST(request: NextRequest) {
       },
     })
   } catch (err) {
+    if (err instanceof PlanLimitError) {
+      return NextResponse.json(
+        { error: err.message, feature: err.feature, upgradeRequired: err.upgradeRequired },
+        { status: 402 }
+      )
+    }
     console.error('[bpc-pdf]', err)
     return NextResponse.json({ error: err instanceof Error ? err.message : 'Erro interno' }, { status: 500 })
   }

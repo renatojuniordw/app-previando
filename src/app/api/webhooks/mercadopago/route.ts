@@ -3,7 +3,7 @@ import { z } from 'zod'
 import { createHmac } from 'crypto'
 import { prisma } from '@/lib/prisma'
 import { redis } from '@/lib/redis'
-import { invalidatePlanLimitCache } from '@/lib/plan-guard'
+import { invalidatePlanLimitCache, reconcileClientActivation } from '@/lib/plan-guard'
 import { Logger } from '@/lib/logger'
 import type { PaymentStatus, Prisma } from '@prisma/client'
 
@@ -193,6 +193,7 @@ export async function POST(req: NextRequest) {
           return NextResponse.json({ received: true })
         }
 
+        let newPlan = user.plan
         await prisma.$transaction(async (tx) => {
           let plan = user.plan
           if (planStatus === 'ACTIVE' && mpSub.preapproval_plan_id) {
@@ -213,7 +214,12 @@ export async function POST(req: NextRequest) {
           })
 
           await invalidatePlanLimitCache(plan)
+          newPlan = plan
         })
+
+        if (newPlan !== user.plan) {
+          await reconcileClientActivation(user.id, newPlan)
+        }
 
         if (eventId) await markWebhookEvent(eventId)
       } finally {

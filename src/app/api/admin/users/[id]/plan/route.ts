@@ -3,7 +3,7 @@ import { requireAdmin } from '@/lib/admin-guard'
 import { prisma } from '@/lib/prisma'
 import { logAudit } from '@/lib/audit'
 import { handleApiError } from '@/lib/api-error'
-import { invalidatePlanLimitCache } from '@/lib/plan-guard'
+import { invalidatePlanLimitCache, reconcileClientActivation } from '@/lib/plan-guard'
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   try {
@@ -27,6 +27,9 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 
     await prisma.user.update({ where: { id: params.id }, data: { plan, planStatus: 'ACTIVE', ...resetMp } })
     await invalidatePlanLimitCache(plan)
+    if (plan !== user.plan) {
+      await reconcileClientActivation(params.id, plan)
+    }
 
     await logAudit({
       userId: adminResult.userId,

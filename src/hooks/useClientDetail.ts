@@ -31,6 +31,7 @@ export interface ClientDetail {
   zipCode: string | null
   priority: string
   notes: string | null
+  active: boolean
   cases: ClientCaseSummary[]
 }
 

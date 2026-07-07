@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/auth'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
-import { verifyCaseOwnership } from '@/lib/ownership'
+import { verifyCaseOwnershipAndActive } from '@/lib/ownership'
 import { handleApiError, ValidationError } from '@/lib/api-error'
 import { computeFeeStatus } from '@/lib/fee-status'
 
@@ -26,7 +26,7 @@ export async function POST(
     const session = await auth()
     if (!session?.user?.id) return NextResponse.json({ error: 'Não autorizado.' }, { status: 401 })
 
-    await verifyCaseOwnership(params.id, session.user.id)
+    await verifyCaseOwnershipAndActive(params.id, session.user.id)
     const fee = await loadFee(params.feeId, params.id)
 
     const parsed = createSchema.safeParse(await req.json())

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { authWithFreshPlan as auth } from '@/lib/auth-server'
 import { prisma } from '@/lib/prisma'
-import { verifyCaseOwnership } from '@/lib/ownership'
+import { verifyCaseOwnershipAndActive } from '@/lib/ownership'
 import { handleApiError } from '@/lib/api-error'
 import { rateLimit } from '@/lib/rate-limit'
 import { guardPeticaoLimit, tryConsumeMonthlyUsage } from '@/lib/plan-guard'
@@ -13,7 +13,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     const session = await auth()
     if (!session?.user?.id) return NextResponse.json({ error: 'Não autorizado.' }, { status: 401 })
 
-    await verifyCaseOwnership(params.id, session.user.id)
+    await verifyCaseOwnershipAndActive(params.id, session.user.id)
 
     await guardPeticaoLimit(session.user.id, session.user.plan)
 

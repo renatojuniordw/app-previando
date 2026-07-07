@@ -6,11 +6,12 @@ import api from '@/lib/api'
 import { ClientSwitcher } from '@/components/ClientSwitcher'
 import { Badge } from '@/components/ui/Badge'
 import { maskCPF } from '@/lib/sanitize'
-import { formatDate } from '@/lib/utils'
-import { Search, Plus, User, FileText, Phone, Mail, Upload } from 'lucide-react'
+import { formatDate, cn } from '@/lib/utils'
+import { Search, Plus, User, FileText, Phone, Mail, Upload, Lock, AlertTriangle, Check, X, Trash2 } from 'lucide-react'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { ActionsDropdown } from '@/components/ui/ActionsDropdown'
 import { DeleteClientModal } from '@/components/client/DeleteClientModal'
+import { useToast } from '@/store/toast'
 
 interface Client {
   id: string
@@ -21,6 +22,7 @@ interface Client {
   priority: 'CRITICAL' | 'ATTENTION' | 'NORMAL'
   cases: Array<{ id: string; status: string; benefitType: string }>
   createdAt: string
+  active: boolean
 }
 
 const PRIORITY_BADGE: Record<string, 'red' | 'yellow' | 'slate'> = {
@@ -42,6 +44,43 @@ export default function ClientsListPage() {
   const [search, setSearch] = useState('')
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [deletingClient, setDeletingClient] = useState<Client | null>(null)
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const [bulkLoading, setBulkLoading] = useState(false)
+  const { addToast } = useToast()
+
+  const blockedCount = clients.filter((c) => !c.active).length
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  const toggleSelectAll = () => {
+    setSelectedIds((prev) => (prev.size === clients.length ? new Set() : new Set(clients.map((c) => c.id))))
+  }
+
+  const handleBulkAction = async (action: 'activate' | 'deactivate' | 'delete') => {
+    if (selectedIds.size === 0) return
+    if (action === 'delete' && !window.confirm(`Excluir ${selectedIds.size} cliente(s) selecionado(s)? Esta ação não pode ser desfeita.`)) {
+      return
+    }
+    setBulkLoading(true)
+    try {
+      await api.post('/clients/bulk', { ids: Array.from(selectedIds), action })
+      addToast({ type: 'success', title: 'Feito', message: 'Clientes atualizados com sucesso.' })
+      setSelectedIds(new Set())
+      load(search)
+    } catch (err) {
+      const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error
+      if (msg) addToast({ type: 'error', title: 'Não foi possível concluir', message: msg })
+    } finally {
+      setBulkLoading(false)
+    }
+  }
 
   const load = (q?: string) => {
     setLoading(true)
@@ -118,6 +157,45 @@ export default function ClientsListPage() {
           <ClientSwitcher />
         </div>
 
+        {blockedCount > 0 && (
+          <div className="flex items-start gap-3 border border-amber-200 bg-amber-50 p-4 rounded-xl shadow-sm">
+            <AlertTriangle className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
+            <p className="font-sans text-sm text-amber-800">
+              Você tem <strong>{blockedCount}</strong> {blockedCount === 1 ? 'cliente bloqueado' : 'clientes bloqueados'} por exceder o limite do seu plano.
+              Clientes bloqueados ficam somente-leitura. Selecione-os abaixo para ativar (desativando outro) ou excluir, liberando espaço — ou faça upgrade do plano.
+            </p>
+          </div>
+        )}
+
+        {selectedIds.size > 0 && (
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-slate-900 text-white p-4 rounded-xl shadow-sm">
+            <span className="font-sans text-sm font-semibold">{selectedIds.size} selecionado(s)</span>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => handleBulkAction('activate')}
+                disabled={bulkLoading}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 font-sans text-xs font-bold rounded-md bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 transition-colors"
+              >
+                <Check className="w-3.5 h-3.5" /> Ativar
+              </button>
+              <button
+                onClick={() => handleBulkAction('deactivate')}
+                disabled={bulkLoading}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 font-sans text-xs font-bold rounded-md bg-slate-700 hover:bg-slate-600 disabled:opacity-50 transition-colors"
+              >
+                <X className="w-3.5 h-3.5" /> Desativar
+              </button>
+              <button
+                onClick={() => handleBulkAction('delete')}
+                disabled={bulkLoading}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 font-sans text-xs font-bold rounded-md bg-red-600 hover:bg-red-500 disabled:opacity-50 transition-colors"
+              >
+                <Trash2 className="w-3.5 h-3.5" /> Excluir
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Data Table / List */}
         <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
           {loading ? (
@@ -144,6 +222,15 @@ export default function ClientsListPage() {
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="bg-slate-50/50 border-b border-slate-200">
+                    <th className="px-4 py-4 w-10">
+                      <input
+                        type="checkbox"
+                        aria-label="Selecionar todos"
+                        checked={selectedIds.size > 0 && selectedIds.size === clients.length}
+                        onChange={toggleSelectAll}
+                        className="w-4 h-4 rounded border-slate-300"
+                      />
+                    </th>
                     <th className="px-6 py-4 font-sans font-bold text-[10px] text-slate-400 uppercase tracking-wider">Cliente</th>
                     <th className="px-6 py-4 font-sans font-bold text-[10px] text-slate-400 uppercase tracking-wider">Contato</th>
                     <th className="px-6 py-4 font-sans font-bold text-[10px] text-slate-400 uppercase tracking-wider">Prioridade</th>
@@ -154,19 +241,35 @@ export default function ClientsListPage() {
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {clients.map((client) => (
-                    <tr key={client.id} className="hover:bg-slate-50/40 transition-colors group">
+                    <tr key={client.id} className={cn('hover:bg-slate-50/40 transition-colors group', !client.active && 'bg-slate-50/60')}>
+                      <td className="px-4 py-4">
+                        <input
+                          type="checkbox"
+                          aria-label={`Selecionar ${client.name}`}
+                          checked={selectedIds.has(client.id)}
+                          onChange={() => toggleSelect(client.id)}
+                          className="w-4 h-4 rounded border-slate-300"
+                        />
+                      </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-200 text-slate-700 font-serif font-bold text-sm shrink-0 flex items-center justify-center shadow-sm group-hover:bg-white group-hover:border-slate-300 transition-colors duration-200">
                             {client.name.charAt(0).toUpperCase()}
                           </div>
                           <div>
-                            <Link 
-                              href={`/clients/list/${client.id}`} 
-                              className="font-sans font-bold text-sm text-slate-800 hover:text-amber-700 transition-colors duration-200"
-                            >
-                              {client.name}
-                            </Link>
+                            <div className="flex items-center gap-2">
+                              <Link
+                                href={`/clients/list/${client.id}`}
+                                className="font-sans font-bold text-sm text-slate-800 hover:text-amber-700 transition-colors duration-200"
+                              >
+                                {client.name}
+                              </Link>
+                              {!client.active && (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 font-sans font-bold text-[10px] uppercase tracking-wide rounded-md border border-slate-300 bg-slate-100 text-slate-600">
+                                  <Lock className="w-2.5 h-2.5" /> Bloqueado
+                                </span>
+                              )}
+                            </div>
                             <p className="font-sans text-[11px] text-slate-400 mt-0.5 font-bold tracking-tight">CPF: {maskCPF(client.cpf)}</p>
                           </div>
                         </div>
@@ -218,6 +321,18 @@ export default function ClientsListPage() {
                               {
                                 label: 'Editar cliente',
                                 onClick: () => window.location.href = `/clients/list/${client.id}/edit`,
+                              },
+                              {
+                                label: client.active ? 'Desativar cliente' : 'Ativar cliente',
+                                onClick: async () => {
+                                  try {
+                                    await api.patch(`/clients/${client.id}/active`, { active: !client.active })
+                                    load(search)
+                                  } catch (err) {
+                                    const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error
+                                    if (msg) addToast({ type: 'error', title: 'Não foi possível concluir', message: msg })
+                                  }
+                                },
                               },
                               {
                                 label: 'Excluir cliente',

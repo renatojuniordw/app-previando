@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { randomBytes } from 'crypto'
 import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
-import { verifyCaseOwnership } from '@/lib/ownership'
+import { verifyCaseOwnership, verifyCaseOwnershipAndActive } from '@/lib/ownership'
 import { handleApiError } from '@/lib/api-error'
 
 const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000
@@ -45,7 +45,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     const session = await auth()
     if (!session?.user?.id) return NextResponse.json({ error: 'Não autorizado.' }, { status: 401 })
 
-    await verifyCaseOwnership(params.id, session.user.id)
+    await verifyCaseOwnershipAndActive(params.id, session.user.id)
 
     const expiresAt = new Date(Date.now() + THIRTY_DAYS_MS)
 

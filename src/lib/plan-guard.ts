@@ -148,14 +148,51 @@ export async function guardClientLimit(userId: string, plan: string): Promise<vo
   const limit = await getPlanLimit(plan)
   if (limit.maxClients === -1) return
 
-  const count = await prisma.client.count({ where: { userId } })
+  const count = await prisma.client.count({ where: { userId, active: true } })
   if (count >= limit.maxClients) {
     throw new PlanLimitError(
-      `Você atingiu o limite de ${limit.maxClients} clientes no plano ${plan}. Atualize para criar mais.`,
+      `Você atingiu o limite de ${limit.maxClients} clientes ativos no plano ${plan}. Desative ou exclua um cliente, ou atualize seu plano para criar mais.`,
       'CLIENTS',
       plan === 'FREE' ? 'SOLO' : 'PRO'
     )
   }
+}
+
+// Recalcula quais clientes ficam `active` sempre que o plano do usuário muda
+// (upgrade, downgrade ou cancelamento). Se o novo limite comporta todos os
+// clientes, todos voltam a ficar ativos — mesmo os que estavam bloqueados
+// por um downgrade anterior (evita ficar "preso" numa escolha antiga e
+// mantém o modelo simples: o usuário sempre gerencia o estado atual).
+// Caso contrário, mantém ativos os clientes mais antigos (por `createdAt`)
+// até o limite, e desativa o restante — que passa a ficar somente-leitura
+// até o usuário liberar espaço manualmente (ativar outro/excluir) ou fazer
+// upgrade.
+export async function reconcileClientActivation(userId: string, plan: string): Promise<void> {
+  const limit = await getPlanLimit(plan)
+
+  if (limit.maxClients === -1) {
+    await prisma.client.updateMany({ where: { userId, active: false }, data: { active: true } })
+    return
+  }
+
+  const totalCount = await prisma.client.count({ where: { userId } })
+  if (totalCount <= limit.maxClients) {
+    await prisma.client.updateMany({ where: { userId, active: false }, data: { active: true } })
+    return
+  }
+
+  const keep = await prisma.client.findMany({
+    where: { userId },
+    orderBy: { createdAt: 'asc' },
+    take: limit.maxClients,
+    select: { id: true },
+  })
+  const keepIds = keep.map((c) => c.id)
+
+  await prisma.$transaction([
+    prisma.client.updateMany({ where: { userId, id: { notIn: keepIds } }, data: { active: false } }),
+    prisma.client.updateMany({ where: { userId, id: { in: keepIds } }, data: { active: true } }),
+  ])
 }
 
 export async function guardCalculationLimit(userId: string, plan: string): Promise<void> {

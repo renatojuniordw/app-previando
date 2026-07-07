@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/auth'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
-import { verifyCaseOwnership } from '@/lib/ownership'
+import { verifyCaseOwnershipAndActive } from '@/lib/ownership'
 import { handleApiError } from '@/lib/api-error'
 import { mapCaseStatusToDb, mapCaseStatusToApi, ApiCaseStatus } from '@/lib/mappers'
 
@@ -15,7 +15,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     const session = await auth()
     if (!session?.user?.id) return NextResponse.json({ error: 'Não autorizado.' }, { status: 401 })
 
-    await verifyCaseOwnership(params.id, session.user.id)
+    await verifyCaseOwnershipAndActive(params.id, session.user.id)
 
     const parsed = schema.safeParse(await req.json())
     if (!parsed.success) {

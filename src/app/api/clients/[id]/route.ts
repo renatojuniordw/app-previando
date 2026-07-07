@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/auth'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
-import { verifyClientOwnership } from '@/lib/ownership'
+import { verifyClientOwnership, verifyClientOwnershipAndActive } from '@/lib/ownership'
 import { sanitizePhone } from '@/lib/sanitize'
 import { sanitizeInput } from '@/lib/sanitize-server'
 import { handleApiError } from '@/lib/api-error'
@@ -68,7 +68,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     const session = await auth()
     if (!session?.user?.id) return NextResponse.json({ error: 'Não autorizado.' }, { status: 401 })
 
-    await verifyClientOwnership(params.id, session.user.id)
+    await verifyClientOwnershipAndActive(params.id, session.user.id)
 
     let body: unknown
     try {

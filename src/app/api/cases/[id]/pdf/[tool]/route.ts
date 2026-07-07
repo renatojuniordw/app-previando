@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
-import { verifyCaseOwnership } from '@/lib/ownership'
+import { verifyCaseOwnershipAndActive } from '@/lib/ownership'
 import { uploadDocument } from '@/services/r2'
 import { mapNoteTypeToDb } from '@/lib/mappers'
 import { sanitizeInput } from '@/lib/sanitize-server'
@@ -17,7 +17,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string;
     const { id: caseId, tool } = params
     
     // Validar propriedade do caso
-    await verifyCaseOwnership(caseId, session.user.id)
+    await verifyCaseOwnershipAndActive(caseId, session.user.id)
 
     const allowedTools = ['compress', 'merge', 'split', 'from-jpg', 'to-markdown']
     if (!allowedTools.includes(tool)) {

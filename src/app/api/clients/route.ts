@@ -65,6 +65,7 @@ export async function GET(req: NextRequest) {
           email: true,
           priority: true,
           notes: true,
+          active: true,
           createdAt: true,
           updatedAt: true,
           cases: {

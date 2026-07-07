@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { authWithFreshPlan as auth } from '@/lib/auth-server'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
-import { verifyCaseOwnership } from '@/lib/ownership'
+import { verifyCaseOwnership, verifyCaseOwnershipAndActive } from '@/lib/ownership'
 import { guardFeature } from '@/lib/plan-guard'
 import { handleApiError } from '@/lib/api-error'
 import { logAudit } from '@/lib/audit'
@@ -41,7 +41,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     await guardFeature(session.user.plan, 'USE_BPC_MODULE')
 
     // Validação estrita de posse do caso (Anti-IDOR)
-    await verifyCaseOwnership(params.id, session.user.id)
+    await verifyCaseOwnershipAndActive(params.id, session.user.id)
 
     const parsed = createSchema.safeParse(await req.json())
     if (!parsed.success) {

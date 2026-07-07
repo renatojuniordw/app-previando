@@ -6,12 +6,14 @@ import { useRouter } from 'next/navigation'
 import { useFocusTrap } from '@/hooks/useFocusTrap'
 
 export function UpgradeModal() {
-  const { open, message, upgradeRequired, closeModal } = useUpgradeModal()
+  const { open, message, feature, upgradeRequired, closeModal } = useUpgradeModal()
   const router = useRouter()
   const dialogRef = useRef<HTMLDivElement>(null)
   useFocusTrap(open, dialogRef)
 
   if (!open) return null
+
+  const isClientOverLimit = feature === 'CLIENT_OVER_LIMIT'
 
   return (
     <div
@@ -31,10 +33,10 @@ export function UpgradeModal() {
       >
         <div className="mb-4">
           <span className="inline-flex items-center px-2.5 py-0.5 font-sans font-medium text-xs tracking-wide border rounded-full bg-slate-100 text-slate-700 mb-2 block w-fit">
-            UPGRADE NECESSÁRIO
+            {isClientOverLimit ? 'CLIENTE BLOQUEADO' : 'UPGRADE NECESSÁRIO'}
           </span>
           <h2 className="font-serif font-bold text-xl text-slate-900">
-            Plano {upgradeRequired} necessário
+            {isClientOverLimit ? 'Limite de clientes ativos atingido' : `Plano ${upgradeRequired} necessário`}
           </h2>
         </div>
 
@@ -44,11 +46,11 @@ export function UpgradeModal() {
           <button
             onClick={() => {
               closeModal()
-              router.push('/settings/billing')
+              router.push(isClientOverLimit ? '/clients/list' : '/settings/billing')
             }}
             className="inline-flex items-center justify-center gap-2 px-4 py-2.5 font-sans font-medium text-sm rounded-md bg-slate-900 text-white hover:bg-slate-800 transition-colors duration-200 cursor-pointer select-none shadow-sm flex-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2"
           >
-            Ver Planos
+            {isClientOverLimit ? 'Gerenciar Clientes' : 'Ver Planos'}
           </button>
           <button
             onClick={closeModal}
