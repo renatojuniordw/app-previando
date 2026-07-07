@@ -1,6 +1,6 @@
 # Documentação de Contexto e Arquitetura — Previando App
 
-> Última atualização: 2026-07-03
+> Última atualização: 2026-07-07
 > Este documento fornece um panorama geral da arquitetura, bibliotecas e estrutura do projeto.
 
 ---
@@ -31,7 +31,7 @@ O projeto é uma aplicação web Full-Stack baseada em **Next.js 14 (App Router)
 - `@prisma/client` / `prisma` (^5.22)
 
 ### Autenticação e Segurança
-- `next-auth` (^5.0.0-beta.25), `@auth/prisma-adapter`, `bcryptjs`, `isomorphic-dompurify`, `zod`
+- `next-auth` (^5.0.0-beta.31), `@auth/prisma-adapter`, `bcryptjs`, `isomorphic-dompurify`, `zod`
 
 ### Filas e Processamento
 - `bullmq` (^5.23), `ioredis`
@@ -112,6 +112,8 @@ src/
 ├── store/              # Zustand (sidebar, upgrade-modal, toast)
 └── types/              # bpc-social.ts, xlsx.d.ts
 ```
+
+> **Convenções AGENTS.md:** O projeto possui um `AGENTS.md` na raiz que documenta todas as convenções de código, comandos, arquitetura e regras DRY + SOLID para agentes de IA. Consulte-o antes de qualquer modificação no código-fonte.
 
 ---
 

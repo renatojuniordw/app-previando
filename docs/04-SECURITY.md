@@ -1,6 +1,6 @@
 # 04 — SECURITY
 > Auth, Middleware, Bloqueios Físicos, Sanitização e Rate Limiting
-> Última atualização: 2026-06-29
+> Última atualização: 2026-07-07
 
 ---
 
@@ -54,14 +54,32 @@ const ADMIN_ROUTES = ['/admin', '/api/admin']
 - **Limites por operação:**
 
 | Operação | Limite | Janela |
-|---|---|---|
+|---|---|---|---|
 | Upload CNIS | 10 | 1 hora |
 | Registro | 3 | 1 hora |
+| Forgot/Reset Password | 5 | 1 hora |
 | Pareceres IA | 20 | 1 hora |
 | Diagnósticos | 10 | 1 hora |
-| BPC (todas) | 15 | 1 hora |
-| Carrossel BPC | 15 | 1 hora |
-| Portal do Cliente (simulador) | 5 | 1 hora |
+| BPC (formulário) | 10 | 1 hora |
+| BPC (análises IA) | 15 | 1 hora |
+| Portal (gerar token) | 5 | 1 hora |
+| Portal (simulador) | 5 | 1 hora |
+| Portal (verify) | 10 | 1 hora |
+| Subscribe / Billing | 5 | 1 hora |
+| Notes (prontuário) | 20 | 1 hora |
+| Status update | 20 | 1 hora |
+| Cálculos | 10 | 1 hora |
+| Retroativos | 10 | 1 hora |
+| Clients (update) | 20 | 1 hora |
+| Clients (bulk) | 3 | 1 hora |
+| Clients (delete) | 5 | 1 hora |
+| Users (password) | 5 | 1 hora |
+| Users (profile) | 10 | 1 hora |
+| Users (delete account) | 2 | 1 hora |
+| PDF tools | 20 | 1 hora |
+| Cases (update) | 20 | 1 hora |
+| Cases (delete) | 5 | 1 hora |
+| Import preview | 10 | 1 hora |
 
 ---
 
@@ -112,6 +130,22 @@ export async function verifyClientOwnership(clientId: string, userId: string): P
 
 ---
 
+## Controle de Acesso (OpenAPI)
+
+- **`GET /api/openapi`**: Schema OpenAPI da aplicação
+- **Sem `Access-Control-Allow-Origin: '*'`** — removido em 2026-07-07
+- Acesso requer autenticação (cookie de sessão)
+
+---
+
+## CEP Validation
+
+- **Arquivo:** `src/app/api/cep/route.ts`
+- Validação com regex `/^\d{8}$/` — apenas dígitos, exatamente 8
+- Timeout de 5 segundos via `AbortSignal.timeout(5000)`
+
+---
+
 ## Sanitização
 
 Arquivo: `src/lib/sanitize.ts`
@@ -141,7 +175,7 @@ export async function validatePDFUpload(buffer: Buffer, fileName: string, mimeTy
 
 ## Headers de Segurança
 
-- **CSP:** script-src 'self' 'unsafe-inline', frame-ancestors 'none', frame-src 'self' blob:, connect-src inclui r2.cloudflarestorage.com
+- **CSP:** Nonce-based por requisição — `script-src 'self' 'nonce-{nonce}' 'wasm-unsafe-eval'`. Nunca `'unsafe-inline'`.
 - **X-Frame-Options:** DENY
 - **X-Content-Type-Options:** nosniff
 - **HSTS:** max-age=31536000; includeSubDomains
@@ -173,6 +207,19 @@ export async function requireAdmin(): Promise<{ error: NextResponse } | { userId
 
 ---
 
+## Webhook Security
+
+### Mercado Pago
+- **Arquivo:** `src/app/api/webhooks/mercadopago/route.ts`
+- **Verificação HMAC-SHA256** via `x-signature`, `x-request-id`, `data.id`
+- **Comparação timing-safe** usando `timingSafeEqual` (não `===`)
+- **Lock por subscription** (Redis, TTL 30s) — previne duplicatas
+- **Persistência de eventos brutos** antes do processamento
+- **500 em erro** em vez de 200 cego — permite retry automático do MP
+- **Não confia no payload** — faz fetch na API MP para dados autoritativos
+
+---
+
 ## Checklist Pré-Deploy
 
 - [ ] `NEXTAUTH_SECRET` gerado com `openssl rand -base64 32`
@@ -181,6 +228,9 @@ export async function requireAdmin(): Promise<{ error: NextResponse } | { userId
 - [ ] Cookies `httpOnly + secure` em produção
 - [ ] PostgreSQL exposto apenas em `127.0.0.1` (porta 60003)
 - [ ] Redis exposto apenas em `127.0.0.1` (porta 60004)
+- [ ] `.env.production` e `.env.development` no `.gitignore`
+- [ ] CORS wildcard removido do OpenAPI
+- [ ] Timing-safe comparison no webhook MP
 - [ ] Middleware cobrindo 100% das rotas
 - [ ] Ownership verificado em todos os endpoints com IDs
 - [ ] Seed de `PlanLimit` rodado
@@ -192,7 +242,7 @@ export async function requireAdmin(): Promise<{ error: NextResponse } | { userId
 
 ### Link Compartilhável
 
-- Token gerado via `cuid()` — imprevisível e único
+- Token gerado via `crypto.randomBytes(32).toString('base64url')` — 256 bits de entropia
 - Expira em 30 dias (`expiresAt`)
 - Advogado pode revogar a qualquer momento via `DELETE /api/cases/[id]/portal`
 - Rate limit: 5 req/hora para simulação (proteção contra brute force)

@@ -1,6 +1,6 @@
 # 00 — REGRAS DE NEGÓCIO
 > Previando — Glossário, Fluxos, Casos de Uso e Regras para o Agente
-> Última atualização: 2026-06-29
+> Última atualização: 2026-07-07
 
 ---
 
@@ -335,7 +335,7 @@ Todo limite verificado no banco via API — retorna 402.
 ### 5.9 Portal do Cliente — Controle de Acesso
 O Portal do Cliente permite ao advogado compartilhar dados do caso de forma **granular e segura**:
 
-- **Link único**: token `cuid()` com validade de 30 dias
+- **Link único**: token `crypto.randomBytes(32)` (256 bits) com validade de 30 dias
 - **Configurável via `portalConfig`**: o advogado ativa/desativa módulos individualmente
 - **Dados mínimos**: só expõe o que foi explicitamente autorizado
 - **Revogável**: link pode ser invalidado a qualquer momento
@@ -369,20 +369,7 @@ O Portal do Cliente permite ao advogado compartilhar dados do caso de forma **gr
 | Nenhum parecer | "Selecione um cálculo como definitivo para gerar o parecer." | — |
 | Portal inativo | "Nenhum link de portal ativo para este caso." | Gerar Link |
 
----
 
-## 6. Empty States
-
-| Situação | Mensagem | Ação |
-|---|---|---|
-| Nenhum cliente | "Cadastre o primeiro segurado para começar." | Cadastrar Cliente |
-| Cliente sem caso | "Crie um caso para iniciar o atendimento." | Criar Caso |
-| Kanban vazio | "Nenhum caso ativo. Cadastre um cliente e crie um caso." | Ver Clientes |
-| CNIS não enviado | "Faça o upload do CNIS para habilitar a calculadora." | Upload CNIS |
-| Prontuário vazio | "Registre o primeiro contato com o cliente." | + Anotação |
-| Nenhum parecer | "Selecione um cálculo como definitivo para gerar o parecer." | — |
-
----
 
 ## 7. Onboarding — Textos Contextuais
 

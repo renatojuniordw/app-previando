@@ -1,6 +1,6 @@
 # 08 — SAAS: PLANOS E PAGAMENTOS
 > Freemium, Mercado Pago Subscriptions, Webhooks
-> Última atualização: 2026-06-27
+> Última atualização: 2026-07-07
 
 ---
 
@@ -55,6 +55,10 @@ POST /api/billing/subscribe → cria subscription MP
   → Webhook atualiza user.plan + user.planStatus
   → MP redireciona para app.previando.com.br/settings/billing?status=success
 ```
+
+### Rate Limiting
+
+`POST /api/billing/subscribe` agora possui rate limit de **5 requisições/hora** por usuário.
 
 ---
 

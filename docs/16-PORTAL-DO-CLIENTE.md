@@ -1,7 +1,7 @@
 # 16 — Portal do Cliente: Compartilhamento Seguro
 
 > Configuração granular do que o cliente pode ver via link único
-> Última atualização: 2026-06-29
+> Última atualização: 2026-07-07
 
 ---
 
@@ -16,7 +16,7 @@ O Portal do Cliente permite que o advogado **compartilhe um link único** com o 
 | Princípio | Implementação |
 |---|---|
 | **Dados mínimos** | Só expõe o que o advogado explicitamente autorizou |
-| **Token opaco** | Link usa `cuid()` aleatório — não expõe IDs internos |
+| **Token opaco** | Link usa `crypto.randomBytes(32).toString('base64url')` (256 bits) — não expõe IDs internos |
 | **Expiração automática** | Link expira em 30 dias |
 | **Revogação imediata** | `DELETE /api/cases/[id]/portal` invalida o link na hora |
 | **Zero dados bancários** | CPF nunca é exposto (nem hash). Telefone e email nunca são expostos |

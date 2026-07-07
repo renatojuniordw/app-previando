@@ -1,6 +1,6 @@
 # 01 — DATABASE
 > PostgreSQL 16 + Prisma ORM — banco: previando_db
-> Última atualização: 2026-06-29
+> Última atualização: 2026-07-07
 
 ---
 
@@ -91,7 +91,17 @@ Tabela: `users`
 | `image` | `String?` | URL da imagem do perfil |
 | `password` | `String?` | Hash bcrypt |
 | `oabNumber` | `String?` | Número OAB |
+| `cpf` | `String?` | CPF do advogado |
 | `phone` | `String?` | Telefone |
+| `maritalStatus` | `String?` | Estado civil |
+| `profession` | `String?` | Profissão |
+| `street` | `String?` | Logradouro |
+| `streetNumber` | `String?` | Número |
+| `complement` | `String?` | Complemento |
+| `neighborhood` | `String?` | Bairro |
+| `city` | `String?` | Cidade |
+| `state` | `String?` | Estado |
+| `zipCode` | `String?` | CEP |
 | `plan` | `Plan @default(FREE)` | Plano |
 | `planStatus` | `PlanStatus @default(ACTIVE)` | Status da assinatura |
 | `mpCustomerId` | `String? @unique` | ID do cliente no MP |
@@ -99,10 +109,14 @@ Tabela: `users`
 | `mpSubscriptionStatus` | `String?` | Status da assinatura MP |
 | `planExpiresAt` | `DateTime?` | Expiração do plano |
 | `isAdmin` | `Boolean @default(false)` | Acesso administrativo |
-| `createdAt` | `DateTime @default(now())` | Data de criação |
-| `updatedAt` | `DateTime @updatedAt` | Data de atualização |
+| `firstLoginAt` | `DateTime?` | Primeiro login |
+| `passwordChangedAt` | `DateTime?` | Invalida JWT emitidos antes do reset |
+| `termsAcceptedAt` | `DateTime?` | Aceite LGPD (Art. 7º, I) |
+| `deletedAt` | `DateTime?` | Soft delete (LGPD Art. 18, VI) |
+| `createdAt` | `DateTime @default(now())` | Criação |
+| `updatedAt` | `DateTime @updatedAt` | Atualização |
 
-**Relações:** `accounts`, `sessions`, `clients`, `cases`, `caseNotes`, `usageRecord?`, `payments`, `auditLogs`, `notifications`
+**Relações:** contém `accounts`, `sessions`, `clients`, `cases`, `caseNotes`, `usageRecord?`, `payments`, `auditLogs`, `notifications`, `clientAccess`, `documents`, `supportTickets`
 
 ---
 
@@ -144,6 +158,10 @@ Tabela: `plan_limits`
 | `bpcEnabled` | `Boolean` | Módulo BPC |
 | `bpcAnalysesPerMonth` | `Int` | Análises BPC/mês |
 | `bpcSocialMediaPerMonth` | `Int` | Carrosséis BPC/mês |
+| `revisionEnabled` | `Boolean @default(false)` | Revisão de benefício |
+| `maxRevisionsPerMonth` | `Int @default(0)` | Máx. revisões/mês |
+| `gpsEnabled` | `Boolean @default(false)` | Guias GPS |
+| `viabilityScoreEnabled` | `Boolean @default(false)` | Score de viabilidade |
 | `peticaoEnabled` | `Boolean` | Petição Inicial IA |
 | `maxPeticoesPerMonth` | `Int` | Máx. petições/mês |
 | `processInterpretEnabled` | `Boolean` | Interpretação de movimentações IA |
@@ -189,14 +207,26 @@ Tabela: `clients`
 | `name` | `String` | Nome |
 | `cpfHash` | `String` | Hash HMAC-SHA256 |
 | `birthDate` | `DateTime` | Data de nascimento |
+| `gender` | `String?` | 'M' ou 'F' |
 | `phone` | `String?` | Telefone (5511999999999) |
 | `email` | `String?` | E-mail |
+| `maritalStatus` | `String?` | Estado civil |
+| `profession` | `String?` | Profissão |
+| `street` | `String?` | Logradouro |
+| `streetNumber` | `String?` | Número |
+| `complement` | `String?` | Complemento |
+| `neighborhood` | `String?` | Bairro |
+| `city` | `String?` | Cidade |
+| `state` | `String?` | Estado |
+| `zipCode` | `String?` | CEP |
 | `priority` | `Priority @default(NORMAL)` | Prioridade |
 | `notes` | `String?` | Observações |
+| `active` | `Boolean @default(true)` | Ativo (plano limit) |
+| `anonymizedAt` | `DateTime?` | LGPD Art. 18, IV |
 | `createdAt` | `DateTime @default(now())` | Criação |
 | `updatedAt` | `DateTime @updatedAt` | Atualização |
 
-**Relações:** `user -> User` (Cascade), `cases -> Case[]`
+**Relações:** `user -> User` (Cascade), `cases -> Case[]`, `cnisDocument -> CnisDocument?`
 **Índices:** `@@index([userId])`
 
 ---
@@ -231,6 +261,7 @@ Tabela: `cases`
 | `deadlineDays` | `Int?` | Prazo em dias |
 | `deadlineDate` | `DateTime?` | Data do prazo |
 | `notes` | `String?` | Observações |
+| `portalConfig` | `Json` | Configuração do Portal do Cliente |
 | `createdAt` | `DateTime @default(now())` | Criação |
 | `updatedAt` | `DateTime @updatedAt` | Atualização |
 
@@ -524,6 +555,103 @@ Tabela: `inpc_indices`
 
 ---
 
+### Documentos Avulsos
+
+#### Document
+Tabela: `documents`
+
+| Campo | Tipo | Descrição |
+|---|---|---|
+| `id` | `String @id @default(cuid())` | Identificador único |
+| `caseId` | `String` | FK para Case |
+| `userId` | `String` | FK para User |
+| `r2Key` | `String @unique` | Chave no R2 |
+| `fileName` | `String` | Nome do arquivo |
+| `contentType` | `String` | Tipo MIME |
+| `createdAt` | `DateTime @default(now())` | Criação |
+
+**Índices:** `@@index([caseId])`, `@@index([userId])`
+
+---
+
+### Guias GPS/DAS
+
+#### GpsGuide
+Tabela: `gps_guides`
+
+`categoria`, `plano`, `salarioContribuicao`, `valorCalculado`, `aliquota`, `codigoPagamento`, `competencia`, `pdfUrl?`, `createdAt`
+
+---
+
+### Revisão de Benefício
+
+#### Revision
+Tabela: `revisions`
+
+`tipoRevisao`, `rmiConcedido`, `rmiRevisado`, `diferencaMensal`, `diferencaPercentual`, `retroativos5Anos`, `elegivel`, `pendencias` (String[]), `createdAt`
+
+---
+
+### Honorários
+
+#### Fee
+Tabela: `fees`
+
+`retroactiveId?` (unique), `description`, `type` (FeeType), `totalAmount`, `paidAmount`, `dueDate?`, `status` (FeeStatus), `notes?`, `createdAt`, `updatedAt`
+
+#### FeePayment
+Tabela: `fee_payments`
+
+`feeId`, `amount`, `paidAt`, `notes?`, `createdAt`
+
+#### FeeType Enum
+`FIXED`, `CONTINGENCY`, `PERCENTAGE`, `OTHER`
+
+#### FeeStatus Enum
+`PENDING`, `PARTIAL`, `PAID`, `OVERDUE`, `CANCELLED`
+
+---
+
+### Eventos de Webhook
+
+#### WebhookEvent
+Tabela: `webhook_events`
+
+`provider`, `eventType`, `externalId?`, `payload` (Json), `processedAt?`, `error?`, `createdAt`
+**Índices:** `@@index([provider, externalId])`, `@@index([processedAt])`
+
+---
+
+### Auditoria — Cadeia de Hash
+
+#### AuditChainState
+Tabela: `audit_chain_state`
+
+| Campo | Tipo | Descrição |
+|---|---|---|
+| `id` | `Int @id @default(1)` | Única linha (id fixo) |
+| `lastHash` | `String @default("genesis")` | SHA-256 da última entrada |
+
+Serializa workers concorrentes via `SELECT ... FOR UPDATE`.
+
+---
+
+### Suporte / Chamados
+
+#### SupportTicket
+Tabela: `support_tickets`
+
+`userId`, `subject`, `message` (Text), `status` (TicketStatus), `priority` (TicketPriority), `adminNotes?`, `createdAt`, `updatedAt`
+**Índices:** `@@index([userId])`, `@@index([status])`, `@@index([createdAt])`
+
+#### TicketStatus Enum
+`OPEN`, `IN_PROGRESS`, `WAITING_USER`, `RESOLVED`, `CLOSED`
+
+#### TicketPriority Enum
+`LOW`, `NORMAL`, `HIGH`, `URGENT`
+
+---
+
 ## Seed Inicial
 
 O seed (`prisma/seed.ts`) popula automaticamente:
@@ -586,3 +714,5 @@ DATABASE_URL_UNPOOLED="postgresql://previando:senha@localhost:60003/previando_db
 5. `PlanLimit` editável pelo admin sem redeploy
 6. `UsageRecord` criado junto com o usuário no registro
 7. PostgreSQL exposto apenas em `127.0.0.1` (porta 60003)
+8. `.env.production` e `.env.development` no `.gitignore` — evita vazamento de secrets
+9. Todos os uploads validados: MIME, magic bytes, tamanho, extensão

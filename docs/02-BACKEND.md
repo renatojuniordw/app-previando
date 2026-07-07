@@ -1,6 +1,6 @@
 # 02 — BACKEND
 
-> Última atualização: 2026-07-03
+> Última atualização: 2026-07-07
 
 ---
 
@@ -179,170 +179,228 @@ PDF Upload → Extração de Texto → Parser Programático (instantâneo)
 - **Arquivo:** `src/services/mercadopago.ts`
 - **Preços:** SOLO: R$97, PRO: R$197
 
+### Calculation Plugins
+- **Arquivo:** `src/services/plugins/`
+- **Padrão:** Plugin strategy — cada modalidade previdenciária é um plugin independente
+- **Interface:** `CalculationPlugin` com `canApply()`, `calculate()`, `getRequirements()`
+- **Registro central:** `plugin-registry.ts` carrega todos os plugins via discovery
+- **Plugins ativos:** Aposentadoria por Idade, Aposentadoria por Tempo de Contribuição, Aposentadoria Especial, Pensão por Morte, Auxílio-Doença, Auxílio-Acidente, Salário-Maternidade, Aposentadoria da Pessoa com Deficiência, Aposentadoria do Professor, Aposentadoria Rural, Aposentadoria Híbrida, Aposentadoria por Pontos
+- **Extensão:** nova modalidade = novo arquivo plugin + registro; sem alteração no orchestrator
+
 ---
 
 ## 5. Mapa de Rotas API
 
 ### Autenticação
-| Método | Rota | Função |
-|--------|------|--------|
-| All | `/api/auth/[...nextauth]` | NextAuth v5 (session, signin, signout, callback) |
-| POST | `/api/auth/register` | Registro (bcrypt cost 12) |
-| POST | `/api/auth/forgot-password` | Envia email de redefinição (nodemailer) |
-| POST | `/api/auth/reset-password` | Redefine senha com token |
+| Método | Rota | Função | Limite | Janela |
+|--------|------|--------|----------|---------|
+| All | `/api/auth/[...nextauth]` | NextAuth v5 (session, signin, signout, callback) | - | - |
+| POST | `/api/auth/register` | Registro (bcrypt cost 12) | 3 | 1h |
+| POST | `/api/auth/forgot-password` | Envia email de redefinição (nodemailer) | 5 | 1h |
+| POST | `/api/auth/reset-password` | Redefine senha com token | 5 | 1h |
 
 ### Usage
-| Método | Rota | Função |
-|--------|------|--------|
-| GET | `/api/usage` | Uso atual + limites (com reset inline mensal) |
+| Método | Rota | Função | Limite | Janela |
+|--------|------|--------|----------|---------|
+| GET | `/api/usage` | Uso atual + limites (com reset inline mensal) | - | - |
 
 ### Clients
-| Método | Rota | Função |
-|--------|------|--------|
-| GET | `/api/clients` | Lista (paginado, busca, prioridade) |
-| POST | `/api/clients` | Cria (hash CPF) |
-| GET | `/api/clients/[id]` | Detalhe |
-| PUT/DELETE | `/api/clients/[id]` | Atualiza/Exclui |
-| PATCH | `/api/clients/[id]/priority` | Prioridade |
-| POST | `/api/clients/import` | CSV (3/hora) |
+| Método | Rota | Função | Limite | Janela |
+|--------|------|--------|----------|---------|
+| GET | `/api/clients` | Lista (paginado, busca, prioridade) | - | - |
+| POST | `/api/clients` | Cria (hash CPF) | 60 | 1h |
+| GET | `/api/clients/[id]` | Detalhe | - | - |
+| PUT | `/api/clients/[id]` | Atualiza | 20 | 1h |
+| DELETE | `/api/clients/[id]` | Exclui | 5 | 1h |
+| PATCH | `/api/clients/[id]/priority` | Prioridade | 20 | 1h |
+| POST | `/api/clients/import` | CSV (3/hora) | 3 | 1h |
 
 ### Cases
-| Método | Rota | Função |
-|--------|------|--------|
-| GET | `/api/cases` | Lista (filtros: status, clientId, priority, benefitType, search) |
-| POST | `/api/cases` | Cria (12 tipos) |
-| GET | `/api/cases/[id]` | Detalhe (caseOverview com client, CNIS, cálculos) |
-| PATCH | `/api/cases/[id]` | Atualiza |
-| DELETE | `/api/cases/[id]` | Exclui |
-| PATCH | `/api/cases/[id]/status` | Status |
-| POST | `/api/cases/[id]/process` | Consulta DataJud |
+| Método | Rota | Função | Limite | Janela |
+|--------|------|--------|----------|---------|
+| GET | `/api/cases` | Lista (filtros: status, clientId, priority, benefitType, search) | - | - |
+| POST | `/api/cases` | Cria (12 tipos) | - | - |
+| GET | `/api/cases/[id]` | Detalhe (caseOverview com client, CNIS, cálculos) | - | - |
+| PATCH | `/api/cases/[id]` | Atualiza | 20 | 1h |
+| DELETE | `/api/cases/[id]` | Exclui | 5 | 1h |
+| PATCH | `/api/cases/[id]/status` | Status | 20 | 1h |
+| POST | `/api/cases/[id]/process` | Consulta DataJud | - | - |
 
 ### Prontuário (Notes)
-| Método | Rota | Função |
-|--------|------|--------|
-| GET/POST | `/api/cases/[id]/notes` | Lista/Cria (7 tipos) |
-| PATCH/DELETE | `/api/cases/[id]/notes/[nId]` | Atualiza/Exclui |
-| GET | `/api/cases/[id]/notes/diagnosis` | Diagnóstico IA |
+| Método | Rota | Função | Limite | Janela |
+|--------|------|--------|----------|---------|
+| GET | `/api/cases/[id]/notes` | Lista (7 tipos) | - | - |
+| POST | `/api/cases/[id]/notes` | Cria | 20 | 1h |
+| PATCH/DELETE | `/api/cases/[id]/notes/[nId]` | Atualiza/Exclui | - | - |
+| GET | `/api/cases/[id]/notes/diagnosis` | Diagnóstico IA | 10 | 1h |
 
 ### CNIS
-| Método | Rota | Função |
-|--------|------|--------|
-| POST | `/api/cnis/upload` | Upload PDF (10/hora) |
-| GET/DELETE | `/api/cnis/[caseId]` | Detalhe/Exclui |
-| GET | `/api/cnis/[caseId]/status` | Status |
-| POST | `/api/cnis/[caseId]/reprocess` | Reprocessa |
+| Método | Rota | Função | Limite | Janela |
+|--------|------|--------|----------|---------|
+| POST | `/api/cnis/upload` | Upload PDF | 10 | 1h |
+| GET/DELETE | `/api/cnis/[caseId]` | Detalhe/Exclui | - | - |
+| GET | `/api/cnis/[caseId]/status` | Status | - | - |
+| POST | `/api/cnis/[caseId]/reprocess` | Reprocessa | - | - |
 
 ### Cálculos
-| Método | Rota | Função |
-|--------|------|--------|
-| GET/POST | `/api/cases/[id]/calculations` | Lista/Executa |
-| DELETE | `/api/cases/[id]/calculations/[cId]` | Exclui |
-| PATCH | `/api/cases/[id]/calculations/[cId]/select` | Seleciona ativo |
+| Método | Rota | Função | Limite | Janela |
+|--------|------|--------|----------|---------|
+| GET | `/api/cases/[id]/calculations` | Lista | - | - |
+| POST | `/api/cases/[id]/calculations` | Executa | 10 | 1h |
+| DELETE | `/api/cases/[id]/calculations/[cId]` | Exclui | 10 | 1h |
+| PATCH | `/api/cases/[id]/calculations/[cId]/select` | Seleciona ativo | 20 | 1h |
 
 ### Retroativos
-| Método | Rota | Função |
-|--------|------|--------|
-| GET/POST | `/api/cases/[id]/retroativos` | Lista/Calcula |
+| Método | Rota | Função | Limite | Janela |
+|--------|------|--------|----------|---------|
+| GET | `/api/cases/[id]/retroativos` | Lista | - | - |
+| POST | `/api/cases/[id]/retroativos` | Calcula | 10 | 1h |
 
 ### Simulações
-| Método | Rota | Função |
-|--------|------|--------|
-| GET/POST | `/api/cases/[id]/simulations` | Lista/Executa |
-| DELETE | `/api/cases/[id]/simulations/[sId]` | Exclui |
+| Método | Rota | Função | Limite | Janela |
+|--------|------|--------|----------|---------|
+| GET/POST | `/api/cases/[id]/simulations` | Lista/Executa | - | - |
+| DELETE | `/api/cases/[id]/simulations/[sId]` | Exclui | - | - |
 
 ### Checklist
-| Método | Rota | Função |
-|--------|------|--------|
-| GET/PATCH | `/api/cases/[id]/checklist` | Lista/Atualiza |
+| Método | Rota | Função | Limite | Janela |
+|--------|------|--------|----------|---------|
+| GET/PATCH | `/api/cases/[id]/checklist` | Lista/Atualiza | - | - |
 
 ### Pareceres (Opinions)
-| Método | Rota | Função |
-|--------|------|--------|
-| GET/POST | `/api/cases/[id]/opinions` | Lista/Gera |
-| PUT | `/api/cases/[id]/opinions/[oId]` | Edita |
+| Método | Rota | Função | Limite | Janela |
+|--------|------|--------|----------|---------|
+| GET | `/api/cases/[id]/opinions` | Lista | - | - |
+| POST | `/api/cases/[id]/opinions` | Gera | 20 | 1h |
+| PUT | `/api/cases/[id]/opinions/[oId]` | Edita | - | - |
 
 ### BPC (7 rotas)
-| Método | Rota | Função |
-|--------|------|--------|
-| GET/POST | `/api/cases/[id]/bpc` | Formulário (upsert) |
-| POST | `/api/cases/[id]/bpc/pre-analysis` | Pré-análise |
-| POST | `/api/cases/[id]/bpc/laudo` | Análise de laudo |
-| POST | `/api/cases/[id]/bpc/social` | Gera relato social (JSON estruturado) |
-| PATCH | `/api/cases/[id]/bpc/social` | Salva relato editado |
-| POST | `/api/cases/[id]/bpc/medical` | Perguntas médicas |
-| POST | `/api/cases/[id]/bpc/checklist` | Checklist |
+| Método | Rota | Função | Limite | Janela |
+|--------|------|--------|----------|---------|
+| GET | `/api/cases/[id]/bpc` | Lista | - | - |
+| POST | `/api/cases/[id]/bpc` | Formulário (upsert) | 10 | 1h |
+| POST | `/api/cases/[id]/bpc/pre-analysis` | Pré-análise | 15 | 1h |
+| POST | `/api/cases/[id]/bpc/laudo` | Análise de laudo | 15 | 1h |
+| POST | `/api/cases/[id]/bpc/social` | Gera relato social (JSON estruturado) | 15 | 1h |
+| PATCH | `/api/cases/[id]/bpc/social` | Salva relato editado | - | - |
+| POST | `/api/cases/[id]/bpc/medical` | Perguntas médicas | 15 | 1h |
+| POST | `/api/cases/[id]/bpc/checklist` | Checklist | 15 | 1h |
 
 ### Sugestão de Modalidades
-| Método | Rota | Função |
-|--------|------|--------|
-| GET | `/api/cases/[id]/suggest-modalities` | Sugere modalidades (22 cálculos, 10 req/min) |
+| Método | Rota | Função | Limite | Janela |
+|--------|------|--------|----------|---------|
+| GET | `/api/cases/[id]/suggest-modalities` | Sugere modalidades (22 cálculos) | 10 | 1h |
 
 ### Export
-| Método | Rota | Função |
-|--------|------|--------|
-| GET | `/api/export/pdf/[caseId]` | Gera PDF (pdfkit) |
+| Método | Rota | Função | Limite | Janela |
+|--------|------|--------|----------|---------|
+| GET | `/api/export/pdf/[caseId]` | Gera PDF (pdfkit) | - | - |
 
 ### Billing
-| Método | Rota | Função |
-|--------|------|--------|
-| GET | `/api/billing/plans` | Lista planos |
-| POST | `/api/billing/subscribe` | Cria assinatura MP |
-| POST | `/api/billing/cancel` | Cancela |
+| Método | Rota | Função | Limite | Janela |
+|--------|------|--------|----------|---------|
+| GET | `/api/billing/plans` | Lista planos | - | - |
+| POST | `/api/billing/subscribe` | Cria assinatura MP | 5 | 1h |
+| POST | `/api/billing/cancel` | Cancela | - | - |
 
 ### Webhooks
-| Método | Rota | Função |
-|--------|------|--------|
-| POST | `/api/webhooks/mercadopago` | Webhook MP (HMAC validation) |
+| Método | Rota | Função | Limite | Janela |
+|--------|------|--------|----------|---------|
+| POST | `/api/webhooks/mercadopago` | Webhook MP (HMAC validation) | - | - |
 
 ### Notificações
-| Método | Rota | Função |
-|--------|------|--------|
-| GET | `/api/notifications` | Lista (50 recentes) |
-| POST | `/api/notifications/[id]/read` | Marca como lida |
+| Método | Rota | Função | Limite | Janela |
+|--------|------|--------|----------|---------|
+| GET | `/api/notifications` | Lista (50 recentes) | - | - |
+| POST | `/api/notifications/[id]/read` | Marca como lida | - | - |
 
 ### Activity
-| Método | Rota | Função |
-|--------|------|--------|
-| GET | `/api/activity` | Log de atividade (paginado) |
+| Método | Rota | Função | Limite | Janela |
+|--------|------|--------|----------|---------|
+| GET | `/api/activity` | Log de atividade (paginado) | - | - |
 
 ### Dashboard
-| Método | Rota | Função |
-|--------|------|--------|
-| GET | `/api/dashboard/summary` | Resumo (clientes, casos, cálculos, prazos) |
-| GET | `/api/dashboard/deadlines` | Prazos próximos (30 dias) |
+| Método | Rota | Função | Limite | Janela |
+|--------|------|--------|----------|---------|
+| GET | `/api/dashboard/summary` | Resumo (clientes, casos, cálculos, prazos) | - | - |
+| GET | `/api/dashboard/deadlines` | Prazos próximos (30 dias) | - | - |
 
 ### Ferramentas
-| Método | Rota | Função |
-|--------|------|--------|
-| GET | `/api/pdf/[tool]` | PDF (ex: consolidado BPC) |
-| GET | `/api/documents/download` | Download de documento |
+| Método | Rota | Função | Limite | Janela |
+|--------|------|--------|----------|---------|
+| GET | `/api/pdf/[tool]` | PDF (ex: consolidado BPC) | - | - |
+| GET | `/api/documents/download` | Download de documento | - | - |
 
 ### Cron
-| Método | Rota | Função |
-|--------|------|--------|
-| GET | `/api/cron/check-processes` | Verifica processos |
-| GET | `/api/cron/reset-usage` | Reseta uso mensal |
+| Método | Rota | Função | Limite | Janela |
+|--------|------|--------|----------|---------|
+| GET | `/api/cron/check-processes` | Verifica processos | - | - |
+| GET | `/api/cron/reset-usage` | Reseta uso mensal | - | - |
 
 ### Health
-| Método | Rota | Função |
-|--------|------|--------|
-| GET | `/api/health` | Health check (DB, Redis, R2) |
+| Método | Rota | Função | Limite | Janela |
+|--------|------|--------|----------|---------|
+| GET | `/api/health` | Health check (DB, Redis, R2) | - | - |
 
 ### Admin (requer `isAdmin`)
-| Método | Rota | Função |
-|--------|------|--------|
-| GET | `/api/admin/metrics` | Métricas |
-| GET | `/api/admin/users` | Lista usuários |
-| PATCH | `/api/admin/users/[id]/plan` | Altera plano |
-| PATCH | `/api/admin/users/[id]/status` | Suspende/ativa |
-| GET | `/api/admin/payments` | Pagamentos |
-| PATCH | `/api/admin/plans/[plan]` | Edita PlanLimit |
-| GET/POST | `/api/admin/modalidades` | CRUD Modalidades |
-| PATCH/DELETE | `/api/admin/modalidades/[id]` | CRUD |
-| GET/POST | `/api/admin/salario-minimo` | CRUD Salário Mínimo |
-| PATCH/DELETE | `/api/admin/salario-minimo/[id]` | CRUD |
-| GET/POST | `/api/admin/regras-aposentadoria` | CRUD Regras |
-| PATCH/DELETE | `/api/admin/regras-aposentadoria/[id]` | CRUD |
+| Método | Rota | Função | Limite | Janela |
+|--------|------|--------|----------|---------|
+| GET | `/api/admin/metrics` | Métricas | - | - |
+| GET | `/api/admin/users` | Lista usuários | - | - |
+| PATCH | `/api/admin/users/[id]/plan` | Altera plano | - | - |
+| PATCH | `/api/admin/users/[id]/status` | Suspende/ativa | - | - |
+| GET | `/api/admin/payments` | Pagamentos | - | - |
+| PATCH | `/api/admin/plans/[plan]` | Edita PlanLimit | - | - |
+| GET/POST | `/api/admin/modalidades` | CRUD Modalidades | - | - |
+| PATCH/DELETE | `/api/admin/modalidades/[id]` | CRUD | - | - |
+| GET/POST | `/api/admin/salario-minimo` | CRUD Salário Mínimo | - | - |
+| PATCH/DELETE | `/api/admin/salario-minimo/[id]` | CRUD | - | - |
+| GET/POST | `/api/admin/regras-aposentadoria` | CRUD Regras | - | - |
+| PATCH/DELETE | `/api/admin/regras-aposentadoria/[id]` | CRUD | - | - |
+
+### Rate Limiting Coverage (2026-07-07)
+
+Todas as rotas de mutação possuem rate limiting via sliding window Redis + fallback em memória:
+
+| Rota | Limite | Janela |
+|------|--------|--------|
+| POST /api/auth/register | 3 | 1h |
+| POST /api/auth/forgot-password | 5 | 1h |
+| POST /api/auth/reset-password | 5 | 1h |
+| POST /api/cnis/upload | 10 | 1h |
+| POST /api/cases/[id]/notes | 20 | 1h |
+| POST /api/cases/[id]/bpc | 10 | 1h |
+| POST /api/cases/[id]/bpc/pre-analysis | 15 | 1h |
+| POST /api/cases/[id]/bpc/laudo | 15 | 1h |
+| POST /api/cases/[id]/bpc/social | 15 | 1h |
+| POST /api/cases/[id]/bpc/medical | 15 | 1h |
+| POST /api/cases/[id]/bpc/checklist | 15 | 1h |
+| POST /api/cases/[id]/opinions | 20 | 1h |
+| GET /api/cases/[id]/notes/diagnosis | 10 | 1h |
+| POST /api/cases/[id]/suggest-modalities | 10 | 1h |
+| POST /api/billing/subscribe | 5 | 1h |
+| POST /api/clients | 60 | 1h |
+| POST /api/clients/import | 3 | 1h |
+| POST /api/cases/[id]/pdf/[tool] | 20 | 1h |
+| POST /api/pdf/[tool] | 20 | 1h |
+| PATCH /api/cases/[id]/status | 20 | 1h |
+| POST /api/cases/[id]/calculations | 10 | 1h |
+| POST /api/cases/[id]/retroativos | 10 | 1h |
+| POST /api/cases/[id]/portal | 5 | 1h |
+| PATCH /api/cases/[id]/portal/config | 10 | 1h |
+| PUT /api/cases/[id] | 20 | 1h |
+| DELETE /api/cases/[id] | 5 | 1h |
+| PUT /api/clients/[id] | 20 | 1h |
+| DELETE /api/clients/[id] | 5 | 1h |
+| POST /api/clients/bulk | 3 | 1h |
+| PATCH /api/clients/[id]/priority | 20 | 1h |
+| PATCH /api/clients/[id]/active | 20 | 1h |
+| PUT /api/users/password | 5 | 1h |
+| PUT /api/users/profile | 10 | 1h |
+| DELETE /api/users/account | 2 | 1h |
+| POST /api/clients/import/preview | 10 | 1h |
+| PATCH /api/cases/[id]/calculations/[cId]/select | 20 | 1h |
+| DELETE /api/cases/[id]/calculations/[cId] | 10 | 1h |
 
 ---
 
@@ -440,3 +498,15 @@ type PlanFeature =
 | `lib/pdf-generator.ts` | Geração de PDF com pdfkit |
 | `lib/email.ts` | Envio de email (nodemailer, password reset) |
 | `lib/constants.ts` | BENEFIT_LABELS, STATUS_LABELS, PRIORITY_LABELS |
+
+---
+
+## 10. Known Fixes & Patches
+
+### 2026-07-07 — Security Hardening
+- **OpenAPI CORS**: Removido `Access-Control-Allow-Origin: '*'` da rota `/api/openapi`
+- **Webhook timing-safe**: Trocado `===` por `timingSafeEqual` na verificação HMAC do MP
+- **Rate limiting expandido**: Adicionado rate limit em 17 rotas críticas (notes, bpc, calculations, subscribe, portal, etc.)
+- **CEP validation**: Adicionado regex `/^\d{8}$/` + `AbortSignal.timeout(5000)`
+- **Pre-existing TS fix**: `src/app/api/export/bpc-pdf/route.ts` — `ClientInfo | null` vs `ClientInfo | undefined`
+- **Dead code removed**: `Copy` import, `BpcConsolidatedPDFDocument` dynamic import, `acimaDoLimite` assignment, `Loader2` import in BpcResult, `getPageCount` function

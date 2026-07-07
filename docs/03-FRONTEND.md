@@ -1,6 +1,6 @@
 # 03 — FRONTEND
 > UI, Navegação, Drawers, Padrões de código, Performance
-> Última atualização: 2026-07-03
+> Última atualização: 2026-07-07
 
 ---
 
@@ -283,6 +283,7 @@ Rota legacy `/notes`, `/checklist`, `/opinions` redirecionam para `?drawer=` via
 | Componente | Motivo |
 |---|---|
 | `CasePDFDocument.tsx` | Nunca utilizado |
+| `BpcConsolidatedPDFDocument` (dynamic import) | Dead import — página gera PDF via API, não via componente frontend |
 | `BpcLaudoModal.tsx` | Nunca utilizado |
 | `BpcFormSection.tsx` | Nunca utilizado |
 | `ContextualTooltip.tsx` | Nunca utilizado |
@@ -348,7 +349,6 @@ const { create, update, remove, loading } = useCrudActions('/api/cases', {
 | `CaseBpcDrawer` | `next/dynamic` + ssr:false | Só abre sob demanda |
 | `CasePeticaoModal` | `next/dynamic` + ssr:false | Só abre sob demanda |
 | `BpcResult` | `next/dynamic` + ssr:false | react-markdown |
-| `BpcConsolidatedPDFDocument` | `next/dynamic` + ssr:false | @react-pdf (~140KB) |
 | `ComparePDFDocument` | `next/dynamic` + ssr:false | @react-pdf (~140KB) |
 | `ReportBarChart` | `next/dynamic` | Recharts (~80KB) |
 | `ReportPieChart` | `next/dynamic` | Recharts (~80KB) |
