@@ -45,3 +45,7 @@ prisma/*.db
 .agent/
 .agents/
 .claude/
+
+# MCP servers
+mcp/telegram/node_modules/
+mcp/telegram/dist/

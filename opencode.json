@@ -11,6 +11,16 @@
       "description": "Complete database schema with 25+ models"
     }
   },
+  "mcp": {
+    "telegram": {
+      "type": "local",
+      "command": ["node", "mcp/telegram/dist/index.js"],
+      "enabled": true,
+      "environment": {
+        "TELEGRAM_BOT_TOKEN": "{env:TELEGRAM_BOT_TOKEN}"
+      }
+    }
+  },
   "command": {
     "dev": { "template": "npm run dev", "description": "Start dev server on port 60002" },
     "build": { "template": "npm run build", "description": "Build for production" },

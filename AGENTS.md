@@ -67,6 +67,13 @@ prisma/schema.prisma — 821 lines, 25+ models
 docs/*.md             — 18 comprehensive documentation files
 ```
 
+## MCP Telegram
+- **Token**: `TELEGRAM_BOT_TOKEN` env var (get from @BotFather)
+- **Chat authorization**: By default any chat can message the bot. Use `telegram_authorize_chat` to restrict.
+- **First use**: Send `/start` to your bot on Telegram, then use `telegram_get_updates` to find your chat ID, then `telegram_authorize_chat` if needed.
+- **Conversation flow**: Use `telegram_send_message` to ask user something, then `telegram_get_updates` to wait for their response.
+- **Tools available**: `telegram_send_message`, `telegram_send_photo`, `telegram_send_document`, `telegram_get_updates`, `telegram_get_chat`, `telegram_authorize_chat`, `telegram_list_chats`
+
 ## Commands
 | Command | Description |
 |---------|-------------|

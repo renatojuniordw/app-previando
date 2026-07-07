@@ -71,6 +71,9 @@ services:
       - "127.0.0.1:60002:60002"
     env_file:
       - .env
+    environment:
+      DATABASE_URL: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}"
+      REDIS_URL: "redis://default:${REDIS_PASSWORD}@redis:6379"
     depends_on:
       postgres:
         condition: service_healthy
@@ -93,6 +96,9 @@ services:
     command: ["tsx", "src/jobs/worker.ts"]
     env_file:
       - .env
+    environment:
+      DATABASE_URL: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}"
+      REDIS_URL: "redis://default:${REDIS_PASSWORD}@redis:6379"
     depends_on:
       postgres:
         condition: service_healthy
