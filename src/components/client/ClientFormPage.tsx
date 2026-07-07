@@ -11,47 +11,11 @@ import { Select } from '@/components/ui/Select'
 import { Button } from '@/components/ui/Button'
 import { DatePicker } from '@/components/ui/DatePicker'
 import { useToast } from '@/store/toast'
-import { formatCPF, formatPhone, stripNonDigits } from '@/lib/masks'
+import { formatCEP, formatCPF, formatPhone, stripNonDigits } from '@/lib/masks'
 import { isValidCPF } from '@/lib/cpf'
+import { useCepLookup } from '@/hooks/useCepLookup'
+import { ESTADOS, ESTADO_CIVIL } from '@/lib/br-data'
 import { AlertCircle, ArrowLeft, UserPlus, UserCheck } from 'lucide-react'
-
-const ESTADOS = [
-  'AC',
-  'AL',
-  'AP',
-  'AM',
-  'BA',
-  'CE',
-  'DF',
-  'ES',
-  'GO',
-  'MA',
-  'MT',
-  'MS',
-  'MG',
-  'PA',
-  'PB',
-  'PR',
-  'PE',
-  'PI',
-  'RJ',
-  'RN',
-  'RS',
-  'RO',
-  'RR',
-  'SC',
-  'SP',
-  'SE',
-  'TO',
-]
-
-const ESTADO_CIVIL = [
-  { value: 'solteiro(a)', label: 'Solteiro(a)' },
-  { value: 'casado(a)', label: 'Casado(a)' },
-  { value: 'divorciado(a)', label: 'Divorciado(a)' },
-  { value: 'viuvo(a)', label: 'Viúvo(a)' },
-  { value: 'uniao estavel', label: 'União Estável' },
-]
 
 const GENERO = [
   { value: 'F', label: 'Feminino' },
@@ -101,7 +65,6 @@ export function ClientFormPage({ clientId }: ClientFormPageProps) {
   const [loading, setLoading] = useState(isEdit)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
-  const [cepLoading, setCepLoading] = useState(false)
 
   const {
     register,
@@ -150,20 +113,12 @@ export function ClientFormPage({ clientId }: ClientFormPageProps) {
       .finally(() => setLoading(false))
   }, [clientId, reset, addToast, router])
 
-  const lookupCep = async (raw: string) => {
-    if (raw.length !== 8) return
-    setCepLoading(true)
-    try {
-      const r = await api.get('/cep', { params: { cep: raw } })
-      setValue('street', r.data.street, { shouldValidate: true, shouldTouch: true })
-      setValue('neighborhood', r.data.neighborhood, { shouldValidate: true, shouldTouch: true })
-      setValue('city', r.data.city, { shouldValidate: true, shouldTouch: true })
-      setValue('state', r.data.state, { shouldValidate: true, shouldTouch: true })
-    } catch {
-    } finally {
-      setCepLoading(false)
-    }
-  }
+  const { cepLoading, lookupCep } = useCepLookup((address) => {
+    setValue('street', address.street, { shouldValidate: true, shouldTouch: true })
+    setValue('neighborhood', address.neighborhood, { shouldValidate: true, shouldTouch: true })
+    setValue('city', address.city, { shouldValidate: true, shouldTouch: true })
+    setValue('state', address.state, { shouldValidate: true, shouldTouch: true })
+  })
 
   const onSubmit = async (data: FormValues) => {
     if (!isEdit && !data.cpf) {
@@ -396,8 +351,7 @@ export function ClientFormPage({ clientId }: ClientFormPageProps) {
                 {...register('zipCode', {
                   onChange: (e) => {
                     const raw = stripNonDigits(e.target.value).slice(0, 8)
-                    const masked = raw.replace(/^(\d{5})(\d)/, '$1-$2')
-                    setValue('zipCode', masked, { shouldValidate: true })
+                    setValue('zipCode', formatCEP(raw), { shouldValidate: true })
                     if (raw.length === 8) lookupCep(raw)
                   },
                 })}

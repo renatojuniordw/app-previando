@@ -2,28 +2,16 @@
 
 import { useToast } from '@/store/toast'
 import { useSession } from 'next-auth/react'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import api from '@/lib/api'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
+import { AddressFields, type AddressValues } from '@/components/shared/AddressFields'
 import { formatCPF, stripNonDigits } from '@/lib/masks'
+import { ESTADO_CIVIL } from '@/lib/br-data'
 import { User, Shield, CreditCard, CheckCircle2, ChevronRight } from 'lucide-react'
 import Link from 'next/link'
-
-const ESTADOS = [
-  'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO',
-  'MA', 'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI',
-  'RJ', 'RN', 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO',
-]
-
-const ESTADO_CIVIL = [
-  { value: 'solteiro(a)', label: 'Solteiro(a)' },
-  { value: 'casado(a)', label: 'Casado(a)' },
-  { value: 'divorciado(a)', label: 'Divorciado(a)' },
-  { value: 'viuvo(a)', label: 'Viúvo(a)' },
-  { value: 'uniao estavel', label: 'União Estável' },
-]
 
 // Common styling for native selects to match <Input> component
 const selectClasses = "w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 disabled:cursor-not-allowed disabled:opacity-50 transition-colors"
@@ -51,6 +39,38 @@ export default function ProfilePage() {
 
   const { addToast } = useToast()
 
+  const hydrated = useRef(false)
+  useEffect(() => {
+    if (hydrated.current || !session?.user) return
+    hydrated.current = true
+    setName(session.user.name ?? '')
+    setOabNumber(session.user.oabNumber ?? '')
+    setCpf(session.user.cpf ?? '')
+    setPhone(session.user.phone ?? '')
+    setMaritalStatus(session.user.maritalStatus ?? '')
+    setProfession(session.user.profession ?? '')
+    setStreet(session.user.street ?? '')
+    setStreetNumber(session.user.streetNumber ?? '')
+    setComplement(session.user.complement ?? '')
+    setNeighborhood(session.user.neighborhood ?? '')
+    setCity(session.user.city ?? '')
+    setState(session.user.state ?? '')
+    setZipCode(session.user.zipCode ?? '')
+  }, [session])
+
+  const addressValues: AddressValues = { street, streetNumber, complement, neighborhood, city, state, zipCode }
+  const handleAddressChange = (field: keyof AddressValues, value: string) => {
+    switch (field) {
+      case 'street': setStreet(value); break
+      case 'streetNumber': setStreetNumber(value); break
+      case 'complement': setComplement(value); break
+      case 'neighborhood': setNeighborhood(value); break
+      case 'city': setCity(value); break
+      case 'state': setState(value); break
+      case 'zipCode': setZipCode(value); break
+    }
+  }
+
   const handleSaveProfile = async () => {
     setSavingProfile(true)
     try {
@@ -70,9 +90,12 @@ export default function ProfilePage() {
       await api.put('/users/profile', payload)
       await update()
       addToast({ type: 'success', title: 'Perfil atualizado' })
+      // `update()` do next-auth nem sempre reflete os novos dados no client
+      // de forma confiável (foi preciso deslogar/logar para ver a mudança em
+      // testes manuais). Um reload garante que a sessão seja lida do zero.
+      setTimeout(() => window.location.reload(), 600)
     } catch {
       addToast({ type: 'error', title: 'Erro', message: 'Não foi possível atualizar o perfil.' })
-    } finally {
       setSavingProfile(false)
     }
   }
@@ -188,34 +211,25 @@ export default function ProfilePage() {
           </div>
           <div className="md:col-span-2">
             <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-6 space-y-5">
-              <div className="grid grid-cols-1 sm:grid-cols-[1fr_120px] gap-5">
-                <Input label="Logradouro" value={street} onChange={(e) => setStreet(e.target.value)} placeholder="Rua, Avenida..." />
-                <Input label="Número" value={streetNumber} onChange={(e) => setStreetNumber(e.target.value)} placeholder="S/N" />
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                <Input label="Complemento" value={complement} onChange={(e) => setComplement(e.target.value)} placeholder="Apto, Bloco..." />
-                <Input label="Bairro" value={neighborhood} onChange={(e) => setNeighborhood(e.target.value)} placeholder="Bairro" />
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-[1fr_100px_120px] gap-5">
-                <Input label="Cidade" value={city} onChange={(e) => setCity(e.target.value)} placeholder="Cidade" />
-                <div>
-                  <label htmlFor="state" className={labelClasses}>UF</label>
-                  <select id="state" value={state} onChange={(e) => setState(e.target.value)} className={selectClasses}>
-                    <option value="">UF</option>
-                    {ESTADOS.map((e) => (
-                      <option key={e} value={e}>{e}</option>
-                    ))}
-                  </select>
-                </div>
-                <Input label="CEP" value={zipCode} onChange={(e) => setZipCode(e.target.value)} placeholder="00000-000" />
-              </div>
-              
-              <div className="pt-2 flex justify-end">
-                <Button onClick={handleSaveProfile} loading={savingProfile}>
-                  <CheckCircle2 className="w-4 h-4 mr-1.5" />
-                  Salvar Perfil
-                </Button>
-              </div>
+              <AddressFields values={addressValues} onChange={handleAddressChange} />
+            </div>
+          </div>
+        </div>
+
+        {/* Save bar: applies to Dados da Conta, Dados Pessoais e Endereço acima */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
+          <div className="md:col-span-1 hidden md:block" />
+          <div className="md:col-span-2">
+            <div className="flex items-center justify-between gap-4 bg-amber-50/60 border border-amber-200 rounded-xl px-5 py-4">
+              <p className="text-sm text-slate-600">
+                Salva as alterações de <span className="font-semibold">Dados da Conta</span>,{' '}
+                <span className="font-semibold">Dados Pessoais</span> e{' '}
+                <span className="font-semibold">Endereço</span>.
+              </p>
+              <Button onClick={handleSaveProfile} loading={savingProfile} className="shrink-0">
+                <CheckCircle2 className="w-4 h-4 mr-1.5" />
+                Salvar Alterações
+              </Button>
             </div>
           </div>
         </div>

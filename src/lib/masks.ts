@@ -37,6 +37,15 @@ export function formatPhone(value: string): string {
 }
 
 /**
+ * Format raw digits as CEP: XXXXX-XXX
+ * Accepts up to 8 digits.
+ */
+export function formatCEP(value: string): string {
+  const digits = stripNonDigits(value).slice(0, 8)
+  return digits.replace(/^(\d{5})(\d)/, '$1-$2')
+}
+
+/**
  * Format raw digits as BRL currency value for display.
  * Returns a string like "1.234,56" (without the R$ symbol).
  * The value is in cents — e.g., "123456" → "1.234,56".
