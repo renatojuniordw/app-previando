@@ -6,7 +6,7 @@ vi.mock('@/lib/prisma', () => ({
   prisma: {
     planLimit: { findUnique: vi.fn() },
     usageRecord: { findUnique: vi.fn(), update: vi.fn(), upsert: vi.fn(), updateMany: vi.fn() },
-    client: { count: vi.fn() },
+    client: { count: vi.fn(), findMany: vi.fn(), updateMany: vi.fn() },
     notification: { create: vi.fn() },
     $transaction: vi.fn(),
   },
@@ -32,7 +32,9 @@ import {
   guardRevisionLimit,
   tryConsumeMonthlyUsage,
   invalidatePlanLimitCache,
+  reconcileClientActivation,
 } from '@/lib/plan-guard'
+import type { MonthlyUsageField } from '@/lib/plan-guard'
 
 const mockPlanLimitFree = {
   plan: 'FREE',
@@ -70,6 +72,7 @@ const mockUsageRecord = {
   bpcAnalysesThisMonth: 5,
   bpcSocialMediaThisMonth: 0,
   peticoesThisMonth: 0,
+  revisionsThisMonth: 1,
   usageMonthRef: new Date(),
 }
 
@@ -170,6 +173,14 @@ describe('guardCalculationLimit', () => {
     vi.mocked(prisma.usageRecord.findUnique).mockResolvedValueOnce({ ...mockUsageRecord, calculationsThisMonth: 5 } as any)
     await expect(guardCalculationLimit('user-1', 'FREE')).rejects.toThrow('Limite de 5 simulações/mês')
   })
+
+  it('deve notificar quando proximo do limite (80%)', async () => {
+    const planLimit = { ...mockPlanLimitFree, simulatorEnabled: true, maxCalculationsPerMonth: 5 }
+    vi.mocked(prisma.planLimit.findUnique).mockResolvedValueOnce(planLimit as any)
+    vi.mocked(prisma.usageRecord.findUnique).mockResolvedValueOnce({ ...mockUsageRecord, calculationsThisMonth: 4 } as any)
+    await expect(guardCalculationLimit('user-1', 'FREE')).resolves.toBeUndefined()
+    expect(prisma.notification.create).toHaveBeenCalled()
+  })
 })
 
 describe('guardOpinionLimit', () => {
@@ -187,6 +198,12 @@ describe('guardOpinionLimit', () => {
   it('deve bloquear quando excede limite', async () => {
     vi.mocked(prisma.usageRecord.findUnique).mockResolvedValueOnce({ ...mockUsageRecord, opinionsThisMonth: 20 } as any)
     await expect(guardOpinionLimit('user-1', 'SOLO')).rejects.toThrow('Limite de 20')
+  })
+
+  it('deve notificar quando proximo do limite (80%)', async () => {
+    vi.mocked(prisma.usageRecord.findUnique).mockResolvedValueOnce({ ...mockUsageRecord, opinionsThisMonth: 16 } as any)
+    await expect(guardOpinionLimit('user-1', 'SOLO')).resolves.toBeUndefined()
+    expect(prisma.notification.create).toHaveBeenCalled()
   })
 })
 
@@ -248,6 +265,12 @@ describe('guardPeticaoLimit', () => {
     vi.mocked(prisma.planLimit.findUnique).mockResolvedValueOnce(unlimitedPlan)
     await expect(guardPeticaoLimit('user-1', 'SOLO')).resolves.toBeUndefined()
   })
+
+  it('deve notificar quando proximo do limite (80%)', async () => {
+    vi.mocked(prisma.usageRecord.findUnique).mockResolvedValueOnce({ ...mockUsageRecord, peticoesThisMonth: 4 } as any)
+    await expect(guardPeticaoLimit('user-1', 'SOLO')).resolves.toBeUndefined()
+    expect(prisma.notification.create).toHaveBeenCalled()
+  })
 })
 
 describe('guardRevisionLimit', () => {
@@ -277,6 +300,12 @@ describe('guardRevisionLimit', () => {
   it('deve bloquear quando excede limite', async () => {
     vi.mocked(prisma.usageRecord.findUnique).mockResolvedValueOnce({ ...mockUsageRecord, revisionsThisMonth: 5 } as any)
     await expect(guardRevisionLimit('user-1', 'SOLO')).rejects.toThrow('Limite de 5')
+  })
+
+  it('deve notificar quando proximo do limite (80%)', async () => {
+    vi.mocked(prisma.usageRecord.findUnique).mockResolvedValueOnce({ ...mockUsageRecord, revisionsThisMonth: 4 } as any)
+    await expect(guardRevisionLimit('user-1', 'SOLO')).resolves.toBeUndefined()
+    expect(prisma.notification.create).toHaveBeenCalled()
   })
 })
 
@@ -345,4 +374,77 @@ describe('guardFeature — todas as features', () => {
     vi.mocked(prisma.planLimit.findUnique).mockResolvedValueOnce(mockPlanLimitSolo as any)
     await expect(guardFeature('SOLO', 'SIMULATOR')).resolves.toBeUndefined()
   })
+})
+
+describe('reconcileClientActivation', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    vi.mocked(redis.get).mockResolvedValue(null)
+    vi.mocked(prisma.$transaction).mockResolvedValue([{}, {}] as any)
+  })
+
+  it('ativa todos quando maxClients = -1 (ilimitado)', async () => {
+    vi.mocked(prisma.planLimit.findUnique).mockResolvedValueOnce({ ...mockPlanLimitFree, maxClients: -1 } as any)
+    await reconcileClientActivation('user-1', 'FREE')
+    expect(prisma.client.updateMany).toHaveBeenCalledWith({
+      where: { userId: 'user-1', active: false },
+      data: { active: true },
+    })
+  })
+
+  it('ativa todos quando total <= maxClients', async () => {
+    vi.mocked(prisma.planLimit.findUnique).mockResolvedValueOnce(mockPlanLimitFree as any)
+    vi.mocked(prisma.client.count).mockResolvedValueOnce(5)
+    await reconcileClientActivation('user-1', 'FREE')
+    expect(prisma.client.updateMany).toHaveBeenCalledWith({
+      where: { userId: 'user-1', active: false },
+      data: { active: true },
+    })
+  })
+
+  it('desativa excedentes quando total > maxClients', async () => {
+    vi.mocked(prisma.planLimit.findUnique).mockResolvedValueOnce(mockPlanLimitFree as any)
+    vi.mocked(prisma.client.count).mockResolvedValueOnce(15)
+    vi.mocked(prisma.client.findMany).mockResolvedValueOnce([
+      { id: 'c1' }, { id: 'c2' }, { id: 'c3' }, { id: 'c4' }, { id: 'c5' },
+      { id: 'c6' }, { id: 'c7' }, { id: 'c8' }, { id: 'c9' }, { id: 'c10' },
+    ] as any)
+    await reconcileClientActivation('user-1', 'FREE')
+    expect(prisma.$transaction).toHaveBeenCalled()
+  })
+})
+
+describe('tryConsumeMonthlyUsage — todos os campos', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    vi.mocked(redis.get).mockResolvedValue(null)
+  })
+
+  const fields: MonthlyUsageField[] = [
+    'calculationsThisMonth',
+    'opinionsThisMonth',
+    'bpcAnalysesThisMonth',
+    'peticoesThisMonth',
+    'revisionsThisMonth',
+  ]
+
+  for (const field of fields) {
+    it(`deve incrementar ${field} quando há cota`, async () => {
+      const planLimit = {
+        ...mockPlanLimitSolo,
+        maxCalculationsPerMonth: 10,
+        maxOpinionsPerMonth: 10,
+        bpcAnalysesPerMonth: 10,
+        maxPeticoesPerMonth: 10,
+        maxRevisionsPerMonth: 10,
+      }
+      vi.mocked(prisma.planLimit.findUnique).mockResolvedValueOnce(planLimit as any)
+      vi.mocked(prisma.usageRecord.findUnique).mockResolvedValueOnce(mockUsageRecord as any)
+      vi.mocked(prisma.usageRecord.upsert).mockResolvedValueOnce({} as any)
+      vi.mocked(prisma.usageRecord.updateMany).mockResolvedValueOnce({ count: 1 } as any)
+
+      const result = await tryConsumeMonthlyUsage('user-1', 'SOLO', field)
+      expect(result).toBe(true)
+    })
+  }
 })

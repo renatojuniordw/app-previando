@@ -1,4 +1,3 @@
-import { createHash } from 'crypto'
 import { Prisma } from '@prisma/client'
 import { prisma } from './prisma'
 import { NextRequest } from 'next/server'
@@ -6,6 +5,7 @@ import { Logger } from './logger'
 import { Queue } from 'bullmq'
 import { bullmqConnection } from './redis'
 import { getClientIp } from './request-ip'
+import { computeEntryHash } from './audit-hash'
 
 const logger = new Logger('AuditLog')
 
@@ -51,20 +51,6 @@ export async function logAudit({ userId, action, resource, req, metadata }: Audi
     // Fallback síncrono se a queue não estiver disponível
     await writeAuditDirect(jobData)
   }
-}
-
-function computeEntryHash(previousHash: string, data: AuditJobData, createdAt: Date): string {
-  const payload = JSON.stringify({
-    previousHash,
-    userId: data.userId,
-    action: data.action,
-    resource: data.resource,
-    ipAddress: data.ipAddress,
-    userAgent: data.userAgent,
-    metadata: data.metadata ?? null,
-    createdAt: createdAt.toISOString(),
-  })
-  return createHash('sha256').update(payload).digest('hex')
 }
 
 export async function writeAuditDirect(data: AuditJobData): Promise<void> {

@@ -22,11 +22,8 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-          cache-dependency-path: app-previando/package-lock.json
       - run: npm ci
-        working-directory: app-previando
       - run: npm run lint
-        working-directory: app-previando
 
   type-check:
     runs-on: ubuntu-latest
@@ -36,13 +33,9 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-          cache-dependency-path: app-previando/package-lock.json
       - run: npm ci
-        working-directory: app-previando
       - run: npx prisma generate
-        working-directory: app-previando
       - run: npx tsc --noEmit
-        working-directory: app-previando
 
   unit-tests:
     runs-on: ubuntu-latest
@@ -75,21 +68,12 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-          cache-dependency-path: app-previando/package-lock.json
       - run: npm ci
-        working-directory: app-previando
       - run: npx prisma generate
-        working-directory: app-previando
-      # Usa os serviços Postgres/Redis do próprio job (acima), não secrets
-      # externos — antes apontava para secrets.CI_DATABASE_URL/CI_REDIS_URL
-      # enquanto subia containers locais sem uso, uma inconsistência que
-      # deixava o CI dependente de infraestrutura externa desnecessária.
       - run: npx prisma migrate deploy
-        working-directory: app-previando
         env:
           DATABASE_URL: postgresql://previando:previando@localhost:5432/previando
       - run: npx vitest run --reporter=verbose
-        working-directory: app-previando
         env:
           DATABASE_URL: postgresql://previando:previando@localhost:5432/previando
           REDIS_URL: redis://localhost:6379
@@ -103,10 +87,6 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-          cache-dependency-path: app-previando/package-lock.json
       - run: npm ci
-        working-directory: app-previando
       - run: npx prisma generate
-        working-directory: app-previando
       - run: npm run build
-        working-directory: app-previando

@@ -43,25 +43,18 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-          cache-dependency-path: app-previando/package-lock.json
       - run: npm ci
-        working-directory: app-previando
       - run: npx prisma generate
-        working-directory: app-previando
       - run: npx prisma migrate deploy
-        working-directory: app-previando
         env:
           DATABASE_URL: ${{ secrets.E2E_DATABASE_URL }}
       - run: npx prisma db seed
-        working-directory: app-previando
         env:
           DATABASE_URL: ${{ secrets.E2E_DATABASE_URL }}
       - name: Install Playwright browsers
         run: npx playwright install chromium
-        working-directory: app-previando
       - name: Run E2E tests
         run: npx playwright test
-        working-directory: app-previando
         env:
           DATABASE_URL: ${{ secrets.E2E_DATABASE_URL }}
           REDIS_URL: ${{ secrets.E2E_REDIS_URL }}
@@ -71,5 +64,5 @@ jobs:
         if: failure()
         with:
           name: playwright-report
-          path: app-previando/playwright-report/
+          path: playwright-report/
           retention-days: 7

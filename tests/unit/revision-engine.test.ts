@@ -86,4 +86,54 @@ describe('calcularRevisao', () => {
     expect(result.memoriaCalculo).toHaveProperty('salarioBeneficioRevisado')
     expect(result.memoriaCalculo).toHaveProperty('coeficienteAplicado')
   })
+
+  it('deve calcular diferencaMensal e diferencaPercentual corretamente', () => {
+    const result = calcularRevisao({
+      tipoRevisao: 'REVISAO_BENEFICIO',
+      rmiConcedido: 1000.00,
+      dibConcedido: '2025-06-01',
+      birthDate: '1960-05-15',
+      gender: 'M',
+      extractedData: mockCnisCompleto,
+      salarioMinimo: 1518.00,
+      tetoPrevidenciario: 8157.41,
+    })
+
+    expect(result.diferencaMensal).toBeGreaterThan(0)
+    expect(result.diferencaPercentual).toBeGreaterThan(0)
+    expect(result.elegivel).toBe(true)
+    expect(result.retroativos5Anos).toBeGreaterThan(0)
+  })
+
+  it('deve retornar diferencaMensal zero quando concedido e maior que revisado', () => {
+    const result = calcularRevisao({
+      tipoRevisao: 'REVISAO_BENEFICIO',
+      rmiConcedido: 999999.00,
+      dibConcedido: '2025-06-01',
+      birthDate: '1960-05-15',
+      gender: 'M',
+      extractedData: mockCnisCompleto,
+      salarioMinimo: 1518.00,
+      tetoPrevidenciario: 8157.41,
+    })
+
+    expect(result.diferencaMensal).toBe(0)
+    expect(result.elegivel).toBe(false)
+  })
+
+  it('deve retornar pendencias quando nao elegivel', () => {
+    const result = calcularRevisao({
+      tipoRevisao: 'REVISAO_BENEFICIO',
+      rmiConcedido: 1000.00,
+      dibConcedido: '2025-06-01',
+      birthDate: '1960-05-15',
+      gender: 'M',
+      extractedData: { periodos: [] },
+      salarioMinimo: 1518.00,
+      tetoPrevidenciario: 8157.41,
+    })
+
+    expect(result.pendencias.length).toBeGreaterThan(0)
+    expect(result.elegivel).toBe(false)
+  })
 })

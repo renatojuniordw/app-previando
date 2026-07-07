@@ -14,7 +14,7 @@ interface GetModalidadesOptions {
   includeInactive?: boolean
 }
 
-function sortModalidades(a: ModalidadeOption, b: ModalidadeOption) {
+export function sortModalidades(a: ModalidadeOption, b: ModalidadeOption) {
   if (a.ordem !== b.ordem) return a.ordem - b.ordem
   return a.label.localeCompare(b.label, 'pt-BR')
 }

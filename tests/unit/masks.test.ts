@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { stripNonDigits, formatCPF, formatPhone, formatCurrencyDisplay, parseCurrency } from '@/lib/masks'
+import { stripNonDigits, formatCPF, formatPhone, formatCEP, formatCurrencyDisplay, parseCurrency } from '@/lib/masks'
 
 describe('stripNonDigits', () => {
   it('remove caracteres não numéricos', () => {
@@ -101,6 +101,29 @@ describe('formatCurrencyDisplay', () => {
 
   it('ignora caracteres não numéricos', () => {
     expect(formatCurrencyDisplay('R$ 1.234,56')).toBe('1.234,56')
+  })
+})
+
+describe('formatCEP', () => {
+  it('formata 8 dígitos corretamente', () => {
+    expect(formatCEP('12345678')).toBe('12345-678')
+  })
+
+  it('formata parcialmente com menos de 8 dígitos', () => {
+    expect(formatCEP('12345')).toBe('12345')
+    expect(formatCEP('123456')).toBe('12345-6')
+  })
+
+  it('trunca para 8 dígitos', () => {
+    expect(formatCEP('12345678999')).toBe('12345-678')
+  })
+
+  it('retorna string vazia para entrada vazia', () => {
+    expect(formatCEP('')).toBe('')
+  })
+
+  it('remove formatação existente antes de formatar', () => {
+    expect(formatCEP('12345-678')).toBe('12345-678')
   })
 })
 

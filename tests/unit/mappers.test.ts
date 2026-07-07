@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { CalculationModality, CaseStatus, BenefitType, NoteType } from '@prisma/client'
+import type { ApiBenefitType } from '@/lib/mappers'
 import {
   mapModalidadeToDb,
   mapCaseStatusToDb,
@@ -10,6 +11,7 @@ import {
   mapNoteTypeToApi,
   mapCaseToApi,
   mapNoteToApi,
+  getModalitiesForBenefit,
 } from '@/lib/mappers'
 
 describe('mapModalidadeToDb', () => {
@@ -112,5 +114,34 @@ describe('mapNoteToApi', () => {
     const result = mapNoteToApi(input)
     expect(result.type).toBe('CONTATO')
     expect(result.content).toBe('teste')
+  })
+})
+
+describe('getModalitiesForBenefit', () => {
+  it('deve retornar modalidades para APOSENTADORIA_IDADE', () => {
+    const mods = getModalitiesForBenefit('APOSENTADORIA_IDADE')
+    expect(mods).toContain('APOSENTADORIA_IDADE')
+    expect(mods).toContain('TEMPO_CONTRIBUICAO')
+    expect(mods).toContain('PONTOS_86_96')
+  })
+
+  it('deve retornar modalidades para AUXILIO_DOENCA', () => {
+    const mods = getModalitiesForBenefit('AUXILIO_DOENCA')
+    expect(mods).toEqual(['AUXILIO_DOENCA_B31', 'AUXILIO_DOENCA_B91'])
+  })
+
+  it('deve retornar array vazio para AUXILIO_ACIDENTE', () => {
+    const mods = getModalitiesForBenefit('AUXILIO_ACIDENTE')
+    expect(mods).toEqual([])
+  })
+
+  it('deve retornar array vazio para beneficio desconhecido', () => {
+    const mods = getModalitiesForBenefit('INEXISTENTE' as ApiBenefitType)
+    expect(mods).toEqual([])
+  })
+
+  it('deve retornar BPC_LOAS para BPC_LOAS', () => {
+    const mods = getModalitiesForBenefit('BPC_LOAS')
+    expect(mods).toEqual(['BPC_LOAS'])
   })
 })
