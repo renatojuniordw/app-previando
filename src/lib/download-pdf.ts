@@ -37,11 +37,13 @@ export async function downloadReactPdf(data: Record<string, unknown>, filename: 
       body: JSON.stringify(data),
     })
     if (!res.ok) throw new Error('Falha ao gerar PDF')
+    const disposition = res.headers.get('Content-Disposition')
+    const serverFilename = disposition?.match(/filename="?(.+?)"?$/)?.[1]
     const blob = await res.blob()
     const url = URL.createObjectURL(blob)
     const a = globalThis.document.createElement('a')
     a.href = url
-    a.download = filename
+    a.download = serverFilename || filename
     globalThis.document.body.appendChild(a)
     a.click()
     globalThis.document.body.removeChild(a)

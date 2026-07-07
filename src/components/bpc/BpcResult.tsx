@@ -155,9 +155,9 @@ export function BpcResult({ caseId, result, type, onCopy, onOpenChecklist, onReg
             variant="outline"
             onClick={() => {
               setExporting(true)
-              downloadReactPdf(
-                { result, type: type ? TYPE_LABELS[type] || 'BPC/LOAS' : 'BPC/LOAS' },
-                `previando-bpc-${caseId}.pdf`
+            downloadReactPdf(
+              { result, type: type ? TYPE_LABELS[type] || 'BPC/LOAS' : 'BPC/LOAS', caseId },
+              `previando-bpc-${caseId}.pdf`
               ).then((ok) => {
                 setExporting(false)
                 if (!ok) addToast({ type: 'error', title: 'Erro', message: 'Não foi possível gerar o PDF.' })

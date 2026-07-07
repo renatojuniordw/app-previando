@@ -10,29 +10,32 @@ const BRAND = {
   border: '#e2e8f0',
 }
 
-function drawHeader(doc: PDFDocType, title: string) {
-  // Logo text
+function drawHeader(doc: PDFDocType, title: string): number {
   doc.font('Helvetica-Bold').fontSize(16).fill(BRAND.accent).text('PREVIANDO', 40, 30, {
     continued: true,
   })
   doc.font('Helvetica').fontSize(10).fill(BRAND.dark).text(' — ' + title)
 
-  // Subtitle
   doc.font('Helvetica').fontSize(7).fill(BRAND.slate).text('app.previando.com.br', 40, 50)
 
-  // Accent line
   doc.lineWidth(2).moveTo(40, 58).lineTo(550, 58).stroke(BRAND.accent)
+
+  return 70
 }
 
 const FOOTER_Y = 770
 const PAGE_MAX_Y = 760
 const PAGE_MIN_Y = 60
 
-function drawFooter(doc: PDFDocType, page: number, totalPages: number) {
+function drawFooter(doc: PDFDocType, page: number, totalPages: number, userName?: string) {
   doc.lineWidth(0.5).moveTo(40, FOOTER_Y).lineTo(550, FOOTER_Y).stroke(BRAND.border)
   doc.fontSize(7).fill(BRAND.slate)
   doc.text('Gerado por Previando', 40, FOOTER_Y + 5)
   doc.text(`Página ${page} de ${totalPages}`, 400, FOOTER_Y + 5)
+  if (userName) {
+    doc.font('Helvetica-Bold').fontSize(7).fill(BRAND.dark).text(`Advogado(a): `, 160, FOOTER_Y + 5, { continued: true })
+    doc.font('Helvetica').fontSize(7).fill(BRAND.slate).text(userName)
+  }
 }
 
 function getPageCount(doc: PDFDocType): number {
@@ -52,6 +55,18 @@ function drawDataRow(doc: PDFDocType, label: string, value: string, y: number) {
   doc.font('Helvetica').fontSize(9).fill(BRAND.dark).text(value || '—', 170, y, { width: 340 })
   doc.lineWidth(0.3).moveTo(40, y + 10).lineTo(550, y + 10).stroke(BRAND.border)
   return y + 16
+}
+
+function drawClientInfo(doc: PDFDocType, info: ClientInfo, startY: number): number {
+  let y = drawSectionHeader(doc, 'Dados do Segurado', startY)
+  y = drawDataRow(doc, 'Nome', info.name, y)
+  if (info.birthDate) y = drawDataRow(doc, 'Data de Nascimento', info.birthDate, y)
+  if (info.phone) y = drawDataRow(doc, 'Telefone', info.phone, y)
+  if (info.email) y = drawDataRow(doc, 'Email', info.email, y)
+  if (info.maritalStatus) y = drawDataRow(doc, 'Estado Civil', info.maritalStatus, y)
+  if (info.profession) y = drawDataRow(doc, 'Profissão', info.profession, y)
+  if (info.address) y = drawDataRow(doc, 'Endereço Completo', info.address, y)
+  return y + 8
 }
 
 function stripMarkdown(text: string): string {
@@ -96,6 +111,16 @@ function splitTextIntoLines(doc: PDFDocType, text: string, maxWidth: number): st
 }
 
 
+export interface ClientInfo {
+  name: string
+  birthDate?: string
+  phone?: string
+  email?: string
+  maritalStatus?: string
+  profession?: string
+  address?: string
+}
+
 export interface CasePDFData {
   clientName?: string
   clientCpf?: string
@@ -127,9 +152,7 @@ export async function generateCasePDF(data: CasePDFData): Promise<Buffer> {
   const doc = new PDFDocument({ size: 'A4', margins: { top: 20, bottom: 30, left: 40, right: 40 } })
   const pdfPromise = collectBuffer(doc)
 
-  drawHeader(doc, 'Relatório do Caso')
-
-  let y = 70
+  let y = drawHeader(doc, 'Relatório do Caso')
 
   // Client Data Section
   y = drawSectionHeader(doc, 'Dados do Cliente', y)
@@ -189,9 +212,12 @@ interface BpcPDFData {
   result: string
   type: 'BPC' | 'LOAS' | 'BPC/LOAS'
   generatedAt?: string
+  clientName?: string
+  userName?: string
+  clientInfo?: ClientInfo
 }
 
-function renderTextPages(doc: PDFDocType, text: string, startY: number) {
+function renderTextPages(doc: PDFDocType, text: string, startY: number, userName?: string) {
   const cleanText = stripMarkdown(text)
   if (!cleanText) return
   const lines = splitTextIntoLines(doc, cleanText, 510)
@@ -210,12 +236,15 @@ function renderTextPages(doc: PDFDocType, text: string, startY: number) {
     y += 12
   }
 
-  drawFooter(doc, pageNum, pageNum)
+  drawFooter(doc, pageNum, pageNum, userName)
 }
 
 export interface BpcConsolidatedPDFData {
   sections: { label: string; content: string }[]
   generatedAt?: string
+  clientName?: string
+  userName?: string
+  clientInfo?: ClientInfo
 }
 
 function renderTextBlock(doc: PDFDocType, text: string, startY: number, pageState: { y: number; pageNum: number }) {
@@ -241,9 +270,11 @@ export async function generateBpcConsolidatedPDF(data: BpcConsolidatedPDFData): 
   const doc = new PDFDocument({ size: 'A4', margins: { top: 20, bottom: 30, left: 40, right: 40 } })
   const pdfPromise = collectBuffer(doc)
 
-  drawHeader(doc, 'Relatório BPC/LOAS — Completo')
+  const pageState = { y: drawHeader(doc, 'Relatório BPC/LOAS — Completo'), pageNum: 1 }
 
-  let pageState = { y: 70, pageNum: 1 }
+  if (data.clientInfo) {
+    pageState.y = drawClientInfo(doc, data.clientInfo, pageState.y)
+  }
 
   if (data.generatedAt) {
     doc.font('Helvetica').fontSize(8).fill(BRAND.slate).text(`Gerado em: ${data.generatedAt}`, 40, pageState.y)
@@ -262,7 +293,7 @@ export async function generateBpcConsolidatedPDF(data: BpcConsolidatedPDFData): 
     pageState.y += 8
   }
 
-  drawFooter(doc, pageState.pageNum, pageState.pageNum)
+  drawFooter(doc, pageState.pageNum, pageState.pageNum, data.userName)
   doc.end()
   return pdfPromise
 }
@@ -271,9 +302,11 @@ export async function generateBpcPDF(data: BpcPDFData): Promise<Buffer> {
   const doc = new PDFDocument({ size: 'A4', margins: { top: 20, bottom: 30, left: 40, right: 40 } })
   const pdfPromise = collectBuffer(doc)
 
-  drawHeader(doc, 'Análise BPC/LOAS')
+  let y = drawHeader(doc, 'Análise BPC/LOAS')
 
-  let y = 70
+  if (data.clientInfo) {
+    y = drawClientInfo(doc, data.clientInfo, y)
+  }
 
   y = drawSectionHeader(doc, 'Tipo de Análise', y)
   doc.font('Helvetica').fontSize(9).fill(BRAND.dark).text(data.type, 40, y)
@@ -286,7 +319,7 @@ export async function generateBpcPDF(data: BpcPDFData): Promise<Buffer> {
   }
 
   y = drawSectionHeader(doc, 'Resultado da Análise', y)
-  renderTextPages(doc, data.result, y)
+  renderTextPages(doc, data.result, y, data.userName)
 
   doc.end()
   return pdfPromise

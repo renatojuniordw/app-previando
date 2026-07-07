@@ -65,7 +65,7 @@ export default function ComparePage() {
     const result = `# Comparativo de Modalidades\n\n_Gerado por Previando — ${new Date().toLocaleDateString('pt-BR')}_\n\n---\n\n## Modalidades Elegíveis\n\n${elegiveisText || 'Nenhuma modalidade elegível encontrada.'}\n\n---\n\n## Modalidades com Pendências\n\n${naoElegiveisText || 'Nenhuma modalidade com pendências.'}`
 
     downloadReactPdf(
-      { result, type: 'Comparativo de Modalidades', generatedAt: new Date().toLocaleDateString('pt-BR') },
+      { result, type: 'Comparativo de Modalidades', generatedAt: new Date().toLocaleDateString('pt-BR'), caseId: id },
       `previando-comparativo-${id}.pdf`
     ).then((ok) => {
       setExportingPdf(false)

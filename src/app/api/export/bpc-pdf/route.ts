@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/auth'
-import { generateBpcPDF, generateBpcConsolidatedPDF } from '@/lib/pdf-generator'
+import { generateBpcPDF, generateBpcConsolidatedPDF, type ClientInfo } from '@/lib/pdf-generator'
+import { fetchClientInfo } from '@/lib/fetch-client-info'
 import { guardFeature } from '@/lib/plan-guard'
 
 export async function POST(request: NextRequest) {
@@ -13,14 +14,28 @@ export async function POST(request: NextRequest) {
     await guardFeature(session.user.plan, 'EXPORT_PDF')
 
     const body = await request.json()
-    const { result, type, sections, generatedAt } = body
+    const { result, type, sections, generatedAt, caseId } = body
+
+    let clientName = ''
+    let clientInfo: ClientInfo | undefined
+    if (caseId) {
+      clientInfo = await fetchClientInfo(caseId, session.user.id)
+      if (clientInfo) clientName = clientInfo.name
+    }
+
+    const userName = session.user.name ?? ''
+
+    const firstName = clientName ? clientName.split(' ').slice(0, 2).join('-').toLowerCase() : ''
+    const filename = `previando-bpc${firstName ? `-${firstName}` : ''}.pdf`
+
+    const sharedFields = { clientName, userName, clientInfo, generatedAt: generatedAt || new Date().toLocaleDateString('pt-BR') }
 
     let pdfBuffer: Buffer
 
     if (sections) {
       pdfBuffer = await generateBpcConsolidatedPDF({
         sections,
-        generatedAt: generatedAt || new Date().toLocaleDateString('pt-BR'),
+        ...sharedFields,
       })
     } else {
       if (!result || !type) {
@@ -29,14 +44,14 @@ export async function POST(request: NextRequest) {
       pdfBuffer = await generateBpcPDF({
         result,
         type: type as 'BPC' | 'LOAS' | 'BPC/LOAS',
-        generatedAt: generatedAt || new Date().toLocaleDateString('pt-BR'),
+        ...sharedFields,
       })
     }
 
     return new Response(new Uint8Array(pdfBuffer), {
       headers: {
         'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename="previando-bpc.pdf"`,
+        'Content-Disposition': `attachment; filename="${filename}"`,
       },
     })
   } catch (err) {

@@ -131,7 +131,7 @@ export default function BpcPage() {
       return [{ label: t.label, content }]
     })
     downloadReactPdf(
-      { sections, generatedAt: new Date().toLocaleDateString('pt-BR') },
+      { sections, generatedAt: new Date().toLocaleDateString('pt-BR'), caseId },
       `previando-bpc-completo-${caseId}.pdf`
     ).then((ok) => {
       setExportingPdf(false)
@@ -274,40 +274,44 @@ export default function BpcPage() {
   }
 
   const headerActions = (
-    <div className="flex items-center gap-3 flex-wrap shrink-0">
-      <Button
-        onClick={() => setIsFormOpen(!isFormOpen)}
-        className="inline-flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold rounded-full bg-slate-900 text-white hover:bg-slate-800 transition-colors shadow-sm"
-      >
-        {isFormOpen ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-        {isFormOpen ? 'Ocultar Formulário' : 'Visualizar Formulário'}
-      </Button>
-
-      {completedCount > 0 && (
-        <Button
-          variant="outline"
-          onClick={handleExportConsolidatedPdf}
-          loading={exportingPdf}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold border border-slate-200 rounded-full bg-white text-slate-655 hover:bg-slate-50 hover:text-slate-800 transition-colors shadow-xs"
+    <div className="flex items-center gap-2 flex-wrap shrink-0">
+      {/* Ações utilitárias: mesmo peso visual, discretas */}
+      <div className="flex items-center gap-2">
+        <button
+          onClick={() => setIsFormOpen(!isFormOpen)}
+          title={isFormOpen ? 'Ocultar formulário' : 'Ver formulário'}
+          aria-label={isFormOpen ? 'Ocultar formulário' : 'Ver formulário'}
+          className="inline-flex items-center justify-center w-8 h-8 rounded-full border border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-slate-700 transition-colors shrink-0"
         >
-          <FileText className="w-3.5 h-3.5 text-slate-450" />
-          Relatório Completo
-        </Button>
-      )}
+          {isFormOpen ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+        </button>
 
+        {completedCount > 0 && (
+          <Button
+            variant="outline"
+            onClick={handleExportConsolidatedPdf}
+            loading={exportingPdf}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-full border-slate-200 text-slate-700 hover:bg-slate-50 transition-colors shadow-xs"
+          >
+            <FileText className="w-3.5 h-3.5 text-slate-450" />
+            Relatório completo
+          </Button>
+        )}
+      </div>
+
+      {/* Notificação de prontuário: único elemento clicável, com destaque próprio */}
       {bpcNotesCount > 0 && (
-        <div className="flex items-center gap-2 bg-slate-900 text-slate-200 px-3 py-1.5 rounded-full text-xs font-medium shadow-xs">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+        <button
+          onClick={openNotes}
+          title="Ver registros no prontuário do caso"
+          className="flex items-center gap-2 pl-3 pr-2.5 py-1.5 rounded-full text-xs font-medium bg-slate-900 text-slate-200 hover:bg-slate-800 transition-colors shadow-xs"
+        >
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
           <span>
             {bpcNotesCount} {bpcNotesCount === 1 ? 'registro no prontuário' : 'registros no prontuário'}
           </span>
-          <button
-            onClick={openNotes}
-            className="ml-2 pl-2 border-l border-slate-700 text-amber-400 hover:text-amber-300 font-semibold transition-colors"
-          >
-            Visualizar
-          </button>
-        </div>
+          <span className="text-amber-400 font-semibold">→</span>
+        </button>
       )}
     </div>
   )
@@ -346,34 +350,14 @@ export default function BpcPage() {
           <div className="bg-white rounded-2xl overflow-hidden flex flex-col h-full min-h-[650px] border border-slate-200 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
             {/* Header IA Command Center */}
             <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
-              <div className="flex items-center gap-3">
-                <div className="flex space-x-1.5">
-                  <div className="w-2.5 h-2.5 rounded-full bg-slate-200" />
-                  <div className="w-2.5 h-2.5 rounded-full bg-slate-200" />
-                  <div className="w-2.5 h-2.5 rounded-full bg-slate-200" />
-                </div>
-                <h3 className="font-sans text-sm font-semibold text-slate-700 ml-2">
-                  BPC Inteligência Artificial
-                </h3>
-              </div>
+              <h3 className="font-sans text-sm font-semibold text-slate-700">
+                BPC Inteligência Artificial
+              </h3>
               <div className="flex items-center gap-3">
                 {analysis && (
-                  <div className="flex items-center gap-2">
-                    <div className="flex gap-0.5">
-                      {visibleTabs.map((t) => {
-                        const done = t.id === 'social' ? !!analysis?.relatoSocial : !!tabResults[t.id]
-                        return (
-                          <div
-                            key={t.id}
-                            className={`w-5 h-1.5 rounded-full transition-colors ${done ? 'bg-emerald-500' : 'bg-slate-200'}`}
-                          />
-                        )
-                      })}
-                    </div>
-                    <span className="text-[10px] font-mono text-slate-400">
-                      {completedCount}/{visibleTabs.length}
-                    </span>
-                  </div>
+                  <span className="text-[10px] font-mono text-slate-400">
+                    {completedCount}/{visibleTabs.length} concluídas
+                  </span>
                 )}
                 {generatingTab && (
                   <div className="flex items-center gap-2">
