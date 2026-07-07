@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
     const { result, type, sections, generatedAt, caseId } = body
 
     let clientName = ''
-    let clientInfo: ClientInfo | undefined
+    let clientInfo: ClientInfo | null = null
     if (caseId) {
       await verifyCaseOwnershipAndActive(caseId, session.user.id)
       clientInfo = await fetchClientInfo(caseId, session.user.id)
@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
     const firstName = clientName ? clientName.split(' ').slice(0, 2).join('-').toLowerCase() : ''
     const filename = `previando-bpc${firstName ? `-${firstName}` : ''}.pdf`
 
-    const sharedFields = { clientName, userName, clientInfo, generatedAt: generatedAt || new Date().toLocaleDateString('pt-BR') }
+    const sharedFields = { clientName, userName, clientInfo: clientInfo ?? undefined, generatedAt: generatedAt || new Date().toLocaleDateString('pt-BR') }
 
     let pdfBuffer: Buffer
 
