@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
+import { rateLimit } from '@/lib/rate-limit'
 import { hashCPF } from '@/lib/sanitize-server'
 import { isValidCPF } from '@/lib/cpf'
 import { handleApiError } from '@/lib/api-error'
@@ -19,6 +20,9 @@ export async function POST(req: NextRequest) {
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Não autorizado.' }, { status: 401 })
     }
+
+    const { success: limitOk } = await rateLimit(`import-preview:${session.user.id}`, 10, 3600)
+    if (!limitOk) return NextResponse.json({ error: 'Muitas tentativas. Tente novamente em 1 hora.' }, { status: 429 })
 
     const formData = await req.formData()
     const file = formData.get('file') as File | null

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { randomBytes } from 'crypto'
 import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
+import { rateLimit } from '@/lib/rate-limit'
 import { verifyCaseOwnership, verifyCaseOwnershipAndActive } from '@/lib/ownership'
 import { handleApiError } from '@/lib/api-error'
 
@@ -46,6 +47,9 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     if (!session?.user?.id) return NextResponse.json({ error: 'Não autorizado.' }, { status: 401 })
 
     await verifyCaseOwnershipAndActive(params.id, session.user.id)
+
+    const { success: limitOk } = await rateLimit(`portal-token:${session.user.id}`, 5, 3600)
+    if (!limitOk) return NextResponse.json({ error: 'Muitas tentativas. Tente novamente em 1 hora.' }, { status: 429 })
 
     const expiresAt = new Date(Date.now() + THIRTY_DAYS_MS)
 

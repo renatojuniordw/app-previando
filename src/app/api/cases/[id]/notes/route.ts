@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/auth'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
+import { rateLimit } from '@/lib/rate-limit'
 import { verifyCaseOwnership, verifyCaseOwnershipAndActive } from '@/lib/ownership'
 import { sanitizeInput } from '@/lib/sanitize-server'
 import { handleApiError } from '@/lib/api-error'
@@ -45,7 +46,10 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     const session = await auth()
     if (!session?.user?.id) return NextResponse.json({ error: 'Não autorizado.' }, { status: 401 })
 
-    await verifyCaseOwnershipAndActive(params.id, session.user.id)
+    await verifyCaseOwnershipAndActive(params.id as string, session.user.id)
+
+    const { success: limitOk } = await rateLimit(`notes:${session.user.id}`, 20, 3600)
+    if (!limitOk) return NextResponse.json({ error: 'Muitas tentativas. Tente novamente em 1 hora.' }, { status: 429 })
 
     const parsed = createSchema.safeParse(await req.json())
     if (!parsed.success) {

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { authWithFreshPlan } from '@/lib/auth-server'
+import { rateLimit } from '@/lib/rate-limit'
 import { handleApiError } from '@/lib/api-error'
 import { deleteAccount } from '@/lib/account-deletion'
 
@@ -10,6 +11,9 @@ export async function DELETE(req: NextRequest) {
   try {
     const session = await authWithFreshPlan()
     if (!session?.user?.id) return NextResponse.json({ error: 'Não autorizado.' }, { status: 401 })
+
+    const { success: limitOk } = await rateLimit(`delete-account:${session.user.id}`, 2, 3600)
+    if (!limitOk) return NextResponse.json({ error: 'Muitas tentativas. Tente novamente em 1 hora.' }, { status: 429 })
 
     let body: unknown
     try {

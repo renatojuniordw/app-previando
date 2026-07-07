@@ -34,6 +34,8 @@ async function releaseLock(key: string): Promise<void> {
 }
 
 function verifyWebhookSignature(req: NextRequest, _rawBody: string): boolean {
+  // Se a documentação do Mercado Pago exigir o corpo no HMAC futuramente,
+  // incluir _rawBody no manifest: `id:${dataId};request-id:${xRequestId};ts:${ts};body:${_rawBody};`
   const secret = process.env.MERCADOPAGO_WEBHOOK_SECRET
   if (!secret) return false
 

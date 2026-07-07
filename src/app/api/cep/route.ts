@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 
 export async function GET(req: NextRequest) {
   const cep = req.nextUrl.searchParams.get('cep')
-  if (!cep || cep.length !== 8) {
+  if (!cep || !/^\d{8}$/.test(cep)) {
     return NextResponse.json({ error: 'CEP inválido.' }, { status: 400 })
   }
 

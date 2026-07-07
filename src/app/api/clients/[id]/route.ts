@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/auth'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
+import { rateLimit } from '@/lib/rate-limit'
 import { verifyClientOwnership, verifyClientOwnershipAndActive } from '@/lib/ownership'
 import { sanitizePhone } from '@/lib/sanitize'
 import { sanitizeInput } from '@/lib/sanitize-server'
@@ -72,6 +73,9 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
 
     await verifyClientOwnershipAndActive(params.id, session.user.id)
 
+    const { success: limitOk } = await rateLimit(`update-client:${session.user.id}`, 20, 3600)
+    if (!limitOk) return NextResponse.json({ error: 'Muitas tentativas. Tente novamente em 1 hora.' }, { status: 429 })
+
     let body: unknown
     try {
       body = await req.json()
@@ -126,6 +130,9 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
     if (!session?.user?.id) return NextResponse.json({ error: 'Não autorizado.' }, { status: 401 })
 
     await verifyClientOwnership(params.id, session.user.id)
+
+    const { success: limitOk } = await rateLimit(`delete-client:${session.user.id}`, 5, 3600)
+    if (!limitOk) return NextResponse.json({ error: 'Muitas tentativas. Tente novamente em 1 hora.' }, { status: 429 })
 
     const client = await prisma.client.findUnique({
       where: { id: params.id },

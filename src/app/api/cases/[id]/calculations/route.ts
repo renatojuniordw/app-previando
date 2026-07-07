@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { authWithFreshPlan as auth } from '@/lib/auth-server'
 import { prisma } from '@/lib/prisma'
+import { rateLimit } from '@/lib/rate-limit'
 import { verifyCaseOwnership, verifyCaseOwnershipAndActive } from '@/lib/ownership'
 import { guardCalculationLimit, tryConsumeMonthlyUsage } from '@/lib/plan-guard'
 import { handleApiError } from '@/lib/api-error'
@@ -33,8 +34,10 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
     // Validação estrita de posse do caso (Anti-IDOR)
     await verifyCaseOwnershipAndActive(params.id, session.user.id)
-    
-    // Validação de limites de uso mensais do SaaS
+
+    const { success: limitOk } = await rateLimit(`calculations:${session.user.id}`, 10, 3600)
+    if (!limitOk) return NextResponse.json({ error: 'Muitas tentativas. Tente novamente em 1 hora.' }, { status: 429 })
+
     await guardCalculationLimit(session.user.id, session.user.plan)
 
     // Validação estrita dos parâmetros do cliente
