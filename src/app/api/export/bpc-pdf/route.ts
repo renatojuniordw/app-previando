@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/auth'
-import { generateBpcPDF } from '@/lib/pdf-generator'
+import { generateBpcPDF, generateBpcConsolidatedPDF } from '@/lib/pdf-generator'
 import { guardFeature } from '@/lib/plan-guard'
 
 export async function POST(request: NextRequest) {
@@ -13,17 +13,25 @@ export async function POST(request: NextRequest) {
     await guardFeature(session.user.plan, 'EXPORT_PDF')
 
     const body = await request.json()
-    const { result, type, generatedAt } = body
+    const { result, type, sections, generatedAt } = body
 
-    if (!result || !type) {
-      return NextResponse.json({ error: 'result e type são obrigatórios' }, { status: 400 })
+    let pdfBuffer: Buffer
+
+    if (sections) {
+      pdfBuffer = await generateBpcConsolidatedPDF({
+        sections,
+        generatedAt: generatedAt || new Date().toLocaleDateString('pt-BR'),
+      })
+    } else {
+      if (!result || !type) {
+        return NextResponse.json({ error: 'result e type são obrigatórios' }, { status: 400 })
+      }
+      pdfBuffer = await generateBpcPDF({
+        result,
+        type: type as 'BPC' | 'LOAS' | 'BPC/LOAS',
+        generatedAt: generatedAt || new Date().toLocaleDateString('pt-BR'),
+      })
     }
-
-    const pdfBuffer = await generateBpcPDF({
-      result,
-      type: type as 'BPC' | 'LOAS' | 'BPC/LOAS',
-      generatedAt: generatedAt || new Date().toLocaleDateString('pt-BR'),
-    })
 
     return new Response(new Uint8Array(pdfBuffer), {
       headers: {

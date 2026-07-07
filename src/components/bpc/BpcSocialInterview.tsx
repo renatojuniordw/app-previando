@@ -159,10 +159,16 @@ export function BpcSocialInterview({
   const categorias = Array.from(new Set(localRelato.dominios.map((d) => d.categoria)))
 
   return (
-    <div className={`flex flex-col ${fullscreen ? 'fixed inset-0 z-50 !bg-slate-50' : 'h-full bg-white'}`}>
+    <div
+      className={`flex flex-col ${fullscreen ? 'fixed inset-0 z-50 !bg-slate-50' : 'h-full bg-white'}`}
+    >
       {/* Barra superior com progresso e ações */}
-      <div className={`flex shrink-0 items-center border-b border-slate-200 py-3 ${fullscreen ? '!bg-white shadow-xs' : 'bg-slate-50'}`}>
-        <div className={`flex flex-1 flex-wrap items-center justify-between gap-3 px-5 ${fullscreen ? 'max-w-5xl mx-auto w-full' : ''}`}>
+      <div
+        className={`flex shrink-0 items-center border-b border-slate-200 py-3 ${fullscreen ? 'shadow-xs !bg-white' : 'bg-slate-50'}`}
+      >
+        <div
+          className={`flex flex-1 flex-wrap items-center justify-between gap-3 px-5 ${fullscreen ? 'mx-auto w-full max-w-5xl' : ''}`}
+        >
           <div className="flex items-center gap-3">
             <span className="font-sans text-xs text-slate-500">
               <span className="font-semibold text-emerald-600">{respondidas}</span>
@@ -232,11 +238,20 @@ export function BpcSocialInterview({
 
       {/* Lista de domínios agrupados por categoria */}
       <div className="relative flex-1 overflow-y-auto">
-        <div className={fullscreen ? 'max-w-5xl mx-auto w-full py-8 px-5' : ''}>
+        <div className={fullscreen ? 'mx-auto w-full max-w-5xl px-5 py-8' : ''}>
           {categorias.map((categoria) => {
-            const dominiosDaCategoria = localRelato.dominios.filter((d) => d.categoria === categoria)
+            const dominiosDaCategoria = localRelato.dominios.filter(
+              (d) => d.categoria === categoria
+            )
             return (
-              <div key={categoria} className={fullscreen ? 'border border-slate-200 rounded-xl bg-white overflow-hidden shadow-xs mb-8' : ''}>
+              <div
+                key={categoria}
+                className={
+                  fullscreen
+                    ? 'shadow-xs mb-8 overflow-hidden rounded-xl border border-slate-200 bg-white'
+                    : ''
+                }
+              >
                 {/* Header da categoria */}
                 <div className="sticky top-0 z-10 border-b border-slate-200 bg-slate-100 px-5 py-2">
                   <p className="font-sans text-[10px] font-bold uppercase tracking-widest text-slate-500">
@@ -301,7 +316,9 @@ export function BpcSocialInterview({
                               </p>
                               <textarea
                                 value={item.resposta}
-                                onChange={(e) => handleAnswerChange(dominio.id, idx, e.target.value)}
+                                onChange={(e) =>
+                                  handleAnswerChange(dominio.id, idx, e.target.value)
+                                }
                                 placeholder="Registre o que o cliente relatou..."
                                 rows={2}
                                 className="neo-input w-full resize-none font-sans text-sm text-slate-700 placeholder:text-slate-400 focus:border-amber-500 focus:ring-amber-500/20"
@@ -330,8 +347,12 @@ export function BpcSocialInterview({
       </div>
 
       {/* Footer de aviso */}
-      <div className={`flex shrink-0 items-center border-t border-slate-100 py-2.5 ${fullscreen ? '!bg-white' : 'bg-amber-50/10'}`}>
-        <div className={`flex flex-1 items-center gap-2 px-5 ${fullscreen ? 'max-w-5xl mx-auto w-full' : ''}`}>
+      <div
+        className={`flex shrink-0 items-center border-t border-slate-100 py-2.5 ${fullscreen ? '!bg-white' : 'bg-amber-50/10'}`}
+      >
+        <div
+          className={`flex flex-1 items-center gap-2 px-5 ${fullscreen ? 'mx-auto w-full max-w-5xl' : ''}`}
+        >
           <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-amber-500" />
           <p className="text-[11px] leading-relaxed text-slate-400">
             As respostas são de responsabilidade do advogado responsável pelo caso.

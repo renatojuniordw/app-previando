@@ -114,17 +114,24 @@ export default function BpcPage() {
 
   useEffect(() => { load() }, [load])
 
+  function formatRelatoSocialText(relato: RelatoSocial): string {
+    return relato.dominios.map((d) => {
+      const items = d.itens.map((i) => `- ${i.pergunta}\n  ${i.resposta}`).join('\n')
+      return `## ${d.titulo}\n\n**Categoria:** ${d.categoria}\n\n**Aspectos Relevantes:**\n${d.aspectosRelevantes}\n\n**Lacunas:**\n${d.lacunas}\n\n**Itens:**\n${items}`
+    }).join('\n\n---\n\n')
+  }
+
   const handleExportConsolidatedPdf = () => {
     setExportingPdf(true)
-    const parts = visibleTabs.flatMap((t) => {
-      if (t.id === 'social') return []
-      const content = tabResults[t.id]
+    const sections = visibleTabs.flatMap((t) => {
+      const content = t.id === 'social'
+        ? (analysis?.relatoSocial ? formatRelatoSocialText(analysis.relatoSocial) : null)
+        : tabResults[t.id]
       if (!content) return []
-      return [`## ${t.label}\n\n${content}`]
+      return [{ label: t.label, content }]
     })
-    const result = `# Relatório BPC/LOAS — Completo\n\n_Gerado em: ${new Date().toLocaleDateString('pt-BR')}_\n\n---\n\n${parts.join('\n\n---\n\n')}`
     downloadReactPdf(
-      { result, type: 'Relatório Completo BPC/LOAS', generatedAt: new Date().toLocaleDateString('pt-BR') },
+      { sections, generatedAt: new Date().toLocaleDateString('pt-BR') },
       `previando-bpc-completo-${caseId}.pdf`
     ).then((ok) => {
       setExportingPdf(false)

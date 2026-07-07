@@ -213,6 +213,60 @@ function renderTextPages(doc: PDFDocType, text: string, startY: number) {
   drawFooter(doc, pageNum, pageNum)
 }
 
+export interface BpcConsolidatedPDFData {
+  sections: { label: string; content: string }[]
+  generatedAt?: string
+}
+
+function renderTextBlock(doc: PDFDocType, text: string, startY: number, pageState: { y: number; pageNum: number }) {
+  const cleanText = stripMarkdown(text)
+  if (!cleanText) return
+  const lines = splitTextIntoLines(doc, cleanText, 510)
+  let y = startY
+  doc.font('Helvetica').fontSize(9).fill(BRAND.dark)
+  for (const line of lines) {
+    if (y > PAGE_MAX_Y) {
+      drawFooter(doc, pageState.pageNum, 0)
+      doc.addPage()
+      pageState.pageNum++
+      y = PAGE_MIN_Y
+    }
+    doc.text(line, 40, y)
+    y += 12
+  }
+  pageState.y = y
+}
+
+export async function generateBpcConsolidatedPDF(data: BpcConsolidatedPDFData): Promise<Buffer> {
+  const doc = new PDFDocument({ size: 'A4', margins: { top: 20, bottom: 30, left: 40, right: 40 } })
+  const pdfPromise = collectBuffer(doc)
+
+  drawHeader(doc, 'Relatório BPC/LOAS — Completo')
+
+  let pageState = { y: 70, pageNum: 1 }
+
+  if (data.generatedAt) {
+    doc.font('Helvetica').fontSize(8).fill(BRAND.slate).text(`Gerado em: ${data.generatedAt}`, 40, pageState.y)
+    pageState.y += 20
+  }
+
+  for (const section of data.sections) {
+    if (pageState.y > PAGE_MAX_Y - 40) {
+      drawFooter(doc, pageState.pageNum, 0)
+      doc.addPage()
+      pageState.pageNum++
+      pageState.y = PAGE_MIN_Y
+    }
+    pageState.y = drawSectionHeader(doc, section.label, pageState.y) + 4
+    renderTextBlock(doc, section.content, pageState.y, pageState)
+    pageState.y += 8
+  }
+
+  drawFooter(doc, pageState.pageNum, pageState.pageNum)
+  doc.end()
+  return pdfPromise
+}
+
 export async function generateBpcPDF(data: BpcPDFData): Promise<Buffer> {
   const doc = new PDFDocument({ size: 'A4', margins: { top: 20, bottom: 30, left: 40, right: 40 } })
   const pdfPromise = collectBuffer(doc)
