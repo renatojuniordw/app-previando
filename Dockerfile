@@ -2,6 +2,8 @@ FROM node:22-alpine AS builder
 
 WORKDIR /app
 
+RUN apk add --no-cache libssl3 openssl
+
 COPY package.json package-lock.json ./
 RUN npm ci
 
@@ -18,7 +20,8 @@ FROM node:22-alpine AS runner
 
 WORKDIR /app
 
-RUN addgroup -S nodejs && adduser -S -G nodejs nodeuser
+RUN apk add --no-cache libssl3 openssl && \
+    addgroup -S nodejs && adduser -S -G nodejs nodeuser
 
 COPY package.json package-lock.json ./
 RUN npm ci && npm i -g tsx
