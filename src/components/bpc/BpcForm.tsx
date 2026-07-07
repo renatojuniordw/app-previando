@@ -72,7 +72,6 @@ export function BpcForm({ caseId, analysis, clientBirthDate, onSave, saving }: B
     : 0
 
   const faixaEtaria = idade ? (parseInt(idade) < 16 ? 'MENOR_16' : 'MAIOR_16') : ''
-  const acimaDoLimite = rendaPerCapita > LIMITE_PER_CAPITA
 
   useEffect(() => {
     if (analysis) {

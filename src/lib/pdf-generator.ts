@@ -38,12 +38,6 @@ function drawFooter(doc: PDFDocType, page: number, totalPages: number, userName?
   }
 }
 
-function getPageCount(doc: PDFDocType): number {
-  // Acessa o buffer interno de páginas do PDFKit de forma segura
-  const buf = (doc as unknown as { pages?: unknown[] }).pages
-  return Array.isArray(buf) ? buf.length : 1
-}
-
 function drawSectionHeader(doc: PDFDocType, title: string, y: number) {
   doc.font('Helvetica-Bold').fontSize(11).fill(BRAND.accent).text(title, 40, y)
   doc.lineWidth(0.5).moveTo(40, y + 6).lineTo(550, y + 6).stroke(BRAND.border)

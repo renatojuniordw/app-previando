@@ -6,7 +6,7 @@ import dynamic from 'next/dynamic'
 import api from '@/lib/api'
 import { Button } from '@/components/ui/Button'
 import { Modal } from '@/components/ui/Modal'
-import { FileText, Building2, Loader2, Copy, Eye, EyeOff } from 'lucide-react'
+import { FileText, Building2, Loader2, Eye, EyeOff } from 'lucide-react'
 import { BpcForm } from '@/components/bpc/BpcForm'
 import { HelpText } from '@/components/ui/HelpText'
 import { BpcSocialInterview } from '@/components/bpc/BpcSocialInterview'
@@ -19,10 +19,6 @@ const BpcResult = dynamic(
   { ssr: false }
 )
 
-const BpcConsolidatedPDFDocument = dynamic(
-  () => import('@/components/pdf/BpcConsolidatedPDFDocument').then(m => ({ default: m.BpcConsolidatedPDFDocument })),
-  { ssr: false }
-)
 import type { RelatoSocial } from '@/types/bpc-social'
 
 interface BpcAnalysis {

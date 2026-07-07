@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/Badge'
 import api from '@/lib/api'
 import { useToast } from '@/store/toast'
 import { downloadReactPdf } from '@/lib/download-pdf'
-import { Copy, FileText, RefreshCw, Check, AlertTriangle, Loader2 } from 'lucide-react'
+import { Copy, FileText, RefreshCw, Check, AlertTriangle } from 'lucide-react'
 
 type AnalysisType = 'preAnalise' | 'laudo' | 'social' | 'medical' | 'checklist' | null
 
