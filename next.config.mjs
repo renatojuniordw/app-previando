@@ -4,8 +4,8 @@
 // simultâneas (uma com nonce, outra sem) se combinariam de forma imprevisível.
 const nextConfig = {
   transpilePackages: ['@react-pdf/renderer'],
+  serverExternalPackages: ['pdfkit'],
   experimental: {
-    serverExternalPackages: ['pdfkit'],
     serverComponentsExternalPackages: ['@prisma/client', 'prisma', 'pdf-parse', 'tesseract.js', 'bullmq', 'ioredis', 'isomorphic-dompurify', 'jsdom', 'pdfkit'],
   },
   images: {
