@@ -16,20 +16,29 @@ interface DeleteClientModalProps {
 
 export function DeleteClientModal({ open, onClose, client, onDeleted }: DeleteClientModalProps) {
   const [deleting, setDeleting] = useState(false)
+  const [anonymizing, setAnonymizing] = useState(false)
   const { addToast } = useToast()
 
-  const handleConfirm = async () => {
+  const handleConfirm = async (anonymize: boolean) => {
     if (!client) return
-    setDeleting(true)
+    if (anonymize) setAnonymizing(true)
+    else setDeleting(true)
     try {
-      await api.delete(`/clients/${client.id}`)
-      addToast({ type: 'success', title: 'Cliente excluído', message: `${client.name} foi removido.` })
+      await api.delete(`/clients/${client.id}${anonymize ? '?anonymize=true' : ''}`)
+      addToast({
+        type: 'success',
+        title: anonymize ? 'Cliente anonimizado' : 'Cliente excluído',
+        message: anonymize
+          ? `Os dados pessoais de ${client.name} foram removidos; o histórico de casos foi mantido.`
+          : `${client.name} foi removido.`,
+      })
       onClose()
       onDeleted()
     } catch {
-      addToast({ type: 'error', title: 'Erro', message: 'Não foi possível excluir o cliente.' })
+      addToast({ type: 'error', title: 'Erro', message: 'Não foi possível concluir a operação.' })
     } finally {
       setDeleting(false)
+      setAnonymizing(false)
     }
   }
 
@@ -45,14 +54,24 @@ export function DeleteClientModal({ open, onClose, client, onDeleted }: DeleteCl
             </p>
           </div>
         </div>
+        <div className="border border-amber-200 bg-amber-50 rounded-xl p-4">
+          <p className="font-sans text-sm text-amber-800">
+            Prefere manter o histórico de casos e cálculos? Você pode <strong>anonimizar</strong> o
+            cliente em vez de excluir tudo — os dados pessoais (nome, CPF, contatos, CNIS) são removidos,
+            mas os casos permanecem acessíveis.
+          </p>
+        </div>
         <div className="flex gap-3">
-          <Button onClick={handleConfirm} loading={deleting} variant="danger" className="flex-1">
+          <Button onClick={() => handleConfirm(false)} loading={deleting} disabled={anonymizing} variant="danger" className="flex-1">
             Sim, Excluir Tudo
           </Button>
-          <Button variant="outline" onClick={onClose} className="flex-1">
-            Cancelar
+          <Button onClick={() => handleConfirm(true)} loading={anonymizing} disabled={deleting} variant="outline" className="flex-1">
+            Anonimizar
           </Button>
         </div>
+        <Button variant="ghost" onClick={onClose} className="w-full">
+          Cancelar
+        </Button>
       </div>
     </Modal>
   )

@@ -19,6 +19,20 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
   adapter: withEncryptedTokens(PrismaAdapter(prisma)),
 
+  events: {
+    // Disparado uma única vez quando o PrismaAdapter cria uma conta nova via
+    // OAuth (Google) — o cadastro por credenciais não passa por aqui, pois
+    // usa createUser() em src/services/register.ts diretamente.
+    async createUser({ user }) {
+      if (user.id) {
+        await prisma.user.update({
+          where: { id: user.id },
+          data: { termsAcceptedAt: new Date() },
+        })
+      }
+    },
+  },
+
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,

@@ -21,6 +21,7 @@ export async function createUser(input: RegisterInput): Promise<{ id: string; em
           oabNumber: input.oabNumber,
           plan: 'FREE',
           planStatus: 'ACTIVE',
+          termsAcceptedAt: new Date(),
         },
       })
 

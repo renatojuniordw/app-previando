@@ -6,8 +6,8 @@ import { handleApiError } from '@/lib/api-error'
 /**
  * GET /api/export/data
  *
- * Exporta todos os dados do escritório em formato JSON.
- * Não inclui dados sensíveis (CPF hash, senhas).
+ * Exporta todos os dados do escritório em formato JSON (LGPD Art. 18, V — portabilidade).
+ * Não inclui hash de CPF de clientes, senhas, ou chaves de armazenamento (r2Key).
  */
 export async function GET() {
   try {
@@ -24,9 +24,20 @@ export async function GET() {
           name: true,
           email: true,
           oabNumber: true,
+          cpf: true,
           phone: true,
+          maritalStatus: true,
+          profession: true,
+          street: true,
+          streetNumber: true,
+          complement: true,
+          neighborhood: true,
+          city: true,
+          state: true,
+          zipCode: true,
           plan: true,
           planStatus: true,
+          termsAcceptedAt: true,
           createdAt: true,
           firstLoginAt: true,
         },
@@ -42,6 +53,7 @@ export async function GET() {
           email: true,
           priority: true,
           notes: true,
+          anonymizedAt: true,
           createdAt: true,
           updatedAt: true,
         },
@@ -119,6 +131,30 @@ export async function GET() {
             },
             orderBy: { version: 'asc' },
           },
+          bpcAnalysis: {
+            select: {
+              tipoBpc: true,
+              patologia: true,
+              cid: true,
+              idade: true,
+              faixaEtaria: true,
+              rendaFamiliar: true,
+              membrosGrupo: true,
+              rendaPerCapita: true,
+              barreiras: true,
+              resumoLaudos: true,
+              preAnalise: true,
+              analiseLaudo: true,
+              createdAt: true,
+            },
+          },
+          documents: {
+            select: {
+              fileName: true,
+              contentType: true,
+              createdAt: true,
+            },
+          },
         },
         orderBy: { createdAt: 'desc' },
       }),
@@ -189,6 +225,12 @@ export async function GET() {
         })),
         opinions: c.opinions,
         caseNotes: c.caseNotes,
+        documents: c.documents,
+        bpcAnalysis: c.bpcAnalysis && {
+          ...c.bpcAnalysis,
+          rendaFamiliar: Number(c.bpcAnalysis.rendaFamiliar),
+          rendaPerCapita: Number(c.bpcAnalysis.rendaPerCapita),
+        },
       })),
       payments: payments.map((p) => ({
         ...p,

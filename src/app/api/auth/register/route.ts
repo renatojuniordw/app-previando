@@ -15,6 +15,7 @@ const schema = z.object({
     .regex(/[A-Z]/, 'Precisa ter ao menos uma maiúscula')
     .regex(/[0-9]/, 'Precisa ter ao menos um número'),
   oabNumber: z.string().optional(),
+  termsAccepted: z.literal(true),
 })
 
 async function checkRateLimit(req: NextRequest): Promise<NextResponse | null> {
@@ -78,6 +79,7 @@ export async function POST(req: NextRequest) {
 
   // Audit log (non-blocking)
   await logAudit({ userId: user.id, action: 'REGISTER', resource: 'user', req })
+  await logAudit({ userId: user.id, action: 'terms.accepted', resource: 'user', req })
 
   return NextResponse.json({ user: { id: user.id, email: user.email, plan: user.plan } }, { status: 201 })
 }

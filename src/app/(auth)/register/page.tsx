@@ -19,6 +19,9 @@ const schema = z.object({
     .regex(/[A-Z]/, 'Deve ter ao menos uma letra maiúscula')
     .regex(/[0-9]/, 'Deve ter ao menos um número'),
   oabNumber: z.string().optional(),
+  termsAccepted: z.literal(true, {
+    errorMap: () => ({ message: 'É necessário aceitar os Termos de Uso e a Política de Privacidade' }),
+  }),
 })
 
 type FormData = z.infer<typeof schema>
@@ -121,6 +124,18 @@ export default function RegisterPage() {
         )}
       </button>
 
+      <p className="text-center font-sans text-xs text-slate-500 -mt-3 mb-6">
+        Ao cadastrar com Google, você concorda com os{' '}
+        <Link href="/termos" target="_blank" className="text-amber-700 hover:text-amber-800 transition-colors">
+          Termos de Uso
+        </Link>{' '}
+        e a{' '}
+        <Link href="/privacidade" target="_blank" className="text-amber-700 hover:text-amber-800 transition-colors">
+          Política de Privacidade
+        </Link>
+        .
+      </p>
+
       <div className="mb-6 flex items-center gap-3">
         <div className="flex-1 border-t border-slate-100" />
         <span className="font-sans text-xs font-semibold text-slate-400 uppercase tracking-widest">Ou use seu email</span>
@@ -173,6 +188,30 @@ export default function RegisterPage() {
               <Eye className="w-4 h-4" />
             )}
           </button>
+        </div>
+
+        <div>
+          <label className="flex items-start gap-2.5 cursor-pointer">
+            <input
+              type="checkbox"
+              {...register('termsAccepted')}
+              disabled={loading}
+              className="mt-0.5 w-4 h-4 rounded border-slate-300 text-amber-600 focus:ring-amber-500/50 shrink-0"
+            />
+            <span className="font-sans text-sm text-slate-600 leading-relaxed">
+              Li e aceito os{' '}
+              <Link href="/termos" target="_blank" className="text-amber-700 font-semibold hover:text-amber-800 transition-colors">
+                Termos de Uso
+              </Link>{' '}
+              e a{' '}
+              <Link href="/privacidade" target="_blank" className="text-amber-700 font-semibold hover:text-amber-800 transition-colors">
+                Política de Privacidade
+              </Link>
+            </span>
+          </label>
+          {errors.termsAccepted && (
+            <p className="mt-1.5 font-sans text-sm text-red-600">{errors.termsAccepted.message}</p>
+          )}
         </div>
 
         <button

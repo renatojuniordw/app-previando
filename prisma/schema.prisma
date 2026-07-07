@@ -85,6 +85,8 @@ model User {
   isAdmin           Boolean   @default(false)
   firstLoginAt      DateTime?
   passwordChangedAt DateTime? // usado para invalidar sessões JWT emitidas antes de um reset de senha
+  termsAcceptedAt   DateTime? // aceite de Termos de Uso e Política de Privacidade (LGPD Art. 7º, I)
+  deletedAt         DateTime? // marca a conta como excluída/anonimizada (LGPD Art. 18, VI)
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 
@@ -203,6 +205,7 @@ model Client {
   priority      Priority @default(NORMAL)
   notes         String?
   active        Boolean  @default(true)
+  anonymizedAt  DateTime? // LGPD Art. 18, IV — dados pessoais removidos, histórico de casos preservado
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

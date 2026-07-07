@@ -1,4 +1,4 @@
-import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3'
+import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand, ListObjectsV2Command } from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 
 const r2 = new S3Client({
@@ -44,6 +44,22 @@ export async function downloadPDF(key: string): Promise<Buffer> {
 
 export async function deletePDF(key: string): Promise<void> {
   await r2.send(new DeleteObjectCommand({ Bucket: BUCKET, Key: key }))
+}
+
+export async function deleteObjectsByPrefix(prefix: string): Promise<void> {
+  let continuationToken: string | undefined
+
+  do {
+    const listed = await r2.send(
+      new ListObjectsV2Command({ Bucket: BUCKET, Prefix: prefix, ContinuationToken: continuationToken })
+    )
+
+    for (const obj of listed.Contents ?? []) {
+      if (obj.Key) await r2.send(new DeleteObjectCommand({ Bucket: BUCKET, Key: obj.Key }))
+    }
+
+    continuationToken = listed.IsTruncated ? listed.NextContinuationToken : undefined
+  } while (continuationToken)
 }
 
 export async function uploadDocument(

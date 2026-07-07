@@ -1,16 +1,17 @@
 'use client'
 
 import { useToast } from '@/store/toast'
-import { useSession } from 'next-auth/react'
+import { useSession, signOut } from 'next-auth/react'
 import { useEffect, useRef, useState } from 'react'
 import api from '@/lib/api'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { AddressFields, type AddressValues } from '@/components/shared/AddressFields'
 import { formatCPF, stripNonDigits } from '@/lib/masks'
 import { ESTADO_CIVIL } from '@/lib/br-data'
-import { User, Shield, CreditCard, CheckCircle2, ChevronRight } from 'lucide-react'
+import { User, Shield, CreditCard, CheckCircle2, ChevronRight, AlertTriangle } from 'lucide-react'
 import Link from 'next/link'
 
 // Common styling for native selects to match <Input> component
@@ -36,6 +37,9 @@ export default function ProfilePage() {
   const [newPassword, setNewPassword] = useState('')
   const [savingProfile, setSavingProfile] = useState(false)
   const [savingPassword, setSavingPassword] = useState(false)
+  const [deleteConfirmText, setDeleteConfirmText] = useState('')
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [deletingAccount, setDeletingAccount] = useState(false)
 
   const { addToast } = useToast()
 
@@ -113,6 +117,19 @@ export default function ProfilePage() {
       addToast({ type: 'error', title: 'Erro', message: (err as { response?: { data?: { error?: string } } })?.response?.data?.error ?? 'Erro ao alterar senha.' })
     } finally {
       setSavingPassword(false)
+    }
+  }
+
+  const handleDeleteAccount = async () => {
+    setDeletingAccount(true)
+    try {
+      await api.delete('/users/account', { data: { confirm: 'EXCLUIR' } })
+      addToast({ type: 'success', title: 'Conta excluída', message: 'Sua conta foi excluída com sucesso.' })
+      await signOut({ callbackUrl: '/login' })
+    } catch {
+      addToast({ type: 'error', title: 'Erro', message: 'Não foi possível excluir a conta.' })
+      setDeletingAccount(false)
+      setShowDeleteDialog(false)
     }
   }
 
@@ -317,6 +334,61 @@ export default function ProfilePage() {
             </div>
           </div>
         </div>
+
+        <hr className="border-slate-100" />
+
+        {/* Section: Zona de Perigo */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 pb-10">
+          <div className="md:col-span-1 flex items-start gap-3">
+            <div className="mt-0.5">
+              <AlertTriangle className="w-5 h-5 text-red-500" />
+            </div>
+            <div>
+              <h3 className="text-base font-bold text-slate-900">Zona de Perigo</h3>
+              <p className="mt-1 text-sm text-slate-500 leading-relaxed">
+                Exclusão permanente da sua conta.
+              </p>
+            </div>
+          </div>
+          <div className="md:col-span-2">
+            <div className="bg-white border border-red-200 rounded-xl shadow-sm p-6 space-y-4">
+              <div className="border border-red-200 bg-red-50 rounded-xl p-4">
+                <p className="font-sans text-sm font-bold text-red-800">Esta ação é irreversível!</p>
+                <p className="font-sans text-sm text-red-700 mt-1 leading-relaxed">
+                  Todos os seus clientes, casos, cálculos e documentos serão excluídos permanentemente.
+                  Registros de pagamento serão anonimizados e mantidos apenas para fins de retenção fiscal,
+                  conforme exigido por lei.
+                </p>
+              </div>
+              <Input
+                label='Digite "EXCLUIR" para confirmar'
+                value={deleteConfirmText}
+                onChange={(e) => setDeleteConfirmText(e.target.value)}
+                placeholder="EXCLUIR"
+              />
+              <div className="flex justify-end">
+                <Button
+                  variant="danger"
+                  disabled={deleteConfirmText !== 'EXCLUIR'}
+                  onClick={() => setShowDeleteDialog(true)}
+                >
+                  Excluir minha conta permanentemente
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <ConfirmDialog
+          open={showDeleteDialog}
+          onConfirm={handleDeleteAccount}
+          onCancel={() => setShowDeleteDialog(false)}
+          title="Excluir conta permanentemente?"
+          message="Esta ação não pode ser desfeita. Todos os seus clientes, casos e documentos serão excluídos. Deseja continuar?"
+          confirmLabel="Sim, excluir minha conta"
+          variant="danger"
+          loading={deletingAccount}
+        />
 
       </div>
     </ErrorBoundary>

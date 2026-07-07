@@ -1,3 +1,4 @@
+import { randomBytes } from 'crypto'
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/auth'
 import { z } from 'zod'
@@ -7,6 +8,7 @@ import { sanitizePhone } from '@/lib/sanitize'
 import { sanitizeInput } from '@/lib/sanitize-server'
 import { handleApiError } from '@/lib/api-error'
 import { logAudit } from '@/lib/audit'
+import { deletePDF } from '@/services/r2'
 
 const updateSchema = z.object({
   name: z.string().min(2).max(100).optional(),
@@ -127,8 +129,70 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
 
     const client = await prisma.client.findUnique({
       where: { id: params.id },
-      select: { name: true },
+      select: {
+        name: true,
+        birthDate: true,
+        cnisDocument: { select: { r2Key: true } },
+        cases: { select: { documents: { select: { r2Key: true } } } },
+      },
     })
+
+    if (!client) return NextResponse.json({ error: 'Cliente não encontrado.' }, { status: 404 })
+
+    const anonymize = req.nextUrl.searchParams.get('anonymize') === 'true'
+
+    if (anonymize) {
+      // Anonimização (LGPD Art. 18, IV): remove PII mas preserva casos e
+      // cálculos como registro de negócio. O CNIS é PII pura (extrato do
+      // segurado) — precisa ser excluído por completo, banco + R2.
+      if (client.cnisDocument) await deletePDF(client.cnisDocument.r2Key).catch(() => {})
+
+      const anonymizedBirthDate = new Date(Date.UTC(client.birthDate.getUTCFullYear(), 0, 1))
+
+      await prisma.$transaction([
+        prisma.cnisDocument.deleteMany({ where: { clientId: params.id } }),
+        prisma.client.update({
+          where: { id: params.id },
+          data: {
+            name: 'Cliente Anonimizado',
+            cpfHash: `anonymized:${randomBytes(16).toString('hex')}`,
+            birthDate: anonymizedBirthDate,
+            gender: null,
+            phone: null,
+            email: null,
+            maritalStatus: null,
+            profession: null,
+            street: null,
+            streetNumber: null,
+            complement: null,
+            neighborhood: null,
+            city: null,
+            state: null,
+            zipCode: null,
+            notes: null,
+            active: false,
+            anonymizedAt: new Date(),
+          },
+        }),
+      ])
+
+      await logAudit({
+        userId: session.user.id,
+        action: 'client.anonymized',
+        resource: client.name,
+        req,
+        metadata: { clientId: params.id },
+      })
+
+      return NextResponse.json({ success: true })
+    }
+
+    const r2Keys = [
+      ...(client.cnisDocument ? [client.cnisDocument.r2Key] : []),
+      ...client.cases.flatMap((c) => c.documents.map((d) => d.r2Key)),
+    ]
+
+    await Promise.allSettled(r2Keys.map((key) => deletePDF(key)))
 
     await prisma.client.delete({ where: { id: params.id } })
 
@@ -138,15 +202,13 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
       update: { totalClients: { decrement: 1 } },
     })
 
-    if (client) {
-      await logAudit({
-        userId: session.user.id,
-        action: 'client.deleted',
-        resource: client.name,
-        req,
-        metadata: { clientId: params.id },
-      })
-    }
+    await logAudit({
+      userId: session.user.id,
+      action: 'client.deleted',
+      resource: client.name,
+      req,
+      metadata: { clientId: params.id },
+    })
 
     return NextResponse.json({ success: true })
   } catch (err) {
