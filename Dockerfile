@@ -18,8 +18,7 @@ FROM node:22-alpine AS runner
 
 WORKDIR /app
 
-RUN addgroup --system --no-create-home nodejs && \
-    adduser --system --ingroup nodejs nodeuser
+RUN addgroup -S nodejs && adduser -S -G nodejs nodeuser
 
 COPY package.json package-lock.json ./
 RUN npm ci && npm i -g tsx
