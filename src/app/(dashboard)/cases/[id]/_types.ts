@@ -16,6 +16,8 @@ export interface CaseDetail {
     bpcEnabled: boolean
     diagnosisEnabled: boolean
     peticaoEnabled: boolean
+    revisionEnabled: boolean
+    gpsEnabled: boolean
   }
   portalConfig?: {
     showCalculations: boolean

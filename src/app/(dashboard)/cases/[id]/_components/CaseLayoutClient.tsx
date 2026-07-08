@@ -14,7 +14,17 @@ import { BENEFIT_SHORT_LABELS, STATUS_LABELS, PRIORITY_STYLES } from '@/lib/cons
 import { CaseFloatingActions } from '@/components/case/CaseFloatingActions'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { useCaseData } from './CaseContext'
+import { useUpgradeModal } from '@/store/upgrade-modal'
 import { cn } from '@/lib/utils'
+
+const LOCKED_TAB_INFO: Record<string, { message: string; feature: string; upgradeRequired: string }> = {
+  calculator: { message: 'Cálculos e simulação de benefício não estão disponíveis no seu plano.', feature: 'SIMULATOR', upgradeRequired: 'SOLO' },
+  simulator: { message: 'Simulação de benefício não está disponível no seu plano.', feature: 'SIMULATOR', upgradeRequired: 'SOLO' },
+  retroativos: { message: 'Cálculo de retroativos não está disponível no seu plano.', feature: 'RETROATIVOS', upgradeRequired: 'SOLO' },
+  gps: { message: 'Guias de Contribuição (GPS/DAS) não estão disponíveis no seu plano.', feature: 'GPS_MODULE', upgradeRequired: 'SOLO' },
+  revisao: { message: 'Revisão de Benefícios não está disponível no seu plano.', feature: 'REVISION_MODULE', upgradeRequired: 'SOLO' },
+  bpc: { message: 'Módulo BPC/LOAS não está disponível no seu plano.', feature: 'USE_BPC_MODULE', upgradeRequired: 'SOLO' },
+}
 
 const CaseNotesDrawer = dynamic(
   () => import('@/components/case/CaseNotesDrawer').then(m => ({ default: m.CaseNotesDrawer })),
@@ -66,7 +76,14 @@ export function CaseLayoutClient({ children }: { children: React.ReactNode }) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { data: caseData } = useCaseData()
+  const openUpgradeModal = useUpgradeModal((s) => s.openModal)
   const [showMobileMenu, setShowMobileMenu] = useState(false)
+
+  const handleLockedClick = (tabId: string) => (e: React.MouseEvent) => {
+    e.preventDefault()
+    const info = LOCKED_TAB_INFO[tabId]
+    if (info) openUpgradeModal(info)
+  }
 
   const activeDrawer = searchParams.get('drawer')
 
@@ -201,7 +218,7 @@ export function CaseLayoutClient({ children }: { children: React.ReactNode }) {
                           key={tab.id}
                           href={tab.locked ? '' : fullPath}
                           prefetch={tab.locked ? false : undefined}
-                          onClick={tab.locked ? (e) => e.preventDefault() : undefined}
+                          onClick={tab.locked ? handleLockedClick(tab.id) : undefined}
                           className={cn(
                             "w-full flex items-center justify-between px-3 py-2 rounded-lg font-sans text-xs transition-all duration-200 group border",
                             isActive
@@ -280,7 +297,7 @@ export function CaseLayoutClient({ children }: { children: React.ReactNode }) {
                             key={tab.id}
                             href={tab.locked ? '' : fullPath}
                             prefetch={tab.locked ? false : undefined}
-                            onClick={tab.locked ? (e) => e.preventDefault() : () => setShowMobileMenu(false)}
+                            onClick={tab.locked ? handleLockedClick(tab.id) : () => setShowMobileMenu(false)}
                             className={cn(
                               "w-full flex items-center justify-between p-3 rounded-xl border text-sm transition-all duration-200",
                               isActive

@@ -52,6 +52,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
           diagnosisEnabled: planLimits.diagnosisEnabled,
           peticaoEnabled: planLimits.peticaoEnabled,
           revisionEnabled: planLimits.revisionEnabled,
+          gpsEnabled: planLimits.gpsEnabled,
           viabilityScoreEnabled: planLimits.viabilityScoreEnabled,
 
         },
