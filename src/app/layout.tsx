@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Inter, Playfair_Display, JetBrains_Mono } from 'next/font/google'
 import { MuiThemeProvider } from '@/components/ui/MuiThemeProvider'
 import './globals.css'
@@ -20,6 +20,13 @@ const jetbrainsMono = JetBrains_Mono({
   variable: '--font-jetbrains',
   display: 'swap',
 })
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
+  themeColor: '#d97706',
+}
 
 export const metadata: Metadata = {
   title: 'Previando — Previdência inteligente para advogados',
@@ -45,9 +52,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="pt-BR" className={`${inter.variable} ${playfair.variable} ${jetbrainsMono.variable}`}>
       <head>
-        <meta name="theme-color" content="#d97706" />
         <meta name="mobile-web-app-capable" content="yes" />
         <link rel="apple-touch-icon" href="/logo-previando.svg" />
+        <meta name="apple-mobile-web-app-title" content="Previando" />
       </head>
       <body className="font-sans">
         <MuiThemeProvider>{children}</MuiThemeProvider>

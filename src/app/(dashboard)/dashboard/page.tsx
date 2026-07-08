@@ -11,7 +11,7 @@ import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { OnboardingBanner } from '@/components/dashboard/OnboardingBanner'
 
 const DashboardKpiGrid = dynamic(() => import('@/components/dashboard/DashboardKpiGrid').then((m) => ({ default: m.DashboardKpiGrid })), {
-  loading: () => <div className="grid grid-cols-4 gap-4">{[...Array(4)].map((_, i) => <div key={i} className="h-24 bg-slate-100 rounded-xl animate-pulse" />)}</div>,
+  loading: () => <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">{[...Array(4)].map((_, i) => <div key={i} className="h-24 bg-slate-100 rounded-xl animate-pulse" />)}</div>,
 })
 
 const DashboardCharts = dynamic(() => import('@/components/dashboard/DashboardCharts').then((m) => ({ default: m.DashboardCharts })), {
@@ -74,7 +74,7 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div className="p-8 flex items-center justify-center h-[calc(100vh-4rem)]">
+      <div className="p-8 flex items-center justify-center h-[calc(100dvh-4rem)]">
         <div className="flex flex-col items-center gap-4">
           <div className="w-8 h-8 border-4 border-amber-500 border-t-transparent animate-spin rounded-full"></div>
           <p className="font-sans font-medium text-slate-500 animate-pulse">Carregando painel...</p>

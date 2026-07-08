@@ -44,21 +44,21 @@ export const DashboardKpiGrid = memo(function DashboardKpiGrid({ data }: { data:
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 gap-3 sm:gap-6 lg:grid-cols-4">
         {items.map(({ icon: Icon, label, value, color }) => {
           const styles = COLOR_STYLES[color] ?? COLOR_STYLES.amber
           return (
             <Card 
               key={label} 
               variant="light" 
-              className={`p-6 flex flex-col gap-4 group ${styles.hover} transition-all duration-300 bg-white border-slate-200 shadow-sm rounded-xl hover:-translate-y-0.5`}
+              className={`p-4 sm:p-6 flex items-center sm:flex-col gap-3 sm:gap-4 group ${styles.hover} transition-all duration-300 bg-white border-slate-200 shadow-sm rounded-xl hover:-translate-y-0.5`}
             >
-              <div className={`w-12 h-12 rounded-xl ${styles.bg} border ${styles.border} flex items-center justify-center ${styles.text} shadow-sm group-hover:scale-105 transition-transform duration-300`}>
-                <Icon className="w-5 h-5" />
+              <div className={`w-9 h-9 sm:w-12 sm:h-12 rounded-xl ${styles.bg} border ${styles.border} flex items-center justify-center ${styles.text} shadow-sm group-hover:scale-105 transition-transform duration-300 shrink-0`}>
+                <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
               </div>
-              <div>
-                <p className="font-serif font-bold text-3xl text-slate-900 tracking-tight">{value}</p>
-                <p className="font-sans font-semibold text-[10px] text-slate-500 uppercase tracking-wider mt-1.5">{label}</p>
+              <div className="sm:text-center">
+                <p className="font-serif font-bold text-xl sm:text-3xl text-slate-900 tracking-tight">{value}</p>
+                <p className="font-sans font-semibold text-[10px] text-slate-500 uppercase tracking-wider mt-0.5 sm:mt-1.5">{label}</p>
               </div>
             </Card>
           )

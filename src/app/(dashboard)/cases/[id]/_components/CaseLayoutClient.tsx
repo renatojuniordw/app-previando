@@ -16,6 +16,7 @@ import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { FeatureLockedTeaser } from '@/components/plan/FeatureLockedTeaser'
 import { PLAN_DISPLAY_NAMES } from '@/lib/feature-marketing'
 import { useCaseData } from './CaseContext'
+import { BottomSheet } from '@/components/ui/BottomSheet'
 import { cn } from '@/lib/utils'
 
 // Abas bloqueadas continuam navegáveis: o conteúdo real é substituído pelo
@@ -135,22 +136,23 @@ export function CaseLayoutClient({ children }: { children: React.ReactNode }) {
     <div className="flex flex-col min-h-full bg-slate-50/30">
       {/* Top Header Card */}
       <div className="bg-white border-b border-slate-200 shrink-0 shadow-xs">
-        <div className="max-w-7xl mx-auto px-6 md:px-8 py-6">
+        <div className="max-w-7xl mx-auto px-6 md:px-8 py-3 md:py-4">
           {caseData ? (
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
                 <Link
                   href={`/clients/list/${caseData.client.id}`}
-                  className="inline-flex items-center gap-1.5 font-sans text-xs font-bold text-slate-400 hover:text-amber-700 transition-colors mb-3 uppercase tracking-wider"
+                  className="inline-flex items-center gap-1.5 font-sans text-xs font-bold text-slate-400 hover:text-amber-700 transition-colors mb-1 md:mb-3 uppercase tracking-wider"
                 >
                   <ArrowLeft className="w-3.5 h-3.5" />
-                  Voltar para {caseData.client.name}
+                  <span className="hidden sm:inline">Voltar para {caseData.client.name}</span>
+                  <span className="sm:hidden">Voltar</span>
                 </Link>
-                <div className="flex flex-wrap items-center gap-3">
-                  <h1 className="font-serif font-bold text-2xl md:text-3xl text-slate-900 tracking-tight leading-none">
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                  <h1 className="font-serif font-bold text-xl md:text-2xl lg:text-3xl text-slate-900 tracking-tight leading-none">
                     {BENEFIT_SHORT_LABELS[caseData.benefitType] ?? caseData.benefitType}
                   </h1>
-                  <div className="flex items-center gap-2 mt-1 md:mt-0">
+                  <div className="flex items-center gap-2">
                     <Badge variant="slate" className="bg-slate-50 text-slate-655 border-slate-200 uppercase text-[9px] font-extrabold tracking-wider px-2 py-0.5">
                       {STATUS_LABELS[caseData.status] ?? caseData.status}
                     </Badge>
@@ -262,86 +264,67 @@ export function CaseLayoutClient({ children }: { children: React.ReactNode }) {
         </main>
       </div>
 
-      {/* Mobile Navigation overlay (Drawer bottom-sheet style) */}
-      {showMobileMenu && (
-        <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true">
-          {/* Backdrop */}
-          <div 
-            className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity duration-300"
-            onClick={() => setShowMobileMenu(false)}
-          />
-          
-          {/* Menu Drawer */}
-          <div className="fixed bottom-0 inset-x-0 bg-white rounded-t-3xl border-t border-slate-200 p-6 shadow-2xl flex flex-col max-h-[85vh] overflow-y-auto animate-slide-up">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-4 shrink-0">
-              <div>
-                <h3 className="font-serif font-bold text-lg text-slate-900">Seções do Caso</h3>
-                <p className="font-sans text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">Selecione para navegar</p>
+      {/* Mobile Navigation bottom sheet */}
+      <BottomSheet
+        open={showMobileMenu}
+        onClose={() => setShowMobileMenu(false)}
+        title="Seções do Caso"
+        className="lg:hidden"
+      >
+        <div className="px-5 pb-6 space-y-5">
+          {CATEGORIES.map((cat) => {
+            const catTabs = tabs.filter((t) => cat.itemIds.includes(t.id))
+            if (catTabs.length === 0) return null
+
+            return (
+              <div key={cat.id} className="space-y-2">
+                <h4 className="font-sans text-[10px] font-extrabold text-slate-400 uppercase tracking-wider border-b border-slate-100 pb-1">
+                  {cat.label}
+                </h4>
+                <div className="grid grid-cols-2 gap-1.5">
+                  {catTabs.map((tab) => {
+                    const fullPath = `${basePath}${tab.path}`
+                    const isActive = tab.id === activeTab.id
+                    const Icon = tab.icon
+
+                    return (
+                      <Link
+                        key={tab.id}
+                        href={fullPath}
+                        prefetch={tab.locked ? false : undefined}
+                        onClick={() => setShowMobileMenu(false)}
+                        className={cn(
+                          "flex items-center justify-between p-2.5 rounded-xl border text-sm transition-all duration-200 active:bg-slate-50",
+                          isActive
+                            ? "bg-amber-50/60 border-amber-200 font-bold text-amber-800 shadow-xs"
+                            : tab.locked
+                              ? "border-slate-100 text-slate-500 hover:bg-amber-50/40 font-semibold"
+                              : "border-slate-100 text-slate-600 hover:bg-slate-50 font-semibold"
+                        )}
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <div className={cn(
+                            "w-7 h-7 rounded-lg border flex items-center justify-center shrink-0",
+                            isActive ? "bg-amber-100/50 border-amber-200 text-amber-700" : "bg-slate-50 border-slate-150 text-slate-400"
+                          )}>
+                            <Icon className="w-4 h-4" />
+                          </div>
+                          <span className="truncate">{tab.label}</span>
+                        </div>
+                        {tab.locked && (
+                          <span className="shrink-0 font-sans text-[8px] font-extrabold uppercase tracking-wider bg-amber-100/80 text-amber-800 border border-amber-200 rounded px-1 py-0.5">
+                            {PLAN_DISPLAY_NAMES[LOCKED_TAB_INFO[tab.id]?.upgradeRequired ?? 'SOLO']}
+                          </span>
+                        )}
+                      </Link>
+                    )
+                  })}
+                </div>
               </div>
-              <button 
-                onClick={() => setShowMobileMenu(false)} 
-                className="p-2 text-slate-400 hover:text-slate-650 hover:bg-slate-50 border border-slate-150 rounded-xl transition-all shadow-xs"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            <div className="space-y-6">
-              {CATEGORIES.map((cat) => {
-                const catTabs = tabs.filter((t) => cat.itemIds.includes(t.id))
-                if (catTabs.length === 0) return null
-
-                return (
-                  <div key={cat.id} className="space-y-2">
-                    <h4 className="font-sans text-[10px] font-extrabold text-slate-400 uppercase tracking-wider border-b border-slate-100 pb-1">
-                      {cat.label}
-                    </h4>
-                    <div className="grid grid-cols-1 gap-1.5">
-                      {catTabs.map((tab) => {
-                        const fullPath = `${basePath}${tab.path}`
-                        const isActive = tab.id === activeTab.id
-                        const Icon = tab.icon
-
-                        return (
-                          <Link
-                            key={tab.id}
-                            href={fullPath}
-                            prefetch={tab.locked ? false : undefined}
-                            onClick={() => setShowMobileMenu(false)}
-                            className={cn(
-                              "w-full flex items-center justify-between p-3 rounded-xl border text-sm transition-all duration-200",
-                              isActive
-                                ? "bg-amber-50/60 border-amber-250 font-bold text-amber-800 shadow-xs"
-                                : tab.locked
-                                  ? "border-slate-100 text-slate-500 hover:bg-amber-50/40 font-semibold"
-                                  : "border-slate-100 text-slate-655 hover:bg-slate-50 font-semibold"
-                            )}
-                          >
-                            <div className="flex items-center gap-3">
-                              <div className={cn(
-                                "w-7 h-7 rounded-lg border flex items-center justify-center shrink-0",
-                                isActive ? "bg-amber-100/50 border-amber-200 text-amber-700" : "bg-slate-50 border-slate-150 text-slate-400"
-                              )}>
-                                <Icon className="w-4 h-4" />
-                              </div>
-                              <span>{tab.label}</span>
-                            </div>
-                            {tab.locked && (
-                              <span className="font-sans text-[9px] font-extrabold uppercase tracking-wider bg-amber-100/80 text-amber-800 border border-amber-200 rounded px-1.5 py-0.5">
-                                {PLAN_DISPLAY_NAMES[LOCKED_TAB_INFO[tab.id]?.upgradeRequired ?? 'SOLO']}
-                              </span>
-                            )}
-                          </Link>
-                        )
-                      })}
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          </div>
+            )
+          })}
         </div>
-      )}
+      </BottomSheet>
 
       {/* Floating Actions and Modals */}
       <CasePeticaoModal

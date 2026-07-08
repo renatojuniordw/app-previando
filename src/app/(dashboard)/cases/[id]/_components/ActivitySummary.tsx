@@ -14,23 +14,23 @@ const ITEMS = [
 
 export function ActivitySummary({ counts }: Props) {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+    <div className="grid grid-cols-3 gap-2 sm:gap-4">
       {ITEMS.map(({ key, label, icon: Icon, borderHover, bgIcon, colorIcon }) => {
         return (
           <Card 
             key={key} 
             variant="light" 
             className={cn(
-              "p-5 flex items-center justify-between border-slate-200/80 bg-white hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 shadow-sm",
+              "p-3 sm:p-5 flex flex-col items-center sm:items-start sm:flex-row gap-2 sm:gap-0 sm:justify-between border-slate-200/80 bg-white hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 shadow-sm active:bg-slate-50",
               borderHover
             )}
           >
-            <div className="space-y-1">
+            <div className="sm:space-y-1 text-center sm:text-left">
               <p className="font-sans text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">{label}</p>
-              <p className="font-mono font-bold text-2xl text-slate-800 leading-none mt-2">{counts[key]}</p>
+              <p className="font-mono font-bold text-xl sm:text-2xl text-slate-800 leading-none mt-1 sm:mt-2">{counts[key]}</p>
             </div>
-            <div className={cn("w-9 h-9 rounded-lg border flex items-center justify-center shrink-0 shadow-xs", bgIcon)}>
-              <Icon className={cn("w-4.5 h-4.5", colorIcon)} />
+            <div className={cn("w-7 h-7 sm:w-9 sm:h-9 rounded-lg border flex items-center justify-center shrink-0 shadow-xs", bgIcon)}>
+              <Icon className={cn("w-3.5 h-3.5 sm:w-4.5 sm:h-4.5", colorIcon)} />
             </div>
           </Card>
         )

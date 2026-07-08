@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { AlertCircle, Calendar, ChevronDown, ChevronUp, Plus, Pencil, Trash2 } from 'lucide-react'
 import { Periodo, PeriodWarning } from '@/types/cnis'
 import { formatCompetencia, formatDateString } from '../_utils'
@@ -18,6 +19,8 @@ interface Props {
   onDelete: () => void
 }
 
+const SALARY_PREVIEW_LIMIT = 6
+
 export function PeriodItem({
   periodo,
   isExpanded,
@@ -27,6 +30,11 @@ export function PeriodItem({
   onEditSalaries,
   onDelete,
 }: Props) {
+  const [showAllSalaries, setShowAllSalaries] = useState(false)
+  const salarios = periodo.salarios || []
+  const visibleSalarios = showAllSalaries ? salarios : salarios.slice(0, SALARY_PREVIEW_LIMIT)
+  const hasMoreSalarios = salarios.length > SALARY_PREVIEW_LIMIT
+
   return (
     <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm transition-all duration-300 hover:shadow-md hover:border-slate-300/80">
       <div className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left">
@@ -140,13 +148,23 @@ export function PeriodItem({
       {/* Expanded Salary Detail View */}
       {isExpanded && (
         <div className="border-slate-100 animate-slide-down border-t bg-slate-50/30 px-5 py-5">
-          {periodo.salarios && periodo.salarios.length > 0 ? (
+          {salarios.length > 0 ? (
             <div className="space-y-3.5">
-              <span className="block font-sans text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
-                Detalhamento de Salários de Contribuição
-              </span>
+              <div className="flex items-center justify-between">
+                <span className="block font-sans text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
+                  Detalhamento de Salários de Contribuição
+                </span>
+                {hasMoreSalarios && (
+                  <button
+                    onClick={() => setShowAllSalaries(v => !v)}
+                    className="font-sans text-[10px] font-extrabold uppercase tracking-wider text-amber-700 hover:text-amber-800 transition-colors"
+                  >
+                    {showAllSalaries ? 'Mostrar menos' : `Ver todas as ${salarios.length} contribuições`}
+                  </button>
+                )}
+              </div>
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
-                {periodo.salarios.map((sal, sIdx) => (
+                {visibleSalarios.map((sal, sIdx) => (
                   <div
                     key={sIdx}
                     className="border-slate-200/80 hover:border-slate-350 hover:shadow-xs group/sal relative flex flex-col justify-between rounded-xl border bg-white p-3.5 shadow-sm transition-all duration-300"

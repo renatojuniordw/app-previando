@@ -11,11 +11,12 @@ import { Button } from '@/components/ui/Button'
 import { ActionsDropdown } from '@/components/ui/ActionsDropdown'
 import { useToast } from '@/store/toast'
 import { downloadPdf } from '@/lib/download-pdf'
-import { Search, SlidersHorizontal, X, ChevronLeft, ChevronRight, Briefcase, ArrowLeft } from 'lucide-react'
+import { FilterSheet } from '@/components/ui/FilterSheet'
+import { Search, SlidersHorizontal, ChevronLeft, ChevronRight, Briefcase, ArrowLeft } from 'lucide-react'
 import { formatDate, formatCurrency } from '@/lib/utils'
 import { BENEFIT_SHORT_LABELS, STATUS_LABELS } from '@/lib/constants'
-import { DatePicker } from '@/components/ui/DatePicker'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
+import { MobileCardList } from '@/components/ui/MobileCardList'
 import { cn } from '@/lib/utils'
 
 const STATUS_OPTIONS = [
@@ -75,7 +76,7 @@ export default function CasesPage() {
   const [cases, setCases] = useState<CaseItem[]>([])
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
-  const [showFilters, setShowFilters] = useState(false)
+  const [filterSheetOpen, setFilterSheetOpen] = useState(false)
   const [page, setPage] = useState(1)
   const [sortField, setSortField] = useState<'client' | 'status' | 'priority' | 'deadlineDate' | 'createdAt'>('createdAt')
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc')
@@ -194,111 +195,89 @@ export default function CasesPage() {
 
         {/* Action Button */}
         <button
-          onClick={() => setShowFilters(!showFilters)}
-          aria-expanded={showFilters}
+          onClick={() => setFilterSheetOpen(true)}
           className={cn(
             'flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold rounded-lg border transition-all duration-200 shrink-0 w-full sm:w-auto',
-            showFilters || hasActiveFilters
+            hasActiveFilters
               ? 'bg-slate-900 text-white border-slate-900 shadow-sm'
               : 'bg-white border-slate-200 text-slate-650 hover:bg-slate-50 hover:text-slate-850'
           )}
         >
           <SlidersHorizontal className="w-3.5 h-3.5" />
-          Filtros Avançados
+          Filtros
           {hasActiveFilters && <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />}
         </button>
       </div>
 
-      {/* Advanced Filters Card */}
-      {showFilters && (
-        <Card variant="light" className="p-6 border-slate-200/80 space-y-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-5">
-            <div>
-              <label htmlFor="filter-status" className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-2">Status</label>
-              <select 
-                id="filter-status" 
-                value={statusFilter} 
-                onChange={(e) => { setStatusFilter(e.target.value); setPage(1) }} 
-                className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-sm text-slate-800 focus:outline-none focus:border-slate-400 focus:ring-1 focus:ring-slate-400 transition-all"
-              >
-                <option value="">Todos</option>
-                {STATUS_OPTIONS.map((s) => (
-                  <option key={s.value} value={s.value}>{s.label}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label htmlFor="filter-priority" className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-2">Prioridade</label>
-              <select 
-                id="filter-priority" 
-                value={priority} 
-                onChange={(e) => { setPriority(e.target.value); setPage(1) }} 
-                className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-sm text-slate-800 focus:outline-none focus:border-slate-400 focus:ring-1 focus:ring-slate-400 transition-all"
-              >
-                <option value="">Todas</option>
-                <option value="CRITICAL">Crítico</option>
-                <option value="ATTENTION">Atenção</option>
-                <option value="NORMAL">Normal</option>
-              </select>
-            </div>
-            <div>
-              <label htmlFor="filter-benefit" className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-2">Tipo de Benefício</label>
-              <select 
-                id="filter-benefit" 
-                value={benefitType} 
-                onChange={(e) => { setBenefitType(e.target.value); setPage(1) }} 
-                className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-sm text-slate-800 focus:outline-none focus:border-slate-400 focus:ring-1 focus:ring-slate-400 transition-all"
-              >
-                <option value="">Todos</option>
-                {ALL_BENEFIT_TYPES.map((t) => (
-                  <option key={t} value={t}>{BENEFIT_SHORT_LABELS[t]}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label htmlFor="filter-rmi-min" className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-2">RMI mínima (R$)</label>
-              <input 
-                id="filter-rmi-min" 
-                type="number" 
-                value={rmiMin} 
-                onChange={(e) => { setRmiMin(e.target.value); setPage(1) }} 
-                placeholder="0,00" 
-                className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-sm text-slate-850 placeholder-slate-400 focus:outline-none focus:border-slate-400 focus:ring-1 focus:ring-slate-400 transition-all" 
-              />
-            </div>
-            <div>
-              <label htmlFor="filter-rmi-max" className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-2">RMI máxima (R$)</label>
-              <input 
-                id="filter-rmi-max" 
-                type="number" 
-                value={rmiMax} 
-                onChange={(e) => { setRmiMax(e.target.value); setPage(1) }} 
-                placeholder="99999,00" 
-                className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-sm text-slate-850 placeholder-slate-400 focus:outline-none focus:border-slate-400 focus:ring-1 focus:ring-slate-400 transition-all" 
-              />
-            </div>
-            <div>
-              <label htmlFor="filter-created-from" className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-2">Criado a partir de</label>
-              <DatePicker value={createdFrom} onChange={(d) => { setCreatedFrom(d ? d.toISOString().split('T')[0] : ''); setPage(1) }} />
-            </div>
-            <div>
-              <label htmlFor="filter-created-to" className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-2">Criado até</label>
-              <DatePicker value={createdTo} onChange={(d) => { setCreatedTo(d ? d.toISOString().split('T')[0] : ''); setPage(1) }} />
-            </div>
-            <div className="flex items-end justify-start sm:col-span-2 md:col-span-1 py-1">
-              {hasActiveFilters && (
-                <button 
-                  onClick={clearFilters} 
-                  className="flex items-center gap-1.5 text-xs font-bold text-red-600 hover:text-red-750 transition-colors"
-                >
-                  <X className="w-4 h-4" />
-                  Limpar Filtros
-                </button>
-              )}
-            </div>
-          </div>
-        </Card>
-      )}
+      {/* Filter Sheet */}
+      <FilterSheet
+        open={filterSheetOpen}
+        onClose={() => setFilterSheetOpen(false)}
+        title="Filtros Avançados"
+        activeCount={[statusFilter, priority, benefitType, rmiMin, rmiMax, createdFrom, createdTo].filter(Boolean).length}
+        onClear={() => { clearFilters(); setFilterSheetOpen(false) }}
+        onApply={() => setFilterSheetOpen(false)}
+        filters={[
+          {
+            type: 'select',
+            id: 'filter-status',
+            label: 'Status',
+            value: statusFilter,
+            onChange: (v) => { setStatusFilter(v); setPage(1) },
+            options: STATUS_OPTIONS,
+          },
+          {
+            type: 'select',
+            id: 'filter-priority',
+            label: 'Prioridade',
+            value: priority,
+            onChange: (v) => { setPriority(v); setPage(1) },
+            options: [
+              { value: 'CRITICAL', label: 'Crítico' },
+              { value: 'ATTENTION', label: 'Atenção' },
+              { value: 'NORMAL', label: 'Normal' },
+            ],
+          },
+          {
+            type: 'select',
+            id: 'filter-benefit',
+            label: 'Tipo de Benefício',
+            value: benefitType,
+            onChange: (v) => { setBenefitType(v); setPage(1) },
+            options: ALL_BENEFIT_TYPES.map((t) => ({ value: t, label: BENEFIT_SHORT_LABELS[t] })),
+          },
+          {
+            type: 'number',
+            id: 'filter-rmi-min',
+            label: 'RMI mínima (R$)',
+            value: rmiMin,
+            onChange: (v) => { setRmiMin(v); setPage(1) },
+            placeholder: '0,00',
+          },
+          {
+            type: 'number',
+            id: 'filter-rmi-max',
+            label: 'RMI máxima (R$)',
+            value: rmiMax,
+            onChange: (v) => { setRmiMax(v); setPage(1) },
+            placeholder: '99999,00',
+          },
+          {
+            type: 'date',
+            id: 'filter-created-from',
+            label: 'Criado a partir de',
+            value: createdFrom,
+            onChange: (v) => { setCreatedFrom(v); setPage(1) },
+          },
+          {
+            type: 'date',
+            id: 'filter-created-to',
+            label: 'Criado até',
+            value: createdTo,
+            onChange: (v) => { setCreatedTo(v); setPage(1) },
+          },
+        ]}
+      />
 
       <ErrorBoundary>
         {/* Table Card */}
@@ -319,101 +298,147 @@ export default function CasesPage() {
               </p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="bg-slate-50/50 border-b border-slate-200">
-                    {([
-                      { label: 'Cliente', field: 'client' },
-                      { label: 'Benefício', field: null },
-                      { label: 'Status', field: 'status' },
-                      { label: 'Prioridade', field: 'priority' },
-                      { label: 'RMI Calculada', field: null },
-                      { label: 'Prazo', field: 'deadlineDate' },
-                      { label: 'Criado em', field: 'createdAt' },
-                    ] as { label: string; field: typeof sortField | null }[]).map(({ label, field }) => (
-                      <th
-                        key={label}
-                        className={cn(
-                          'px-6 py-4 font-sans font-bold text-[10px] text-slate-400 uppercase tracking-wider',
-                          field && 'cursor-pointer select-none hover:text-slate-700 transition-colors'
-                        )}
-                        onClick={field ? () => handleSort(field) : undefined}
-                      >
-                        <span className="inline-flex items-center gap-1.5">
-                          {label}
-                          {field && sortField === field && (
-                            <span className="text-amber-600 font-extrabold">{sortDir === 'asc' ? '↑' : '↓'}</span>
+            <>
+              {/* Desktop table */}
+              <div className="hidden md:block overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-slate-50/50 border-b border-slate-200">
+                      {([
+                        { label: 'Cliente', field: 'client' },
+                        { label: 'Benefício', field: null },
+                        { label: 'Status', field: 'status' },
+                        { label: 'Prioridade', field: 'priority' },
+                        { label: 'RMI Calculada', field: null },
+                        { label: 'Prazo', field: 'deadlineDate' },
+                        { label: 'Criado em', field: 'createdAt' },
+                      ] as { label: string; field: typeof sortField | null }[]).map(({ label, field }) => (
+                        <th
+                          key={label}
+                          className={cn(
+                            'px-6 py-4 font-sans font-bold text-[10px] text-slate-400 uppercase tracking-wider',
+                            field && 'cursor-pointer select-none hover:text-slate-700 transition-colors'
                           )}
-                          {field && sortField !== field && <span className="text-slate-300">↕</span>}
-                        </span>
-                      </th>
-                    ))}
-                    <th className="px-6 py-4 font-sans font-bold text-[10px] text-slate-400 uppercase tracking-wider text-right">Ações</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {cases.map((c) => (
-                    <tr key={c.id} className="hover:bg-slate-50/40 transition-colors group">
-                      <td className="px-6 py-4">
-                        <Link 
-                          href={`/cases/${c.id}`} 
-                          className="font-sans font-bold text-sm text-slate-800 hover:text-amber-700 transition-colors"
+                          onClick={field ? () => handleSort(field) : undefined}
                         >
-                          {c.client.name}
-                        </Link>
-                      </td>
-                      <td className="px-6 py-4 text-sm text-slate-650 font-medium">
-                        {BENEFIT_SHORT_LABELS[c.benefitType] ?? c.benefitType}
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className={cn(
-                          'inline-flex items-center px-2.5 py-1 rounded-md border text-[9px] font-extrabold uppercase tracking-wider',
-                          STATUS_BADGE_STYLE[c.status] || 'bg-slate-50 text-slate-600 border-slate-200'
-                        )}>
-                          {STATUS_LABELS[c.status] ?? c.status}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <Badge variant={PRIORITY_VARIANT[c.priority] ?? 'slate'}>
-                          {PRIORITY_LABEL[c.priority] ?? c.priority}
-                        </Badge>
-                      </td>
-                      <td className="px-6 py-4 text-sm font-bold text-emerald-700 font-mono">
-                        {c.selectedRmi ? formatCurrency(c.selectedRmi) : '—'}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-slate-500 font-mono">
-                        {c.deadlineDate ? formatDate(c.deadlineDate) : '—'}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-slate-500 font-medium">
-                        {formatDate(c.createdAt)}
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                        <ActionsDropdown
-                          ariaLabel={`Ações para caso de ${c.client.name}`}
-                          actions={[
-                            {
-                              label: 'Alterar Status',
-                              onClick: () => setStatusTarget({ id: c.id, status: c.status }),
-                            },
-                            {
-                              label: 'Exportar PDF',
-                              onClick: () => downloadPdf(c.id).then((ok) => {
-                                if (!ok) addToast({ type: 'error', title: 'Erro', message: 'Não foi possível gerar o PDF.' })
-                              }),
-                            },
-                            {
-                              label: 'Acessar Cálculo',
-                              onClick: () => router.push(`/cases/${c.id}/calculator`),
-                            },
-                          ]}
-                        />
-                      </td>
+                          <span className="inline-flex items-center gap-1.5">
+                            {label}
+                            {field && sortField === field && (
+                              <span className="text-amber-600 font-extrabold">{sortDir === 'asc' ? '↑' : '↓'}</span>
+                            )}
+                            {field && sortField !== field && <span className="text-slate-300">↕</span>}
+                          </span>
+                        </th>
+                      ))}
+                      <th className="px-6 py-4 font-sans font-bold text-[10px] text-slate-400 uppercase tracking-wider text-right">Ações</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {cases.map((c) => (
+                      <tr key={c.id} className="hover:bg-slate-50/40 transition-colors group">
+                        <td className="px-6 py-4">
+                          <Link 
+                            href={`/cases/${c.id}`} 
+                            className="font-sans font-bold text-sm text-slate-800 hover:text-amber-700 transition-colors"
+                          >
+                            {c.client.name}
+                          </Link>
+                        </td>
+                        <td className="px-6 py-4 text-sm text-slate-650 font-medium">
+                          {BENEFIT_SHORT_LABELS[c.benefitType] ?? c.benefitType}
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className={cn(
+                            'inline-flex items-center px-2.5 py-1 rounded-md border text-[9px] font-extrabold uppercase tracking-wider',
+                            STATUS_BADGE_STYLE[c.status] || 'bg-slate-50 text-slate-600 border-slate-200'
+                          )}>
+                            {STATUS_LABELS[c.status] ?? c.status}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <Badge variant={PRIORITY_VARIANT[c.priority] ?? 'slate'}>
+                            {PRIORITY_LABEL[c.priority] ?? c.priority}
+                          </Badge>
+                        </td>
+                        <td className="px-6 py-4 text-sm font-bold text-emerald-700 font-mono">
+                          {c.selectedRmi ? formatCurrency(c.selectedRmi) : '—'}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-slate-500 font-mono">
+                          {c.deadlineDate ? formatDate(c.deadlineDate) : '—'}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-slate-500 font-medium">
+                          {formatDate(c.createdAt)}
+                        </td>
+                        <td className="px-6 py-4 text-right">
+                          <ActionsDropdown
+                            ariaLabel={`Ações para caso de ${c.client.name}`}
+                            actions={[
+                              {
+                                label: 'Alterar Status',
+                                onClick: () => setStatusTarget({ id: c.id, status: c.status }),
+                              },
+                              {
+                                label: 'Exportar PDF',
+                                onClick: () => downloadPdf(c.id).then((ok) => {
+                                  if (!ok) addToast({ type: 'error', title: 'Erro', message: 'Não foi possível gerar o PDF.' })
+                                }),
+                              },
+                              {
+                                label: 'Acessar Cálculo',
+                                onClick: () => router.push(`/cases/${c.id}/calculator`),
+                              },
+                            ]}
+                          />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile cards */}
+              <MobileCardList
+                cards={cases.map((c) => ({
+                  id: c.id,
+                  primary: c.client.name,
+                  secondary: BENEFIT_SHORT_LABELS[c.benefitType] ?? c.benefitType,
+                  badge: (
+                    <div className="flex items-center gap-1.5">
+                      <span className={cn(
+                        'inline-flex items-center px-2 py-0.5 rounded-md border text-[9px] font-extrabold uppercase tracking-wider',
+                        STATUS_BADGE_STYLE[c.status] || 'bg-slate-50 text-slate-600 border-slate-200'
+                      )}>
+                        {STATUS_LABELS[c.status] ?? c.status}
+                      </span>
+                      <Badge variant={PRIORITY_VARIANT[c.priority] ?? 'slate'}>
+                        {PRIORITY_LABEL[c.priority] ?? c.priority}
+                      </Badge>
+                    </div>
+                  ),
+                  fields: [
+                    ...(c.selectedRmi ? [{ label: 'RMI', value: formatCurrency(c.selectedRmi) }] : []),
+                    { label: 'Prazo', value: c.deadlineDate ? formatDate(c.deadlineDate) : '—' },
+                    { label: 'Criado em', value: formatDate(c.createdAt) },
+                  ],
+                  href: `/cases/${c.id}`,
+                  actions: (
+                    <ActionsDropdown
+                      ariaLabel={`Ações para caso de ${c.client.name}`}
+                      actions={[
+                        { label: 'Alterar Status', onClick: () => setStatusTarget({ id: c.id, status: c.status }) },
+                        {
+                          label: 'Exportar PDF',
+                          onClick: () => downloadPdf(c.id).then((ok) => {
+                            if (!ok) addToast({ type: 'error', title: 'Erro', message: 'Não foi possível gerar o PDF.' })
+                          }),
+                        },
+                        { label: 'Acessar Cálculo', onClick: () => router.push(`/cases/${c.id}/calculator`) },
+                      ]}
+                    />
+                  ),
+                }))}
+              />
+            </>
           )}
         </Card>
 

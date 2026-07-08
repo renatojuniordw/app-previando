@@ -171,7 +171,7 @@ export default function CnisCasePage() {
           </div>
           <iframe
             src={pdfBlobUrl ?? ''}
-            className="w-full grow border-0 bg-slate-100 min-h-[calc(100vh-12rem)]"
+            className="w-full grow border-0 bg-slate-100 min-h-[calc(100dvh-12rem)]"
             title="Extrato CNIS Original"
           />
         </div>

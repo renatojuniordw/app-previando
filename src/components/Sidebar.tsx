@@ -120,7 +120,7 @@ export const Sidebar = memo(function Sidebar() {
 
       <aside
         className={cn(
-          'sticky top-0 z-20 h-screen shrink-0 overflow-hidden border-r border-slate-200 bg-white transition-all duration-300',
+          'sticky top-0 z-20 h-dvh shrink-0 overflow-hidden border-r border-slate-200 bg-white transition-all duration-300',
           'fixed inset-y-0 left-0 z-40 transform lg:static lg:translate-x-0',
           isOpen ? 'translate-x-0' : '-translate-x-full',
           isDesktopOpen ? 'lg:w-64' : 'lg:w-0 lg:border-none'

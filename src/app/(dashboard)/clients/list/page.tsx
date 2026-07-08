@@ -10,6 +10,7 @@ import { formatDate, cn } from '@/lib/utils'
 import { Search, Plus, User, FileText, Phone, Mail, Upload, Lock, AlertTriangle, Check, X, Trash2 } from 'lucide-react'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { ActionsDropdown } from '@/components/ui/ActionsDropdown'
+import { MobileCardList } from '@/components/ui/MobileCardList'
 import { DeleteClientModal } from '@/components/client/DeleteClientModal'
 import { useToast } from '@/store/toast'
 
@@ -218,139 +219,191 @@ export default function ClientsListPage() {
               </Link>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="bg-slate-50/50 border-b border-slate-200">
-                    <th className="px-4 py-4 w-10">
-                      <input
-                        type="checkbox"
-                        aria-label="Selecionar todos"
-                        checked={selectedIds.size > 0 && selectedIds.size === clients.length}
-                        onChange={toggleSelectAll}
-                        className="w-4 h-4 rounded border-slate-300"
-                      />
-                    </th>
-                    <th className="px-6 py-4 font-sans font-bold text-[10px] text-slate-400 uppercase tracking-wider">Cliente</th>
-                    <th className="px-6 py-4 font-sans font-bold text-[10px] text-slate-400 uppercase tracking-wider">Contato</th>
-                    <th className="px-6 py-4 font-sans font-bold text-[10px] text-slate-400 uppercase tracking-wider">Prioridade</th>
-                    <th className="px-6 py-4 font-sans font-bold text-[10px] text-slate-400 uppercase tracking-wider">Casos Ativos</th>
-                    <th className="px-6 py-4 font-sans font-bold text-[10px] text-slate-400 uppercase tracking-wider">Cadastrado em</th>
-                    <th className="px-6 py-4 font-sans font-bold text-[10px] text-slate-400 uppercase tracking-wider text-right">Ações</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {clients.map((client) => (
-                    <tr key={client.id} className={cn('hover:bg-slate-50/40 transition-colors group', !client.active && 'bg-slate-50/60')}>
-                      <td className="px-4 py-4">
+            <>
+              {/* Desktop table */}
+              <div className="hidden md:block overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-slate-50/50 border-b border-slate-200">
+                      <th className="px-4 py-4 w-10">
                         <input
                           type="checkbox"
-                          aria-label={`Selecionar ${client.name}`}
-                          checked={selectedIds.has(client.id)}
-                          onChange={() => toggleSelect(client.id)}
+                          aria-label="Selecionar todos"
+                          checked={selectedIds.size > 0 && selectedIds.size === clients.length}
+                          onChange={toggleSelectAll}
                           className="w-4 h-4 rounded border-slate-300"
                         />
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-200 text-slate-700 font-serif font-bold text-sm shrink-0 flex items-center justify-center shadow-sm group-hover:bg-white group-hover:border-slate-300 transition-colors duration-200">
-                            {client.name.charAt(0).toUpperCase()}
-                          </div>
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <Link
-                                href={`/clients/list/${client.id}`}
-                                className="font-sans font-bold text-sm text-slate-800 hover:text-amber-700 transition-colors duration-200"
-                              >
-                                {client.name}
-                              </Link>
-                              {!client.active && (
-                                <span className="inline-flex items-center gap-1 px-2 py-0.5 font-sans font-bold text-[10px] uppercase tracking-wide rounded-md border border-slate-300 bg-slate-100 text-slate-600">
-                                  <Lock className="w-2.5 h-2.5" /> Bloqueado
-                                </span>
-                              )}
-                            </div>
-                            <p className="font-sans text-[11px] text-slate-400 mt-0.5 font-bold tracking-tight">CPF: {maskCPF(client.cpf)}</p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex flex-col gap-1">
-                          {client.phone ? (
-                            <div className="flex items-center gap-1.5 font-sans text-xs text-slate-650 font-medium">
-                              <Phone className="w-3.5 h-3.5 text-slate-400" />
-                              {client.phone}
-                            </div>
-                          ) : (
-                            <span className="font-sans text-xs text-slate-400 font-medium">Sem telefone</span>
-                          )}
-                          {client.email && (
-                            <div className="flex items-center gap-1.5 font-sans text-xs text-slate-500">
-                              <Mail className="w-3.5 h-3.5 text-slate-400" />
-                              <span className="truncate max-w-[120px]">{client.email}</span>
-                            </div>
-                          )}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <Badge variant={PRIORITY_BADGE[client.priority]}>
-                          {PRIORITY_LABELS[client.priority]}
-                        </Badge>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-1.5">
-                          <FileText className="w-4 h-4 text-slate-400" />
-                          <span className="font-sans text-sm font-semibold text-slate-700">{client.cases.length}</span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 font-sans text-sm text-slate-500 font-medium">
-                        {formatDate(client.createdAt)}
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                        <div className="flex items-center justify-end gap-1">
-                          <Link
-                            href={`/clients/list/${client.id}`}
-                            className="p-2 text-slate-450 hover:text-amber-700 hover:bg-amber-50 border border-transparent hover:border-amber-100 rounded-lg transition-all"
-                            aria-label={`Ver detalhes de ${client.name}`}
-                          >
-                            <FileText className="w-4 h-4" aria-hidden="true" />
-                          </Link>
-                          <ActionsDropdown
-                            ariaLabel={`Ações para ${client.name}`}
-                            actions={[
-                              {
-                                label: 'Editar cliente',
-                                onClick: () => window.location.href = `/clients/list/${client.id}/edit`,
-                              },
-                              {
-                                label: client.active ? 'Desativar cliente' : 'Ativar cliente',
-                                onClick: async () => {
-                                  try {
-                                    await api.patch(`/clients/${client.id}/active`, { active: !client.active })
-                                    load(search)
-                                  } catch (err) {
-                                    const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error
-                                    if (msg) addToast({ type: 'error', title: 'Não foi possível concluir', message: msg })
-                                  }
-                                },
-                              },
-                              {
-                                label: 'Excluir cliente',
-                                onClick: () => {
-                                  setDeletingClient(client)
-                                  setShowDeleteModal(true)
-                                },
-                                variant: 'danger',
-                              },
-                            ]}
-                          />
-                        </div>
-                      </td>
+                      </th>
+                      <th className="px-6 py-4 font-sans font-bold text-[10px] text-slate-400 uppercase tracking-wider">Cliente</th>
+                      <th className="px-6 py-4 font-sans font-bold text-[10px] text-slate-400 uppercase tracking-wider">Contato</th>
+                      <th className="px-6 py-4 font-sans font-bold text-[10px] text-slate-400 uppercase tracking-wider">Prioridade</th>
+                      <th className="px-6 py-4 font-sans font-bold text-[10px] text-slate-400 uppercase tracking-wider">Casos Ativos</th>
+                      <th className="px-6 py-4 font-sans font-bold text-[10px] text-slate-400 uppercase tracking-wider">Cadastrado em</th>
+                      <th className="px-6 py-4 font-sans font-bold text-[10px] text-slate-400 uppercase tracking-wider text-right">Ações</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {clients.map((client) => (
+                      <tr key={client.id} className={cn('hover:bg-slate-50/40 transition-colors group', !client.active && 'bg-slate-50/60')}>
+                        <td className="px-4 py-4">
+                          <input
+                            type="checkbox"
+                            aria-label={`Selecionar ${client.name}`}
+                            checked={selectedIds.has(client.id)}
+                            onChange={() => toggleSelect(client.id)}
+                            className="w-4 h-4 rounded border-slate-300"
+                          />
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-200 text-slate-700 font-serif font-bold text-sm shrink-0 flex items-center justify-center shadow-sm group-hover:bg-white group-hover:border-slate-300 transition-colors duration-200">
+                              {client.name.charAt(0).toUpperCase()}
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <Link
+                                  href={`/clients/list/${client.id}`}
+                                  className="font-sans font-bold text-sm text-slate-800 hover:text-amber-700 transition-colors duration-200"
+                                >
+                                  {client.name}
+                                </Link>
+                                {!client.active && (
+                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 font-sans font-bold text-[10px] uppercase tracking-wide rounded-md border border-slate-300 bg-slate-100 text-slate-600">
+                                    <Lock className="w-2.5 h-2.5" /> Bloqueado
+                                  </span>
+                                )}
+                              </div>
+                              <p className="font-sans text-[11px] text-slate-400 mt-0.5 font-bold tracking-tight">CPF: {maskCPF(client.cpf)}</p>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex flex-col gap-1">
+                            {client.phone ? (
+                              <div className="flex items-center gap-1.5 font-sans text-xs text-slate-650 font-medium">
+                                <Phone className="w-3.5 h-3.5 text-slate-400" />
+                                {client.phone}
+                              </div>
+                            ) : (
+                              <span className="font-sans text-xs text-slate-400 font-medium">Sem telefone</span>
+                            )}
+                            {client.email && (
+                              <div className="flex items-center gap-1.5 font-sans text-xs text-slate-500">
+                                <Mail className="w-3.5 h-3.5 text-slate-400" />
+                                <span className="truncate max-w-[120px]">{client.email}</span>
+                              </div>
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <Badge variant={PRIORITY_BADGE[client.priority]}>
+                            {PRIORITY_LABELS[client.priority]}
+                          </Badge>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-1.5">
+                            <FileText className="w-4 h-4 text-slate-400" />
+                            <span className="font-sans text-sm font-semibold text-slate-700">{client.cases.length}</span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 font-sans text-sm text-slate-500 font-medium">
+                          {formatDate(client.createdAt)}
+                        </td>
+                        <td className="px-6 py-4 text-right">
+                          <div className="flex items-center justify-end gap-1">
+                            <Link
+                              href={`/clients/list/${client.id}`}
+                              className="p-2 text-slate-450 hover:text-amber-700 hover:bg-amber-50 border border-transparent hover:border-amber-100 rounded-lg transition-all"
+                              aria-label={`Ver detalhes de ${client.name}`}
+                            >
+                              <FileText className="w-4 h-4" aria-hidden="true" />
+                            </Link>
+                            <ActionsDropdown
+                              ariaLabel={`Ações para ${client.name}`}
+                              actions={[
+                                {
+                                  label: 'Editar cliente',
+                                  onClick: () => window.location.href = `/clients/list/${client.id}/edit`,
+                                },
+                                {
+                                  label: client.active ? 'Desativar cliente' : 'Ativar cliente',
+                                  onClick: async () => {
+                                    try {
+                                      await api.patch(`/clients/${client.id}/active`, { active: !client.active })
+                                      load(search)
+                                    } catch (err) {
+                                      const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error
+                                      if (msg) addToast({ type: 'error', title: 'Não foi possível concluir', message: msg })
+                                    }
+                                  },
+                                },
+                                {
+                                  label: 'Excluir cliente',
+                                  onClick: () => {
+                                    setDeletingClient(client)
+                                    setShowDeleteModal(true)
+                                  },
+                                  variant: 'danger',
+                                },
+                              ]}
+                            />
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile cards */}
+              <MobileCardList
+                cards={clients.map((client) => ({
+                  id: client.id,
+                  primary: client.name,
+                  secondary: client.active ? `CPF: ${maskCPF(client.cpf)}` : undefined,
+                  badge: (
+                    <div className="flex items-center gap-1.5">
+                      <Badge variant={PRIORITY_BADGE[client.priority]}>
+                        {PRIORITY_LABELS[client.priority]}
+                      </Badge>
+                      {!client.active && (
+                        <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 font-sans font-bold text-[9px] uppercase tracking-wide rounded border border-slate-300 bg-slate-100 text-slate-500">
+                          <Lock className="w-2 h-2" /> Bloqueado
+                        </span>
+                      )}
+                    </div>
+                  ),
+                  fields: [
+                    { label: 'Contato', value: client.phone ?? client.email ?? '—' },
+                    { label: 'Casos', value: String(client.cases.length) },
+                    { label: 'Cadastro', value: formatDate(client.createdAt) },
+                    { label: 'CPF', value: maskCPF(client.cpf) },
+                  ],
+                  href: `/clients/list/${client.id}`,
+                  actions: (
+                    <ActionsDropdown
+                      ariaLabel={`Ações para ${client.name}`}
+                      actions={[
+                        { label: 'Editar cliente', onClick: () => window.location.href = `/clients/list/${client.id}/edit` },
+                        {
+                          label: client.active ? 'Desativar cliente' : 'Ativar cliente',
+                          onClick: async () => {
+                            try {
+                              await api.patch(`/clients/${client.id}/active`, { active: !client.active })
+                              load(search)
+                            } catch (err) {
+                              const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error
+                              if (msg) addToast({ type: 'error', title: 'Não foi possível concluir', message: msg })
+                            }
+                          },
+                        },
+                        { label: 'Excluir cliente', onClick: () => { setDeletingClient(client); setShowDeleteModal(true) }, variant: 'danger' },
+                      ]}
+                    />
+                  ),
+                }))}
+              />
+            </>
           )}
         </div>
 

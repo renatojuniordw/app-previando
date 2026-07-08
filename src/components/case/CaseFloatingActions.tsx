@@ -129,14 +129,14 @@ export function CaseFloatingActions({ activeDrawer, setDrawer, benefitType }: Ca
   ]
 
   return (
-    <div ref={menuRef} className="fixed bottom-6 right-6 z-40 flex flex-col items-end gap-3">
+    <div ref={menuRef} className="fixed bottom-6 right-6 z-60 flex flex-col items-end gap-3 pointer-events-none lg:bottom-6">
       {/* Sub-buttons list */}
       <div
         className={cn(
           'flex flex-col items-end gap-3 transition-all duration-300 ease-out origin-bottom transform',
           isOpen
             ? 'opacity-100 translate-y-0 scale-100 pointer-events-auto'
-            : 'opacity-0 translate-y-4 scale-75 pointer-events-none'
+            : 'opacity-0 translate-y-4 scale-75 pointer-events-none invisible'
         )}
       >
         {actions.map((action, index) => {
@@ -156,7 +156,7 @@ export function CaseFloatingActions({ activeDrawer, setDrawer, benefitType }: Ca
               <button
                 onClick={() => handleAction(action.id)}
                 className={cn(
-                  'w-12 h-12 rounded-full bg-white border border-slate-200 shadow-lg flex items-center justify-center transition-all duration-200',
+                  'w-12 h-12 rounded-full bg-white border border-slate-200 shadow-lg flex items-center justify-center transition-all duration-200 pointer-events-auto',
                   action.color,
                   isDrawerActive
                     ? 'border-amber-500 text-amber-600 bg-amber-50/30'
@@ -176,14 +176,14 @@ export function CaseFloatingActions({ activeDrawer, setDrawer, benefitType }: Ca
 
       {/* Hint tooltip */}
       {showHint && (
-        <div className="animate-hint-fade bg-slate-900 text-white text-xs font-sans font-semibold px-3 py-2 rounded-lg shadow-lg flex items-center gap-2 whitespace-nowrap mb-1">
+        <div className="animate-hint-fade bg-slate-900 text-white text-xs font-sans font-semibold px-3 py-2 rounded-lg shadow-lg flex items-center gap-2 whitespace-nowrap mb-1 pointer-events-auto">
           <Briefcase className="w-3.5 h-3.5 text-amber-400 shrink-0" />
           {hintText}
         </div>
       )}
 
       {/* Main Trigger Button */}
-      <div className="relative">
+      <div className="relative pointer-events-auto">
         <button
           onClick={handleToggle}
           className={cn(

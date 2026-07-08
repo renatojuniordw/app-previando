@@ -49,12 +49,15 @@ export function AddressFields({ values, onChange }: AddressFieldsProps) {
           onKeyDown={(e) => { if (e.key === 'Enter') e.preventDefault() }}
           loading={cepLoading}
           placeholder="00000-000"
+          inputMode="numeric"
+          autoComplete="postal-code"
         />
         <Input
           label="Logradouro"
           value={values.street}
           onChange={(e) => onChange('street', e.target.value)}
           placeholder="Rua, Avenida..."
+          autoComplete="street-address"
         />
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
@@ -63,6 +66,7 @@ export function AddressFields({ values, onChange }: AddressFieldsProps) {
           value={values.streetNumber}
           onChange={(e) => onChange('streetNumber', e.target.value)}
           placeholder="S/N"
+          autoComplete="address-line2"
         />
         <Input
           label="Complemento"
@@ -75,6 +79,7 @@ export function AddressFields({ values, onChange }: AddressFieldsProps) {
           value={values.neighborhood}
           onChange={(e) => onChange('neighborhood', e.target.value)}
           placeholder="Bairro"
+          autoComplete="address-line2"
         />
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-[1fr_120px] gap-5">
@@ -83,6 +88,7 @@ export function AddressFields({ values, onChange }: AddressFieldsProps) {
           value={values.city}
           onChange={(e) => onChange('city', e.target.value)}
           placeholder="Cidade"
+          autoComplete="address-level2"
         />
         <div>
           <label htmlFor="address-state" className={labelClasses}>UF</label>

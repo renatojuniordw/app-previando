@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { Briefcase, Edit3, FileSpreadsheet, Plus, Search, User, FileText, Calendar, CheckCircle2, Trash2 } from 'lucide-react'
+import { useState, useRef } from 'react'
+import { Briefcase, Edit3, FileSpreadsheet, MoreHorizontal, Plus, Search, User, FileText, Calendar, CheckCircle2, Trash2 } from 'lucide-react'
 import { CnisExtractedData as ExtractedData } from '@/types/cnis'
 import { formatDateString, getPeriodWarnings } from '../_utils'
 import { PeriodItem } from './PeriodItem'
@@ -33,6 +33,8 @@ export function CnisExtractedDataView({
   onReprocessClick, onUploadClick, onDeleteCnisClick,
   onEditField, onExportCSV, onAddPeriod, onEditPeriod, onEditSalaries, onDeletePeriod,
 }: Props) {
+  const [showMobileToolbar, setShowMobileToolbar] = useState(false)
+  const mobileToolbarRef = useRef<HTMLDivElement>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [expandedPeriods, setExpandedPeriods] = useState<Record<number, boolean>>({})
   const [confirmDeleteIdx, setConfirmDeleteIdx] = useState<number | null>(null)
@@ -149,16 +151,45 @@ export function CnisExtractedDataView({
           </span>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <Button variant="outline" size="sm" onClick={onExportCSV} className="flex items-center gap-1">
-            <FileSpreadsheet className="w-3.5 h-3.5 text-slate-550" />
-            <span>Exportar CSV</span>
-          </Button>
-          <Button variant="outline" size="sm" onClick={expandAll}>
-            Expandir
-          </Button>
-          <Button variant="outline" size="sm" onClick={collapseAll}>
-            Recolher
-          </Button>
+          <div className="hidden sm:flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={onExportCSV} className="flex items-center gap-1">
+              <FileSpreadsheet className="w-3.5 h-3.5 text-slate-550" />
+              <span>Exportar CSV</span>
+            </Button>
+            <Button variant="outline" size="sm" onClick={expandAll}>
+              Expandir
+            </Button>
+            <Button variant="outline" size="sm" onClick={collapseAll}>
+              Recolher
+            </Button>
+          </div>
+          <div className="sm:hidden" ref={mobileToolbarRef}>
+            <button
+              onClick={() => setShowMobileToolbar(v => !v)}
+              className="p-2 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
+              aria-label="Mais ações"
+              aria-expanded={showMobileToolbar}
+            >
+              <MoreHorizontal className="w-5 h-5" />
+            </button>
+            {showMobileToolbar && (
+              <>
+                <div className="fixed inset-0 z-10" onClick={() => setShowMobileToolbar(false)} />
+                <div className="absolute right-0 top-full mt-1 z-20 w-44 bg-white border border-slate-200 rounded-lg shadow-lg py-1">
+                  <button onClick={() => { onExportCSV(); setShowMobileToolbar(false) }} className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 text-left transition-colors">
+                    <FileSpreadsheet className="w-4 h-4 text-slate-550" />
+                    Exportar CSV
+                  </button>
+                  <button onClick={() => { expandAll(); setShowMobileToolbar(false) }} className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 text-left transition-colors">
+                    Expandir todos
+                  </button>
+                  <button onClick={() => { collapseAll(); setShowMobileToolbar(false) }} className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 text-left transition-colors">
+                    Recolher todos
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
           <Button 
             variant="primary" 
             size="sm" 

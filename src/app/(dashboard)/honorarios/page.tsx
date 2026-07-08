@@ -8,6 +8,7 @@ import {
   XCircle, AlertTriangle, TrendingUp, Wallet, Search,
 } from 'lucide-react'
 import { DatePicker } from '@/components/ui/DatePicker'
+import { MobileCardList } from '@/components/ui/MobileCardList'
 import { formatCurrency, cn } from '@/lib/utils'
 import { BENEFIT_DB_LABELS } from '@/lib/constants'
 
@@ -107,17 +108,11 @@ export default function HonorariosGlobalPage() {
       </div>
 
       {/* Summary Strip */}
-      <div className="grid grid-cols-1 gap-0 overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm sm:grid-cols-4">
-        <SummaryCell label="Total Esperado" value={summary.total} icon={<Wallet className="h-4 w-4 text-slate-400" />} border="right" />
-        <SummaryCell label="Total Recebido" value={summary.paid} icon={<CheckCircle2 className="h-4 w-4 text-emerald-500" />} valueColor="text-emerald-700" highlight="emerald" border="right" />
-        <SummaryCell label="Total Pendente" value={summary.pending} icon={<Clock className="h-4 w-4 text-amber-500" />} valueColor="text-amber-700" highlight="amber" border="right" />
-        <div className="flex flex-col gap-1 p-5">
-          <div className="flex items-center gap-1.5">
-            <TrendingUp className="h-4 w-4 text-indigo-500" />
-            <span className="font-sans text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Taxa de Cobrança</span>
-          </div>
-          <span className="font-mono text-xl font-bold tracking-tight text-indigo-700">{summary.collectionRate}%</span>
-        </div>
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <SummaryCell label="Total Esperado" value={summary.total} icon={<Wallet className="h-4 w-4 text-slate-400" />} />
+        <SummaryCell label="Total Recebido" value={summary.paid} icon={<CheckCircle2 className="h-4 w-4 text-emerald-500" />} valueColor="text-emerald-700" highlight="emerald" />
+        <SummaryCell label="Total Pendente" value={summary.pending} icon={<Clock className="h-4 w-4 text-amber-500" />} valueColor="text-amber-700" highlight="amber" />
+        <SummaryCell label="Taxa de Cobrança" value={summary.collectionRate} icon={<TrendingUp className="h-4 w-4 text-indigo-500" />} valueColor="text-indigo-700" isPercentage />
       </div>
 
       {/* Filters */}
@@ -172,79 +167,108 @@ export default function HonorariosGlobalPage() {
           </p>
         </div>
       ) : (
-        <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left font-sans text-sm" role="table">
-              <thead>
-                <tr className="border-b border-slate-200 bg-slate-50">
-                  <th scope="col" className="px-4 py-3 font-sans text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Cliente</th>
-                  <th scope="col" className="px-4 py-3 font-sans text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Caso</th>
-                  <th scope="col" className="px-4 py-3 font-sans text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Descrição</th>
-                  <th scope="col" className="px-4 py-3 text-right font-sans text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Total</th>
-                  <th scope="col" className="px-4 py-3 text-right font-sans text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Recebido</th>
-                  <th scope="col" className="px-4 py-3 font-sans text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {fees.map((fee) => {
-                  const cfg = STATUS_CONFIG[fee.status]
-                  const Icon = cfg.icon
-                  return (
-                    <tr
-                      key={fee.id}
-                      onClick={() => router.push(`/cases/${fee.case.id}/honorarios`)}
-                      className="cursor-pointer transition-colors hover:bg-slate-50/60"
-                    >
-                      <td className="px-4 py-3 font-semibold text-slate-800">{fee.case.client.name}</td>
-                      <td className="px-4 py-3 text-slate-500">{BENEFIT_DB_LABELS[fee.case.benefitType] ?? fee.case.benefitType}</td>
-                      <td className="px-4 py-3 text-slate-600">{fee.description}</td>
-                      <td className="px-4 py-3 text-right font-mono font-bold text-slate-800">{formatCurrency(fee.totalAmount)}</td>
-                      <td className="px-4 py-3 text-right font-mono font-bold text-emerald-700">{formatCurrency(fee.paidAmount)}</td>
-                      <td className="px-4 py-3">
-                        <span className={cn(
-                          'inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wider',
-                          cfg.bg, cfg.color, cfg.border
-                        )}>
-                          <Icon className="h-3 w-3" aria-hidden="true" />
-                          {cfg.label}
-                        </span>
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
+        <>
+          {/* Desktop table */}
+          <div className="hidden md:block overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left font-sans text-sm" role="table">
+                <thead>
+                  <tr className="border-b border-slate-200 bg-slate-50">
+                    <th scope="col" className="px-4 py-3 font-sans text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Cliente</th>
+                    <th scope="col" className="px-4 py-3 font-sans text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Caso</th>
+                    <th scope="col" className="px-4 py-3 font-sans text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Descrição</th>
+                    <th scope="col" className="px-4 py-3 text-right font-sans text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Total</th>
+                    <th scope="col" className="px-4 py-3 text-right font-sans text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Recebido</th>
+                    <th scope="col" className="px-4 py-3 font-sans text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {fees.map((fee) => {
+                    const cfg = STATUS_CONFIG[fee.status]
+                    const Icon = cfg.icon
+                    return (
+                      <tr
+                        key={fee.id}
+                        onClick={() => router.push(`/cases/${fee.case.id}/honorarios`)}
+                        className="cursor-pointer transition-colors hover:bg-slate-50/60"
+                      >
+                        <td className="px-4 py-3 font-semibold text-slate-800">{fee.case.client.name}</td>
+                        <td className="px-4 py-3 text-slate-500">{BENEFIT_DB_LABELS[fee.case.benefitType] ?? fee.case.benefitType}</td>
+                        <td className="px-4 py-3 text-slate-600">{fee.description}</td>
+                        <td className="px-4 py-3 text-right font-mono font-bold text-slate-800">{formatCurrency(fee.totalAmount)}</td>
+                        <td className="px-4 py-3 text-right font-mono font-bold text-emerald-700">{formatCurrency(fee.paidAmount)}</td>
+                        <td className="px-4 py-3">
+                          <span className={cn(
+                            'inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wider',
+                            cfg.bg, cfg.color, cfg.border
+                          )}>
+                            <Icon className="h-3 w-3" aria-hidden="true" />
+                            {cfg.label}
+                          </span>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
           </div>
-        </div>
+
+          {/* Mobile cards */}
+          <MobileCardList
+            cards={fees.map((fee) => {
+              const cfg = STATUS_CONFIG[fee.status]
+              const Icon = cfg.icon
+              return {
+                id: fee.id,
+                primary: fee.case.client.name,
+                secondary: `${BENEFIT_DB_LABELS[fee.case.benefitType] ?? fee.case.benefitType} · ${fee.description}`,
+                badge: (
+                  <span className={cn(
+                    'inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-wider',
+                    cfg.bg, cfg.color, cfg.border
+                  )}>
+                    <Icon className="h-3 w-3" aria-hidden="true" />
+                    {cfg.label}
+                  </span>
+                ),
+                fields: [
+                  { label: 'Total', value: formatCurrency(fee.totalAmount), className: 'text-right' },
+                  { label: 'Recebido', value: formatCurrency(fee.paidAmount), className: 'text-right' },
+                ],
+                onClick: () => router.push(`/cases/${fee.case.id}/honorarios`),
+              }
+            })}
+          />
+        </>
       )}
     </div>
   )
 }
 
 function SummaryCell({
-  label, value, icon, valueColor = 'text-slate-900', highlight, border,
+  label, value, icon, valueColor = 'text-slate-900', highlight, isPercentage,
 }: {
   label: string
   value: number
   icon: React.ReactNode
   valueColor?: string
   highlight?: 'emerald' | 'amber'
-  border?: 'right'
+  isPercentage?: boolean
 }) {
   return (
     <div className={cn(
-      'flex flex-col gap-1 p-5',
+      'rounded-xl border border-slate-200/80 bg-white p-4 shadow-sm flex items-center gap-3',
       highlight === 'emerald' && 'bg-emerald-50/20',
-      highlight === 'amber' && 'bg-amber-50/20',
-      border === 'right' && 'border-b border-slate-100 sm:border-b-0 sm:border-r'
+      highlight === 'amber' && 'bg-amber-50/20'
     )}>
-      <div className="flex items-center gap-1.5">
-        {icon}
-        <span className="font-sans text-[10px] font-extrabold uppercase tracking-wider text-slate-400">{label}</span>
+      <div className="shrink-0">{icon}</div>
+      <div className="min-w-0">
+        <p className="font-sans text-[10px] font-extrabold uppercase tracking-wider text-slate-400 truncate">{label}</p>
+        <p className={cn('font-mono text-lg font-bold tracking-tight', valueColor)}>
+          {isPercentage ? `${value}%` : formatCurrency(value)}
+        </p>
       </div>
-      <span className={cn('font-mono text-xl font-bold tracking-tight', valueColor)}>
-        {formatCurrency(value)}
-      </span>
     </div>
   )
 }

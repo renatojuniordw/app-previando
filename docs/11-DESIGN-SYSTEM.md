@@ -108,3 +108,17 @@ Definidas em `tailwind.config.ts` e `globals.css`:
 - `animate-fab-attention`: Pulso do FAB (1.8s infinite)
 - `animate-hint-fade`: Dica do FAB (5s ease-out)
 - `prefers-reduced-motion`: Respeitado globalmente (spinners mantidos)
+
+---
+
+## 7. Checklist Mobile (PR Review)
+
+Antes de aprovar um PR, verificar:
+
+- [ ] Testado a 375px (e 320px se possível) sem scroll horizontal
+- [ ] Sem `100vh` (usar `dvh` ou `flex-1 min-h-0`)
+- [ ] Grids com prefixos responsivos (`grid-cols-1 sm:grid-cols-2 ...`)
+- [ ] Alvos de toque ≥ 44px; inputs com fonte ≥ 16px no mobile
+- [ ] Tabelas com visão em card no mobile (usar `MobileCardList`)
+- [ ] Modais/sheets com `max-h-[85dvh]` + scroll interno + safe-area
+- [ ] Padding de página `p-4 sm:p-6 lg:p-8`

@@ -91,7 +91,7 @@ export default function ReportsPage() {
 
   if (loading && !overview) {
     return (
-      <div className="p-8 flex items-center justify-center h-[calc(100vh-4rem)]">
+      <div className="p-8 flex items-center justify-center h-[calc(100dvh-4rem)]">
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="w-8 h-8 text-amber-500 animate-spin" />
           <p className="font-sans font-medium text-slate-500 animate-pulse">Carregando relatórios...</p>
