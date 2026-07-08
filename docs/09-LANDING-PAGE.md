@@ -47,6 +47,11 @@ Anúncio (Meta/Google) → previando.com.br → CTA → app.previando.com.br/reg
 ### FEATURES
 8 features com ícone, título e descrição objetiva.
 
+> ⚠️ Integração com Google Calendar (sincronização automática de prazos) só funciona
+> para quem se cadastra/loga com "Entrar com Google". Login por e-mail/senha não
+> conecta a agenda automaticamente (não há vínculo de conta hoje). Deixar isso
+> explícito na copy da feature e/ou no FAQ, para não gerar expectativa errada.
+
 ### PLANOS
 Tabela FREE / SOLO / PRO com âncora de custo de oportunidade.
 

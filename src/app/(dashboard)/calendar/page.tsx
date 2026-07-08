@@ -64,6 +64,7 @@ function formatDateKey(year: number, month: number, day: number): string {
 export default function CalendarPage() {
   const [data, setData] = useState<CalendarData | null>(null)
   const [loading, setLoading] = useState(true)
+  const [googleConnected, setGoogleConnected] = useState(false)
   const [selectedMonth, setSelectedMonth] = useState(() => new Date().getMonth())
   const [selectedYear, setSelectedYear] = useState(() => new Date().getFullYear())
   const [activeFilters, setActiveFilters] = useState<Set<string>>(new Set())
@@ -74,7 +75,16 @@ export default function CalendarPage() {
       .then((r) => setData(r.data))
       .catch(() => null)
       .finally(() => setLoading(false))
+
+    api.get<{ connected: boolean }>('/calendar/status')
+      .then((r) => setGoogleConnected(r.data.connected))
+      .catch(() => setGoogleConnected(false))
   }, [])
+
+  const filterOptions = useMemo(
+    () => (googleConnected ? FILTER_OPTIONS : FILTER_OPTIONS.filter((opt) => opt.value !== 'google_event')),
+    [googleConnected]
+  )
 
   const toggleFilter = useCallback((type: string) => {
     setActiveFilters((prev) => {
@@ -255,7 +265,7 @@ export default function CalendarPage() {
 
       {/* Filters Bar */}
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-2 flex flex-wrap items-center gap-2">
-        {FILTER_OPTIONS.map((opt) => {
+        {filterOptions.map((opt) => {
           const isActive = activeFilters.size === 0 || activeFilters.has(opt.value)
           return (
             <button
