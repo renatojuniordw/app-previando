@@ -7,6 +7,7 @@ import { RevenueCard } from '@/components/admin/metrics/RevenueCard'
 import { UsersByPlanCard } from '@/components/admin/metrics/UsersByPlanCard'
 import { AiUsageCard } from '@/components/admin/metrics/AiUsageCard'
 import { CasesPipelineCard } from '@/components/admin/metrics/CasesPipelineCard'
+import { ConversionFunnelCard } from '@/components/admin/metrics/ConversionFunnelCard'
 import type { AdminMetrics } from '@/components/admin/metrics/types'
 
 export default function AdminMetricsPage() {
@@ -26,6 +27,9 @@ export default function AdminMetricsPage() {
           <UsersByPlanCard metrics={metrics} showTotals />
           <AiUsageCard metrics={metrics} />
           <CasesPipelineCard metrics={metrics} />
+          <div className="lg:col-span-2">
+            <ConversionFunnelCard />
+          </div>
         </div>
       )}
     </div>

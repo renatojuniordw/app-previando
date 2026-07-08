@@ -12,6 +12,7 @@ import { HelpText } from '@/components/ui/HelpText'
 import { BpcSocialInterview } from '@/components/bpc/BpcSocialInterview'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { useToast } from '@/store/toast'
+import { useCaseData } from '../_components/CaseContext'
 import { downloadReactPdf } from '@/lib/download-pdf'
 
 const BpcResult = dynamic(
@@ -58,6 +59,8 @@ export default function BpcPage() {
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const caseId = params.id as string
+  const { data: caseData } = useCaseData()
+  const exportPdfLocked = caseData?.planLimits ? !caseData.planLimits.exportPdfEnabled : false
 
   const [analysis, setAnalysis] = useState<BpcAnalysis | null>(null)
   const [clientBirthDate, setClientBirthDate] = useState<string | null>(null)
@@ -443,6 +446,7 @@ export default function BpcPage() {
                       onRegenerate={() => handleRegenerateRequest(activeTab)}
                       checklistImported={activeTab === 'checklist' ? checklistImported : undefined}
                       onChecklistImported={() => setChecklistImported(true)}
+                      exportPdfLocked={exportPdfLocked}
                     />
                   </div>
                 ) : activeTab === 'laudo' ? (

@@ -102,6 +102,7 @@ model User {
   clientAccess  ClientAccess[]
   documents     Document[]
   supportTickets SupportTicket[]
+  conversionEvents ConversionEvent[]
 
   @@map("users")
 }
@@ -993,4 +994,36 @@ model SupportTicket {
   @@index([status])
   @@index([createdAt])
   @@map("support_tickets")
+}
+
+// ─────────────────────────────────────────
+// FUNIL DE CONVERSÃO (PAYWALL)
+// ─────────────────────────────────────────
+
+// Evento do funil de upgrade: quem viu um paywall (teaser de feature bloqueada
+// ou modal de upgrade) e quem clicou no CTA. Permite medir qual feature gera
+// mais intenção de compra e onde investir em degustação/copy.
+// Volume esperado é baixo (eventos de paywall, não page views) — uma tabela
+// própria basta; se um dia crescer, migrar para ferramenta de analytics.
+model ConversionEvent {
+  id      String @id @default(cuid())
+  userId  String
+  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  event   ConversionEventType
+  feature String // código da feature (SIMULATOR, EXPORT_PDF, ...) — ver plan-guard.ts
+  plan    String // plano do usuário no momento do evento (FREE, SOLO, ...)
+
+  createdAt DateTime @default(now())
+
+  @@index([event, feature])
+  @@index([userId, createdAt])
+  @@map("conversion_events")
+}
+
+enum ConversionEventType {
+  TEASER_VIEW // teaser de feature bloqueada exibido
+  TEASER_CTA_CLICK // clique no CTA do teaser
+  PAYWALL_MODAL_VIEW // modal de upgrade exibido (402 ou clique bloqueado)
+  PAYWALL_MODAL_CTA_CLICK // clique no CTA do modal
 }

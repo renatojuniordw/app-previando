@@ -7,7 +7,9 @@ import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { downloadReactPdf } from '@/lib/download-pdf'
 import { useToast } from '@/store/toast'
-import { CheckCircle2, XCircle, TrendingUp, AlertTriangle, Download } from 'lucide-react'
+import { useUpgradeModal } from '@/store/upgrade-modal'
+import { useCaseData } from '../_components/CaseContext'
+import { CheckCircle2, XCircle, TrendingUp, AlertTriangle, Download, Lock } from 'lucide-react'
 import { formatCurrency } from '@/lib/utils'
 
 interface ModalidadeSugerida {
@@ -44,12 +46,22 @@ const GENDER_LABEL: Record<string, string> = { M: 'Masculino', F: 'Feminino' }
 export default function ComparePage() {
   const { id } = useParams<{ id: string }>()
   const addToast = useToast((s) => s.addToast)
+  const openUpgradeModal = useUpgradeModal((s) => s.openModal)
+  const { data: caseData } = useCaseData()
   const [data, setData] = useState<SuggestionsData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [exportingPdf, setExportingPdf] = useState(false)
 
+  // O download usa fetch puro (fora do interceptor 402 do axios) — sem o
+  // cadeado, o clique bloqueado viraria toast de erro genérico.
+  const exportPdfLocked = caseData?.planLimits ? !caseData.planLimits.exportPdfEnabled : false
+
   const handleExportPdf = () => {
+    if (exportPdfLocked) {
+      openUpgradeModal({ message: '', feature: 'EXPORT_PDF', upgradeRequired: 'SOLO' })
+      return
+    }
     if (!data) return
     setExportingPdf(true)
 
@@ -114,7 +126,7 @@ export default function ComparePage() {
             loading={exportingPdf}
             className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
           >
-            <Download className="w-4 h-4" />
+            {exportPdfLocked ? <Lock className="w-4 h-4 text-amber-600" /> : <Download className="w-4 h-4" />}
             Exportar PDF
           </Button>
         )}

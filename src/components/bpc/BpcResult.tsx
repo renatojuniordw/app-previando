@@ -8,7 +8,8 @@ import { Badge } from '@/components/ui/Badge'
 import api from '@/lib/api'
 import { useToast } from '@/store/toast'
 import { downloadReactPdf } from '@/lib/download-pdf'
-import { Copy, FileText, RefreshCw, Check, AlertTriangle } from 'lucide-react'
+import { useUpgradeModal } from '@/store/upgrade-modal'
+import { Copy, FileText, RefreshCw, Check, AlertTriangle, Lock } from 'lucide-react'
 
 type AnalysisType = 'preAnalise' | 'laudo' | 'social' | 'medical' | 'checklist' | null
 
@@ -21,6 +22,8 @@ interface BpcResultProps {
   onRegenerate?: () => void
   checklistImported?: boolean
   onChecklistImported?: () => void
+  /** Plano sem EXPORT_PDF: botão mostra cadeado e abre o modal de upgrade. */
+  exportPdfLocked?: boolean
 }
 
 const TYPE_LABELS: Record<string, string> = {
@@ -74,8 +77,9 @@ function parseChecklistMarkdown(text: string): {
   return { items, pendencias }
 }
 
-export function BpcResult({ caseId, result, type, onCopy, onOpenChecklist, onRegenerate, checklistImported, onChecklistImported }: BpcResultProps) {
+export function BpcResult({ caseId, result, type, onCopy, onOpenChecklist, onRegenerate, checklistImported, onChecklistImported, exportPdfLocked }: BpcResultProps) {
   const addToast = useToast((s) => s.addToast)
+  const openUpgradeModal = useUpgradeModal((s) => s.openModal)
   const [importing, setImporting] = useState(false)
   const [exporting, setExporting] = useState(false)
   const [mounted, setMounted] = useState(false)
@@ -154,6 +158,10 @@ export function BpcResult({ caseId, result, type, onCopy, onOpenChecklist, onReg
           <Button
             variant="outline"
             onClick={() => {
+              if (exportPdfLocked) {
+                openUpgradeModal({ message: '', feature: 'EXPORT_PDF', upgradeRequired: 'SOLO' })
+                return
+              }
               setExporting(true)
             downloadReactPdf(
               { result, type: type ? TYPE_LABELS[type] || 'BPC/LOAS' : 'BPC/LOAS', caseId },
@@ -166,7 +174,7 @@ export function BpcResult({ caseId, result, type, onCopy, onOpenChecklist, onReg
             loading={exporting}
             className="text-xs py-2 flex items-center gap-1.5"
           >
-            <FileText className="w-3.5 h-3.5 text-slate-500" />
+            {exportPdfLocked ? <Lock className="w-3.5 h-3.5 text-amber-600" /> : <FileText className="w-3.5 h-3.5 text-slate-500" />}
             Exportar PDF
           </Button>
         )}

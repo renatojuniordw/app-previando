@@ -7,23 +7,28 @@ import { useParams, usePathname, useRouter, useSearchParams } from 'next/navigat
 import { Badge } from '@/components/ui/Badge'
 import { 
   ArrowLeft, LayoutDashboard, FileText, Calculator, BarChart3, 
-  History, Lock, Building2, GitCompareArrows, Files, ShieldAlert, 
+  History, Building2, GitCompareArrows, Files, ShieldAlert,
   Clock, DollarSign, Scale, Receipt, ChevronDown, X 
 } from 'lucide-react'
 import { BENEFIT_SHORT_LABELS, STATUS_LABELS, PRIORITY_STYLES } from '@/lib/constants'
 import { CaseFloatingActions } from '@/components/case/CaseFloatingActions'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
+import { FeatureLockedTeaser } from '@/components/plan/FeatureLockedTeaser'
+import { PLAN_DISPLAY_NAMES } from '@/lib/feature-marketing'
 import { useCaseData } from './CaseContext'
-import { useUpgradeModal } from '@/store/upgrade-modal'
 import { cn } from '@/lib/utils'
 
-const LOCKED_TAB_INFO: Record<string, { message: string; feature: string; upgradeRequired: string }> = {
-  calculator: { message: 'Cálculos e simulação de benefício não estão disponíveis no seu plano.', feature: 'SIMULATOR', upgradeRequired: 'SOLO' },
-  simulator: { message: 'Simulação de benefício não está disponível no seu plano.', feature: 'SIMULATOR', upgradeRequired: 'SOLO' },
-  retroativos: { message: 'Cálculo de retroativos não está disponível no seu plano.', feature: 'RETROATIVOS', upgradeRequired: 'SOLO' },
-  gps: { message: 'Guias de Contribuição (GPS/DAS) não estão disponíveis no seu plano.', feature: 'GPS_MODULE', upgradeRequired: 'SOLO' },
-  revisao: { message: 'Revisão de Benefícios não está disponível no seu plano.', feature: 'REVISION_MODULE', upgradeRequired: 'SOLO' },
-  bpc: { message: 'Módulo BPC/LOAS não está disponível no seu plano.', feature: 'USE_BPC_MODULE', upgradeRequired: 'SOLO' },
+// Abas bloqueadas continuam navegáveis: o conteúdo real é substituído pelo
+// FeatureLockedTeaser (degustação + CTA de upgrade). Ver docs/Para o nicho
+// de advocacia previdenciária.md — esconder ou travar o clique mata o desejo
+// de upgrade; mostrar a ferramenta bloqueada gera conversão contextual.
+const LOCKED_TAB_INFO: Record<string, { feature: string; upgradeRequired: string }> = {
+  calculator: { feature: 'CALCULATIONS', upgradeRequired: 'SOLO' },
+  simulator: { feature: 'SIMULATOR', upgradeRequired: 'SOLO' },
+  retroativos: { feature: 'RETROATIVOS', upgradeRequired: 'SOLO' },
+  gps: { feature: 'GPS_MODULE', upgradeRequired: 'SOLO' },
+  revisao: { feature: 'REVISION_MODULE', upgradeRequired: 'SOLO' },
+  bpc: { feature: 'USE_BPC_MODULE', upgradeRequired: 'SOLO' },
 }
 
 const CaseNotesDrawer = dynamic(
@@ -76,14 +81,7 @@ export function CaseLayoutClient({ children }: { children: React.ReactNode }) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { data: caseData } = useCaseData()
-  const openUpgradeModal = useUpgradeModal((s) => s.openModal)
   const [showMobileMenu, setShowMobileMenu] = useState(false)
-
-  const handleLockedClick = (tabId: string) => (e: React.MouseEvent) => {
-    e.preventDefault()
-    const info = LOCKED_TAB_INFO[tabId]
-    if (info) openUpgradeModal(info)
-  }
 
   const activeDrawer = searchParams.get('drawer')
 
@@ -216,24 +214,27 @@ export function CaseLayoutClient({ children }: { children: React.ReactNode }) {
                       return (
                         <Link
                           key={tab.id}
-                          href={tab.locked ? '' : fullPath}
+                          href={fullPath}
                           prefetch={tab.locked ? false : undefined}
-                          onClick={tab.locked ? handleLockedClick(tab.id) : undefined}
                           className={cn(
                             "w-full flex items-center justify-between px-3 py-2 rounded-lg font-sans text-xs transition-all duration-200 group border",
                             isActive
                               ? "bg-amber-50/55 border-amber-250 font-bold text-amber-800 shadow-xs"
                               : tab.locked
-                                ? "border-transparent text-slate-400 cursor-not-allowed opacity-55"
+                                ? "border-transparent text-slate-500 hover:text-slate-700 hover:bg-amber-50/40 font-medium"
                                 : "border-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-50 hover:border-slate-100 font-medium"
                           )}
-                          title={tab.locked ? 'Recurso bloqueado no seu plano' : ''}
+                          title={tab.locked ? 'Disponível em planos pagos — clique para conhecer' : ''}
                         >
                           <div className="flex items-center gap-2.5 min-w-0">
                             <Icon className={cn("w-4 h-4 shrink-0", isActive ? "text-amber-700" : "text-slate-400 group-hover:text-slate-500")} />
                             <span className="truncate">{tab.label}</span>
                           </div>
-                          {tab.locked && <Lock className="w-3 h-3 text-slate-400 shrink-0" />}
+                          {tab.locked && (
+                            <span className="font-sans text-[8px] font-extrabold uppercase tracking-wider bg-amber-100/80 text-amber-800 border border-amber-200 rounded px-1.5 py-0.5 shrink-0">
+                              {PLAN_DISPLAY_NAMES[LOCKED_TAB_INFO[tab.id]?.upgradeRequired ?? 'SOLO']}
+                            </span>
+                          )}
                         </Link>
                       )
                     })}
@@ -247,7 +248,16 @@ export function CaseLayoutClient({ children }: { children: React.ReactNode }) {
         {/* Content Panel */}
         <main className="flex-1 min-w-0" role="tabpanel" aria-labelledby="tab-content">
           <ErrorBoundary>
-            {children}
+            {/* Aba bloqueada: o page component nem monta (nenhuma chamada de
+                API é disparada) — só o teaser estático com CTA de upgrade. */}
+            {activeTab.locked && LOCKED_TAB_INFO[activeTab.id] ? (
+              <FeatureLockedTeaser
+                feature={LOCKED_TAB_INFO[activeTab.id].feature}
+                requiredPlan={LOCKED_TAB_INFO[activeTab.id].upgradeRequired}
+              />
+            ) : (
+              children
+            )}
           </ErrorBoundary>
         </main>
       </div>
@@ -295,15 +305,15 @@ export function CaseLayoutClient({ children }: { children: React.ReactNode }) {
                         return (
                           <Link
                             key={tab.id}
-                            href={tab.locked ? '' : fullPath}
+                            href={fullPath}
                             prefetch={tab.locked ? false : undefined}
-                            onClick={tab.locked ? handleLockedClick(tab.id) : () => setShowMobileMenu(false)}
+                            onClick={() => setShowMobileMenu(false)}
                             className={cn(
                               "w-full flex items-center justify-between p-3 rounded-xl border text-sm transition-all duration-200",
                               isActive
                                 ? "bg-amber-50/60 border-amber-250 font-bold text-amber-800 shadow-xs"
                                 : tab.locked
-                                  ? "border-transparent text-slate-400 cursor-not-allowed opacity-55"
+                                  ? "border-slate-100 text-slate-500 hover:bg-amber-50/40 font-semibold"
                                   : "border-slate-100 text-slate-655 hover:bg-slate-50 font-semibold"
                             )}
                           >
@@ -316,7 +326,11 @@ export function CaseLayoutClient({ children }: { children: React.ReactNode }) {
                               </div>
                               <span>{tab.label}</span>
                             </div>
-                            {tab.locked && <Lock className="w-3.5 h-3.5 text-slate-400" />}
+                            {tab.locked && (
+                              <span className="font-sans text-[9px] font-extrabold uppercase tracking-wider bg-amber-100/80 text-amber-800 border border-amber-200 rounded px-1.5 py-0.5">
+                                {PLAN_DISPLAY_NAMES[LOCKED_TAB_INFO[tab.id]?.upgradeRequired ?? 'SOLO']}
+                              </span>
+                            )}
                           </Link>
                         )
                       })}

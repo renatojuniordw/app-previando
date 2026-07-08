@@ -4,9 +4,10 @@ import { formatDate } from '@/lib/utils'
 import { BENEFIT_LABELS } from '@/lib/constants'
 import type { CaseDetail } from '../_types'
 import { STATUS_OPTIONS } from '../_constants'
-import { Shield, Activity, AlertCircle, Calendar, FileText, ArrowRight, Edit, FileDown, RefreshCw } from 'lucide-react'
+import { Shield, Activity, AlertCircle, Calendar, FileText, ArrowRight, Edit, FileDown, RefreshCw, Lock } from 'lucide-react'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
+import { useUpgradeModal } from '@/store/upgrade-modal'
 
 interface Props {
   caseData: CaseDetail
@@ -28,8 +29,16 @@ const PRIORITY_LABEL: Record<string, string> = {
 }
 
 export function CaseInfoCard({ caseData, onStatusChangeClick, onExportPDF, onEditClick }: Props) {
+  const openUpgradeModal = useUpgradeModal((s) => s.openModal)
   const isOverdue = caseData.deadlineDate ? new Date(caseData.deadlineDate) < new Date() : false
   const deadlineColor = isOverdue ? 'text-red-600' : 'text-slate-800'
+
+  // Cadeado explícito: sem ele o clique iria à API, receberia 402 fora do
+  // interceptor axios (o download usa fetch puro) e pareceria bug.
+  const exportPdfLocked = caseData.planLimits ? !caseData.planLimits.exportPdfEnabled : false
+  const handleExportClick = exportPdfLocked
+    ? () => openUpgradeModal({ message: '', feature: 'EXPORT_PDF', upgradeRequired: 'SOLO' })
+    : onExportPDF
 
   return (
     <Card variant="light" className="overflow-hidden border-slate-200/80 shadow-sm">
@@ -43,7 +52,7 @@ export function CaseInfoCard({ caseData, onStatusChangeClick, onExportPDF, onEdi
             actions={[
               { label: 'Alterar Status', icon: <RefreshCw className="w-4 h-4" />, onClick: onStatusChangeClick },
               { label: 'Editar Caso', icon: <Edit className="w-4 h-4" />, onClick: () => onEditClick?.() },
-              { label: 'Exportar PDF', icon: <FileDown className="w-4 h-4" />, onClick: onExportPDF }
+              { label: 'Exportar PDF', icon: exportPdfLocked ? <Lock className="w-4 h-4 text-amber-600" /> : <FileDown className="w-4 h-4" />, onClick: handleExportClick }
             ]} 
           />
         </div>

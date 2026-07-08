@@ -9,8 +9,9 @@ import { Button } from '@/components/ui/Button'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { formatCurrency, formatDate } from '@/lib/utils'
-import { Calendar, TrendingUp, CheckCircle2, XCircle, AlertCircle, CreditCard, Activity, Box, History, HelpCircle, FileText, Settings2 } from 'lucide-react'
+import { Calendar, TrendingUp, CheckCircle2, XCircle, AlertCircle, CreditCard, Activity, Box, History, HelpCircle, FileText, Settings2, Sparkles } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { FEATURE_MARKETING, PLAN_DISPLAY_NAMES } from '@/lib/feature-marketing'
 
 interface PlanInfo {
   plan: string
@@ -80,6 +81,16 @@ export default function BillingPage() {
   const { addToast } = useToast()
 
   const successStatus = searchParams.get('status')
+
+  // Contexto de origem do paywall (?from=FEATURE&plan=SOLO): mantém a
+  // continuidade entre o clique no CTA e a decisão de compra — banner com a
+  // feature que motivou a visita e destaque no plano que a desbloqueia.
+  const fromFeature = searchParams.get('from')
+  const fromMarketing = fromFeature ? FEATURE_MARKETING[fromFeature] : undefined
+  const recommendedPlanParam = searchParams.get('plan')
+  const recommendedPlan = recommendedPlanParam && ['SOLO', 'PRO'].includes(recommendedPlanParam)
+    ? recommendedPlanParam
+    : fromMarketing ? 'SOLO' : null
 
   const fetchPlanInfo = () => {
     setLoading(true)
@@ -169,6 +180,21 @@ export default function BillingPage() {
             <p className="text-sm font-medium text-slate-500 mt-0.5">Gerencie seu plano, pagamentos e limites de uso.</p>
           </div>
         </div>
+
+        {fromMarketing && currentPlan === 'FREE' && (
+          <div className="border border-amber-200 bg-gradient-to-r from-amber-50 to-amber-50/30 p-4 rounded-xl shadow-sm flex items-start gap-3 animate-fade-in" role="note">
+            <Sparkles className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
+            <div>
+              <p className="font-sans font-bold text-slate-900">{fromMarketing.title}</p>
+              <p className="font-sans text-sm text-slate-600 mt-1">
+                {fromMarketing.tagline}
+                {recommendedPlan && (
+                  <> Disponível no plano <span className="font-bold text-amber-700">{PLAN_DISPLAY_NAMES[recommendedPlan] ?? recommendedPlan}</span>, destacado abaixo.</>
+                )}
+              </p>
+            </div>
+          </div>
+        )}
 
         {successStatus === 'success' && (
           <div className="border border-emerald-200 bg-emerald-50 p-4 rounded-xl shadow-sm flex items-start gap-3 animate-fade-in" role="alert">
@@ -323,13 +349,18 @@ export default function BillingPage() {
               {PLANS.map((plan) => {
                 const isCurrent = currentPlan === plan.id
                 const canUpgrade = plan.id !== 'FREE' && !isCurrent
+                const isRecommended = !isCurrent && plan.id === recommendedPlan
 
                 return (
                   <div
                     key={plan.id}
                     className={cn(
                       'border rounded-xl p-5 transition-all flex flex-col',
-                      isCurrent ? 'border-amber-500 bg-amber-50/20 shadow-sm ring-1 ring-amber-500' : 'border-slate-200 bg-white hover:border-slate-300'
+                      isCurrent
+                        ? 'border-amber-500 bg-amber-50/20 shadow-sm ring-1 ring-amber-500'
+                        : isRecommended
+                          ? 'border-amber-400 bg-amber-50/30 shadow-md ring-2 ring-amber-400'
+                          : 'border-slate-200 bg-white hover:border-slate-300'
                     )}
                   >
                     <div className="mb-4">
@@ -340,7 +371,12 @@ export default function BillingPage() {
                             Atual
                           </span>
                         )}
-                        {plan.id === 'PRO' && !isCurrent && (
+                        {isRecommended && (
+                          <span className="font-sans font-bold text-[10px] uppercase bg-amber-500 text-white px-2 py-0.5 rounded-full">
+                            Recomendado
+                          </span>
+                        )}
+                        {plan.id === 'PRO' && !isCurrent && !isRecommended && (
                           <span className="font-sans font-bold text-[10px] uppercase bg-slate-900 text-white px-2 py-0.5 rounded-full">
                             Popular
                           </span>

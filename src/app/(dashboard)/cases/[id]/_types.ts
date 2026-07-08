@@ -18,6 +18,8 @@ export interface CaseDetail {
     peticaoEnabled: boolean
     revisionEnabled: boolean
     gpsEnabled: boolean
+    viabilityScoreEnabled: boolean
+    exportPdfEnabled: boolean
   }
   portalConfig?: {
     showCalculations: boolean
