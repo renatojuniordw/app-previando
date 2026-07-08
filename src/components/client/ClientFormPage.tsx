@@ -209,7 +209,15 @@ export function ClientFormPage({ clientId }: ClientFormPageProps) {
       </div>
 
       <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-8 p-6 sm:p-8">
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && (e.target as HTMLElement).tagName !== 'TEXTAREA') {
+              e.preventDefault()
+            }
+          }}
+          className="space-y-8 p-6 sm:p-8"
+        >
           {error && (
             <div className="text-red-650 flex items-start gap-2.5 rounded-xl border border-red-200 bg-red-50 p-4 font-sans text-sm font-medium">
               <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-red-600" />
@@ -355,9 +363,6 @@ export function ClientFormPage({ clientId }: ClientFormPageProps) {
                     if (raw.length === 8) lookupCep(raw)
                   },
                 })}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') e.preventDefault()
-                }}
                 error={errors.zipCode?.message}
                 success={
                   isFieldSuccess('zipCode') && stripNonDigits(watch('zipCode') ?? '').length === 8

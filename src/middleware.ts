@@ -5,7 +5,7 @@ import { buildCSP } from '@/lib/csp'
 // ioredis não é compatível com Edge Runtime (middleware).
 // O rate limiting é aplicado diretamente nas API routes, onde o Node.js runtime está disponível.
 
-const PUBLIC_PAGES = ['/login', '/register', '/forgot-password', '/reset-password']
+const PUBLIC_PAGES = ['/login', '/register', '/forgot-password', '/reset-password', '/termos', '/privacidade']
 const ADMIN_ROUTES = ['/admin', '/api/admin']
 
 // Prefixos que precisam ficar acessíveis sem sessão de usuário:
