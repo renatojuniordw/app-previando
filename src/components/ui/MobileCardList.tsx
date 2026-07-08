@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import { ChevronRight } from 'lucide-react'
 
@@ -28,21 +29,11 @@ export function MobileCardList({ cards, className }: MobileCardListProps) {
 
   return (
     <div className={cn('space-y-2 md:hidden', className)}>
-      {cards.map((card) => (
-        <div
-          key={card.id}
-          className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm active:bg-slate-50 transition-colors"
-        >
-          <div
-            className={cn(
-              'p-4',
-              (card.onClick || card.href) && 'cursor-pointer'
-            )}
-            onClick={card.onClick}
-            role={card.onClick ? 'button' : undefined}
-            tabIndex={card.onClick ? 0 : undefined}
-            onKeyDown={card.onClick ? (e) => { if (e.key === 'Enter') card.onClick?.() } : undefined}
-          >
+      {cards.map((card) => {
+        const clickable = card.onClick || card.href
+
+        const content = (
+          <div className={cn('p-4', clickable && 'cursor-pointer')}>
             <div className="flex items-start justify-between gap-3">
               <div className="flex-1 min-w-0 space-y-1">
                 <div className="flex items-center gap-2 flex-wrap">
@@ -59,7 +50,7 @@ export function MobileCardList({ cards, className }: MobileCardListProps) {
                   </p>
                 )}
               </div>
-              {(card.onClick || card.href) && (
+              {clickable && (
                 <ChevronRight className="w-4 h-4 text-slate-300 shrink-0 mt-1" />
               )}
             </div>
@@ -81,14 +72,40 @@ export function MobileCardList({ cards, className }: MobileCardListProps) {
               </div>
             )}
           </div>
+        )
 
-          {card.actions && (
-            <div className="border-t border-slate-100 px-4 py-2 flex items-center justify-end gap-1 bg-slate-50/50">
-              {card.actions}
-            </div>
-          )}
-        </div>
-      ))}
+        return (
+          <div
+            key={card.id}
+            className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm active:bg-slate-50 transition-colors"
+          >
+            {card.href ? (
+              <Link
+                href={card.href}
+                className="block"
+                onClick={card.onClick}
+              >
+                {content}
+              </Link>
+            ) : (
+              <div
+                onClick={card.onClick}
+                role={card.onClick ? 'button' : undefined}
+                tabIndex={card.onClick ? 0 : undefined}
+                onKeyDown={card.onClick ? (e) => { if (e.key === 'Enter') card.onClick?.() } : undefined}
+              >
+                {content}
+              </div>
+            )}
+
+            {card.actions && (
+              <div className="border-t border-slate-100 px-4 py-2 flex items-center justify-end gap-1 bg-slate-50/50">
+                {card.actions}
+              </div>
+            )}
+          </div>
+        )
+      })}
     </div>
   )
 }

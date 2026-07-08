@@ -177,20 +177,26 @@ export function CaseLayoutClient({ children }: { children: React.ReactNode }) {
         
         {/* Mobile Submenu Trigger */}
         <div className="lg:hidden w-full shrink-0">
-          <button 
-            onClick={() => setShowMobileMenu(true)} 
-            className="w-full flex items-center justify-between p-4 bg-white border border-slate-200 rounded-xl shadow-sm active:bg-slate-50 transition-colors"
+          <button
+            onClick={() => setShowMobileMenu(true)}
+            className="w-full flex items-center justify-between p-3 bg-white border border-slate-200 rounded-xl shadow-sm active:bg-slate-50 transition-colors"
+            aria-label="Abrir menu de navegação entre seções"
           >
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-700">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-9 h-9 rounded-lg bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-700 shrink-0">
                 <ActiveIcon className="w-4.5 h-4.5" />
               </div>
-              <div className="text-left">
-                <p className="font-sans text-[9px] font-extrabold text-slate-400 uppercase tracking-wider">Seção Atual</p>
-                <p className="font-sans font-bold text-sm text-slate-800 mt-0.5">{activeTab.label}</p>
+              <div className="text-left min-w-0">
+                <p className="font-sans text-[10px] font-extrabold text-slate-400 uppercase tracking-wider truncate">Navegar seções</p>
+                <div className="flex items-center gap-2 mt-0.5">
+                  <p className="font-sans font-bold text-sm text-slate-800 truncate">{activeTab.label}</p>
+                  <span className="shrink-0 flex items-center justify-center min-w-[20px] h-5 rounded-full bg-slate-100 border border-slate-200 px-1.5 text-[10px] font-bold text-slate-500">
+                    {tabs.filter(t => !t.locked).length}
+                  </span>
+                </div>
               </div>
             </div>
-            <ChevronDown className="w-5 h-5 text-slate-400" />
+            <ChevronDown className="w-5 h-5 text-slate-400 shrink-0 ml-2" />
           </button>
         </div>
 

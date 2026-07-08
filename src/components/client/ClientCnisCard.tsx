@@ -136,37 +136,37 @@ export function ClientCnisCard({ clientId, caseCount }: Props) {
               )}
             </div>
 
-            <div className="flex shrink-0 items-center gap-2">
+            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
               {cnis.downloadUrl && (
                 <a
                   href={cnis.downloadUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-1.5 rounded-lg border border-slate-200 px-2.5 py-1.5 font-sans text-xs font-semibold text-slate-600 transition-colors hover:bg-slate-50"
+                  className="flex items-center gap-1 rounded-lg border border-slate-200 px-2 py-1.5 font-sans text-[10px] sm:text-xs font-semibold text-slate-600 transition-colors hover:bg-slate-50"
                 >
-                  <Download className="h-3.5 w-3.5" aria-hidden="true" /> Baixar
+                  <Download className="h-3 w-3 sm:h-3.5 sm:w-3.5" aria-hidden="true" /> Baixar
                 </a>
               )}
               <button
                 onClick={() => fileRef.current?.click()}
                 disabled={uploading || isProcessing}
-                className="flex items-center gap-1.5 rounded-lg border border-slate-200 px-2.5 py-1.5 font-sans text-xs font-semibold text-slate-600 transition-colors hover:bg-slate-50 disabled:opacity-50"
+                className="flex items-center gap-1 rounded-lg border border-slate-200 px-2 py-1.5 font-sans text-[10px] sm:text-xs font-semibold text-slate-600 transition-colors hover:bg-slate-50 disabled:opacity-50"
               >
-                <Upload className="h-3.5 w-3.5" aria-hidden="true" /> Substituir
+                <Upload className="h-3 w-3 sm:h-3.5 sm:w-3.5" aria-hidden="true" /> Substituir
               </button>
               <button
                 onClick={() => handleReprocess(() => {}, setActionError, setReprocessing)}
                 disabled={reprocessing || isProcessing}
-                className="flex items-center gap-1.5 rounded-lg border border-slate-200 px-2.5 py-1.5 font-sans text-xs font-semibold text-slate-600 transition-colors hover:bg-slate-50 disabled:opacity-50"
+                className="flex items-center gap-1 rounded-lg border border-slate-200 px-2 py-1.5 font-sans text-[10px] sm:text-xs font-semibold text-slate-600 transition-colors hover:bg-slate-50 disabled:opacity-50"
               >
-                {reprocessing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />} Reprocessar
+                {reprocessing ? <Loader2 className="h-3 w-3 sm:h-3.5 sm:w-3.5 animate-spin" /> : <RotateCcw className="h-3 w-3 sm:h-3.5 sm:w-3.5" aria-hidden="true" />} Reprocessar
               </button>
               <button
                 onClick={() => setShowDeleteConfirm(true)}
                 disabled={deleting}
-                className="flex items-center gap-1.5 rounded-lg border border-red-200 px-2.5 py-1.5 font-sans text-xs font-semibold text-red-600 transition-colors hover:bg-red-50 disabled:opacity-50"
+                className="flex items-center gap-1 rounded-lg border border-red-200 px-2 py-1.5 font-sans text-[10px] sm:text-xs font-semibold text-red-600 transition-colors hover:bg-red-50 disabled:opacity-50"
               >
-                <Trash2 className="h-3.5 w-3.5" aria-hidden="true" /> Excluir
+                <Trash2 className="h-3 w-3 sm:h-3.5 sm:w-3.5" aria-hidden="true" /> Excluir
               </button>
             </div>
           </div>
