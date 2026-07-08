@@ -32,6 +32,7 @@ RUN npx prisma generate
 COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/next.config.mjs ./
+COPY --from=builder /app/tsconfig.json ./
 COPY --from=builder /app/src ./src
 
 COPY docker-entrypoint.sh ./
