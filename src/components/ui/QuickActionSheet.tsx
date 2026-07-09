@@ -32,7 +32,7 @@ export function QuickActionSheet({ open, onClose }: QuickActionSheetProps) {
   if (!open) return null
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center">
+    <div className="fixed inset-0 z-[65] flex items-end sm:items-center justify-center">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} aria-hidden="true" />
       <div
         ref={sheetRef}

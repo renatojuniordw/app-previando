@@ -173,7 +173,7 @@ export function CaseLayoutClient({ children }: { children: React.ReactNode }) {
       </div>
 
       {/* Main Container */}
-      <div className="max-w-7xl w-full mx-auto px-6 md:px-8 py-8 flex-1 flex flex-col lg:flex-row gap-8">
+      <div className="max-w-7xl w-full mx-auto px-6 md:px-8 py-8 pb-24 lg:pb-8 flex-1 flex flex-col lg:flex-row gap-8">
         
         {/* Mobile Submenu Trigger */}
         <div className="lg:hidden w-full shrink-0">

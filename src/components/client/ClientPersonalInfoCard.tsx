@@ -5,15 +5,16 @@ import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { formatDate } from '@/lib/utils'
 import { PRIORITY_LABELS } from '@/lib/constants'
-import { ChevronDown } from 'lucide-react'
+import { ChevronDown, Pencil } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { ClientDetail } from '@/hooks/useClientDetail'
 
 interface Props {
   client: ClientDetail
+  onEditNotes?: () => void
 }
 
-export function ClientPersonalInfoCard({ client }: Props) {
+export function ClientPersonalInfoCard({ client, onEditNotes }: Props) {
   const [expanded, setExpanded] = useState(true)
   const hasAddress = [client.street, client.city].some(Boolean)
 
@@ -75,10 +76,25 @@ export function ClientPersonalInfoCard({ client }: Props) {
         </div>
       )}
 
-      {client.notes && (
-        <div className="mt-4 p-4 border border-slate-200/80 bg-slate-50/50 rounded-xl font-sans text-xs text-slate-700 leading-relaxed font-medium">
-          <span className="block text-[9px] font-extrabold text-slate-400 uppercase tracking-wider mb-1.5">Observações Internas</span>
-          {client.notes}
+      {(client.notes || onEditNotes) && (
+        <div className="mt-4 p-4 border border-slate-200/80 bg-slate-50/50 rounded-xl">
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider">Observações Internas</span>
+            {onEditNotes && (
+              <button
+                onClick={onEditNotes}
+                className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg text-slate-400 hover:text-amber-600 hover:bg-amber-50 transition-colors -mr-2 -my-1"
+                aria-label="Editar observações"
+              >
+                <Pencil className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+          {client.notes ? (
+            <p className="font-sans text-xs text-slate-700 leading-relaxed font-medium">{client.notes}</p>
+          ) : (
+            <p className="font-sans text-xs text-slate-400 italic">Nenhuma observação registrada.</p>
+          )}
         </div>
       )}
     </Card>

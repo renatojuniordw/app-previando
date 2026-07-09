@@ -34,7 +34,7 @@ export function BottomSheet({ open, onClose, children, title, className }: Botto
   if (!open) return null
 
   return (
-    <div className="fixed inset-0 z-[60]" role="dialog" aria-modal="true" aria-labelledby={title ? 'bottom-sheet-title' : undefined}>
+    <div className="fixed inset-0 z-[65]" role="dialog" aria-modal="true" aria-labelledby={title ? 'bottom-sheet-title' : undefined}>
       <div
         className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs animate-fade-in"
         onClick={onClose}

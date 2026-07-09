@@ -75,8 +75,10 @@ export function ClientFloatingActions({ email, cpf, onEdit, onCopyCpf }: ClientF
               <div key={action.id} className="flex items-center gap-2 group">
                 <span
                   className={cn(
-                    'px-2 py-0.5 rounded bg-slate-900 text-white text-[10px] font-sans font-semibold shadow-md whitespace-nowrap transition-all duration-200 opacity-0 scale-95 origin-right translate-x-2 pointer-events-none',
-                    isOpen && 'group-hover:opacity-100 group-hover:scale-100 group-hover:translate-x-0'
+                    'px-2 py-0.5 rounded bg-slate-900 text-white text-[10px] font-sans font-semibold shadow-md whitespace-nowrap transition-all duration-200 pointer-events-none',
+                    isOpen
+                      ? 'opacity-100 scale-100 translate-x-0 lg:opacity-0 lg:scale-95 lg:translate-x-2 lg:group-hover:opacity-100 lg:group-hover:scale-100 lg:group-hover:translate-x-0'
+                      : 'opacity-0 scale-95 translate-x-2'
                   )}
                 >
                   {action.label}

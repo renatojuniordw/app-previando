@@ -317,9 +317,6 @@ export const Sidebar = memo(function Sidebar() {
                             ) : (
                               <span className="sr-only">{item.label}</span>
                             )}
-                            ) : (
-                              <span className="sr-only">{item.label}</span>
-                            )}
                           </Link>
                         </li>
                       )

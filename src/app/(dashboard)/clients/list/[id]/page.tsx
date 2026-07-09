@@ -66,7 +66,7 @@ export default function ClientDetailPage() {
 
   return (
     <ErrorBoundary>
-      <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6 lg:space-y-8 animate-fade-in">
+      <div className="p-4 sm:p-6 lg:p-8 pb-24 lg:pb-8 max-w-7xl mx-auto space-y-6 lg:space-y-8 animate-fade-in">
         {isBlocked && (
           <div className="flex items-start gap-3 border border-amber-200 bg-amber-50 p-4 rounded-xl shadow-sm">
             <Lock className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
@@ -82,7 +82,7 @@ export default function ClientDetailPage() {
 
         <ClientHeader name={client.name} cpf={client.cpf} />
 
-        <ClientPersonalInfoCard client={client} />
+        <ClientPersonalInfoCard client={client} onEditNotes={() => (isBlocked ? notifyBlocked() : setShowNotesModal(true))} />
 
         <ClientCnisCard clientId={client.id} caseCount={totalCases} />
 

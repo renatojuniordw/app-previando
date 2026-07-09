@@ -37,7 +37,7 @@ export function Modal({ open, onClose, title, children, className, size = 'md' }
   if (!open) return null
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-sm">
+    <div className="fixed inset-0 z-[70] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-sm">
       <div
         ref={dialogRef}
         tabIndex={-1}
@@ -64,7 +64,7 @@ export function Modal({ open, onClose, title, children, className, size = 'md' }
             <X className="h-5 w-5" />
           </button>
         </div>
-        <div className="p-4 sm:p-6 overflow-y-auto">{children}</div>
+        <div className="p-4 sm:p-6 pb-20 lg:pb-6 overflow-y-auto">{children}</div>
       </div>
     </div>
   )
