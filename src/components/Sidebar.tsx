@@ -12,7 +12,6 @@ import {
   Settings,
   LogOut,
   Activity,
-  Calendar,
   CalendarDays,
   FolderOpen,
   X,
@@ -46,8 +45,7 @@ const NAV_SECTIONS = [
     items: [
       { href: '/reports', label: 'Relatórios', icon: BarChart3 },
       { href: '/honorarios', label: 'Honorários', icon: DollarSign },
-      { href: '/calendar', label: 'Calendário', icon: CalendarDays },
-      { href: '/deadlines', label: 'Prazos', icon: Calendar },
+      { href: '/calendar', label: 'Agenda', icon: CalendarDays, badge: 'deadlines' as const },
       { href: '/activity', label: 'Atividade', icon: Activity },
     ],
   },
@@ -229,7 +227,7 @@ export const Sidebar = memo(function Sidebar() {
                                 {SHORTCUT_LABELS[item.href]}
                               </kbd>
                             )}
-                            {item.href === '/deadlines' && urgentDeadlines > 0 && (
+                            {item.badge === 'deadlines' && urgentDeadlines > 0 && (
                               <span className="ml-auto flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
                                 {urgentDeadlines > 9 ? '9+' : urgentDeadlines}
                               </span>
