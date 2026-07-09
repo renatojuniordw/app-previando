@@ -417,6 +417,53 @@ Log de auditoria é conteúdo cronológico, não tabular. Substituir a `<table>`
 
 ---
 
+---
+
+## Atualização — Sessão 09/07/2026
+
+### Implementado nesta sessão
+
+| Item | O que foi feito | Arquivos |
+|------|----------------|----------|
+| **FAB zone morte** | `pointer-events-none` no wrapper, `invisible` no sub-menu fechado | `CaseFloatingActions.tsx`, `ClientFloatingActions.tsx` |
+| **dvh layouts** | `min-h-screen` → `min-h-dvh` em auth, public, not-found, portal | 4 layouts |
+| **Modal scroll + padding** | `flex-1 min-h-0 overflow-y-auto` + `pb-20 lg:pb-6` | `Modal.tsx` |
+| **Z-index hierarchy** | Modal/ConfirmDialog `z-[70]`, Drawer/BottomSheet/FilterSheet `z-[65]`, FAB `z-[60]` | 7 componentes |
+| **MobileBottomNav** | Badges (clientes/casos/prazos), 5º item "Mais" (sidebar), Search no Header | `MobileBottomNav.tsx` |
+| **QuickActionSheet** | Long-press no Search abre sheet com Novo Cliente/Caso/Importar CNIS | `QuickActionSheet.tsx` + `MobileBottomNav.tsx` |
+| **Sidebar avatar + colapsado** | Avatar com iniciais, modo 64px com tooltips, Recentes (localStorage), shortcuts ⌘1-4 | `Sidebar.tsx`, `recent-store.ts` |
+| **Sidebar labels no mobile** | `showFullSidebar = isDesktopOpen \|\| isMobile` — labels sempre visíveis no mobile | `Sidebar.tsx` |
+| **Global Search (Cmd+K)** | Modal Spotlight, API route Prisma, categorias (clientes/casos/páginas), setas + Enter | `GlobalSearch.tsx`, `SearchResultItem.tsx`, `api/search/route.ts` |
+| **Header sem duplicação** | Busca inline removida, só botão "Buscar ⌘K" no desktop + lupa no mobile | `Header.tsx` |
+| **Calendário + Prazos** | Badge de urgentes na Agenda, redirect de /deadlines para /calendar | `Sidebar.tsx`, `deadlines/page.tsx` |
+| **PageError + EmptyState** | Dashboard error usa PageError, inline empty states substituídos por EmptyState | 7 páginas |
+| **ErrorBoundary** | Adicionado em 14 páginas (reports, activity, honorarios, kanban, import, 9 admin) | 14 arquivos |
+| **loading.tsx + error.tsx** | Criados para honorarios, activity, calendar, suporte, tools, 9 admin | 17 arquivos |
+| **FilterSheet mobile** | Adicionado à página de honorários | `honorarios/page.tsx` |
+| **Calendar BottomSheet** | Substituído componente local duplicado pelo compartilhado | `calendar/page.tsx` |
+| **Button touch targets** | Variante `sm` com `min-h-[44px]` | `Button.tsx` |
+| **FilterSheet close button** | `min-w-[44px] min-h-[44px]` | `FilterSheet.tsx` |
+| **Client detail 2-col desktop** | Grid `lg:grid-cols-3` — dados + CNIS (2/3), stats + portal (1/3 sticky) | `clients/[id]/page.tsx` |
+| **Priority no ClientHeader** | Badge de prioridade ao lado do nome | `ClientHeader.tsx` |
+| **Stats legíveis** | `text-[8px]` → `text-[10px]`, ícones/valores compactos | `ClientCaseStatsCards.tsx` |
+| **Portal com limite** | 3 casos visíveis + "Ver todos (N)" | `ClientPortalCard.tsx` |
+| **Edit button direto** | Ícone de lápis no card Observações, sem precisar do FAB | `ClientPersonalInfoCard.tsx` |
+| **Process badges scroll** | Badges com scroll horizontal no mobile em vez de wrapping | `ClientCasesListCard.tsx` |
+| **Logo sidebar colapsada** | Badge "PA" no modo 64px em vez de texto cortado | `Sidebar.tsx` |
+
+### Pendente para próxima sessão
+
+| Item | Prioridade | Referência |
+|------|-----------|------------|
+| **Botão de editar dados direto no card** | Média | Similar ao edit de observações, adicionar lápis nos campos editáveis |
+| **Onboarding coachmark no mobile** | Média | Apontar "Mais" na primeira vez que usuário entra |
+| **Processo: checklist mobile em PR** | Baixa | Adicionar ao `11-DESIGN-SYSTEM.md` |
+| **Virtualização activity feed** | Baixa | Se usuário tem anos de auditoria |
+| **AdminTable dual-view mobile** | Baixa | Aplicar MobileCardList nas tabelas admin |
+| **Dark mode** | Futuro | Todo o código é light-only |
+
+---
+
 ## Ordem de execução recomendada
 
 | Sprint | Itens | Esforço | Impacto |
