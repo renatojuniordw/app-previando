@@ -5,6 +5,7 @@ import { useSession } from 'next-auth/react'
 import { memo, useCallback, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { useSearchStore } from '@/store/search-store'
 import { useSidebarStore } from '@/store/sidebar'
 
 interface AppNotification {
@@ -144,6 +145,17 @@ export const Header = memo(function Header() {
               </button>
             )}
           </div>
+
+          {/* Global search trigger (Cmd+K) */}
+          <button
+            onClick={() => useSearchStore.getState().openSearch()}
+            className="min-h-[44px] min-w-[44px] flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-500 transition-colors"
+            aria-label="Buscar (⌘K)"
+          >
+            <Search className="w-4 h-4" />
+            <span className="hidden sm:inline text-xs font-semibold text-slate-400">Buscar</span>
+            <kbd className="hidden lg:inline-flex px-1 py-0.5 text-[9px] font-mono font-bold text-slate-400 bg-white border border-slate-200 rounded">⌘K</kbd>
+          </button>
 
           {/* Mobile search trigger */}
           <button

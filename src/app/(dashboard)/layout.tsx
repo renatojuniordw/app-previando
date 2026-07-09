@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation'
 import { Sidebar } from '@/components/Sidebar'
 import { MobileBottomNav } from '@/components/ui/MobileBottomNav'
 import { Header } from '@/components/Header'
+import { GlobalSearch } from '@/components/search/GlobalSearch'
 import { UpgradeModal } from '@/components/UpgradeModal'
 import { ToastContainer } from '@/components/ToastContainer'
 import { DashboardLayoutClient } from './DashboardLayoutClient'
@@ -31,6 +32,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
           </DashboardLayoutClient>
         </div>
       </div>
+      <GlobalSearch />
       <UpgradeModal />
       <ToastContainer />
       <MobileBottomNav />
