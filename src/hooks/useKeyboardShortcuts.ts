@@ -7,6 +7,8 @@ interface Shortcut {
   description: string
   action: () => void
   enabled?: boolean
+  metaKey?: boolean    // Require Meta (⌘) key
+  ctrlKey?: boolean    // Require Ctrl key
 }
 
 /**
@@ -43,7 +45,24 @@ export function useKeyboardShortcuts(shortcuts: Shortcut[]) {
 
         // Single key shortcuts (like ?, Escape)
         if (shortcut.keys.length === 1) {
-          // Don't trigger single letter shortcuts while typing
+          if (shortcut.metaKey) {
+            if (e.metaKey && e.key.toLowerCase() === shortcut.keys[0].toLowerCase()) {
+              e.preventDefault()
+              shortcut.action()
+              return
+            }
+            continue
+          }
+
+          if (shortcut.ctrlKey) {
+            if (e.ctrlKey && e.key.toLowerCase() === shortcut.keys[0].toLowerCase()) {
+              e.preventDefault()
+              shortcut.action()
+              return
+            }
+            continue
+          }
+
           if (
             shortcut.keys[0] !== '?' &&
             shortcut.keys[0] !== 'Escape' &&

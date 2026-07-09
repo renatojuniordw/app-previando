@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { signOut, useSession } from 'next-auth/react'
 import { cn } from '@/lib/utils'
 import {
@@ -28,6 +28,8 @@ import { useSidebarStore } from '@/store/sidebar'
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock'
 import { useUrgentDeadlines } from '@/hooks/useUrgentDeadlines'
 import { memo, useEffect, useCallback } from 'react'
+import { useRecentStore } from '@/store/recent-store'
+import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts'
 
 const NAV_SECTIONS = [
   {
@@ -73,6 +75,13 @@ const ADMIN_SECTION = {
   ],
 }
 
+const SHORTCUT_LABELS: Record<string, string> = {
+  '/dashboard': '⌘1',
+  '/clients/list': '⌘2',
+  '/cases': '⌘3',
+  '/calendar': '⌘4',
+}
+
 export const Sidebar = memo(function Sidebar() {
   const pathname = usePathname()
   const { data: session } = useSession()
@@ -81,6 +90,15 @@ export const Sidebar = memo(function Sidebar() {
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 1024
   useBodyScrollLock(isOpen && isMobile)
   const urgentDeadlines = useUrgentDeadlines()
+
+  const router = useRouter()
+  const recentItems = useRecentStore((s) => s.items)
+  useKeyboardShortcuts([
+    { keys: ['1'], metaKey: true, description: 'Ir para Dashboard', action: () => router.push('/dashboard') },
+    { keys: ['2'], metaKey: true, description: 'Ir para Clientes', action: () => router.push('/clients/list') },
+    { keys: ['3'], metaKey: true, description: 'Ir para Casos', action: () => router.push('/cases') },
+    { keys: ['4'], metaKey: true, description: 'Ir para Calendário', action: () => router.push('/calendar') },
+  ])
 
   const handleClose = useCallback(() => close(), [close])
   const handleSignOut = useCallback(() => signOut({ callbackUrl: '/login' }), [])
@@ -123,7 +141,7 @@ export const Sidebar = memo(function Sidebar() {
           'sticky top-0 z-20 h-dvh shrink-0 overflow-hidden border-r border-slate-200 bg-white transition-all duration-300',
           'fixed inset-y-0 left-0 z-40 transform lg:static lg:translate-x-0',
           isOpen ? 'translate-x-0' : '-translate-x-full',
-          isDesktopOpen ? 'lg:w-64' : 'lg:w-0 lg:border-none'
+          isDesktopOpen ? 'lg:w-64' : 'lg:w-16'
         )}
         role="navigation"
         aria-label="Navegação principal"
@@ -148,13 +166,33 @@ export const Sidebar = memo(function Sidebar() {
             </button>
           </div>
 
+          {session?.user && (
+            <div className="flex items-center gap-3 px-4 py-3 border-b border-slate-100">
+              <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center font-serif font-bold text-amber-700 shrink-0">
+                {session.user.name?.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() ?? 'U'}
+              </div>
+              {isDesktopOpen && (
+                <div className="flex-1 min-w-0">
+                  <p className="font-sans text-sm font-bold text-slate-900 truncate">{session.user.name}</p>
+                  <p className="font-sans text-[11px] font-semibold text-slate-400 uppercase tracking-wider">{session.user.plan ?? 'FREE'}</p>
+                </div>
+              )}
+            </div>
+          )}
+
           <nav className="flex-1 overflow-y-auto p-3" aria-label="Seções do sistema">
             <ul role="list" className="space-y-1">
               {NAV_SECTIONS.map((section) => (
                 <li key={section.label}>
-                  <p className="px-3 py-2 text-xs font-semibold uppercase tracking-wider text-slate-400">
-                    {section.label}
-                  </p>
+                  {isDesktopOpen ? (
+                    <p className="px-3 py-2 text-xs font-semibold uppercase tracking-wider text-slate-400">
+                      {section.label}
+                    </p>
+                  ) : (
+                    <p className="sr-only px-3 py-2 text-xs font-semibold uppercase tracking-wider text-slate-400">
+                      {section.label}
+                    </p>
+                  )}
                   <ul role="list" className="ml-0 space-y-0.5">
                     {section.items.map((item) => {
                       const active = pathname.startsWith(item.href)
@@ -166,6 +204,7 @@ export const Sidebar = memo(function Sidebar() {
                             prefetch={false}
                             aria-label={item.label}
                             aria-current={active ? 'page' : undefined}
+                            title={!isDesktopOpen ? item.label : undefined}
                             className={cn(
                               'flex min-h-[44px] items-center gap-3 rounded-lg px-3 py-2 font-sans text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/50',
                               active
@@ -180,7 +219,16 @@ export const Sidebar = memo(function Sidebar() {
                               )}
                               aria-hidden="true"
                             />
-                            <span className="flex-1">{item.label}</span>
+                            {isDesktopOpen ? (
+                              <span className="flex-1">{item.label}</span>
+                            ) : (
+                              <span className="sr-only">{item.label}</span>
+                            )}
+                            {SHORTCUT_LABELS[item.href] && isDesktopOpen && (
+                              <kbd className="hidden lg:inline-flex items-center px-1.5 py-0.5 text-[10px] font-mono font-bold text-slate-400 bg-slate-100 rounded">
+                                {SHORTCUT_LABELS[item.href]}
+                              </kbd>
+                            )}
                             {item.href === '/deadlines' && urgentDeadlines > 0 && (
                               <span className="ml-auto flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
                                 {urgentDeadlines > 9 ? '9+' : urgentDeadlines}
@@ -194,12 +242,43 @@ export const Sidebar = memo(function Sidebar() {
                 </li>
               ))}
 
+              {recentItems.length > 0 && isDesktopOpen && (
+                <li>
+                  <p className="px-3 py-2 text-xs font-semibold uppercase tracking-wider text-slate-400">
+                    Recentes
+                  </p>
+                  <ul role="list" className="ml-0 space-y-0.5">
+                    {recentItems.slice(0, 3).map((item) => {
+                      const Icon = item.type === 'client' ? Users : FolderOpen
+                      return (
+                        <li key={item.id}>
+                          <Link
+                            href={item.href}
+                            prefetch={false}
+                            className="flex min-h-[44px] items-center gap-3 rounded-lg px-3 py-2 font-sans text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all"
+                          >
+                            <Icon className="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
+                            <span className="flex-1 truncate">{item.label}</span>
+                          </Link>
+                        </li>
+                      )
+                    })}
+                  </ul>
+                </li>
+              )}
+
               {isAdmin && (
                 <li>
                   <hr className="my-2 border-slate-200" />
-                  <p className="px-3 py-2 text-xs font-semibold uppercase tracking-wider text-amber-700">
-                    {ADMIN_SECTION.label}
-                  </p>
+                  {isDesktopOpen ? (
+                    <p className="px-3 py-2 text-xs font-semibold uppercase tracking-wider text-amber-700">
+                      {ADMIN_SECTION.label}
+                    </p>
+                  ) : (
+                    <p className="sr-only px-3 py-2 text-xs font-semibold uppercase tracking-wider text-amber-700">
+                      {ADMIN_SECTION.label}
+                    </p>
+                  )}
                   <ul role="list" className="ml-0 space-y-0.5">
                     {ADMIN_SECTION.items.map((item) => {
                       const active = pathname.startsWith(item.href)
@@ -211,6 +290,7 @@ export const Sidebar = memo(function Sidebar() {
                             prefetch={false}
                             aria-label={item.label}
                             aria-current={active ? 'page' : undefined}
+                            title={!isDesktopOpen ? item.label : undefined}
                             className={cn(
                               'flex min-h-[44px] items-center gap-3 rounded-lg px-3 py-2 font-sans text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/50',
                               active
@@ -225,7 +305,11 @@ export const Sidebar = memo(function Sidebar() {
                               )}
                               aria-hidden="true"
                             />
-                            <span className="flex-1">{item.label}</span>
+                            {isDesktopOpen ? (
+                              <span className="flex-1">{item.label}</span>
+                            ) : (
+                              <span className="sr-only">{item.label}</span>
+                            )}
                           </Link>
                         </li>
                       )
@@ -245,7 +329,7 @@ export const Sidebar = memo(function Sidebar() {
                 aria-label="Sair da conta"
               >
                 <LogOut className="h-4 w-4" aria-hidden="true" />
-                <span>Sair da Conta</span>
+                {isDesktopOpen && <span>Sair da Conta</span>}
               </button>
             </div>
           </div>
