@@ -126,7 +126,7 @@ export const Header = memo(function Header() {
           {/* Global search trigger (Cmd+K) */}
           <button
             onClick={() => useSearchStore.getState().openSearch()}
-            className="min-h-[44px] flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-500 transition-colors"
+            className="hidden sm:flex min-h-[44px] items-center justify-center gap-2 px-4 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-500 transition-colors"
             aria-label="Buscar (⌘K)"
           >
             <Search className="w-4 h-4" />
