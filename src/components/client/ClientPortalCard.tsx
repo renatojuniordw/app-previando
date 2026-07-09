@@ -33,6 +33,10 @@ function daysLeft(expiresAt: string): number {
 
 export function ClientPortalCard({ cases }: Props) {
   const { addToast } = useToast()
+  const [showAll, setShowAll] = useState(false)
+  const MAX_VISIBLE = 3
+  const visibleCases = showAll ? cases : cases.slice(0, MAX_VISIBLE)
+
   const [portals, setPortals] = useState<Record<string, PortalState>>(() =>
     Object.fromEntries(cases.map((c) => [c.id, { link: null, expiresAt: null, loading: true, generating: false }]))
   )
@@ -114,7 +118,7 @@ export function ClientPortalCard({ cases }: Props) {
       />
 
       <div className="space-y-3 mt-1">
-        {cases.map((c) => {
+        {visibleCases.map((c) => {
           const state = portals[c.id] ?? { link: null, expiresAt: null, loading: true, generating: false }
           const benefitLabel = BENEFIT_DB_LABELS[c.benefitType] ?? BENEFIT_SHORT_LABELS[c.benefitType] ?? c.benefitType
           const isActive = !!state.link && !!state.expiresAt && new Date(state.expiresAt) > new Date()
@@ -212,6 +216,15 @@ export function ClientPortalCard({ cases }: Props) {
           )
         })}
       </div>
+
+      {cases.length > MAX_VISIBLE && (
+        <button
+          onClick={() => setShowAll(!showAll)}
+          className="w-full text-center py-2 text-xs font-bold text-amber-600 hover:text-amber-700 hover:bg-amber-50 rounded-lg transition-colors"
+        >
+          {showAll ? 'Ver menos' : `Ver todos (${cases.length})`}
+        </button>
+      )}
 
       <p className="text-xs text-slate-400 mt-4 flex items-center gap-1.5">
         <Share2 className="w-3.5 h-3.5" />

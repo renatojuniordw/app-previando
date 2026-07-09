@@ -68,7 +68,7 @@ export function ClientCasesListCard({ cases, onNewCase }: Props) {
                       Criado em: {formatDate(caso.createdAt)}
                     </p>
                   </div>
-                  <div className="flex flex-wrap items-center gap-2.5 sm:gap-3">
+                  <div className="flex items-center gap-2.5 sm:gap-3 overflow-x-auto overscroll-x-contain -mx-1 px-1 scrollbar-none">
                     {caso.cnisDocument && (
                       <span className={cn(
                         'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-[9px] font-extrabold uppercase tracking-wider',
