@@ -148,12 +148,20 @@ export const Sidebar = memo(function Sidebar() {
           {/* Logo + Close button */}
           <div className="flex h-16 items-center justify-between border-b border-slate-200 px-6">
             <Link href="/dashboard" prefetch={false} className="flex flex-col">
-              <span className="font-serif text-2xl font-bold leading-none tracking-tight text-slate-900">
-                PREVI<span className="text-amber-600">ANDO</span>
-              </span>
-              <span className="mt-1 font-sans text-[10px] font-semibold uppercase tracking-widest text-slate-400">
-                Previdência
-              </span>
+              {isDesktopOpen ? (
+                <>
+                  <span className="font-serif text-2xl font-bold leading-none tracking-tight text-slate-900">
+                    PREVI<span className="text-amber-600">ANDO</span>
+                  </span>
+                  <span className="mt-1 font-sans text-[10px] font-semibold uppercase tracking-widest text-slate-400">
+                    Previdência
+                  </span>
+                </>
+              ) : (
+                <div className="w-9 h-9 rounded-lg bg-amber-600 flex items-center justify-center">
+                  <span className="font-serif font-bold text-sm text-white">PA</span>
+                </div>
+              )}
             </Link>
             <button
               onClick={handleClose}

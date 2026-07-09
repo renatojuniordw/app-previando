@@ -123,33 +123,10 @@ export const Header = memo(function Header() {
             <Menu className="w-5 h-5" />
           </button>
 
-          {/* Desktop search */}
-          <div className="hidden sm:block relative w-full max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-            <input
-              type="search"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyDown={handleSearchKeyDown}
-              placeholder="Pesquisar casos, clientes..."
-              aria-label="Pesquisar casos por nome do cliente"
-              className="w-full pl-9 pr-12 py-2 bg-slate-50 border border-slate-200 rounded-full text-base sm:text-sm font-sans focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all placeholder:text-slate-400 text-slate-900"
-            />
-            {searchQuery.trim() && (
-              <button
-                onClick={handleSearchClick}
-                className="absolute right-1.5 top-1/2 -translate-y-1/2 min-w-[44px] min-h-[44px] flex items-center justify-center bg-amber-600 hover:bg-amber-700 text-white rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/50"
-                aria-label={`Pesquisar por "${searchQuery.trim()}"`}
-              >
-                <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
-              </button>
-            )}
-          </div>
-
           {/* Global search trigger (Cmd+K) */}
           <button
             onClick={() => useSearchStore.getState().openSearch()}
-            className="min-h-[44px] min-w-[44px] flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-500 transition-colors"
+            className="min-h-[44px] flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-500 transition-colors"
             aria-label="Buscar (⌘K)"
           >
             <Search className="w-4 h-4" />
@@ -159,9 +136,9 @@ export const Header = memo(function Header() {
 
           {/* Mobile search trigger */}
           <button
-            onClick={() => setShowMobileSearch(true)}
+            onClick={() => useSearchStore.getState().openSearch()}
             className="sm:hidden min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors"
-            aria-label="Abrir pesquisa"
+            aria-label="Buscar (⌘K)"
           >
             <Search className="w-5 h-5" />
           </button>
