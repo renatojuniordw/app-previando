@@ -86,6 +86,7 @@ export const Sidebar = memo(function Sidebar() {
   const isAdmin = session?.user?.isAdmin
   const { isOpen, close, isDesktopOpen } = useSidebarStore()
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 1024
+  const showFullSidebar = isDesktopOpen || isMobile
   useBodyScrollLock(isOpen && isMobile)
   const urgentDeadlines = useUrgentDeadlines()
 
@@ -148,7 +149,7 @@ export const Sidebar = memo(function Sidebar() {
           {/* Logo + Close button */}
           <div className="flex h-16 items-center justify-between border-b border-slate-200 px-6">
             <Link href="/dashboard" prefetch={false} className="flex flex-col">
-              {isDesktopOpen ? (
+              {showFullSidebar ? (
                 <>
                   <span className="font-serif text-2xl font-bold leading-none tracking-tight text-slate-900">
                     PREVI<span className="text-amber-600">ANDO</span>
@@ -177,7 +178,7 @@ export const Sidebar = memo(function Sidebar() {
               <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center font-serif font-bold text-amber-700 shrink-0">
                 {session.user.name?.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() ?? 'U'}
               </div>
-              {isDesktopOpen && (
+              {showFullSidebar && (
                 <div className="flex-1 min-w-0">
                   <p className="font-sans text-sm font-bold text-slate-900 truncate">{session.user.name}</p>
                   <p className="font-sans text-[11px] font-semibold text-slate-400 uppercase tracking-wider">{session.user.plan ?? 'FREE'}</p>
@@ -190,7 +191,7 @@ export const Sidebar = memo(function Sidebar() {
             <ul role="list" className="space-y-1">
               {NAV_SECTIONS.map((section) => (
                 <li key={section.label}>
-                  {isDesktopOpen ? (
+                  {showFullSidebar ? (
                     <p className="px-3 py-2 text-xs font-semibold uppercase tracking-wider text-slate-400">
                       {section.label}
                     </p>
@@ -210,7 +211,7 @@ export const Sidebar = memo(function Sidebar() {
                             prefetch={false}
                             aria-label={item.label}
                             aria-current={active ? 'page' : undefined}
-                            title={!isDesktopOpen ? item.label : undefined}
+                            title={!showFullSidebar ? item.label : undefined}
                             className={cn(
                               'flex min-h-[44px] items-center gap-3 rounded-lg px-3 py-2 font-sans text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/50',
                               active
@@ -225,12 +226,12 @@ export const Sidebar = memo(function Sidebar() {
                               )}
                               aria-hidden="true"
                             />
-                            {isDesktopOpen ? (
+                            {showFullSidebar ? (
                               <span className="flex-1">{item.label}</span>
                             ) : (
                               <span className="sr-only">{item.label}</span>
                             )}
-                            {SHORTCUT_LABELS[item.href] && isDesktopOpen && (
+                            {SHORTCUT_LABELS[item.href] && showFullSidebar && (
                               <kbd className="hidden lg:inline-flex items-center px-1.5 py-0.5 text-[10px] font-mono font-bold text-slate-400 bg-slate-100 rounded">
                                 {SHORTCUT_LABELS[item.href]}
                               </kbd>
@@ -248,7 +249,7 @@ export const Sidebar = memo(function Sidebar() {
                 </li>
               ))}
 
-              {recentItems.length > 0 && isDesktopOpen && (
+              {recentItems.length > 0 && showFullSidebar && (
                 <li>
                   <p className="px-3 py-2 text-xs font-semibold uppercase tracking-wider text-slate-400">
                     Recentes
@@ -276,7 +277,7 @@ export const Sidebar = memo(function Sidebar() {
               {isAdmin && (
                 <li>
                   <hr className="my-2 border-slate-200" />
-                  {isDesktopOpen ? (
+                  {showFullSidebar ? (
                     <p className="px-3 py-2 text-xs font-semibold uppercase tracking-wider text-amber-700">
                       {ADMIN_SECTION.label}
                     </p>
@@ -296,9 +297,9 @@ export const Sidebar = memo(function Sidebar() {
                             prefetch={false}
                             aria-label={item.label}
                             aria-current={active ? 'page' : undefined}
-                            title={!isDesktopOpen ? item.label : undefined}
+                            title={!showFullSidebar ? item.label : undefined}
                             className={cn(
-                              'flex min-h-[44px] items-center gap-3 rounded-lg px-3 py-2 font-sans text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/50',
+                              'flex min-h-[44px] items-center gap-3 rounded-lg px-3 py-2 font-sans text-sm font-medium transition-all',
                               active
                                 ? 'bg-amber-50 text-amber-700'
                                 : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
@@ -311,8 +312,11 @@ export const Sidebar = memo(function Sidebar() {
                               )}
                               aria-hidden="true"
                             />
-                            {isDesktopOpen ? (
+                            {showFullSidebar ? (
                               <span className="flex-1">{item.label}</span>
+                            ) : (
+                              <span className="sr-only">{item.label}</span>
+                            )}
                             ) : (
                               <span className="sr-only">{item.label}</span>
                             )}
@@ -335,7 +339,7 @@ export const Sidebar = memo(function Sidebar() {
                 aria-label="Sair da conta"
               >
                 <LogOut className="h-4 w-4" aria-hidden="true" />
-                {isDesktopOpen && <span>Sair da Conta</span>}
+                {showFullSidebar && <span>Sair da Conta</span>}
               </button>
             </div>
           </div>
