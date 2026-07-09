@@ -127,7 +127,7 @@ export function FilterSheet({ open, onClose, title = 'Filtros', filters, activeC
           <h2 className="font-serif font-bold text-lg text-slate-900">{title}</h2>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg hover:bg-slate-100 transition-colors text-slate-400 hover:text-slate-700"
+            className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg hover:bg-slate-100 transition-colors text-slate-400 hover:text-slate-700"
             aria-label="Fechar"
           >
             <X className="w-5 h-5" />

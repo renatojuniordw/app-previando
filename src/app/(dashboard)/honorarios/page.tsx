@@ -3,10 +3,14 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import api from '@/lib/api'
+import { EmptyState } from '@/components/ui/EmptyState'
+import { ErrorBoundary } from '@/components/ErrorBoundary'
 import {
   DollarSign, Loader2, AlertCircle, CheckCircle2, Clock,
   XCircle, AlertTriangle, TrendingUp, Wallet, Search,
+  SlidersHorizontal,
 } from 'lucide-react'
+import { FilterSheet } from '@/components/ui/FilterSheet'
 import { DatePicker } from '@/components/ui/DatePicker'
 import { MobileCardList } from '@/components/ui/MobileCardList'
 import { formatCurrency, cn } from '@/lib/utils'
@@ -65,6 +69,14 @@ export default function HonorariosGlobalPage() {
   const [search, setSearch] = useState('')
   const [from, setFrom] = useState('')
   const [to, setTo] = useState('')
+  const [filterSheetOpen, setFilterSheetOpen] = useState(false)
+
+  function clearFilters() {
+    setStatusFilter('ALL')
+    setSearch('')
+    setFrom('')
+    setTo('')
+  }
 
   const load = useCallback(() => {
     setLoading(true)
@@ -97,6 +109,7 @@ export default function HonorariosGlobalPage() {
   }
 
   return (
+    <ErrorBoundary>
     <div className="mx-auto max-w-6xl space-y-6 px-4 sm:px-0">
 
       {/* Page Header */}
@@ -116,39 +129,70 @@ export default function HonorariosGlobalPage() {
       </div>
 
       {/* Filters */}
-      <div className="flex flex-wrap items-end gap-3 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm">
-        <div className="min-w-[200px] flex-1">
-          <label htmlFor="fee-search" className="neo-label">Buscar por cliente</label>
-          <div className="relative">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-            <input
-              id="fee-search"
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Nome do cliente..."
-              className="neo-input pl-9"
-            />
+      <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm">
+        {/* Desktop filters */}
+        <div className="hidden md:flex flex-wrap items-end gap-3">
+          <div className="min-w-[200px] flex-1">
+            <label htmlFor="fee-search" className="neo-label">Buscar por cliente</label>
+            <div className="relative">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <input
+                id="fee-search"
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Nome do cliente..."
+                className="neo-input pl-9"
+              />
+            </div>
           </div>
+
+          <div>
+            <label htmlFor="fee-status" className="neo-label">Status</label>
+            <select
+              id="fee-status"
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value as FeeStatus | 'ALL')}
+              className="neo-input"
+            >
+              {STATUS_FILTERS.map((s) => (
+                <option key={s.value} value={s.value}>{s.label}</option>
+              ))}
+            </select>
+          </div>
+
+          <DatePicker label="De" value={from} onChange={(d) => setFrom(d ? d.toISOString().split('T')[0] : '')} />
+          <DatePicker label="Até" value={to} onChange={(d) => setTo(d ? d.toISOString().split('T')[0] : '')} />
         </div>
 
-        <div>
-          <label htmlFor="fee-status" className="neo-label">Status</label>
-          <select
-            id="fee-status"
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value as FeeStatus | 'ALL')}
-            className="neo-input"
-          >
-            {STATUS_FILTERS.map((s) => (
-              <option key={s.value} value={s.value}>{s.label}</option>
-            ))}
-          </select>
-        </div>
-
-        <DatePicker label="De" value={from} onChange={(d) => setFrom(d ? d.toISOString().split('T')[0] : '')} />
-        <DatePicker label="Até" value={to} onChange={(d) => setTo(d ? d.toISOString().split('T')[0] : '')} />
+        {/* Mobile filter button */}
+        <button
+          onClick={() => setFilterSheetOpen(true)}
+          className="flex md:hidden items-center justify-center gap-2 w-full py-2.5 text-xs font-bold rounded-lg border border-slate-200 text-slate-650 hover:bg-slate-50 transition-colors"
+        >
+          <SlidersHorizontal className="w-3.5 h-3.5" />
+          Filtros
+          {[statusFilter !== 'ALL' ? statusFilter : '', search, from, to].filter(Boolean).length > 0 && (
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+          )}
+        </button>
       </div>
+
+      {/* Filter Sheet */}
+      <FilterSheet
+        open={filterSheetOpen}
+        onClose={() => setFilterSheetOpen(false)}
+        title="Filtros"
+        activeCount={[statusFilter !== 'ALL' ? statusFilter : '', search, from, to].filter(Boolean).length}
+        onClear={() => { clearFilters(); setFilterSheetOpen(false) }}
+        onApply={() => setFilterSheetOpen(false)}
+        filters={[
+          { type: 'text', id: 'filter-search', label: 'Buscar por cliente', value: search, onChange: setSearch, placeholder: 'Nome do cliente...' },
+          { type: 'select', id: 'filter-status', label: 'Status', value: statusFilter === 'ALL' ? '' : statusFilter, onChange: (v) => setStatusFilter((v || 'ALL') as FeeStatus | 'ALL'), options: STATUS_FILTERS.filter((s) => s.value !== 'ALL').map((s) => ({ value: s.value, label: s.label })) },
+          { type: 'date', id: 'filter-from', label: 'De', value: from, onChange: (v) => setFrom(v) },
+          { type: 'date', id: 'filter-to', label: 'Até', value: to, onChange: (v) => setTo(v) },
+        ]}
+      />
 
       {/* Table / List */}
       {loading ? (
@@ -157,15 +201,11 @@ export default function HonorariosGlobalPage() {
           <p className="mt-4 animate-pulse font-sans text-sm font-medium text-slate-500">Carregando honorários...</p>
         </div>
       ) : fees.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-250 bg-white py-20 text-center shadow-sm">
-          <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-2xl border border-amber-100 bg-amber-50 shadow-xs">
-            <DollarSign className="h-8 w-8 text-amber-500" />
-          </div>
-          <h2 className="mb-2 font-serif text-lg font-bold text-slate-900">Nenhum Honorário Encontrado</h2>
-          <p className="mx-auto max-w-sm font-sans text-sm leading-relaxed text-slate-500">
-            Ajuste os filtros ou registre honorários dentro de um caso específico.
-          </p>
-        </div>
+        <EmptyState
+          icon={DollarSign}
+          title="Nenhum Honorário Encontrado"
+          description="Ajuste os filtros ou registre honorários dentro de um caso específico."
+        />
       ) : (
         <>
           {/* Desktop table */}
@@ -243,6 +283,7 @@ export default function HonorariosGlobalPage() {
         </>
       )}
     </div>
+    </ErrorBoundary>
   )
 }
 

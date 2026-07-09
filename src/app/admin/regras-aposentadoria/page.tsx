@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
+import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { Plus, Pencil, Trash2, ChevronDown, ChevronUp, BookOpen } from 'lucide-react'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { Button } from '@/components/ui/Button'
@@ -190,6 +191,7 @@ export default function RegrasAposentadoriaPage() {
   const modalidadeLabels = Object.fromEntries(modalidades.map(({ codigo, label }) => [codigo, label]))
 
   return (
+    <ErrorBoundary>
     <div className="space-y-6">
       <PageHeader
         title="Regras de Aposentadoria"
@@ -454,5 +456,6 @@ export default function RegrasAposentadoriaPage() {
         loading={deleting}
       />
     </div>
+    </ErrorBoundary>
   )
 }

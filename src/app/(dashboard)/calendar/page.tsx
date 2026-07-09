@@ -4,10 +4,12 @@ import { useEffect, useState, useMemo, useCallback, useRef } from 'react'
 import api from '@/lib/api'
 import { Card } from '@/components/ui/Card'
 import { CalendarEventCard } from '@/components/calendar/CalendarEventCard'
-import { CalendarDays, ChevronLeft, ChevronRight, X, Clock, AlertTriangle, CalendarCheck, ListTodo, ExternalLink, ChevronDown } from 'lucide-react'
+import { EmptyState } from '@/components/ui/EmptyState'
+import { CalendarDays, ChevronLeft, ChevronRight, X, Clock, AlertTriangle, CalendarCheck, ListTodo, ExternalLink } from 'lucide-react'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
+import { BottomSheet } from '@/components/ui/BottomSheet'
 
 interface CalendarEvent {
   id: string
@@ -72,74 +74,7 @@ function parseDateKey(key: string): Date {
   return new Date(y, m - 1, d)
 }
 
-interface BottomSheetProps {
-  open: boolean
-  onClose: () => void
-  children: React.ReactNode
-  title: string
-}
 
-function BottomSheet({ open, onClose, children, title }: BottomSheetProps) {
-  const sheetRef = useRef<HTMLDivElement>(null)
-  const startY = useRef(0)
-  const currentY = useRef(0)
-
-  const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    startY.current = e.touches[0].clientY
-  }, [])
-
-  const handleTouchMove = useCallback((e: React.TouchEvent) => {
-    currentY.current = e.touches[0].clientY
-    const diff = currentY.current - startY.current
-    if (diff > 0 && sheetRef.current) {
-      sheetRef.current.style.transform = `translateY(${diff}px)`
-    }
-  }, [])
-
-  const handleTouchEnd = useCallback(() => {
-    if (sheetRef.current) {
-      const diff = currentY.current - startY.current
-      sheetRef.current.style.transform = ''
-      if (diff > 120) onClose()
-    }
-    startY.current = 0
-    currentY.current = 0
-  }, [onClose])
-
-  if (!open) return null
-
-  return (
-    <div className="fixed inset-0 z-50 md:hidden">
-      <div
-        className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs animate-fade-in"
-        onClick={onClose}
-      />
-      <div
-        ref={sheetRef}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-        className="fixed bottom-0 left-0 right-0 max-h-[80dvh] bg-white rounded-t-2xl shadow-2xl flex flex-col z-10 animate-slide-up transition-transform duration-200 ease-out"
-      >
-        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 shrink-0">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={onClose}
-              className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 -ml-2"
-              aria-label="Fechar"
-            >
-              <ChevronDown className="w-5 h-5" />
-            </button>
-            <h3 className="font-serif font-bold text-base text-slate-900 tracking-tight">{title}</h3>
-          </div>
-        </div>
-        <div className="flex-1 overflow-y-auto p-5 pb-8">
-          {children}
-        </div>
-      </div>
-    </div>
-  )
-}
 
 function AgendaView({
   eventsByDate,
@@ -159,15 +94,11 @@ function AgendaView({
 
   if (sortedEntries.length === 0) {
     return (
-      <div className="py-20 text-center px-4">
-        <div className="w-14 h-14 rounded-2xl bg-amber-50 border border-amber-100 flex items-center justify-center mx-auto mb-4">
-          <CalendarDays className="w-6 h-6 text-amber-600" />
-        </div>
-        <p className="text-sm font-bold text-slate-900">Agenda vazia</p>
-        <p className="text-xs text-slate-500 mt-1.5 leading-relaxed font-medium">
-          Nenhum evento encontrado para este período.
-        </p>
-      </div>
+      <EmptyState
+        icon={CalendarDays}
+        title="Agenda vazia"
+        description="Nenhum evento encontrado para este período."
+      />
     )
   }
 
@@ -745,15 +676,11 @@ export default function CalendarPage() {
                 ))}
               </div>
             ) : (
-              <div className="py-16 text-center">
-                <div className="w-14 h-14 rounded-2xl bg-slate-50 flex items-center justify-center mx-auto mb-4 border border-slate-200">
-                  <CalendarDays className="w-6 h-6 text-slate-400" />
-                </div>
-                <p className="text-sm font-bold text-slate-900">Agenda vazia</p>
-                <p className="text-xs text-slate-500 mt-1.5 leading-relaxed font-medium">
-                  Nenhum compromisso ou prazo programado para esta data.
-                </p>
-              </div>
+              <EmptyState
+                icon={CalendarDays}
+                title="Agenda vazia"
+                description="Nenhum compromisso ou prazo programado para esta data."
+              />
             )}
           </BottomSheet>
         </>

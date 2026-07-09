@@ -1,4 +1,5 @@
 'use client'
+import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { useApi } from '@/hooks/useApi'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { PageError } from '@/components/ui/PageError'
@@ -14,6 +15,7 @@ export default function AdminDashboardPage() {
   const { data: metrics, loading, error, refetch } = useApi<AdminMetrics>('/admin/metrics')
 
   return (
+    <ErrorBoundary>
     <div className="space-y-6">
       <PageHeader title="Dashboard Administrativo" description="Visão executiva do Previando" />
 
@@ -42,5 +44,6 @@ export default function AdminDashboardPage() {
         </>
       )}
     </div>
+    </ErrorBoundary>
   )
 }

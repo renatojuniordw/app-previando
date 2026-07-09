@@ -12,6 +12,7 @@ import { ActionsDropdown } from '@/components/ui/ActionsDropdown'
 import { useToast } from '@/store/toast'
 import { downloadPdf } from '@/lib/download-pdf'
 import { FilterSheet } from '@/components/ui/FilterSheet'
+import { EmptyState } from '@/components/ui/EmptyState'
 import { Search, SlidersHorizontal, ChevronLeft, ChevronRight, Briefcase, ArrowLeft } from 'lucide-react'
 import { formatDate, formatCurrency } from '@/lib/utils'
 import { BENEFIT_SHORT_LABELS, STATUS_LABELS } from '@/lib/constants'
@@ -288,15 +289,11 @@ export default function CasesPage() {
               <p className="font-sans font-medium text-slate-500 animate-pulse mt-4">Carregando processos...</p>
             </div>
           ) : cases.length === 0 ? (
-            <div className="py-20 text-center flex flex-col items-center justify-center px-4">
-              <div className="w-16 h-16 rounded-2xl bg-slate-50 flex items-center justify-center mb-4 border border-slate-200/60 shadow-sm text-slate-350">
-                <Briefcase className="w-8 h-8" />
-              </div>
-              <p className="font-serif font-bold text-slate-900 text-lg">Nenhum caso encontrado</p>
-              <p className="font-sans text-slate-500 text-sm mt-1 max-w-sm font-medium">
-                Tente ajustar seus filtros de busca ou adicione um novo caso a partir do cadastro do cliente.
-              </p>
-            </div>
+            <EmptyState
+              icon={Briefcase}
+              title="Nenhum caso encontrado"
+              description="Tente ajustar seus filtros de busca ou adicione um novo caso a partir do cadastro do cliente."
+            />
           ) : (
             <>
               {/* Desktop table */}

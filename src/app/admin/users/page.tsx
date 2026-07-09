@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useState, useCallback, useRef } from 'react'
+import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { formatDate } from '@/lib/utils'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
@@ -156,6 +157,7 @@ export default function AdminUsersPage() {
   ]
 
   return (
+    <ErrorBoundary>
     <div className="space-y-6">
       <PageHeader title="Usuários" description={`${total} usuários cadastrados`} />
 
@@ -225,5 +227,6 @@ export default function AdminUsersPage() {
         loading={mutating}
       />
     </div>
+    </ErrorBoundary>
   )
 }

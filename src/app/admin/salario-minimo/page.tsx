@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
+import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { Plus, Pencil, Trash2, DollarSign } from 'lucide-react'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { Button } from '@/components/ui/Button'
@@ -171,6 +172,7 @@ export default function SalarioMinimoPage() {
   ]
 
   return (
+    <ErrorBoundary>
     <div className="space-y-6">
       <PageHeader
         title="Salário Mínimo"
@@ -267,5 +269,6 @@ export default function SalarioMinimoPage() {
         loading={deleting}
       />
     </div>
+    </ErrorBoundary>
   )
 }

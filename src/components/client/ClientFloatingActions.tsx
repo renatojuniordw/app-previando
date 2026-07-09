@@ -62,11 +62,11 @@ export function ClientFloatingActions({ email, cpf, onEdit, onCopyCpf }: ClientF
   ].filter((a) => a.show)
 
   return (
-    <div ref={menuRef} className="fixed bottom-[5rem] right-4 z-[60] flex flex-col items-end gap-2 pointer-events-none sm:right-6 lg:bottom-6">
+    <div ref={menuRef} className="fixed bottom-[5rem] right-4 z-[60] flex flex-col items-end gap-2 sm:right-6 lg:bottom-6">
         <div
           className={cn(
             'flex flex-col items-end gap-2 transition-all duration-300 ease-out origin-bottom transform',
-            isOpen ? 'opacity-100 translate-y-0 scale-100 pointer-events-auto' : 'opacity-0 translate-y-4 scale-75 pointer-events-none'
+            isOpen ? 'opacity-100 translate-y-0 scale-100 pointer-events-auto' : 'opacity-0 translate-y-4 scale-75 pointer-events-none invisible'
           )}
         >
           {actions.map((action, index) => {
@@ -97,20 +97,22 @@ export function ClientFloatingActions({ email, cpf, onEdit, onCopyCpf }: ClientF
           })}
         </div>
 
-        <button
-          onClick={() => setIsOpen(!isOpen)}
-          className={cn(
-            'w-11 h-11 rounded-full flex items-center justify-center shadow-xl text-white transition-all duration-300 transform active:scale-95 pointer-events-auto',
-            isOpen
-              ? 'bg-slate-800 hover:bg-slate-700 rotate-90 scale-95'
-              : 'bg-emerald-600 hover:bg-emerald-500 hover:shadow-emerald-500/20 hover:scale-105'
-          )}
-          aria-expanded={isOpen}
-          aria-haspopup="true"
-          aria-label="Ações rápidas do cliente"
-        >
-          {isOpen ? <X className="w-5 h-5 animate-fade-in" /> : <Zap className="w-5 h-5 animate-fade-in" />}
-        </button>
+        <div className="relative pointer-events-auto">
+          <button
+            onClick={() => setIsOpen(!isOpen)}
+            className={cn(
+              'w-11 h-11 rounded-full flex items-center justify-center shadow-xl text-white transition-all duration-300 transform active:scale-95',
+              isOpen
+                ? 'bg-slate-800 hover:bg-slate-700 rotate-90 scale-95'
+                : 'bg-emerald-600 hover:bg-emerald-500 hover:shadow-emerald-500/20 hover:scale-105'
+            )}
+            aria-expanded={isOpen}
+            aria-haspopup="true"
+            aria-label="Ações rápidas do cliente"
+          >
+            {isOpen ? <X className="w-5 h-5 animate-fade-in" /> : <Zap className="w-5 h-5 animate-fade-in" />}
+          </button>
+        </div>
       </div>
   )
 }

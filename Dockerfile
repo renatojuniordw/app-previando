@@ -14,6 +14,7 @@ COPY tsconfig.json next.config.mjs tailwind.config.ts postcss.config.js ./
 COPY public/ ./public/
 COPY src/ ./src/
 
+ENV NODE_OPTIONS=--max-old-space-size=4096
 RUN npm run build
 
 FROM node:22-alpine AS runner

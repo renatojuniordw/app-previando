@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useState, useCallback } from 'react'
+import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { formatDate, formatCurrency } from '@/lib/utils'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { Badge } from '@/components/ui/Badge'
@@ -97,6 +98,7 @@ export default function AdminPaymentsPage() {
   ]
 
   return (
+    <ErrorBoundary>
     <div className="space-y-6">
       <PageHeader
         title="Pagamentos"
@@ -131,5 +133,6 @@ export default function AdminPaymentsPage() {
 
       <AdminPagination page={page} pages={pages} total={total} itemLabel="pagamentos" onChange={(p) => { setPage(p); load(p) }} />
     </div>
+    </ErrorBoundary>
   )
 }

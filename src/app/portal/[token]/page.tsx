@@ -72,7 +72,7 @@ export default async function PortalPage({ params }: Props) {
   const identityVerified = !requireIdentity || isPortalSessionValid(verifiedCookie, params.token)
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-dvh bg-slate-50">
       {/* Header */}
       <header className="bg-white border-b border-slate-200">
         <div className="max-w-3xl mx-auto px-4 py-4 flex items-center justify-between">

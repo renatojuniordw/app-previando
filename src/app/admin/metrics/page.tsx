@@ -1,4 +1,5 @@
 'use client'
+import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { useApi } from '@/hooks/useApi'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { PageError } from '@/components/ui/PageError'
@@ -14,6 +15,7 @@ export default function AdminMetricsPage() {
   const { data: metrics, loading, error, refetch } = useApi<AdminMetrics>('/admin/metrics')
 
   return (
+    <ErrorBoundary>
     <div className="space-y-6">
       <PageHeader title="Métricas Detalhadas" description="Receita, usuários, uso de IA e pipeline de casos" />
 
@@ -33,5 +35,6 @@ export default function AdminMetricsPage() {
         </div>
       )}
     </div>
+    </ErrorBoundary>
   )
 }

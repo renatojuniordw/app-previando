@@ -26,6 +26,7 @@ import { Badge } from '@/components/ui/Badge'
 import { ClientSwitcher } from '@/components/ClientSwitcher'
 import { useToast } from '@/store/toast'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
+import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { Clock, FileText, LayoutTemplate, Layers, MoreHorizontal, ChevronLeft, ChevronRight } from 'lucide-react'
 import { BENEFIT_SHORT_LABELS, PRIORITY_STYLES } from '@/lib/constants'
 import { cn } from '@/lib/utils'
@@ -460,12 +461,13 @@ export default function ClientsKanbanPage() {
             <div className="w-8 h-8 border-4 border-amber-500 border-t-transparent animate-spin rounded-full" role="status" aria-label="Carregando" />
             <p className="font-sans font-medium text-slate-500 animate-pulse">Carregando quadro...</p>
           </div>
-        </div>
       </div>
-    )
-  }
+    </div>
+  )
+}
 
   return (
+    <ErrorBoundary>
     <div className="p-4 sm:p-6 lg:p-8 h-dvh flex flex-col space-y-6 lg:space-y-8 animate-fade-in">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 pb-6 shrink-0">
@@ -623,5 +625,6 @@ export default function ClientsKanbanPage() {
         </DndContext>
       </div>
     </div>
+    </ErrorBoundary>
   )
 }

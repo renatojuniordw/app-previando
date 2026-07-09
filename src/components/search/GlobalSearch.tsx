@@ -2,8 +2,9 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { Search, Users, FolderOpen, Zap, FileText, X } from 'lucide-react'
+import { Search, Users, FolderOpen, Zap, FileText, X, LayoutDashboard, DollarSign, CalendarDays, BarChart3, Settings } from 'lucide-react'
 import { useSearchStore } from '@/store/search-store'
+import { useFocusTrap } from '@/hooks/useFocusTrap'
 import { useRecentStore } from '@/store/recent-store'
 import { SearchResultItem } from './SearchResultItem'
 
@@ -14,12 +15,12 @@ const QUICK_ACTIONS = [
 ]
 
 const PAGES = [
-  { label: 'Dashboard', icon: Search, href: '/dashboard' },
+  { label: 'Dashboard', icon: LayoutDashboard, href: '/dashboard' },
   { label: 'Clientes', icon: Users, href: '/clients/list' },
-  { label: 'Honorários', icon: Search, href: '/honorarios' },
-  { label: 'Calendário', icon: Search, href: '/calendar' },
-  { label: 'Relatórios', icon: Search, href: '/reports' },
-  { label: 'Configurações', icon: Search, href: '/settings/profile' },
+  { label: 'Honorários', icon: DollarSign, href: '/honorarios' },
+  { label: 'Calendário', icon: CalendarDays, href: '/calendar' },
+  { label: 'Relatórios', icon: BarChart3, href: '/reports' },
+  { label: 'Configurações', icon: Settings, href: '/settings/profile' },
 ]
 
 export function GlobalSearch() {
@@ -29,6 +30,8 @@ export function GlobalSearch() {
   const [activeIdx, setActiveIdx] = useState(0)
   const [loading, setLoading] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
+  const dialogRef = useRef<HTMLDivElement>(null)
+  useFocusTrap(open, dialogRef)
   const router = useRouter()
   const debounceRef = useRef<NodeJS.Timeout>()
 
@@ -105,6 +108,7 @@ export function GlobalSearch() {
     <div className="fixed inset-0 z-[70] flex items-start justify-center pt-[10vh] sm:pt-[15vh]">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={close} aria-hidden="true" />
       <div
+        ref={dialogRef}
         className="relative w-full max-w-lg mx-4 bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden animate-slide-up"
         role="dialog"
         aria-modal="true"

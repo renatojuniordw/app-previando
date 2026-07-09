@@ -129,7 +129,7 @@ export function CaseFloatingActions({ activeDrawer, setDrawer, benefitType }: Ca
   ]
 
   return (
-    <div ref={menuRef} className="fixed bottom-[5rem] right-4 z-[60] flex flex-col items-end gap-2 pointer-events-none sm:right-6 lg:bottom-6">
+    <div ref={menuRef} className="fixed bottom-[5rem] right-4 z-[60] flex flex-col items-end gap-2 sm:right-6 lg:bottom-6">
       {/* Sub-buttons list */}
       <div
         className={cn(

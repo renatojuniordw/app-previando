@@ -7,6 +7,7 @@ import { ClientSwitcher } from '@/components/ClientSwitcher'
 import { Badge } from '@/components/ui/Badge'
 import { maskCPF } from '@/lib/sanitize'
 import { formatDate, cn } from '@/lib/utils'
+import { EmptyState } from '@/components/ui/EmptyState'
 import { Search, Plus, User, FileText, Phone, Mail, Upload, Lock, AlertTriangle, Check, X, Trash2 } from 'lucide-react'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { ActionsDropdown } from '@/components/ui/ActionsDropdown'
@@ -205,19 +206,17 @@ export default function ClientsListPage() {
               <p className="font-sans font-medium text-slate-500 animate-pulse mt-4">Carregando clientes...</p>
             </div>
           ) : clients.length === 0 ? (
-            <div className="py-20 text-center flex flex-col items-center justify-center px-4">
-              <div className="w-16 h-16 rounded-2xl bg-slate-50 flex items-center justify-center mb-4 border border-slate-200/60 shadow-sm text-slate-300">
-                <User className="w-8 h-8" />
-              </div>
-              <p className="font-serif font-bold text-slate-900 text-lg">Nenhum cliente encontrado</p>
-              <p className="font-sans text-slate-500 text-sm mt-1 max-w-sm font-medium">
-                Comece adicionando seu primeiro cliente para gerenciar casos e analisar documentos.
-              </p>
-              <Link href="/clients/new" className="mt-6 inline-flex items-center justify-center gap-2 px-6 py-2.5 font-sans font-bold text-sm rounded-lg bg-slate-900 hover:bg-slate-800 text-white shadow-sm transition-colors duration-200">
-                <Plus className="w-4 h-4" />
-                Cadastrar Primeiro Cliente
-              </Link>
-            </div>
+            <EmptyState
+              icon={User}
+              title="Nenhum cliente encontrado"
+              description="Comece adicionando seu primeiro cliente para gerenciar casos e analisar documentos."
+              action={
+                <Link href="/clients/new" className="inline-flex items-center justify-center gap-2 px-6 py-2.5 font-sans font-bold text-sm rounded-lg bg-slate-900 hover:bg-slate-800 text-white shadow-sm transition-colors duration-200">
+                  <Plus className="w-4 h-4" />
+                  Cadastrar Primeiro Cliente
+                </Link>
+              }
+            />
           ) : (
             <>
               {/* Desktop table */}

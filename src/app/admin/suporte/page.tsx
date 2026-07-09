@@ -5,6 +5,7 @@ import { PageHeader } from '@/components/ui/PageHeader'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { AdminTable, type AdminTableColumn } from '@/components/admin/AdminTable'
 import { AdminPagination } from '@/components/admin/AdminPagination'
+import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { Headphones, ChevronDown, ChevronUp } from 'lucide-react'
 import { useToast } from '@/store/toast'
 import api from '@/lib/api'
@@ -169,6 +170,7 @@ export default function AdminSupportPage() {
   ]
 
   return (
+    <ErrorBoundary>
     <div className="space-y-6">
       <PageHeader title="Suporte" description={`${total} chamados registrados`} />
 
@@ -245,5 +247,6 @@ export default function AdminSupportPage() {
         loading={mutating}
       />
     </div>
+    </ErrorBoundary>
   )
 }

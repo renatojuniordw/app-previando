@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
+import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { Plus, Pencil, Trash2, Tags } from 'lucide-react'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { Button } from '@/components/ui/Button'
@@ -165,6 +166,7 @@ export default function ModalidadesPage() {
   ]
 
   return (
+    <ErrorBoundary>
     <div className="space-y-6">
       <PageHeader
         title="Modalidades"
@@ -276,5 +278,6 @@ export default function ModalidadesPage() {
         loading={deleting}
       />
     </div>
+    </ErrorBoundary>
   )
 }

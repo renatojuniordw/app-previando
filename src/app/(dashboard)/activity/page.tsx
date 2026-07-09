@@ -4,7 +4,9 @@ import { useEffect, useState, useCallback } from 'react'
 import api from '@/lib/api'
 import { Card } from '@/components/ui/Card'
 import { useToast } from '@/store/toast'
+import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { Activity, ChevronDown, ArrowLeft, Loader2 } from 'lucide-react'
+import { EmptyState } from '@/components/ui/EmptyState'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import { format } from 'date-fns'
@@ -201,6 +203,7 @@ export default function ActivityPage() {
   const groups = groupByDay(logs)
 
   return (
+    <ErrorBoundary>
     <div className="p-4 sm:p-6 lg:p-8 max-w-3xl mx-auto space-y-6 lg:space-y-8 animate-fade-in">
 
       {/* Header */}
@@ -225,15 +228,11 @@ export default function ActivityPage() {
           <p className="font-sans font-medium text-slate-500 mt-4 animate-pulse">Carregando logs...</p>
         </div>
       ) : logs.length === 0 ? (
-        <div className="py-20 text-center flex flex-col items-center justify-center px-4">
-          <div className="w-16 h-16 rounded-2xl bg-slate-50 flex items-center justify-center mb-4 border border-slate-200 text-slate-350">
-            <Activity className="w-8 h-8" />
-          </div>
-          <p className="font-serif font-bold text-slate-900 text-lg">Nenhuma atividade</p>
-          <p className="font-sans text-slate-500 text-sm mt-1 max-w-sm font-medium">
-            As ações dos operadores do sistema serão exibidas aqui.
-          </p>
-        </div>
+        <EmptyState
+          icon={Activity}
+          title="Nenhuma atividade"
+          description="As ações dos operadores do sistema serão exibidas aqui."
+        />
       ) : (
         <div className="space-y-10">
           {groups.map(([dateKey, dayLogs]) => (
@@ -335,5 +334,6 @@ export default function ActivityPage() {
         </div>
       )}
     </div>
+    </ErrorBoundary>
   )
 }

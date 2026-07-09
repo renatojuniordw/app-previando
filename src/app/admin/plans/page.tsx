@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
+import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { Check, X, Infinity as InfinityIcon, Package } from 'lucide-react'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { Button } from '@/components/ui/Button'
@@ -120,6 +121,7 @@ export default function AdminPlansPage() {
   const editingPlan = plans.find((p) => p.plan === editing)
 
   return (
+    <ErrorBoundary>
     <div className="space-y-6">
       <PageHeader title="Planos" description="Gerencie os limites e features de cada plano" />
 
@@ -240,5 +242,6 @@ export default function AdminPlansPage() {
         )}
       </Drawer>
     </div>
+    </ErrorBoundary>
   )
 }

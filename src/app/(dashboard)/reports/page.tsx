@@ -1,5 +1,6 @@
 'use client'
 
+import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { useCallback, useEffect, useState } from 'react'
 import { Card } from '@/components/ui/Card'
 import { Loader2, BarChart3, ArrowLeft } from 'lucide-react'
@@ -101,6 +102,7 @@ export default function ReportsPage() {
   }
 
   return (
+    <ErrorBoundary>
     <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-8 lg:space-y-10 animate-fade-in">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-200 pb-6">
@@ -300,5 +302,6 @@ export default function ReportsPage() {
         Os dados são atualizados automaticamente a cada 5 minutos. Período selecionado: {period} dias.
       </p>
     </div>
+    </ErrorBoundary>
   )
 }

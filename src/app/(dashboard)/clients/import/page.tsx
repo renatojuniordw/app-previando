@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { useToast } from '@/store/toast'
+import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { ArrowLeft, Upload, FileSpreadsheet, CheckCircle2, XCircle, AlertTriangle, Download, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -165,6 +166,7 @@ export default function ClientsImportPage() {
   }
 
   return (
+    <ErrorBoundary>
     <div className="p-4 sm:p-6 lg:p-8 max-w-4xl mx-auto space-y-6 lg:space-y-8 animate-fade-in">
       {/* Header */}
       <div className="flex items-center gap-4 border-b border-slate-200 pb-6">
@@ -466,5 +468,6 @@ export default function ClientsImportPage() {
         </div>
       )}
     </div>
+    </ErrorBoundary>
   )
 }

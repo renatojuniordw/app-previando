@@ -4,7 +4,10 @@ import api from '@/lib/api'
 export function usePendingCasesCount() {
   const [count, setCount] = useState(0)
   useEffect(() => {
-    api.get('/cases?limit=1').then(r => setCount(r.data.total ?? 0)).catch(() => {})
+    const fetch = () => api.get('/cases?limit=1').then(r => setCount(r.data.total ?? 0)).catch(() => {})
+    fetch()
+    const interval = setInterval(fetch, 60000)
+    return () => clearInterval(interval)
   }, [])
   return count
 }
