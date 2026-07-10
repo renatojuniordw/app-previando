@@ -106,7 +106,6 @@ function AgendaView({
     <div className="space-y-6">
       {sortedEntries.map(({ key, events, date }) => {
         const isCurrentDay = key === todayKey
-        const dayName = DAY_NAMES[date.getDay()]
         const dayNameShort = WEEKDAYS[date.getDay()]
         const monthName = MONTH_NAMES[date.getMonth()]
 

@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import api from '@/lib/api'
-import { Card } from '@/components/ui/Card'
 import { useToast } from '@/store/toast'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { Activity, ChevronDown, ArrowLeft, Loader2 } from 'lucide-react'

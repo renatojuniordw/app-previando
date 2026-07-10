@@ -18,19 +18,16 @@ export async function GET(req: Request) {
         userId,
         OR: [
           { name: { contains: q, mode: 'insensitive' } },
-          { cpf: { contains: q } },
+          { cpfHash: { contains: q } },
         ],
       },
-      select: { id: true, name: true, cpf: true },
+      select: { id: true, name: true, cpfHash: true },
       take: 5,
     }),
     prisma.case.findMany({
       where: {
         userId,
-        OR: [
-          { benefitType: { contains: q, mode: 'insensitive' } },
-          { client: { name: { contains: q, mode: 'insensitive' } } },
-        ],
+        client: { name: { contains: q, mode: 'insensitive' } },
       },
       select: { id: true, benefitType: true, client: { select: { name: true } } },
       take: 5,
@@ -41,7 +38,7 @@ export async function GET(req: Request) {
     clients: clients.map((c) => ({
       id: c.id,
       label: c.name,
-      subtitle: `CPF: ${c.cpf.slice(0, 3)}.***.***-${c.cpf.slice(-2)}`,
+      subtitle: `CPF: ${c.cpfHash.slice(0, 3)}.***.***-${c.cpfHash.slice(-2)}`,
       href: `/clients/list/${c.id}`,
     })),
     cases: cases.map((c) => ({

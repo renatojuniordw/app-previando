@@ -37,8 +37,9 @@ export function PortalSimulator({ token }: PortalSimulatorProps) {
     try {
       const { data } = await api.post(`/portal/${token}/simulate`, { dibProjetada, valorContribuicao })
       setResult(data)
-    } catch (err: any) {
-      setError(err.response?.data?.error ?? 'Erro de conexão.')
+    } catch (err: unknown) {
+      const apiError = err as { response?: { data?: { error?: string } } }
+      setError(apiError.response?.data?.error ?? 'Erro de conexão.')
     } finally {
       setLoading(false)
     }

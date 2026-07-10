@@ -8,6 +8,14 @@ import { useFocusTrap } from '@/hooks/useFocusTrap'
 import { useRecentStore } from '@/store/recent-store'
 import { SearchResultItem } from './SearchResultItem'
 
+interface SearchItem {
+  id?: string
+  label: string
+  subtitle?: string
+  href: string
+  category?: string
+}
+
 const QUICK_ACTIONS = [
   { label: 'Novo Cliente', icon: Users, href: '/clients/new' },
   { label: 'Novo Caso', icon: FolderOpen, href: '/cases/new' },
@@ -26,7 +34,7 @@ const PAGES = [
 export function GlobalSearch() {
   const { open, close } = useSearchStore()
   const [query, setQuery] = useState('')
-  const [results, setResults] = useState<{ clients: any[]; cases: any[] }>({ clients: [], cases: [] })
+  const [results, setResults] = useState<{ clients: SearchItem[]; cases: SearchItem[] }>({ clients: [], cases: [] })
   const [activeIdx, setActiveIdx] = useState(0)
   const [loading, setLoading] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -58,11 +66,11 @@ export function GlobalSearch() {
     }, 300)
   }, [])
 
-  const handleSelect = useCallback((item: any) => {
+  const handleSelect = useCallback((item: SearchItem & { category?: string }) => {
     if (item.category === 'client' || item.category === 'case') {
       useRecentStore.getState().add({
         type: item.category,
-        id: item.id,
+        id: item.id!,
         label: item.label,
         href: item.href,
       })
@@ -199,7 +207,7 @@ export function GlobalSearch() {
   )
 }
 
-function Section({ title, icon: Icon, children }: { title: string; icon: any; children: React.ReactNode }) {
+function Section({ title, icon: Icon, children }: { title: string; icon: React.ComponentType<{ className?: string }>; children: React.ReactNode }) {
   return (
     <div>
       <div className="flex items-center gap-1.5 px-3 py-2">

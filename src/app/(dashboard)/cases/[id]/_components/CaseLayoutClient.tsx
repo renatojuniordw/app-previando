@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/Badge'
 import { 
   ArrowLeft, LayoutDashboard, FileText, Calculator, BarChart3, 
   History, Building2, GitCompareArrows, Files, ShieldAlert,
-  Clock, DollarSign, Scale, Receipt, ChevronDown, X 
+  Clock, DollarSign, Scale, Receipt, ChevronDown 
 } from 'lucide-react'
 import { BENEFIT_SHORT_LABELS, STATUS_LABELS, PRIORITY_STYLES } from '@/lib/constants'
 import { CaseFloatingActions } from '@/components/case/CaseFloatingActions'
