@@ -176,7 +176,9 @@ export default function ActivityPage() {
   const [page, setPage] = useState(1)
   const [loading, setLoading] = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
+  const [showAll, setShowAll] = useState(false)
   const limit = 25
+  const maxVisible = 50
   const { addToast } = useToast()
 
   const fetchLogs = useCallback(async (pageNum: number, append = false) => {
@@ -200,6 +202,16 @@ export default function ActivityPage() {
 
   const hasMore = page * limit < total
   const groups = groupByDay(logs)
+
+  const visibleGroups = showAll ? groups : (() => {
+    let count = 0
+    return groups.filter(([, dayLogs]) => {
+      if (count >= maxVisible) return false
+      count += dayLogs.length
+      return true
+    })
+  })()
+  const hasHiddenItems = groups.length > 0 && visibleGroups.length < groups.length
 
   return (
     <ErrorBoundary>
@@ -234,7 +246,7 @@ export default function ActivityPage() {
         />
       ) : (
         <div className="space-y-10">
-          {groups.map(([dateKey, dayLogs]) => (
+          {visibleGroups.map(([dateKey, dayLogs]) => (
             <div key={dateKey} className="space-y-4">
               {/* Sticky day header */}
               <div className="sticky top-0 z-10 bg-slate-50/90 backdrop-blur-sm py-2 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8">
@@ -299,6 +311,19 @@ export default function ActivityPage() {
               </div>
             </div>
           ))}
+
+          {/* Virtualization: mostrar registros ocultos */}
+          {hasHiddenItems && !showAll && (
+            <div className="flex justify-center pt-2 pb-4">
+              <button
+                onClick={() => setShowAll(true)}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-slate-250 bg-white hover:bg-slate-50 transition-all shadow-sm font-sans font-bold text-xs text-slate-700 uppercase tracking-wider"
+              >
+                <ChevronDown className="w-4 h-4" />
+                Mostrar registros anteriores
+              </button>
+            </div>
+          )}
 
           {/* Carregar mais */}
           {hasMore && (

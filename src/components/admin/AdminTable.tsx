@@ -24,6 +24,7 @@ interface AdminTableProps<T> {
   emptyDescription?: string
   emptyAction?: React.ReactNode
   className?: string
+  renderMobileCard?: (row: T) => React.ReactNode
 }
 
 const alignClass = { left: 'text-left', right: 'text-right', center: 'text-center' }
@@ -40,6 +41,7 @@ export function AdminTable<T>({
   emptyDescription,
   emptyAction,
   className,
+  renderMobileCard,
 }: AdminTableProps<T>) {
   return (
     <div className={cn('bg-white border border-slate-200/80 rounded-2xl shadow-sm overflow-hidden', className)}>
@@ -52,36 +54,47 @@ export function AdminTable<T>({
       ) : data.length === 0 ? (
         <EmptyState icon={emptyIcon} title={emptyTitle} description={emptyDescription} action={emptyAction} />
       ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
-            <thead>
-              <tr className="bg-slate-50 border-b border-slate-200">
-                {columns.map((col) => (
-                  <th
-                    key={col.key}
-                    className={cn(
-                      'px-5 py-3.5 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider',
-                      alignClass[col.align ?? 'left']
-                    )}
-                  >
-                    {col.header}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
+        <>
+          {renderMobileCard && (
+            <div className="divide-y divide-slate-100 md:hidden">
               {data.map((row) => (
-                <tr key={rowKey(row)} className="hover:bg-slate-50 transition-colors">
+                <div key={rowKey(row)} className="px-4 py-3">
+                  {renderMobileCard(row)}
+                </div>
+              ))}
+            </div>
+          )}
+          <div className={cn('overflow-x-auto', renderMobileCard && 'hidden md:block')}>
+            <table className="w-full text-left">
+              <thead>
+                <tr className="bg-slate-50 border-b border-slate-200">
                   {columns.map((col) => (
-                    <td key={col.key} className={cn('px-5 py-4', alignClass[col.align ?? 'left'], col.className)}>
-                      {col.render(row)}
-                    </td>
+                    <th
+                      key={col.key}
+                      className={cn(
+                        'px-5 py-3.5 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider',
+                        alignClass[col.align ?? 'left']
+                      )}
+                    >
+                      {col.header}
+                    </th>
                   ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {data.map((row) => (
+                  <tr key={rowKey(row)} className="hover:bg-slate-50 transition-colors">
+                    {columns.map((col) => (
+                      <td key={col.key} className={cn('px-5 py-4', alignClass[col.align ?? 'left'], col.className)}>
+                        {col.render(row)}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
     </div>
   )

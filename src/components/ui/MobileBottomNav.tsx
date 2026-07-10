@@ -14,6 +14,7 @@ import { useSidebarStore } from '@/store/sidebar'
 import { useUrgentDeadlines } from '@/hooks/useUrgentDeadlines'
 import { useClientCount } from '@/hooks/useClientCount'
 import { usePendingCasesCount } from '@/hooks/usePendingCasesCount'
+import { ContextualTooltip } from '@/components/onboarding/ContextualTooltip'
 
 const NAV_ITEMS = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -76,16 +77,18 @@ export function MobileBottomNav() {
             </li>
           )
         })}
-        <li className="flex-1">
-          <button
-            type="button"
-            onClick={openSidebar}
-            aria-label="Abrir menu"
-            className="flex w-full flex-col items-center gap-0.5 py-2 text-[11px] font-medium text-slate-500 transition-colors hover:text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:ring-inset"
-          >
-            <MoreHorizontal className="h-5 w-5" aria-hidden="true" />
-            <span>Mais</span>
-          </button>
+        <li className="flex-1 flex items-center justify-center">
+          <ContextualTooltip content="Acesse todas as seções: relatórios, configurações e mais" storageKey="mobile-mais" position="top">
+            <button
+              type="button"
+              onClick={openSidebar}
+              aria-label="Abrir menu"
+              className="flex flex-col items-center gap-0.5 py-2 text-[11px] font-medium text-slate-500 transition-colors hover:text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:ring-inset"
+            >
+              <MoreHorizontal className="h-5 w-5" aria-hidden="true" />
+              <span>Mais</span>
+            </button>
+          </ContextualTooltip>
         </li>
       </ul>
     </nav>

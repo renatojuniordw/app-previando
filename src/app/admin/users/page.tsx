@@ -195,6 +195,48 @@ export default function AdminUsersPage() {
         emptyIcon={Users}
         emptyTitle="Nenhum usuário encontrado"
         emptyDescription="Ajuste os filtros de busca para encontrar o que procura."
+        renderMobileCard={(user) => {
+          const suspended = user.planStatus === 'SUSPENDED'
+          return (
+            <div className="space-y-2">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 font-bold text-sm shrink-0">
+                  {user.name?.charAt(0)?.toUpperCase() || 'U'}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="font-sans font-semibold text-sm text-slate-900 truncate">{user.name ?? '—'}</p>
+                  <p className="font-sans text-xs text-slate-500 truncate">{user.email}</p>
+                </div>
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <select
+                    value={user.plan}
+                    onChange={(e) => setPlanChange({ user, plan: e.target.value })}
+                    aria-label={`Alterar plano`}
+                    className="text-xs bg-white border border-slate-200 rounded-lg px-2 py-1.5 text-slate-700 font-sans font-medium focus:outline-none focus:ring-1 focus:ring-amber-500"
+                  >
+                    {Object.entries(PLAN_LABELS).map(([value, label]) => (
+                      <option key={value} value={value}>{label}</option>
+                    ))}
+                  </select>
+                  <span className="font-mono text-xs text-slate-500">{user._count.clients} clientes</span>
+                </div>
+                <button
+                  onClick={() => setStatusChange({ user, suspend: !suspended })}
+                  className={`inline-flex items-center gap-1.5 font-sans text-xs font-semibold px-2.5 py-1.5 rounded-lg transition-colors ${
+                    suspended
+                      ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                      : 'bg-red-50 text-red-700 border border-red-200'
+                  }`}
+                >
+                  {suspended ? 'Reativar' : 'Suspender'}
+                </button>
+              </div>
+              <p className="font-mono text-[11px] text-slate-400">Cadastro: {formatDate(user.createdAt)}</p>
+            </div>
+          )
+        }}
       />
 
       <AdminPagination page={page} pages={pages} total={total} itemLabel="usuários" onChange={(p) => { setPage(p); load(search, p) }} />

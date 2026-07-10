@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { formatDate, cn } from '@/lib/utils'
 import { BENEFIT_SHORT_LABELS, STATUS_LABELS, PRIORITY_LABELS, BENEFIT_DB_LABELS } from '@/lib/constants'
+import { isProcessingStatus } from '@/lib/cnis-status'
 import type { ClientCaseSummary } from '@/hooks/useClientDetail'
 
 const getCaseStatusLabel = (status: string) => {
@@ -36,11 +37,11 @@ interface Props {
 export function ClientCasesListCard({ cases, onNewCase }: Props) {
   return (
     <Card variant="light" className="p-6 border-slate-200/80 space-y-4">
-      <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-        <h2 className="font-serif font-bold text-lg text-slate-900 lowercase">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
+        <h2 className="font-serif font-bold text-base sm:text-lg text-slate-900 lowercase">
           processos vinculados ({cases.length})
         </h2>
-        <Button size="sm" onClick={onNewCase} className="bg-slate-900 hover:bg-slate-800 text-white border-slate-900 h-9 font-sans font-bold text-xs shadow-sm">
+        <Button size="sm" onClick={onNewCase} className="bg-slate-900 hover:bg-slate-800 text-white border-slate-900 h-9 font-sans font-bold text-xs shadow-sm self-start sm:self-auto">
           + Adicionar Processo
         </Button>
       </div>
@@ -56,7 +57,9 @@ export function ClientCasesListCard({ cases, onNewCase }: Props) {
       ) : (
         <div className="space-y-3">
           {cases.map((caso) => {
-            const isCnisLido = caso.cnisDocument && ['PROCESSED', 'PROCESSADO'].includes(caso.cnisDocument.processingStatus.toUpperCase());
+            const isCnisLido = caso.cnisDocument != null
+              && !isProcessingStatus(caso.cnisDocument.processingStatus)
+              && caso.cnisDocument.processingStatus !== 'FAILED';
             return (
               <Link key={caso.id} href={`/cases/${caso.id}`} className="block">
                 <div className="border border-slate-200/80 bg-white rounded-xl p-5 md:p-6 hover:border-slate-300 hover:shadow-elevation-md transition-all duration-300 hover:-translate-y-0.5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 group shadow-elevation-sm">
@@ -68,7 +71,7 @@ export function ClientCasesListCard({ cases, onNewCase }: Props) {
                       Criado em: {formatDate(caso.createdAt)}
                     </p>
                   </div>
-                  <div className="flex items-center gap-2.5 sm:gap-3 overflow-x-auto overscroll-x-contain -mx-1 px-1 scrollbar-none">
+                  <div className="flex flex-wrap items-center gap-1.5 sm:gap-3">
                     {caso.cnisDocument && (
                       <span className={cn(
                         'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-[9px] font-extrabold uppercase tracking-wider',

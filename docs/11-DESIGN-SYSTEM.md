@@ -119,6 +119,10 @@ Antes de aprovar um PR, verificar:
 - [ ] Sem `100vh` (usar `dvh` ou `flex-1 min-h-0`)
 - [ ] Grids com prefixos responsivos (`grid-cols-1 sm:grid-cols-2 ...`)
 - [ ] Alvos de toque ≥ 44px; inputs com fonte ≥ 16px no mobile
-- [ ] Tabelas com visão em card no mobile (usar `MobileCardList`)
+- [ ] Tabelas com visão em card no mobile (usar `MobileCardList` ou `AdminTable.renderMobileCard`)
 - [ ] Modais/sheets com `max-h-[85dvh]` + scroll interno + safe-area
 - [ ] Padding de página `p-4 sm:p-6 lg:p-8`
+- [ ] Gráficos com ticks abreviados e tooltips por toque (`DashboardCharts.tsx`)
+- [ ] PWA icons: `icon-192x192.png`, `icon-512x512.png`, `apple-touch-icon.png` em `public/`
+- [ ] AdminTable com `renderMobileCard` para tabelas do admin
+- [ ] Coachmark/onboarding para features novas no mobile (`MobileCoachmark`)

@@ -2,16 +2,15 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { cn } from '@/lib/utils'
-import { Mail, Copy, Edit3, X, Zap } from 'lucide-react'
+import { Mail, Copy, X, Zap } from 'lucide-react'
 
 interface ClientFloatingActionsProps {
   email?: string | null
   cpf: string
-  onEdit: () => void
   onCopyCpf: (cpf: string) => void
 }
 
-export function ClientFloatingActions({ email, cpf, onEdit, onCopyCpf }: ClientFloatingActionsProps) {
+export function ClientFloatingActions({ email, cpf, onCopyCpf }: ClientFloatingActionsProps) {
   const [isOpen, setIsOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
 
@@ -35,14 +34,6 @@ export function ClientFloatingActions({ email, cpf, onEdit, onCopyCpf }: ClientF
   }, [isOpen])
 
   const actions = [
-    {
-      id: 'edit',
-      label: 'Editar Cliente / Notas',
-      icon: Edit3,
-      color: 'hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50/50 text-slate-600',
-      onClick: () => { onEdit(); setIsOpen(false) },
-      show: true,
-    },
     {
       id: 'copy',
       label: 'Copiar CPF',

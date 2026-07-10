@@ -66,7 +66,7 @@ export default function ClientDetailPage() {
 
   return (
     <ErrorBoundary>
-      <div className="p-4 sm:p-6 lg:p-8 pb-24 lg:pb-8 max-w-7xl mx-auto space-y-6 lg:space-y-8 animate-fade-in">
+      <div className="p-4 sm:p-6 lg:p-8 pb-16 lg:pb-8 max-w-7xl mx-auto space-y-6 lg:space-y-8 animate-fade-in">
         {isBlocked && (
           <div className="flex items-start gap-3 border border-amber-200 bg-amber-50 p-4 rounded-xl shadow-sm">
             <Lock className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
@@ -80,7 +80,9 @@ export default function ClientDetailPage() {
           </div>
         )}
 
-        <ClientHeader name={client.name} cpf={client.cpf} priority={client.priority} />
+        <ClientHeader name={client.name} cpf={client.cpf} priority={client.priority} editHref={`/clients/list/${client.id}/edit`} />
+
+        <ClientCaseStatsCards total={totalCases} active={activeCases} finished={finishedCases} />
 
         <div className="lg:grid lg:grid-cols-3 lg:gap-8 space-y-6 lg:space-y-0">
           <div className="lg:col-span-2 space-y-6 lg:space-y-8">
@@ -88,7 +90,6 @@ export default function ClientDetailPage() {
             <ClientCnisCard clientId={client.id} caseCount={totalCases} />
           </div>
           <div className="space-y-6 lg:space-y-8 lg:sticky lg:top-24 lg:self-start">
-            <ClientCaseStatsCards total={totalCases} active={activeCases} finished={finishedCases} />
             <ClientPortalCard cases={client.cases} />
           </div>
         </div>
@@ -112,7 +113,6 @@ export default function ClientDetailPage() {
         <ClientFloatingActions
           email={client.email}
           cpf={client.cpf}
-          onEdit={() => (isBlocked ? notifyBlocked() : setShowNotesModal(true))}
           onCopyCpf={handleCopyCpf}
         />
       </div>

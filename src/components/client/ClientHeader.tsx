@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, Pencil } from 'lucide-react'
 import { maskCPF } from '@/lib/sanitize'
 import { Badge } from '@/components/ui/Badge'
 import { PRIORITY_LABELS } from '@/lib/constants'
@@ -8,6 +8,7 @@ interface Props {
   name: string
   cpf: string
   priority?: string
+  editHref?: string
 }
 
 const PRIORITY_BADGE: Record<string, 'red' | 'yellow' | 'slate'> = {
@@ -16,7 +17,7 @@ const PRIORITY_BADGE: Record<string, 'red' | 'yellow' | 'slate'> = {
   NORMAL: 'slate',
 }
 
-export function ClientHeader({ name, cpf, priority }: Props) {
+export function ClientHeader({ name, cpf, priority, editHref }: Props) {
   return (
     <div className="flex items-center gap-4 border-b border-slate-200 pb-4 sm:pb-6">
       <div className="w-10 h-10 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center shadow-lg flex-shrink-0 text-white font-serif font-bold text-base sm:text-xl">
@@ -30,6 +31,15 @@ export function ClientHeader({ name, cpf, priority }: Props) {
         </div>
         <div className="flex items-center gap-3 flex-wrap">
           <h1 className="font-serif font-bold text-xl sm:text-2xl lg:text-3xl text-slate-900 tracking-tight truncate">{name}</h1>
+          {editHref && (
+            <Link
+              href={editHref}
+              className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg text-slate-400 hover:text-amber-600 hover:bg-amber-50 transition-colors -ml-1"
+              aria-label="Editar dados do cliente"
+            >
+              <Pencil className="w-4 h-4" />
+            </Link>
+          )}
           {priority && (
             <Badge variant={PRIORITY_BADGE[priority] ?? 'slate'}>
               {PRIORITY_LABELS[priority] ?? priority}

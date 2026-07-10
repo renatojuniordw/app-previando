@@ -123,15 +123,15 @@ export const Header = memo(function Header() {
             <Menu className="w-5 h-5" />
           </button>
 
-          {/* Global search trigger (Cmd+K) */}
+          {/* Global search trigger (Cmd+K) — fake search bar */}
           <button
             onClick={() => useSearchStore.getState().openSearch()}
-            className="hidden sm:flex min-h-[44px] items-center justify-center gap-2 px-4 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-500 transition-colors"
+            className="hidden sm:flex flex-1 max-w-md min-h-[44px] items-center gap-3 px-4 rounded-xl border border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/50 text-slate-400 transition-all shadow-xs group"
             aria-label="Buscar (⌘K)"
           >
-            <Search className="w-4 h-4" />
-            <span className="hidden sm:inline text-xs font-semibold text-slate-400">Buscar</span>
-            <kbd className="hidden lg:inline-flex px-1 py-0.5 text-[9px] font-mono font-bold text-slate-400 bg-white border border-slate-200 rounded">⌘K</kbd>
+            <Search className="w-4 h-4 shrink-0 text-slate-400 group-hover:text-slate-500" />
+            <span className="flex-1 text-left text-sm font-sans font-medium text-slate-400 group-hover:text-slate-500 truncate">Buscar clientes, casos...</span>
+            <kbd className="hidden lg:inline-flex items-center px-1.5 py-0.5 text-[10px] font-mono font-bold text-slate-400 bg-slate-100 border border-slate-200 rounded-md">⌘K</kbd>
           </button>
 
           {/* Mobile search trigger */}

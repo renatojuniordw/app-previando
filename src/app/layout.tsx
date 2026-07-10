@@ -53,7 +53,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="pt-BR" className={`${inter.variable} ${playfair.variable} ${jetbrainsMono.variable}`}>
       <head>
         <meta name="mobile-web-app-capable" content="yes" />
-        <link rel="apple-touch-icon" href="/logo-previando.svg" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" /><link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
         <meta name="apple-mobile-web-app-title" content="Previando" />
       </head>
       <body className="font-sans">

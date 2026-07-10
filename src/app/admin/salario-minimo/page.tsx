@@ -196,6 +196,44 @@ export default function SalarioMinimoPage() {
         emptyIcon={DollarSign}
         emptyTitle="Nenhum registro encontrado"
         emptyDescription="Cadastre o primeiro registro de salário mínimo."
+        renderMobileCard={(r) => (
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="font-mono font-semibold text-sm text-slate-800">
+                {fmtDate(r.vigencia)}
+                {r._index === 0 && (
+                  <span className="ml-2 font-sans text-[10px] bg-amber-500 text-white px-1.5 py-0.5 rounded font-bold uppercase">Vigente</span>
+                )}
+              </span>
+              <div className="flex gap-1">
+                <button onClick={() => handleEdit(r)} aria-label="Editar" className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg text-slate-400 hover:text-amber-600 hover:bg-amber-50 transition-colors">
+                  <Pencil className="w-3.5 h-3.5" />
+                </button>
+                <button onClick={() => setConfirmDeleteId(r.id)} aria-label="Excluir" className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors">
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-2 text-xs">
+              <div>
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Salário Mínimo</span>
+                <span className="font-mono font-bold text-sm text-slate-900">{fmt(r.valor)}</span>
+              </div>
+              <div>
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Teto RGPS</span>
+                <span className="font-mono text-sm text-slate-600">{fmt(r.teto)}</span>
+              </div>
+              <div>
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Legislação</span>
+                <span className="font-sans text-xs text-slate-500">{r.legislacao}</span>
+              </div>
+              <div>
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Reajuste</span>
+                <span className="font-mono text-sm text-slate-500">{r.reajuste !== null ? `${r.reajuste.toFixed(2)}%` : '—'}</span>
+              </div>
+            </div>
+          </div>
+        )}
       />
 
       <Drawer
