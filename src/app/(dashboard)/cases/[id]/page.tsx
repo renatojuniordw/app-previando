@@ -57,6 +57,7 @@ export default function CaseOverviewPage() {
 
       <PortalConfigCard
         caseId={caseData.id}
+        benefitType={caseData.benefitType}
         portalConfig={caseData.portalConfig}
         onUpdate={load}
       />

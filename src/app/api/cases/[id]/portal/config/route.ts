@@ -51,7 +51,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     const {
       showCalculations,
       showRetroactives,
-      showInterpretation,
+      showBpcSocialAnalysis,
       requireIdentity,
     } = body
 
@@ -59,7 +59,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     const updates: Partial<PortalConfig> = {}
     if (typeof showCalculations === 'boolean') updates.showCalculations = showCalculations
     if (typeof showRetroactives === 'boolean') updates.showRetroactives = showRetroactives
-    if (typeof showInterpretation === 'boolean') updates.showInterpretation = showInterpretation
+    if (typeof showBpcSocialAnalysis === 'boolean') updates.showBpcSocialAnalysis = showBpcSocialAnalysis
     if (typeof requireIdentity === 'boolean') updates.requireIdentity = requireIdentity
 
     if (Object.keys(updates).length === 0) {

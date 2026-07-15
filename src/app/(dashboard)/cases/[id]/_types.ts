@@ -24,7 +24,7 @@ export interface CaseDetail {
   portalConfig?: {
     showCalculations: boolean
     showRetroactives: boolean
-    showInterpretation: boolean
+    showBpcSocialAnalysis: boolean
     requireIdentity: boolean
   }
 }

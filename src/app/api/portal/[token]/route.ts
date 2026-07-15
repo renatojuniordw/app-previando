@@ -63,7 +63,7 @@ export async function GET(req: NextRequest, { params }: { params: { token: strin
     const portalConfig = caso.portalConfig ?? {
       showCalculations: true,
       showRetroactives: false,
-      showInterpretation: false,
+      showBpcSocialAnalysis: false,
       requireIdentity: false,
     }
 

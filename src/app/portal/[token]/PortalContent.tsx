@@ -99,17 +99,21 @@ export function PortalContent({ token, calculations, retroactives, requireIdenti
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 <div>
-                  <p className="font-sans text-xs text-slate-500">RMI</p>
+                  <p className="font-sans text-xs text-slate-500">
+                    {bestCalc.modality === 'BPC_LOAS' ? 'Valor do Benefício' : 'RMI'}
+                  </p>
                   <p className="font-sans font-bold text-xl text-amber-700">
                     {formatCurrency(bestCalc.rmi)}
                   </p>
                 </div>
-                <div>
-                  <p className="font-sans text-xs text-slate-500">RMA</p>
-                  <p className="font-sans font-semibold text-slate-800">
-                    {formatCurrency(bestCalc.rma)}
-                  </p>
-                </div>
+                {bestCalc.modality !== 'BPC_LOAS' && (
+                  <div>
+                    <p className="font-sans text-xs text-slate-500">RMA</p>
+                    <p className="font-sans font-semibold text-slate-800">
+                      {formatCurrency(bestCalc.rma)}
+                    </p>
+                  </div>
+                )}
                 {bestCalc.expectedDib && (
                   <div>
                     <p className="font-sans text-xs text-slate-500">DIB Estimada</p>

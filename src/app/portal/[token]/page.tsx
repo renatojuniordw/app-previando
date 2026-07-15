@@ -5,7 +5,9 @@ import { formatDate } from '@/lib/utils'
 import { Scale, FileText } from 'lucide-react'
 import { PortalSimulator } from '@/components/portal/PortalSimulator'
 import { PortalContent } from './PortalContent'
+import { PortalBpcSection } from './PortalBpcSection'
 import { PORTAL_SESSION_COOKIE, isPortalSessionValid } from '@/lib/portal-session'
+import { shouldShowSensitiveData } from '@/lib/portal-config'
 
 const BENEFIT_LABELS: Record<string, string> = {
   RETIREMENT_BY_AGE: 'Aposentadoria por Idade',
@@ -45,6 +47,7 @@ export default async function PortalPage({ params }: Props) {
             orderBy: { rmi: 'desc' },
           },
           retroactives: { orderBy: { createdAt: 'desc' }, take: 1 },
+          bpcAnalysis: true,
           user: { select: { name: true, oabNumber: true, plan: true } },
         },
       },
@@ -59,11 +62,19 @@ export default async function PortalPage({ params }: Props) {
   const hasWatermark = c.user.plan === 'FREE'
   const hasSimulator = c.user.plan === 'SOLO' || c.user.plan === 'PRO'
 
-  // Lê portalConfig para saber se precisa de verificação
+  // Lê portalConfig para saber o que exibir
   const casoData = c as unknown as {
-    portalConfig?: { requireIdentity?: boolean }
+    portalConfig?: {
+      requireIdentity?: boolean
+      showCalculations?: boolean
+      showRetroactives?: boolean
+      showBpcSocialAnalysis?: boolean
+    }
   }
   const requireIdentity = casoData.portalConfig?.requireIdentity ?? false
+  const showCalculations = casoData.portalConfig?.showCalculations ?? true
+  const showRetroactives = casoData.portalConfig?.showRetroactives ?? false
+  const showBpcSocialAnalysis = casoData.portalConfig?.showBpcSocialAnalysis ?? false
 
   // Gate real do lado do servidor: sem isso, os dados sensíveis (cálculos,
   // retroativos) seriam embutidos no HTML/RSC payload antes de qualquer
@@ -142,7 +153,7 @@ export default async function PortalPage({ params }: Props) {
         <PortalContent
           token={params.token}
           calculations={
-            identityVerified
+            shouldShowSensitiveData(showCalculations, identityVerified)
               ? c.calculations.map((calc) => ({
                   ...calc,
                   rmi: Number(calc.rmi),
@@ -152,7 +163,7 @@ export default async function PortalPage({ params }: Props) {
               : []
           }
           retroactives={
-            identityVerified
+            shouldShowSensitiveData(showRetroactives, identityVerified)
               ? c.retroactives.map((r) => ({
                   ...r,
                   totalGrossValue: Number(r.totalGrossValue),
@@ -164,6 +175,17 @@ export default async function PortalPage({ params }: Props) {
           requireIdentity={requireIdentity}
           initialVerified={identityVerified}
         />
+        {c.benefitType === 'BPC_LOAS' &&
+          c.bpcAnalysis &&
+          shouldShowSensitiveData(showBpcSocialAnalysis, identityVerified) && (
+            <PortalBpcSection
+              analysis={{
+                ...c.bpcAnalysis,
+                rendaFamiliar: Number(c.bpcAnalysis.rendaFamiliar),
+                rendaPerCapita: Number(c.bpcAnalysis.rendaPerCapita),
+              }}
+            />
+          )}
 
         {/* Rodapé */}
         <p className="font-sans text-xs text-slate-400 text-center pb-6">
