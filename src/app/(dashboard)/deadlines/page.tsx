@@ -51,7 +51,7 @@ function urgencyLabel(daysLeft: number | null): string {
   return `${daysLeft}d`
 }
 
-function DeadlineRow({ d, onNavigate, onDownloadError }: { d: DeadlineCase; onNavigate: (path: string) => void; onDownloadError: () => void }) {
+function DeadlineRow({ d, onNavigate, onDownloadError, showFirstVisitHint }: { d: DeadlineCase; onNavigate: (path: string) => void; onDownloadError: () => void; showFirstVisitHint?: boolean }) {
   return (
     <div className="flex items-center gap-4 px-5 py-4 hover:bg-slate-50/40 transition-colors border-b border-slate-100 last:border-0 group">
       <Link href={`/cases/${d.id}`} className="flex items-center gap-4 flex-1 min-w-0">
@@ -75,6 +75,7 @@ function DeadlineRow({ d, onNavigate, onDownloadError }: { d: DeadlineCase; onNa
         </span>
       </Link>
       <ActionsDropdown
+        showFirstVisitHint={showFirstVisitHint}
         ariaLabel={`Ações para ${d.client.name}`}
         actions={[
           { label: 'Ver Caso', onClick: () => onNavigate(`/cases/${d.id}`) },
@@ -102,6 +103,7 @@ export default function DeadlinesPage() {
   const overdue = deadlines.filter((d) => (d.daysLeft ?? 0) < 0)
   const urgent = deadlines.filter((d) => d.daysLeft !== null && d.daysLeft >= 0 && d.daysLeft <= 3)
   const upcoming = deadlines.filter((d) => d.daysLeft !== null && d.daysLeft > 3)
+  const firstDeadlineId = overdue[0]?.id ?? urgent[0]?.id ?? upcoming[0]?.id
 
   return (
     <ErrorBoundary>
@@ -145,7 +147,7 @@ export default function DeadlinesPage() {
                 <AlertTriangle className="w-4 h-4 text-red-650" />
                 <span className="font-sans font-bold text-xs uppercase tracking-wider text-red-750">Atrasados ({overdue.length})</span>
               </div>
-              {overdue.map((d) => <DeadlineRow key={d.id} d={d} onNavigate={router.push} onDownloadError={() => addToast({ type: 'error', title: 'Erro', message: 'Não foi possível gerar o PDF.' })} />)}
+              {overdue.map((d) => <DeadlineRow key={d.id} d={d} onNavigate={router.push} onDownloadError={() => addToast({ type: 'error', title: 'Erro', message: 'Não foi possível gerar o PDF.' })} showFirstVisitHint={d.id === firstDeadlineId} />)}
             </Card>
           )}
 
@@ -155,7 +157,7 @@ export default function DeadlinesPage() {
                 <Clock className="w-4 h-4 text-amber-600" />
                 <span className="font-sans font-bold text-xs uppercase tracking-wider text-amber-700">Urgentes — até 3 dias ({urgent.length})</span>
               </div>
-              {urgent.map((d) => <DeadlineRow key={d.id} d={d} onNavigate={router.push} onDownloadError={() => addToast({ type: 'error', title: 'Erro', message: 'Não foi possível gerar o PDF.' })} />)}
+              {urgent.map((d) => <DeadlineRow key={d.id} d={d} onNavigate={router.push} onDownloadError={() => addToast({ type: 'error', title: 'Erro', message: 'Não foi possível gerar o PDF.' })} showFirstVisitHint={d.id === firstDeadlineId} />)}
             </Card>
           )}
 
@@ -165,7 +167,7 @@ export default function DeadlinesPage() {
                 <Calendar className="w-4 h-4 text-slate-500" />
                 <span className="font-sans font-bold text-xs uppercase tracking-wider text-slate-700">Próximos ({upcoming.length})</span>
               </div>
-              {upcoming.map((d) => <DeadlineRow key={d.id} d={d} onNavigate={router.push} onDownloadError={() => addToast({ type: 'error', title: 'Erro', message: 'Não foi possível gerar o PDF.' })} />)}
+              {upcoming.map((d) => <DeadlineRow key={d.id} d={d} onNavigate={router.push} onDownloadError={() => addToast({ type: 'error', title: 'Erro', message: 'Não foi possível gerar o PDF.' })} showFirstVisitHint={d.id === firstDeadlineId} />)}
             </Card>
           )}
         </div>

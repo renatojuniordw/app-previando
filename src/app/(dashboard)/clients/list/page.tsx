@@ -242,7 +242,7 @@ export default function ClientsListPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
-                    {clients.map((client) => (
+                    {clients.map((client, index) => (
                       <tr key={client.id} className={cn('hover:bg-slate-50/40 transition-colors group', !client.active && 'bg-slate-50/60')}>
                         <td className="px-4 py-4">
                           <input
@@ -318,6 +318,7 @@ export default function ClientsListPage() {
                               <FileText className="w-4 h-4" aria-hidden="true" />
                             </Link>
                             <ActionsDropdown
+                              showFirstVisitHint={index === 0}
                               ariaLabel={`Ações para ${client.name}`}
                               actions={[
                                 {
@@ -356,7 +357,7 @@ export default function ClientsListPage() {
 
               {/* Mobile cards */}
               <MobileCardList
-                cards={clients.map((client) => ({
+                cards={clients.map((client, index) => ({
                   id: client.id,
                   primary: client.name,
                   secondary: client.active ? `CPF: ${maskCPF(client.cpf)}` : undefined,
@@ -381,6 +382,7 @@ export default function ClientsListPage() {
                   href: `/clients/list/${client.id}`,
                   actions: (
                     <ActionsDropdown
+                      showFirstVisitHint={index === 0}
                       ariaLabel={`Ações para ${client.name}`}
                       actions={[
                         { label: 'Editar cliente', onClick: () => window.location.href = `/clients/list/${client.id}/edit` },

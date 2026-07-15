@@ -331,7 +331,7 @@ export default function CasesPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
-                    {cases.map((c) => (
+                    {cases.map((c, index) => (
                       <tr key={c.id} className="hover:bg-slate-50/40 transition-colors group">
                         <td className="px-6 py-4">
                           <Link 
@@ -368,6 +368,7 @@ export default function CasesPage() {
                         </td>
                         <td className="px-6 py-4 text-right">
                           <ActionsDropdown
+                            showFirstVisitHint={index === 0}
                             ariaLabel={`Ações para caso de ${c.client.name}`}
                             actions={[
                               {
@@ -395,7 +396,7 @@ export default function CasesPage() {
 
               {/* Mobile cards */}
               <MobileCardList
-                cards={cases.map((c) => ({
+                cards={cases.map((c, index) => ({
                   id: c.id,
                   primary: c.client.name,
                   secondary: BENEFIT_SHORT_LABELS[c.benefitType] ?? c.benefitType,
@@ -420,6 +421,7 @@ export default function CasesPage() {
                   href: `/cases/${c.id}`,
                   actions: (
                     <ActionsDropdown
+                      showFirstVisitHint={index === 0}
                       ariaLabel={`Ações para caso de ${c.client.name}`}
                       actions={[
                         { label: 'Alterar Status', onClick: () => setStatusTarget({ id: c.id, status: c.status }) },

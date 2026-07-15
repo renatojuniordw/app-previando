@@ -3,6 +3,8 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import { MoreHorizontal, Pencil, Trash2 } from 'lucide-react'
+import { Tooltip } from './Tooltip'
+import { ContextualTooltip } from '@/components/onboarding/ContextualTooltip'
 
 interface ActionItem {
   label: string
@@ -14,14 +16,29 @@ interface ActionItem {
 interface ActionsDropdownProps {
   actions: ActionItem[]
   ariaLabel?: string
+  showFirstVisitHint?: boolean
 }
 
-export function ActionsDropdown({ actions, ariaLabel = 'Abrir menu de ações' }: ActionsDropdownProps) {
+const FIRST_VISIT_HINT_STORAGE_KEY = 'actions_menu'
+
+export function ActionsDropdown({ actions, ariaLabel = 'Abrir menu de ações', showFirstVisitHint = false }: ActionsDropdownProps) {
   const [open, setOpen] = useState(false)
   const [activeIndex, setActiveIndex] = useState(-1)
   const [pos, setPos] = useState({ top: 0, right: 0 })
   const ref = useRef<HTMLDivElement>(null)
   const menuRef = useRef<HTMLDivElement>(null)
+
+  const [hintAlreadySeen, setHintAlreadySeen] = useState(true)
+
+  useEffect(() => {
+    if (!showFirstVisitHint) return
+    try {
+      const dismissed = localStorage.getItem(`tooltip_dismissed_${FIRST_VISIT_HINT_STORAGE_KEY}`)
+      setHintAlreadySeen(!!dismissed)
+    } catch {
+      setHintAlreadySeen(true)
+    }
+  }, [showFirstVisitHint])
 
   const updatePos = useCallback(() => {
     if (ref.current) {
@@ -101,17 +118,33 @@ export function ActionsDropdown({ actions, ariaLabel = 'Abrir menu de ações' }
     }
   }
 
+  const trigger = (
+    <button
+      onClick={(e) => { e.preventDefault(); setOpen(!open) }}
+      className="p-2 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
+      aria-label={ariaLabel}
+      aria-expanded={open}
+      aria-haspopup="true"
+    >
+      <MoreHorizontal className="w-5 h-5" aria-hidden="true" />
+    </button>
+  )
+
   return (
     <div className="relative inline-block text-left" ref={ref} onKeyDown={handleKeyDown}>
-      <button
-        onClick={(e) => { e.preventDefault(); setOpen(!open) }}
-        className="p-2 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
-        aria-label={ariaLabel}
-        aria-expanded={open}
-        aria-haspopup="true"
-      >
-        <MoreHorizontal className="w-5 h-5" aria-hidden="true" />
-      </button>
+      {showFirstVisitHint && !hintAlreadySeen ? (
+        <ContextualTooltip
+          content="Toque aqui para ver mais ações"
+          storageKey={FIRST_VISIT_HINT_STORAGE_KEY}
+          position="left"
+        >
+          {trigger}
+        </ContextualTooltip>
+      ) : (
+        <Tooltip content="Mais ações" position="left">
+          {trigger}
+        </Tooltip>
+      )}
 
       {open && createPortal(
         <div

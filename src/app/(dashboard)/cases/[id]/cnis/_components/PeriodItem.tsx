@@ -23,6 +23,7 @@ const SALARY_PREVIEW_LIMIT = 6
 
 export function PeriodItem({
   periodo,
+  idx,
   isExpanded,
   warnings,
   onToggle,
@@ -99,7 +100,8 @@ export function PeriodItem({
 
         {/* Consolidated Actions Dropdown (No-accidental delete, touch-friendly size) */}
         <div className="flex shrink-0 items-center gap-2">
-          <ActionsDropdown 
+          <ActionsDropdown
+            showFirstVisitHint={idx === 0}
             ariaLabel="Ações do vínculo"
             actions={[
               { label: 'Editar vínculo', icon: <Pencil className="w-4 h-4" />, onClick: onEdit },

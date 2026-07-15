@@ -48,7 +48,8 @@ export function CaseInfoCard({ caseData, onStatusChangeClick, onExportPDF, onEdi
           <p className="font-sans text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">Visão Geral e Metadados</p>
         </div>
         <div className="flex items-center gap-2">
-          <ActionsDropdown 
+          <ActionsDropdown
+            showFirstVisitHint
             actions={[
               { label: 'Alterar Status', icon: <RefreshCw className="w-4 h-4" />, onClick: onStatusChangeClick },
               { label: 'Editar Caso', icon: <Edit className="w-4 h-4" />, onClick: () => onEditClick?.() },

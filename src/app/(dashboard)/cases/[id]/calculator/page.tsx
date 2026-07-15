@@ -152,7 +152,7 @@ export default function CalculatorPage() {
         </div>
       ) : (
         <div className="space-y-4" aria-live="polite" aria-label="Lista de cálculos">
-          {calculations.map((calc) => {
+          {calculations.map((calc, index) => {
             const isExpanded = expandedCalc === calc.id
             const parsedInput = calc.inputParams
             const isCalcElegivel = calc.eligible
@@ -225,6 +225,7 @@ export default function CalculatorPage() {
                     </button>
 
                     <ActionsDropdown
+                      showFirstVisitHint={index === 0}
                       ariaLabel="Ações do cálculo"
                       actions={[
                         ...(!calc.isSelected ? [{
