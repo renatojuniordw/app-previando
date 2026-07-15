@@ -52,6 +52,11 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       showCalculations,
       showRetroactives,
       showBpcSocialAnalysis,
+      showTimeline,
+      showDocuments,
+      showFaq,
+      showGlossary,
+      showPdfExport,
       requireIdentity,
     } = body
 
@@ -60,6 +65,11 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     if (typeof showCalculations === 'boolean') updates.showCalculations = showCalculations
     if (typeof showRetroactives === 'boolean') updates.showRetroactives = showRetroactives
     if (typeof showBpcSocialAnalysis === 'boolean') updates.showBpcSocialAnalysis = showBpcSocialAnalysis
+    if (typeof showTimeline === 'boolean') updates.showTimeline = showTimeline
+    if (typeof showDocuments === 'boolean') updates.showDocuments = showDocuments
+    if (typeof showFaq === 'boolean') updates.showFaq = showFaq
+    if (typeof showGlossary === 'boolean') updates.showGlossary = showGlossary
+    if (typeof showPdfExport === 'boolean') updates.showPdfExport = showPdfExport
     if (typeof requireIdentity === 'boolean') updates.requireIdentity = requireIdentity
 
     if (Object.keys(updates).length === 0) {

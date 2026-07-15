@@ -17,6 +17,26 @@ describe('DEFAULT_PORTAL_CONFIG', () => {
   it('requireIdentity é false', () => {
     expect(DEFAULT_PORTAL_CONFIG.requireIdentity).toBe(false)
   })
+
+  it('showTimeline é false', () => {
+    expect(DEFAULT_PORTAL_CONFIG.showTimeline).toBe(false)
+  })
+
+  it('showDocuments é false', () => {
+    expect(DEFAULT_PORTAL_CONFIG.showDocuments).toBe(false)
+  })
+
+  it('showFaq é false', () => {
+    expect(DEFAULT_PORTAL_CONFIG.showFaq).toBe(false)
+  })
+
+  it('showGlossary é false', () => {
+    expect(DEFAULT_PORTAL_CONFIG.showGlossary).toBe(false)
+  })
+
+  it('showPdfExport é false', () => {
+    expect(DEFAULT_PORTAL_CONFIG.showPdfExport).toBe(false)
+  })
 })
 
 describe('shouldShowSensitiveData', () => {

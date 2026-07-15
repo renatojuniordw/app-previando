@@ -25,6 +25,11 @@ export interface CaseDetail {
     showCalculations: boolean
     showRetroactives: boolean
     showBpcSocialAnalysis: boolean
+    showTimeline: boolean
+    showDocuments: boolean
+    showFaq: boolean
+    showGlossary: boolean
+    showPdfExport: boolean
     requireIdentity: boolean
   }
 }

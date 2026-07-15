@@ -2,10 +2,14 @@ import { notFound } from 'next/navigation'
 import { cookies } from 'next/headers'
 import { prisma } from '@/lib/prisma'
 import { formatDate } from '@/lib/utils'
-import { Scale, FileText } from 'lucide-react'
+import { Scale, FileText, Download } from 'lucide-react'
 import { PortalSimulator } from '@/components/portal/PortalSimulator'
 import { PortalContent } from './PortalContent'
 import { PortalBpcSection } from './PortalBpcSection'
+import { PortalTimeline } from './PortalTimeline'
+import { PortalGlossary } from './PortalGlossary'
+import { PortalFaq } from './PortalFaq'
+import { PortalDocuments } from './PortalDocuments'
 import { PORTAL_SESSION_COOKIE, isPortalSessionValid } from '@/lib/portal-session'
 import { shouldShowSensitiveData } from '@/lib/portal-config'
 
@@ -69,12 +73,22 @@ export default async function PortalPage({ params }: Props) {
       showCalculations?: boolean
       showRetroactives?: boolean
       showBpcSocialAnalysis?: boolean
+      showTimeline?: boolean
+      showDocuments?: boolean
+      showFaq?: boolean
+      showGlossary?: boolean
+      showPdfExport?: boolean
     }
   }
   const requireIdentity = casoData.portalConfig?.requireIdentity ?? false
   const showCalculations = casoData.portalConfig?.showCalculations ?? true
   const showRetroactives = casoData.portalConfig?.showRetroactives ?? false
   const showBpcSocialAnalysis = casoData.portalConfig?.showBpcSocialAnalysis ?? false
+  const showTimeline = casoData.portalConfig?.showTimeline ?? false
+  const showDocuments = casoData.portalConfig?.showDocuments ?? false
+  const showFaq = casoData.portalConfig?.showFaq ?? false
+  const showGlossary = casoData.portalConfig?.showGlossary ?? false
+  const showPdfExport = casoData.portalConfig?.showPdfExport ?? false
 
   // Gate real do lado do servidor: sem isso, os dados sensíveis (cálculos,
   // retroativos) seriam embutidos no HTML/RSC payload antes de qualquer
@@ -186,6 +200,40 @@ export default async function PortalPage({ params }: Props) {
               }}
             />
           )}
+
+        {shouldShowSensitiveData(showDocuments, identityVerified) && (
+          <PortalDocuments token={params.token} />
+        )}
+
+        {shouldShowSensitiveData(showTimeline, identityVerified) && (
+          <PortalTimeline token={params.token} />
+        )}
+
+        {showFaq && <PortalFaq token={params.token} />}
+
+        {showGlossary && <PortalGlossary />}
+
+        {shouldShowSensitiveData(showPdfExport, identityVerified) && (
+          <div className="bg-white border border-slate-200 rounded-xl p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-sans text-sm font-semibold text-slate-800">Exportar Relatório</p>
+                <p className="font-sans text-xs text-slate-400 mt-0.5">
+                  Baixe um resumo completo dos dados do seu caso em PDF
+                </p>
+              </div>
+              <a
+                href={`/api/portal/${params.token}/export-pdf`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200 rounded-lg hover:bg-amber-100 transition-colors shadow-sm"
+              >
+                <Download className="w-3.5 h-3.5" />
+                Baixar PDF
+              </a>
+            </div>
+          </div>
+        )}
 
         {/* Rodapé */}
         <p className="font-sans text-xs text-slate-400 text-center pb-6">

@@ -18,6 +18,7 @@ import {
 import type { CaseDetail } from '../_types'
 import { cn, formatDate } from '@/lib/utils'
 import { PortalPreviewModal } from './PortalPreviewModal'
+import { DocumentShareList } from './DocumentShareList'
 
 interface Props {
   caseId: string
@@ -27,7 +28,7 @@ interface Props {
 }
 
 const BASE_CONFIG_ITEMS: Array<{
-  key: 'showCalculations' | 'showRetroactives'
+  key: 'showCalculations' | 'showRetroactives' | 'showTimeline' | 'showDocuments' | 'showFaq' | 'showGlossary' | 'showPdfExport'
   label: string
   description: string
 }> = [
@@ -41,6 +42,31 @@ const BASE_CONFIG_ITEMS: Array<{
     label: 'Retroativos',
     description: 'Valores devidos e projeções financeiras',
   },
+  {
+    key: 'showTimeline',
+    label: 'Linha do tempo',
+    description: 'Eventos do caso em ordem cronológica',
+  },
+  {
+    key: 'showDocuments',
+    label: 'Documentos do caso',
+    description: 'Arquivos compartilhados com o cliente',
+  },
+  {
+    key: 'showFaq',
+    label: 'Perguntas frequentes',
+    description: 'FAQ inteligente sobre o benefício',
+  },
+  {
+    key: 'showGlossary',
+    label: 'Glossário de termos',
+    description: 'Explicação de termos previdenciários',
+  },
+  {
+    key: 'showPdfExport',
+    label: 'Exportar relatório em PDF',
+    description: 'Download de relatório completo',
+  },
 ]
 
 export function PortalConfigCard({ caseId, benefitType, portalConfig, onUpdate }: Props) {
@@ -49,6 +75,11 @@ export function PortalConfigCard({ caseId, benefitType, portalConfig, onUpdate }
       showCalculations: true,
       showRetroactives: false,
       showBpcSocialAnalysis: false,
+      showTimeline: false,
+      showDocuments: false,
+      showFaq: false,
+      showGlossary: false,
+      showPdfExport: false,
       requireIdentity: false,
     }
   )
@@ -273,6 +304,12 @@ export function PortalConfigCard({ caseId, benefitType, portalConfig, onUpdate }
                 Revogar
               </button>
             </div>
+          </div>
+        )}
+
+        {config.showDocuments && (
+          <div className="pt-4 border-t border-slate-100">
+            <DocumentShareList caseId={caseId} />
           </div>
         )}
 

@@ -30,6 +30,10 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
         },
         retroactives: { orderBy: { createdAt: 'desc' }, take: 1 },
         bpcAnalysis: true,
+        documents: {
+          where: { shared: true },
+          select: { id: true, fileName: true, contentType: true, createdAt: true },
+        },
       },
     })
 
@@ -62,6 +66,14 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
               rendaPerCapita: Number(caso.bpcAnalysis.rendaPerCapita),
             }
           : null,
+      documents: draftConfig.showDocuments
+        ? caso.documents.map((d) => ({
+            id: d.id,
+            fileName: d.fileName,
+            contentType: d.contentType,
+            createdAt: d.createdAt,
+          }))
+        : [],
     })
   } catch (err) {
     return handleApiError(err)
