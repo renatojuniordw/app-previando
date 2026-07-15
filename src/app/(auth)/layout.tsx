@@ -2,6 +2,7 @@ import { Scale, Lock, ShieldCheck, CheckCircle } from 'lucide-react'
 import { AuthHighlights } from './_components/AuthHighlights'
 import { AuthTransition } from './_components/AuthTransition'
 import { AuthMobileValue } from './_components/AuthMobileValue'
+import { CookieConsent } from './_components/CookieConsent'
 
 export const dynamic = 'force-dynamic'
 
@@ -99,6 +100,8 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
           </div>
         </div>
       </div>
+
+      <CookieConsent />
     </div>
   )
 }

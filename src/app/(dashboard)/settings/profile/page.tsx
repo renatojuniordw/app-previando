@@ -11,7 +11,7 @@ import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { AddressFields, type AddressValues } from '@/components/shared/AddressFields'
 import { formatCPF, stripNonDigits } from '@/lib/masks'
 import { ESTADO_CIVIL } from '@/lib/br-data'
-import { User, Shield, CreditCard, CheckCircle2, ChevronRight, AlertTriangle } from 'lucide-react'
+import { User, Shield, CreditCard, CheckCircle2, ChevronRight, AlertTriangle, Download, FileText, ExternalLink } from 'lucide-react'
 import Link from 'next/link'
 
 // Common styling for native selects to match <Input> component
@@ -331,6 +331,93 @@ export default function ProfilePage() {
                 Gerenciar Assinatura
                 <ChevronRight className="w-4 h-4 text-slate-400" />
               </Link>
+            </div>
+          </div>
+        </div>
+
+        <hr className="border-slate-100" />
+
+        {/* Section: Dados e Privacidade */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
+          <div className="md:col-span-1 flex items-start gap-3">
+            <div className="mt-0.5">
+              <Shield className="w-5 h-5 text-slate-500" />
+            </div>
+            <div>
+              <h3 className="text-base font-bold text-slate-900">Dados e Privacidade</h3>
+              <p className="mt-1 text-sm text-slate-500 leading-relaxed">
+                Seus direitos LGPD: portabilidade, retenção e transparência.
+              </p>
+            </div>
+          </div>
+          <div className="md:col-span-2 space-y-4">
+            {/* Portabilidade */}
+            <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center shrink-0">
+                    <Download className="w-5 h-5 text-amber-700" />
+                  </div>
+                  <div>
+                    <p className="font-sans text-sm font-bold text-slate-900">Exportar meus dados</p>
+                    <p className="font-sans text-xs text-slate-500 mt-0.5 leading-relaxed">
+                      Baixe uma cópia completa dos seus dados em formato JSON
+                      (LGPD Art. 18, V — portabilidade). Inclui perfil, clientes,
+                      casos, cálculos, retroativos e pagamentos.
+                    </p>
+                  </div>
+                </div>
+                <a
+                  href="/api/export/data"
+                  download
+                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-lg transition-colors shadow-sm shrink-0"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  Exportar JSON
+                </a>
+              </div>
+            </div>
+
+            {/* Retenção e Documentos */}
+            <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-6">
+              <div className="space-y-3">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center shrink-0">
+                    <FileText className="w-5 h-5 text-blue-700" />
+                  </div>
+                  <div>
+                    <p className="font-sans text-sm font-bold text-slate-900">Retenção de dados</p>
+                    <ul className="font-sans text-xs text-slate-500 mt-1.5 space-y-1 leading-relaxed">
+                      <li><strong className="text-slate-700">Dados de clientes e casos:</strong> mantidos enquanto sua conta estiver ativa</li>
+                      <li><strong className="text-slate-700">Registros de pagamento:</strong> retidos por 5 anos (exigência fiscal)</li>
+                      <li><strong className="text-slate-700">Registros de auditoria:</strong> mantidos por segurança mesmo após exclusão</li>
+                      <li><strong className="text-slate-700">Clientes anonimizados:</strong> dados pessoais removidos, histórico de casos preservado</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Links LGPD */}
+            <div className="flex items-center gap-4 text-xs">
+              <a
+                href="/privacidade"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-amber-700 hover:text-amber-800 font-semibold transition-colors"
+              >
+                Política de Privacidade
+                <ExternalLink className="w-3 h-3" />
+              </a>
+              <a
+                href="/termos"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-amber-700 hover:text-amber-800 font-semibold transition-colors"
+              >
+                Termos de Uso
+                <ExternalLink className="w-3 h-3" />
+              </a>
             </div>
           </div>
         </div>
