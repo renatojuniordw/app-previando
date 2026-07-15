@@ -205,8 +205,7 @@ Grid 2×2 (4 cards, sendo o primeiro destacado):
 
 [PASSO 3]
   "Parecer e Gestão"
-  "Gere o parecer jurídico com IA, acompanhe no Kanban,
-   consulte processos via DataJud sem abrir o PJe."
+  "Gere o parecer jurídico com IA e acompanhe tudo no Kanban."
 
 [PASSO 4 — BÔNUS]
   "Petição Inicial"
@@ -234,7 +233,7 @@ Cards 2, 3, 4: bg white, sombra suave, hover translateY(-4px).
 CONTEXTO:
   "Tudo que o advogado previdenciário precisa em um só lugar."
 
-GRID DE 8 FUNCIONALIDADES (4x2 ou carrossel):
+GRID DE 7 FUNCIONALIDADES (4x2 ou carrossel):
 
 1. 📄 Leitura Automática do CNIS
    "Upload do PDF e extração automática com IA. O sistema lê
@@ -251,27 +250,22 @@ GRID DE 8 FUNCIONALIDADES (4x2 ou carrossel):
    do caso. A IA lê o CNIS, os cálculos e suas anotações
    do prontuário para gerar um rascunho técnico."
 
-4. 🔍 Consulta de Processo (DataJud)
-   "Informe o número CNJ e receba o andamento do processo
-   sem abrir o PJe. Resumo em linguagem clara gerado por IA.
-    Compartilhe direto com o cliente."
-
-5. 📊 Comparativo de Modalidades
+4. 📊 Comparativo de Modalidades
    "O sistema calcula automaticamente todas as 11 modalidades
    para ambos os gêneros — 22 cenários — e mostra qual delas
    oferece o melhor RMI. Você não precisa testar uma por uma."
 
-6. 📝 Petição Inicial Automática
+5. 📝 Petição Inicial Automática
    "Com um clique, gere a petição inicial completa: dados
    do cliente, fundamentação legal, cálculos e pedidos.
    Copie, edite e protocole."
 
-7. 📋 Prontuário Imutável
+6. 📋 Prontuário Imutável
    "Registre cada contato, documento, decisão e prazo.
    Histórico versionado — nunca editável. A IA lê suas
    anotações para gerar diagnósticos automáticos do caso."
 
-8. 🏛️ Módulo BPC/LOAS
+7. 🏛️ Módulo BPC/LOAS
    "Análise completa de viabilidade: pré-análise com IA,
    análise de laudo médico, relato social interativo por
    domínios CIF, perguntas para perícia e checklist de
@@ -322,7 +316,7 @@ Números grandes (clamp(2rem, 4vw, 3.5rem))
 Labels pequenas abaixo.
 
 NOTA: Sem depoimentos inventados. Sem logos de escritórios
-sem autorização. Usar badges institucionais (INSS, CNJ, DataJud,
+sem autorização. Usar badges institucionais (INSS, CNJ,
 TRF) como selos de referência.
 ```
 
@@ -402,7 +396,6 @@ SOLO → DESTAQUE "Mais Popular":
     ✓ Petição Inicial (5/mês)
     ✓ Simulador de cenários
     ✓ Cálculo de retroativos
-    ✓ Consulta DataJud
     ✓ Export PDF sem marca d'água
     ✓ Diagnóstico IA
     × Portal do Cliente básico
@@ -639,7 +632,7 @@ Anúncios:
 | **Urgência** | Hero + CTA | "Comece agora. Grátis." |
 | **Especificidade** | Funcionalidades | "14 modalidades", "22 cenários" |
 | **Prova social** | Métricas | "Utilizado por escritórios em todo o Brasil" |
-| **Autoridade** | Parcerias | INSS, CNJ, DataJud, OAB |
+| **Autoridade** | Parcerias | INSS, CNJ, OAB |
 | **Reciprocidade** | FREE | "Grátis para começar, sem cartão" |
 | **Ancoragem** | Planos | R$ 97/mês vs R$ 5.000-30.000 de honorários |
 | **Prova** | Como funciona | 4 passos visuais do fluxo real |

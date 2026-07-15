@@ -127,11 +127,6 @@ export const GLOSSARY: GlossaryEntry[] = [
     category: 'cálculo',
   },
   {
-    term: 'DataJud',
-    definition: 'Sistema do Conselho Nacional de Justiça (CNJ) que reúne dados públicos de processos judiciais de todo o Brasil.',
-    category: 'processo',
-  },
-  {
     term: 'Perícia Médica',
     definition: 'Avaliação realizada por médico perito do INSS para verificar a existência de incapacidade para o trabalho, necessária para auxílio-doença e aposentadoria especial.',
     category: 'processo',

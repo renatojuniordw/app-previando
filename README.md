@@ -216,7 +216,6 @@ O sistema usa 4 workers para processamento assíncrono, iniciados via `npm run w
 | `MERCADOPAGO_ACCESS_TOKEN` | ❌ | Integração Mercado Pago |
 | `MERCADOPAGO_WEBHOOK_SECRET` | ❌ | HMAC webhook MP |
 | `MP_PLAN_ID_SOLO` / `MP_PLAN_ID_PRO` | ❌ | IDs dos planos no Mercado Pago |
-| `DATAJUD_API_KEY` | ❌ | API pública do CNJ |
 
 | `SMTP_HOST` / `SMTP_PORT` / `SMTP_USER` / `SMTP_PASS` / `EMAIL_FROM` | ❌ | Config de email (worker opcional) |
 | `NEXT_PUBLIC_SENTRY_DSN` | ❌ | Sentry monitoring |

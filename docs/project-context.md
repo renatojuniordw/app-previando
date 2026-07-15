@@ -17,7 +17,6 @@ O projeto é uma aplicação web Full-Stack baseada em **Next.js 14 (App Router)
 - **IA:** OpenAI SDK (gpt-4.1-mini, gpt-4.1-nano, gpt-4o-mini)
 - **Storage:** Cloudflare R2 (PDF CNIS e documentos)
 - **Pagamentos:** Mercado Pago (assinaturas recorrentes)
-- **Monitoramento Processual:** DataJud (API pública CNJ)
 - **Email:** Nodemailer (password recovery)
 
 ---
@@ -130,9 +129,6 @@ POST /subscribe → MP subscription → Webhook → Atualiza plano → Cache inv
 
 ### Recuperação de Senha
 POST /forgot-password → Token → Email SMTP → POST /reset-password → Hash nova senha
-
-### Consulta DataJud
-POST /cases/[id]/process → API pública CNJ → Atualiza campos de processo
 
 ---
 

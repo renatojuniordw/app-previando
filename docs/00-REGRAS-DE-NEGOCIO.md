@@ -72,9 +72,6 @@ Rascunho jurídico gerado com IA. Advogado sempre revisa antes de usar.
 ### Prontuário
 Histórico versionado e imutável de anotações de um caso. Cada entrada nunca é editada — só se cria novas.
 
-### DataJud
-API pública do CNJ (Conselho Nacional de Justiça) para consulta de andamento processual. Integrada via `/api/cases/[id]/process`.
-
 ---
 
 
@@ -97,19 +94,6 @@ Pessoa física atendida. Pode ter zero ou mais casos.
 
 ### 3.3 Caso (Processo Previdenciário)
 Atendimento específico para um benefício. Um cliente pode ter múltiplos casos.
-
-**Campos do processo:**
-- `processNumber`: Número do processo (administrativo ou judicial)
-- `processLastCheck`: Última data de consulta ao processo via DataJud
-- `processLastMovDate`: Data do último movimento no processo
-- `processLastMovCount`: Contagem de movimentos desde a última consulta
-- `processLastSummary`: Resumo do último movimento
-
-**Consulta de processo (DataJud):**
-- Endpoint: `POST /api/cases/[id]/process`
-- Envia o `processNumber` para a API pública do CNJ
-- Retorna: tribunal, classe, assuntos, última movimentação
-- Atualiza os campos `processLastCheck`, `processLastMovDate`, `processLastMovCount`, `processLastSummary`
 
 **Tipos de benefício:**
 
@@ -267,7 +251,6 @@ PASSO 6 — AÇÕES OPCIONAIS
     → Checklist de elegibilidade
     → Gerar parecer com IA
     → Diagnóstico de caso (prontuário + IA)
-    → Consultar processo via DataJud (informar número CNJ)
     → Análise BPC/LOAS (quando benefitType === BPC_LOAS)
 
 PASSO 7 — PROTOCOLAR

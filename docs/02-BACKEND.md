@@ -159,12 +159,6 @@ PDF Upload → Extração de Texto → Parser Programático (instantâneo)
 - **Modelo:** `gpt-4.1-mini`, **max_tokens:** 16384, **temperature:** 0.3
 - **Regras:** max 4 parágrafos, disclaimer obrigatório, rodapé "Calculado via Previando"
 
-### DataJud
-- **Arquivo:** `src/services/datajud.ts`
-- **Função:** `queryProcess(rawNumber)` — consulta API pública CNJ
-- **Suporta:** STF, STJ, TRFs (1-5), TRTs (1-24), TJs (27 tribunais)
-- **Chave pública:** `cDZHYzlZa0JadVREZDJCendFbzNRdnp6Z3ZUcTdjMHJueFRuMnBiQVQ=`
-
 ### Register
 - **Arquivo:** `src/services/register.ts`
 - **Transação:** Cria User + UsageRecord
@@ -224,7 +218,6 @@ PDF Upload → Extração de Texto → Parser Programático (instantâneo)
 | PATCH | `/api/cases/[id]` | Atualiza | 20 | 1h |
 | DELETE | `/api/cases/[id]` | Exclui | 5 | 1h |
 | PATCH | `/api/cases/[id]/status` | Status | 20 | 1h |
-| POST | `/api/cases/[id]/process` | Consulta DataJud | - | - |
 
 ### Prontuário (Notes)
 | Método | Rota | Função | Limite | Janela |
