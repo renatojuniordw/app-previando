@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from 'react'
 import { useParams, useSearchParams, useRouter, usePathname } from 'next/navigation'
-import { ExternalLink } from 'lucide-react'
+import { ExternalLink, BarChart3, Table2 } from 'lucide-react'
 import api from '@/lib/api'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
+import { cn } from '@/lib/utils'
 import { useCnis } from '@/hooks/useCnis'
 import { useCnisUpload } from '@/hooks/useCnisUpload'
 import { useCnisEditing } from './_hooks/useCnisEditing'
@@ -14,6 +15,7 @@ import { CnisBanners } from './_components/CnisBanners'
 import { CnisUploadOverlay } from './_components/CnisUploadOverlay'
 import { CnisUploadDropzone } from './_components/CnisUploadDropzone'
 import { CnisStatusCard } from './_components/CnisStatusCard'
+import { CnisAnalysisTab } from './_components/CnisAnalysisTab'
 import { DeleteModal } from './_components/modals/DeleteModal'
 import { SaveConfirmModal } from './_components/modals/SaveConfirmModal'
 import { ReprocessModal } from './_components/modals/ReprocessModal'
@@ -21,6 +23,7 @@ import { EditPeriodModal } from './_components/modals/EditPeriodModal'
 import { EditSalariesModal } from './_components/modals/EditSalariesModal'
 import { CnisIndicatorsDrawer } from './_components/CnisIndicatorsDrawer'
 import { Drawer } from '@/components/ui/Drawer'
+import type { CnisExtractedData } from '@/types/cnis'
 
 export default function CnisCasePage() {
   const params = useParams()
@@ -45,6 +48,19 @@ export default function CnisCasePage() {
   const router = useRouter()
   const pathname = usePathname()
   const showIndicatorsDrawer = searchParams.get('drawer') === 'dictionary'
+  const activeTab = searchParams.get('tab') || 'dados'
+
+  const isCompleted = cnis?.processingStatus === 'COMPLETED'
+
+  const switchTab = (tab: string) => {
+    const next = new URLSearchParams(searchParams.toString())
+    if (tab === 'dados') {
+      next.delete('tab')
+    } else {
+      next.set('tab', tab)
+    }
+    router.replace(`${pathname}?${next.toString()}`)
+  }
 
   const openDictionary = () => {
     const next = new URLSearchParams(searchParams.toString())
@@ -57,6 +73,8 @@ export default function CnisCasePage() {
     next.delete('drawer')
     router.replace(`${pathname}?${next.toString()}`)
   }
+
+  const analysisData = (editing.tempExtractedData || cnis?.extractedData) as CnisExtractedData | null
 
   useEffect(() => {
     if (!cnis?.downloadUrl) return
@@ -120,6 +138,42 @@ export default function CnisCasePage() {
         onCloseSucess={() => setShowSuccessBanner(false)}
       />
 
+      {/* Tab bar — apenas quando CNIS está completo */}
+      {cnis && isCompleted && (
+        <div className="border-b border-slate-200">
+          <nav className="flex gap-0 -mb-px" role="tablist">
+            <button
+              role="tab"
+              aria-selected={activeTab === 'dados'}
+              onClick={() => switchTab('dados')}
+              className={cn(
+                'flex items-center gap-1.5 px-4 py-3 text-sm font-bold border-b-2 transition-colors',
+                activeTab === 'dados'
+                  ? 'border-amber-500 text-amber-700'
+                  : 'border-transparent text-slate-400 hover:text-slate-600 hover:border-slate-300'
+              )}
+            >
+              <Table2 className="w-4 h-4" />
+              <span>Dados</span>
+            </button>
+            <button
+              role="tab"
+              aria-selected={activeTab === 'analise'}
+              onClick={() => switchTab('analise')}
+              className={cn(
+                'flex items-center gap-1.5 px-4 py-3 text-sm font-bold border-b-2 transition-colors',
+                activeTab === 'analise'
+                  ? 'border-amber-500 text-amber-700'
+                  : 'border-transparent text-slate-400 hover:text-slate-600 hover:border-slate-300'
+              )}
+            >
+              <BarChart3 className="w-4 h-4" />
+              <span>Análise</span>
+            </button>
+          </nav>
+        </div>
+      )}
+
       <div className="w-full">
         {!cnis ? (
           <CnisUploadDropzone
@@ -131,6 +185,8 @@ export default function CnisCasePage() {
             onDrop={handleDrop}
             onUploadClick={() => fileRef.current?.click()}
           />
+        ) : activeTab === 'analise' && isCompleted ? (
+          <CnisAnalysisTab data={analysisData} />
         ) : (
           <CnisStatusCard
             cnis={cnis}
