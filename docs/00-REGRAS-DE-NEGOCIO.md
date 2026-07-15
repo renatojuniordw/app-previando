@@ -1,6 +1,6 @@
 # 00 — REGRAS DE NEGÓCIO
 > Previando — Glossário, Fluxos, Casos de Uso e Regras para o Agente
-> Última atualização: 2026-07-07
+> Última atualização: 2026-07-15
 
 ---
 

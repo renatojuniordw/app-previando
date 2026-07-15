@@ -1,6 +1,6 @@
 # 11 — DESIGN SYSTEM
 > Diretrizes visuais, tipografia, componentes e regras de UX/UI do Previando
-> Última atualização: 2026-07-03
+> Última atualização: 2026-07-15
 
 ---
 

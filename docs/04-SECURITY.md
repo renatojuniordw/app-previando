@@ -1,6 +1,6 @@
 # 04 — SECURITY
 > Auth, Middleware, Bloqueios Físicos, Sanitização e Rate Limiting
-> Última atualização: 2026-07-07
+> Última atualização: 2026-07-15
 
 ---
 
@@ -265,3 +265,27 @@ O `portalConfig` (JSON no model `Case`) define exatamente quais informações o 
 - Endpoint público (`/api/portal/[token]`) não permite pesquisa por processNumber — apenas por token
 - Token expirado retorna 410 Gone (não 404 — não vaza existência)
 - Token inválido retorna 404
+
+---
+
+## LGPD / Privacidade
+
+### Cookie Consent
+- Componente `CookieConsent.tsx` exibido no primeiro acesso
+- Conforme LGPD Art. 7º, I — consentimento explícito para coleta de dados
+- Seção de privacidade em `/settings/profile` para gerenciar consentimento
+
+### Anonimização
+- Soft delete de usuários: `deletedAt` no modelo `User`
+- Anonimização de clientes: `anonymizedAt` no modelo `Client`
+- `POST /api/users/account` → anonimiza e deleta dados pessoais (LGPD Art. 18, VI)
+
+### Páginas Públicas
+- `/privacidade` — Política de privacidade
+- `/termos` — Termos de uso
+- Rotas no grupo `(public)/`, sem middleware de autenticação
+
+### Conversão e Tracking
+- Eventos de conversão armazenados em `ConversionEvent` (anonimizados)
+- UTM params rastreados para marketing (sem PII)
+- Consentimento necessário antes de tracking

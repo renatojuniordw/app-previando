@@ -1,6 +1,6 @@
 # 09 — LANDING PAGE
 > previando.com.br — Copy, Estrutura e Estratégia de Tráfego Pago
-> Última atualização: 2026-06-27
+> Última atualização: 2026-07-15
 
 ---
 

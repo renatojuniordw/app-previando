@@ -1,7 +1,7 @@
 # 14 — ROADMAP DE FEATURES DIFERENCIADAS
 
 > Estratégia de diferenciação do Previando frente aos concorrentes
-> Última atualização: 2026-06-28
+> Última atualização: 2026-07-15
 
 ---
 

@@ -1,6 +1,6 @@
 # 08 — SAAS: PLANOS E PAGAMENTOS
 > Freemium, Mercado Pago Subscriptions, Webhooks
-> Última atualização: 2026-07-07
+> Última atualização: 2026-07-15
 
 ---
 
@@ -115,6 +115,9 @@ async function getOrResetUsageRecord(userId: string) {
 | `guardBpcAnalysisLimit()` | bpcAnalysesPerMonth + bpcEnabled |
 | `guardBpcSocialMediaLimit()` | bpcSocialMediaPerMonth + bpcEnabled |
 | `guardProcessInterpretLimit()` | maxProcessInterpretPerMonth + processInterpretEnabled |
+| `guardRevisionLimit()` | maxRevisionsPerMonth + revisionEnabled |
+| `guardGpsLimit()` | gpsEnabled (booleano) |
+| `guardViabilityScoreLimit()` | viabilityScoreEnabled (booleano) |
 
 ---
 

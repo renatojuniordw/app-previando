@@ -1,6 +1,6 @@
 # 01 — DATABASE
 > PostgreSQL 16 + Prisma ORM — banco: previando_db
-> Última atualização: 2026-07-07
+> Última atualização: 2026-07-15
 
 ---
 
@@ -375,6 +375,29 @@ Tabela: `cnis_documents`
 
 ---
 
+### Cálculo de Causa de Pedir (Causa de Pedir Value)
+
+#### CauseValueCalculation
+Tabela: `cause_value_calculations`
+
+| Campo | Tipo | Descrição |
+|---|---|---|
+| `id` | `String @id @default(cuid())` | Identificador único |
+| `caseId` | `String` | FK para Case |
+| `modality` | `CalculationModality` | Modalidade |
+| `benefitSalary` | `Decimal(12,2)` | Salário de benefício |
+| `rmi` | `Decimal(12,2)` | RMI |
+| `rma` | `Decimal(12,2)` | RMA |
+| `coefficient` | `Decimal(6,4)?` | Coeficiente |
+| `socialSecurityFactor` | `Decimal(6,4)?` | Fator previdenciário |
+| `contributionTime` | `Int?` | Tempo de contribuição |
+| `calculationMemory` | `Json` | Memória de cálculo |
+| `createdAt` | `DateTime @default(now())` | Criação |
+
+**Relações:** `case -> Case` (Cascade)
+
+---
+
 ### Cálculos
 
 #### Calculation
@@ -609,6 +632,49 @@ Tabela: `fee_payments`
 
 #### FeeStatus Enum
 `PENDING`, `PARTIAL`, `PAID`, `OVERDUE`, `CANCELLED`
+
+---
+
+### Acesso de Clientes ao Portal
+
+#### ClientAccess
+Tabela: `client_access`
+
+| Campo | Tipo | Descrição |
+|---|---|---|
+| `id` | `String @id @default(cuid())` | Identificador único |
+| `caseId` | `String @unique` | FK para Case |
+| `token` | `String @unique` | Token crypto random (256 bits, base64url) |
+| `expiresAt` | `DateTime` | Expira em 30 dias |
+| `active` | `Boolean @default(true)` | Pode ser revogado |
+| `lastAccessAt` | `DateTime?` | Último acesso |
+| `createdAt` | `DateTime @default(now())` | Criação |
+
+**Relações:** `case -> Case` (Cascade)
+
+---
+
+### Eventos de Conversão (Marketing)
+
+#### ConversionEvent
+Tabela: `conversion_events`
+
+| Campo | Tipo | Descrição |
+|---|---|---|
+| `id` | `String @id @default(cuid())` | Identificador único |
+| `eventType` | `ConversionEventType` | Tipo (PAGE_VIEW, SIGNUP, TRIAL_START, etc.) |
+| `utmSource` | `String?` | Fonte UTM |
+| `utmMedium` | `String?` | Meio UTM |
+| `utmCampaign` | `String?` | Campanha UTM |
+| `pageUrl` | `String?` | URL da página |
+| `userId` | `String?` | FK para User (se logado) |
+| `metadata` | `Json?` | Metadados adicionais |
+| `createdAt` | `DateTime @default(now())` | Criação |
+
+**Índices:** `@@index([eventType])`, `@@index([createdAt])`
+
+#### ConversionEventType (Enum)
+`PAGE_VIEW`, `SIGNUP`, `TRIAL_START`, `SUBSCRIPTION`, `UPGRADE`, `CANCEL`
 
 ---
 

@@ -1,6 +1,6 @@
 # 10 — INFRA
 > Contabo VPS — Docker Compose, Nginx, SSL, BullMQ e Backup
-> Última atualização: 2026-06-27
+> Última atualização: 2026-07-15
 
 ---
 
@@ -51,7 +51,7 @@ services:
 npm run dev              # Next.js dev server (porta 60002)
 npm run build            # Build produção
 npm run start            # Start produção
-npm run worker           # BullMQ workers (CNIS + audit + deadlines)
+npm run worker           # BullMQ workers (CNIS + audit + deadlines + email + fee)
 npm run db:generate      # Prisma generate
 npm run db:migrate       # Prisma migrate dev
 npm run db:migrate:prod  # Prisma migrate deploy

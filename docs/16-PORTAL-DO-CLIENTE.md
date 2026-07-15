@@ -1,7 +1,7 @@
 # 16 — Portal do Cliente: Compartilhamento Seguro
 
 > Configuração granular do que o cliente pode ver via link único
-> Última atualização: 2026-07-07
+> Última atualização: 2026-07-15
 
 ---
 
@@ -34,6 +34,10 @@ interface PortalConfig {
   showCalculations: boolean     // Cálculos (RMI, RMA, modalidades)
   showRetroactives: boolean     // Retroativos (valores financeiros)
   showInterpretation: boolean   // Interpretação de movimentações com IA
+  showTimeline?: boolean        // Timeline do caso (eventos e prazos)
+  showFaq?: boolean             // FAQ customizada por caso
+  showDocuments?: boolean       // Documentos compartilhados
+  showGlossary?: boolean        // Glossário de termos previdenciários
 }
 ```
 
@@ -44,7 +48,11 @@ interface PortalConfig {
   "showProcessTracking": true,
   "showCalculations": true,
   "showRetroactives": false,
-  "showInterpretation": false
+  "showInterpretation": false,
+  "showTimeline": false,
+  "showFaq": false,
+  "showDocuments": false,
+  "showGlossary": false
 }
 ```
 
@@ -112,6 +120,13 @@ Campo `portalConfig` (JSON) no model `Case` — dentro da tabela `cases`. Isso s
 |---|---|---|
 | `GET` | `/api/portal/[token]` | Dados do caso (filtrados por portalConfig) |
 | `POST` | `/api/portal/[token]/simulate` | Simulador "E se?" (PRO) |
+| `GET` | `/api/portal/[token]/documents` | Documentos compartilhados |
+| `GET` | `/api/portal/[token]/timeline` | Timeline do caso |
+| `GET` | `/api/portal/[token]/faq` | FAQ customizada por caso |
+| `GET` | `/api/portal/[token]/export-pdf` | Exporta dados do portal em PDF |
+| `POST` | `/api/portal/[token]/verify` | Verificação de identidade (CPF parcial + data nasc.) |
+
+**Verificação de identidade:** Para módulos sensíveis, o cliente pode precisar verificar identidade com CPF parcial + data de nascimento antes de acessar.
 
 ---
 
@@ -136,6 +151,10 @@ O componente `PortalConfigCard` é um card na visão geral do caso com:
 | Cálculos | RMI, RMA, modalidade, elegibilidade | 🟡 Médio (valores financeiros) |
 | Retroativos | Valor bruto, corrigido, líquido | 🟡 Médio (valores financeiros) |
 | Interpretação IA | Urgência, interpretação, ação sugerida | 🟢 Baixo (análise textual) |
+| Timeline | Eventos do caso, prazos, movimentações | 🟢 Baixo |
+| FAQ | Perguntas frequentes customizadas | 🟢 Baixo |
+| Documentos | Documentos compartilhados seletivamente | 🟡 Médio |
+| Glossário | Termos previdenciários explicados | 🟢 Baixo |
 
 > **Nunca são expostos:** CPF, telefone, email, endereço, notas do prontuário, dados bancários.
 

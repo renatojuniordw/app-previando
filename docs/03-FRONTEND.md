@@ -1,6 +1,6 @@
 # 03 — FRONTEND
 > UI, Navegação, Drawers, Padrões de código, Performance
-> Última atualização: 2026-07-07
+> Última atualização: 2026-07-15
 
 ---
 
@@ -23,7 +23,7 @@
 - **Framework:** Next.js 14 (App Router, Server/Client Components)
 - **UI:** Tailwind CSS, Radix UI primitives
 - **Fontes:** Inter (sans), Playfair Display (serif), JetBrains Mono (mono)
-- **State:** Zustand (sidebar, upgrade-modal, toast)
+- **State:** Zustand (sidebar, upgrade-modal, toast, admin-sidebar, recent-store, search-store)
 - **HTTP:** Axios com interceptores (402 → upgrade modal)
 - **Auth:** NextAuth.js (SessionProvider no layout do dashboard)
 - **Ícones:** Lucide React
@@ -79,16 +79,28 @@
     ├── /profile                ← Configurações de perfil
     └── /billing                ← Gerenciamento de plano/faturamento
 
+/suporte                   ← Página de suporte/chamados
+/honorarios                ← Gestão de honorários
+/tools
+├── /tools/pdf                    ← Ferramenta PDF
+└── /tools/cnis-indicators        ← Dicionário de indicadores CNIS
+/settings
+├── /settings/profile             ← Configurações de perfil
+└── /settings/billing             ← Gerenciamento de plano/faturamento
+
+/(public)                   ← Páginas públicas (privacidade, termos)
+
 /admin                          ← Layout admin (sidebar escura + header, isAdmin guard)
 ├── /                           ← redirect → /admin/dashboard
-├── /admin/dashboard            ← KPIs
-├── /admin/users                ← Gestão de usuários
-├── /admin/payments             ← Pagamentos
-├── /admin/metrics              ← Métricas detalhadas
-├── /admin/plans                ← Configuração de planos
-├── /admin/modalidades          ← Modalidades CRUD
-├── /admin/regras-aposentadoria ← Regras previdenciárias CRUD
-└── /admin/salario-minimo       ← Tabela salário mínimo histórico
+├── /dashboard                  ← KPIs
+├── /users                      ← Gestão de usuários
+├── /payments                   ← Pagamentos
+├── /metrics                    ← Métricas detalhadas
+├── /plans                      ← Configuração de planos
+├── /modalidades                ← Modalidades CRUD
+├── /regras-aposentadoria       ← Regras previdenciárias CRUD
+├── /salario-minimo             ← Tabela salário mínimo histórico
+└── /suporte                    ← Gestão de chamados de suporte
 ```
 
 ---
@@ -104,6 +116,7 @@
 ### Auth — Split-Panel (`src/app/(auth)/layout.tsx`)
 - Desktop: painel esquerdo (branding, slogan, gradiente) + direito (formulário)
 - Mobile: logo compacto + formulário centralizado
+- Componentes: `AuthHighlights`, `AuthMobileValue`, `AuthTransition`, `CookieConsent`
 
 ### Dashboard (`src/app/(dashboard)/layout.tsx`)
 - `SessionProvider` com sessão NextAuth
@@ -212,6 +225,9 @@ Rota legacy `/notes`, `/checklist`, `/opinions` redirecionam para `?drawer=` via
 | `useSidebarStore` | `src/store/sidebar.ts` | `isDesktopOpen` (localStorage) |
 | `useUpgradeModal` | `src/store/upgrade-modal.ts` | Não |
 | `useToast` | `src/store/toast.ts` | Não |
+| `useAdminSidebar` | `src/store/admin-sidebar.ts` | Não |
+| `useRecentStore` | `src/store/recent-store.ts` | localStorage |
+| `useSearchStore` | `src/store/search-store.ts` | Não |
 
 ---
 
@@ -240,6 +256,13 @@ Rota legacy `/notes`, `/checklist`, `/opinions` redirecionam para `?drawer=` via
 | `HelpText.tsx` | Texto de ajuda contextual |
 | `MuiThemeProvider.tsx` | Provider MUI (apenas dashboard) |
 | `Tooltip.tsx` | Tooltip customizado |
+| `BottomSheet.tsx` | Bottom sheet mobile (gestão por toque) |
+| `FilterSheet.tsx` | Painel de filtros deslizante |
+| `MobileBottomNav.tsx` | Navegação inferior mobile (5 itens) |
+| `QuickActionSheet.tsx` | Ações rápidas em sheet |
+| `Select.tsx` | Select dropdown padronizado |
+| `Popover.tsx` | Popover contextual |
+| `MobileCardList.tsx` | Lista de cards otimizada para mobile |
 
 ### Caso (`src/components/case/`)
 | Componente | Descrição |
@@ -252,15 +275,18 @@ Rota legacy `/notes`, `/checklist`, `/opinions` redirecionam para `?drawer=` via
 | `CasePeticaoModal` | Modal de petição |
 | `DrawerRedirect` | Redireciona rotas legacy para ?drawer= |
 | `ModalitySelect` | Seletor de modalidade |
+| `ProcessTimeline` | Timeline processual |
 
-### BPC (`src/components/bpc/`)
+### BPC (`src/components/bpc/`) — 5 componentes
 | Componente | Descrição |
 |---|---|
 | `BpcForm.tsx` | Formulário de dados (patologia, renda, etc.) |
 | `BpcResult.tsx` | Resultado com tabs (Pré-Análise, Laudo, Social, Médico, Checklist) |
 | `BpcSocialInterview.tsx` | Entrevistador social interativo por domínios CIF |
+| `BpcFormSection.tsx` | Seção colapsável do formulário BPC |
+| `BpcLaudoModal.tsx` | Modal de upload/visualização de laudos |
 
-### Dashboard (`src/components/dashboard/`)
+### Dashboard (`src/components/dashboard/`) — 7 componentes
 | Componente | Descrição |
 |---|---|
 | `DashboardKpiGrid` | KPIs principais |
@@ -271,12 +297,13 @@ Rota legacy `/notes`, `/checklist`, `/opinions` redirecionam para `?drawer=` via
 | `DashboardQuickActions` | Ações rápidas |
 | `OnboardingBanner` | Banner de onboarding |
 
-### PDF (`src/components/pdf/`)
+### PDF (`src/components/pdf/`) — 5 componentes
 | Componente | Descrição |
 |---|---|
 | `BpcPDFDocument.tsx` | PDF BPC (@react-pdf) |
 | `ComparePDFDocument.tsx` | PDF comparativo |
 | `BpcConsolidatedPDFDocument.tsx` | PDF consolidado BPC |
+| `CasePDFDocument.tsx` | PDF genérico de caso |
 | `styles.ts` | Estilos compartilhados PDF |
 
 ### Obsoletos/Removidos
@@ -299,7 +326,13 @@ Rota legacy `/notes`, `/checklist`, `/opinions` redirecionam para `?drawer=` via
 | `useBodyScrollLock` | `src/hooks/useBodyScrollLock.ts` | Bloqueia scroll |
 | `useFocusTrap` | `src/hooks/useFocusTrap.ts` | Focus trap para modais/drawers |
 | `useKeyboardShortcuts` | `src/hooks/useKeyboardShortcuts.ts` | Atalhos de teclado |
-| `useUrgentDeadlines` | `src/hooks/useUrgentDeadlines.ts` | Prazos urgentes |
+| `useUrgentDeadlines` | `src/hooks/useUrgentDeadlines.ts` | Prazos urgentes (7 dias) |
+| `useCepLookup` | `src/hooks/useCepLookup.ts` | Busca automática de CEP com debounce |
+| `useClientCount` | `src/hooks/useClientCount.ts` | Contagem de clientes (sidebar) |
+| `useClientDetail` | `src/hooks/useClientDetail.ts` | Hook de detalhe do cliente com refetch |
+| `useCnis` | `src/hooks/useCnis.ts` | Gerenciamento de CNIS do caso |
+| `useCnisUpload` | `src/hooks/useCnisUpload.ts` | Upload de CNIS com progresso |
+| `usePendingCasesCount` | `src/hooks/usePendingCasesCount.ts` | Contagem de casos pendentes |
 
 ---
 
@@ -362,3 +395,11 @@ Componentes persistentes memoizados: `Header`, `Sidebar`, todos os widgets de da
 - Sidebar: `prefetch={false}` em todos os links
 - Case tabs: `prefetch={false}` em tabs bloqueadas por plano
 - Notification dropdown: `prefetch={false}`
+
+### Mobile Optimization
+- BottomNav: 5 itens (Início, Clientes, Casos, Calendário, Mais)
+- Sidebar responsiva: labels visíveis no mobile, ocultas em desktop collapsed
+- Modal: `flex-1 min-h-0` no conteúdo para scroll em mobile
+- FAB: labels visíveis no mobile, `z-[60]`
+- Global search: Cmd+K desktop, botão de busca no mobile
+- Bottom sheet: `BottomSheet` component para gestos de toque

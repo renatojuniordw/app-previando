@@ -22,49 +22,79 @@
 - **AI as assistant** — temperature 0 for extraction, never autonomous
 - **Portuguese-first** — UI labels in Portuguese, lowercase headings, Lucide icons (no emojis)
 - **Premium Legal Design** — slate/amber palette, Playfair Display headings, Inter UI, JetBrains Mono code
-- **State** — Zustand for global state (sidebar, toast, upgrade-modal)
+- **State** — Zustand for global state (sidebar, upgrade-modal, toast, admin-sidebar, recent-store, search-store)
 - **DRY First + SOLID (CRITICAL)** — Never create new components/hooks/utils without: (1) searching existing code first (skill: `dry-enforcement`), (2) applying SOLID — SRP, OCP, LSP, ISP, DIP. Cada componente/hook deve ter uma única responsabilidade, ser extensível por composição, depender de abstrações (props), e nunca forçar dependências desnecessárias.
-- **Shared hooks priorizados** — `useApi`, `useCrudActions` para data fetching e CRUD; `useBodyScrollLock`, `useFocusTrap`, `useKeyboardShortcuts` para UI; nunca duplicar padrões de loading/error/data
+- **12 hooks** — `useApi`, `useCrudActions` (data fetching/CRUD); `useBodyScrollLock`, `useFocusTrap`, `useKeyboardShortcuts` (UI); `useCepLookup`, `useClientCount`, `useClientDetail`, `useCnis`, `useCnisUpload`, `usePendingCasesCount`, `useUrgentDeadlines` (domain)
 
 ## Architecture
 ```
 src/
   app/
-    (auth)/            login, register, forgot/reset-password
+    (auth)/            login, register, forgot/reset-password (AuthHighlights, AuthTransition, CookieConsent)
     (dashboard)/       main app: Sidebar + Header + UpgradeModal + Toast
       dashboard/       metrics via Recharts
-      cases/[id]/      case detail with tabs + drawers + FAB
-      clients/         list + kanban
+      cases/[id]/      case detail with tabs + drawers + FAB + 15 sub-tabs
+      clients/         list, kanban, import, new
       calendar/        90-day calendar view + Google Calendar sync
       reports/         BI reports
-      settings/        user settings
-    admin/             admin panel
-    portal/            client portal
+      honorarios/      fee tracking
+      deadlines/       deadline overview
+      activity/        audit log
+      suporte/         support tickets
+      tools/           PDF tool + CNIS indicators dictionary
+      settings/        profile + billing
+    (public)/          privacy policy, terms of service
+    admin/             dashboard, users, payments, metrics, plans, support, CRUDs
+    portal/            client portal (FAQ, timeline, simulator, documents, verify)
     api/               all API routes
   components/
-    ui/                primitives: Button, Badge, Input, Modal, Drawer, Card,
-                       Spinner, PageHeader, PageError, AlertBanner,
-                       EmptyState, ActionsDropdown, ConfirmDialog, etc.
-    case/              CaseNotesDrawer, CaseChecklistDrawer, CaseOpinionsDrawer,
+    ui/                27 primitives: Button, Badge, Input, Modal, Drawer, Card,
+                       Spinner, PageHeader, PageError, AlertBanner, EmptyState,
+                       ActionsDropdown, ConfirmDialog, BottomSheet, FilterSheet,
+                       MobileBottomNav, QuickActionSheet, Select, Tooltip, Popover,
+                       CurrencyInput, DatePicker, MonthPicker, Skeleton, HelpText,
+                       MuiThemeProvider, MobileCardList
+    case/              9: CaseNotesDrawer, CaseChecklistDrawer, CaseOpinionsDrawer,
                        CaseBpcDrawer, CasePeticaoModal, CaseFloatingActions,
-                       DrawerRedirect, ModalitySelect
-    client/            ClientFloatingActions, ClientFormPage, DeleteClientModal
-    dashboard/         dashboard widgets (KPI Grid, Charts, Deadlines, Pipeline)
-    reports/           BI chart components
-    bpc/               BpcForm, BpcResult, BpcSocialInterview
-    pdf/               BpcPDFDocument, BpcConsolidatedPDFDocument, ComparePDFDocument
-    onboarding/        OnboardingWizard, OnboardingChecklist
-  hooks/               useApi, useCrudActions, useBodyScrollLock, useFocusTrap,
-                       useKeyboardShortcuts, useUrgentDeadlines
-  lib/                 shared logic: prisma, redis, engines, prompts, sanitize,
+                       DrawerRedirect, ModalitySelect, ProcessTimeline
+    client/            11: ClientFloatingActions, ClientFormPage, DeleteClientModal,
+                       ClientHeader, ClientPersonalInfoCard, ClientCasesListCard,
+                       ClientCaseStatsCards, ClientCnisCard, ClientPortalCard,
+                       EditNotesModal, NewCaseModal
+    dashboard/         7 widgets (KPI Grid, Charts, Deadlines, Pipeline, ActivityFeed,
+                       QuickActions, OnboardingBanner)
+    reports/           BI chart components (7)
+    bpc/               5: BpcForm, BpcResult, BpcSocialInterview, BpcFormSection, BpcLaudoModal
+    pdf/               5: BpcPDFDocument, BpcConsolidatedPDFDocument, CasePDFDocument,
+                       ComparePDFDocument, styles
+    onboarding/        OnboardingWizard, OnboardingChecklist, ContextualTooltip
+    admin/             AdminNav, AdminTable, AdminPagination, AdminCard, metrics/ (8)
+    portal/            IdentityVerification, PortalSimulator
+    plan/              FeatureLockedTeaser
+    search/            GlobalSearch, SearchResultItem
+    shared/            AddressFields
+    cases/             CnisInfoCard
+    calendar/          CalendarEventCard
+  hooks/               12 hooks: useApi, useCrudActions, useBodyScrollLock, useFocusTrap,
+                       useKeyboardShortcuts, useUrgentDeadlines, useCepLookup,
+                       useClientCount, useClientDetail, useCnis, useCnisUpload,
+                       usePendingCasesCount
+  lib/                 ~59 shared modules: prisma, redis, engines, prompts, sanitize,
                        api-error (+ extractApiError), utils (+ formatPercentage),
-                       modalidade-labels (+ getModalityLabel)
-  services/            external integrations: CNIS, Mercado Pago, etc.
+                       modalidade-labels (+ getModalityLabel), glossary, cnj-parser,
+                       feature-marketing, track-conversion, encryption, cpf, br-data,
+                       csp, request-ip, sanitize-server, account-deletion,
+                       client-import-parser, cnis-status, fee-status, cause-value-engine,
+                       prisma-user-encryption, prisma-bpc-encryption, email/templates,
+                       strategies/, prompts/
+  services/            CNIS, BPC, Previdência (calculation, simulation, retroativo, cause-value),
+                       Mercado Pago, R2, Opinion Generator, Petição Inicial, Revision,
+                       Google Calendar, Email, Register
   jobs/                BullMQ workers
-  store/               Zustand stores (sidebar, toast, upgrade-modal)
+  store/               6 Zustand stores (sidebar, upgrade-modal, toast, admin-sidebar, recent-store, search-store)
   types/               TS type declarations
-prisma/schema.prisma — 821 lines, 25+ models
-docs/*.md             — 18 comprehensive documentation files
+prisma/schema.prisma — 1030 lines, 31 models (19 enums)
+docs/*.md             — 24 comprehensive documentation files (+ superpowers spec/plans)
 ```
 
 ## MCP Telegram

@@ -1,6 +1,6 @@
 # 02 — BACKEND
 
-> Última atualização: 2026-07-07
+> Última atualização: 2026-07-15
 
 ---
 
@@ -10,7 +10,7 @@
 | Pacote | Versão | Função |
 |--------|--------|--------|
 | `next` | ^14.2.35 | Framework fullstack (API routes + SSR) |
-| `next-auth` | ^5.0.0-beta.25 | Autenticação (NextAuth v5) |
+| `next-auth` | ^5.0.0-beta.31 | Autenticação (NextAuth v5) |
 | `@prisma/client` | ^5.22.0 | ORM para PostgreSQL |
 | `prisma` | ^5.22.0 | Schema migrations |
 | `zod` | ^3.24.1 | Validação de schema |
@@ -31,7 +31,7 @@
 | `ioredis` | ^5.4.1 | Client Redis |
 | `@aws-sdk/client-s3` | ^3.699.0 | Cloudflare R2 |
 | `@aws-sdk/s3-request-presigner` | ^3.699.0 | URLs assinadas R2 |
-| `mercadopago` | ^2.0.15 | Assinaturas recorrentes |
+| `mercadopago` | ^3.2.0 | Assinaturas recorrentes |
 | `bcryptjs` | ^2.4.3 | Hash de senhas |
 
 ### Utilidades
@@ -111,6 +111,8 @@ PDF Upload → Extração de Texto → Parser Programático (instantâneo)
 | `cnis-processing` | `src/jobs/cnis-worker.ts` | 2 | Processamento híbrido CNIS |
 | `audit-log` | `src/jobs/audit-worker.ts` | 10 | Escrita assíncrona de auditoria |
 | `deadline-notifications` | `src/jobs/deadline-worker.ts` | 1 | Notificações de prazo (cron 08:00) |
+| `email-notifications` | `src/jobs/email-worker.ts` | 1 | Envio de emails em fila |
+| `fee-payments` | `src/jobs/fee-worker.ts` | 1 | Processamento de pagamentos de honorários |
 
 ### Crons
 - **NENHUM** cron reset-usage inline (reset no `plan-guard.ts`)
@@ -173,13 +175,26 @@ PDF Upload → Extração de Texto → Parser Programático (instantâneo)
 - **Arquivo:** `src/services/mercadopago.ts`
 - **Preços:** SOLO: R$97, PRO: R$197
 
-### Calculation Plugins
-- **Arquivo:** `src/services/plugins/`
-- **Padrão:** Plugin strategy — cada modalidade previdenciária é um plugin independente
-- **Interface:** `CalculationPlugin` com `canApply()`, `calculate()`, `getRequirements()`
-- **Registro central:** `plugin-registry.ts` carrega todos os plugins via discovery
-- **Plugins ativos:** Aposentadoria por Idade, Aposentadoria por Tempo de Contribuição, Aposentadoria Especial, Pensão por Morte, Auxílio-Doença, Auxílio-Acidente, Salário-Maternidade, Aposentadoria da Pessoa com Deficiência, Aposentadoria do Professor, Aposentadoria Rural, Aposentadoria Híbrida, Aposentadoria por Pontos
-- **Extensão:** nova modalidade = novo arquivo plugin + registro; sem alteração no orchestrator
+### Petição Inicial (IA)
+- **Arquivo:** `src/services/peticao-generator.ts`
+- **Modelo:** `gpt-4.1-mini`, **temperature:** 0.3
+- **Gera:** Petição inicial completa com base nos dados do caso
+
+### Revision Service
+- **Arquivo:** `src/services/revision-service.ts`
+- **Função:** Cálculo de revisão de benefício (diferença entre RMI concedido e revisado)
+
+### Google Calendar
+- **Arquivo:** `src/services/google-calendar.ts`
+- **Função:** Sincronização com Google Agenda (OAuth2, list/insert/update events)
+
+### Email Service
+- **Arquivo:** `src/services/email-service.ts`
+- **Função:** Envio de emails em fila (BullMQ) — templates em `src/lib/email/templates/`
+
+### Cause Value Orchestrator
+- **Arquivo:** `src/services/previdencia/cause-value-orchestrator.ts`
+- **Função:** Cálculo de causa de pedir (valor da causa para petição inicial)
 
 ---
 
@@ -279,27 +294,15 @@ PDF Upload → Extração de Texto → Parser Programático (instantâneo)
 | POST | `/api/cases/[id]/bpc/medical` | Perguntas médicas | 15 | 1h |
 | POST | `/api/cases/[id]/bpc/checklist` | Checklist | 15 | 1h |
 
-### Sugestão de Modalidades
+### Search
 | Método | Rota | Função | Limite | Janela |
 |--------|------|--------|----------|---------|
-| GET | `/api/cases/[id]/suggest-modalities` | Sugere modalidades (22 cálculos) | 10 | 1h |
+| GET | `/api/search` | Busca global (casos, clientes) | - | - |
 
-### Export
+### CEP
 | Método | Rota | Função | Limite | Janela |
 |--------|------|--------|----------|---------|
-| GET | `/api/export/pdf/[caseId]` | Gera PDF (pdfkit) | - | - |
-
-### Billing
-| Método | Rota | Função | Limite | Janela |
-|--------|------|--------|----------|---------|
-| GET | `/api/billing/plans` | Lista planos | - | - |
-| POST | `/api/billing/subscribe` | Cria assinatura MP | 5 | 1h |
-| POST | `/api/billing/cancel` | Cancela | - | - |
-
-### Webhooks
-| Método | Rota | Função | Limite | Janela |
-|--------|------|--------|----------|---------|
-| POST | `/api/webhooks/mercadopago` | Webhook MP (HMAC validation) | - | - |
+| GET | `/api/cep?cep=...` | Busca CEP (ViaCEP) | - | - |
 
 ### Notificações
 | Método | Rota | Função | Limite | Janela |
@@ -317,17 +320,59 @@ PDF Upload → Extração de Texto → Parser Programático (instantâneo)
 |--------|------|--------|----------|---------|
 | GET | `/api/dashboard/summary` | Resumo (clientes, casos, cálculos, prazos) | - | - |
 | GET | `/api/dashboard/deadlines` | Prazos próximos (30 dias) | - | - |
+| GET | `/api/dashboard/insights` | Insights do dashboard | - | - |
 
-### Ferramentas
+### Honorários
 | Método | Rota | Função | Limite | Janela |
 |--------|------|--------|----------|---------|
-| GET | `/api/pdf/[tool]` | PDF (ex: consolidado BPC) | - | - |
-| GET | `/api/documents/download` | Download de documento | - | - |
+| GET | `/api/cases/[id]/fees` | Lista honorários | - | - |
+| POST | `/api/cases/[id]/fees` | Cria honorário | - | - |
+| GET | `/api/fees` | Lista global | - | - |
+
+### Export
+| Método | Rota | Função | Limite | Janela |
+|--------|------|--------|----------|---------|
+| GET | `/api/export/pdf/[caseId]` | Gera PDF (pdfkit) | - | - |
+| GET | `/api/export/bpc-pdf` | Exporta PDF BPC | - | - |
+| GET | `/api/export/data` | Exporta dados | - | - |
+
+### Portal do Cliente
+| Método | Rota | Função | Limite | Janela |
+|--------|------|--------|----------|---------|
+| GET | `/api/portal/[token]` | Dados do caso via token | - | - |
+| GET | `/api/portal/[token]/documents` | Documentos compartilhados | - | - |
+| GET | `/api/portal/[token]/timeline` | Timeline do caso | - | - |
+| GET | `/api/portal/[token]/faq` | FAQ customizada | - | - |
+| GET | `/api/portal/[token]/export-pdf` | Exporta PDF do portal | - | - |
+| POST | `/api/portal/[token]/simulate` | Simulador no portal | 5 | 1h |
+| POST | `/api/portal/[token]/verify` | Verifica identidade | 10 | 1h |
+| POST | `/api/cases/[id]/portal` | Gera token de acesso | 5 | 1h |
+| PATCH | `/api/cases/[id]/portal/config` | Configura portal | 10 | 1h |
+
+### Success Analysis
+| Método | Rota | Função | Limite | Janela |
+|--------|------|--------|----------|---------|
+| POST | `/api/cases/[id]/success-analysis` | Gera análise de sucesso | - | - |
+
+### Viability Score
+| Método | Rota | Função | Limite | Janela |
+|--------|------|--------|----------|---------|
+| POST | `/api/cases/[id]/viability-score` | Score de viabilidade | - | - |
+
+### Suporte
+| Método | Rota | Função | Limite | Janela |
+|--------|------|--------|----------|---------|
+| GET | `/api/support/tickets` | Lista chamados | - | - |
+| POST | `/api/support/tickets` | Abre chamado | - | - |
+
+### Conversion Tracking
+| Método | Rota | Função | Limite | Janela |
+|--------|------|--------|----------|---------|
+| POST | `/api/track/conversion` | Rastreia evento de conversão | - | - |
 
 ### Cron
 | Método | Rota | Função | Limite | Janela |
 |--------|------|--------|----------|---------|
-| GET | `/api/cron/check-processes` | Verifica processos | - | - |
 | GET | `/api/cron/reset-usage` | Reseta uso mensal | - | - |
 
 ### Health
@@ -449,7 +494,36 @@ type PlanFeature =
 
 ---
 
-## 8. OpenAI Client
+## 8. Libs Adicionais (atualizado 2026-07-15)
+
+| Arquivo | Função |
+|---------|--------|
+| `lib/glossary.ts` | Glossário de termos previdenciários para portal |
+| `lib/cnj-parser.ts` | Parser de números de processo CNJ |
+| `lib/feature-marketing.ts` | Funis de conversão e marketing |
+| `lib/track-conversion.ts` | Rastreamento de eventos de conversão |
+| `lib/fetch-client-info.ts` | Fetch de info de clientes com cache |
+| `lib/client-import-parser.ts` | Parser de CSV para importação de clientes |
+| `lib/encryption.ts` | Criptografia de dados sensíveis (BPC) |
+| `lib/cpf.ts` | Validação e formatação de CPF |
+| `lib/br-data.ts` | Dados brasileiros (estados, cidades) |
+| `lib/csp.ts` | Content Security Policy (nonce-based) |
+| `lib/request-ip.ts` | Extração de IP do request |
+| `lib/sanitize-server.ts` | Sanitização server-side adicional |
+| `lib/account-deletion.ts` | Soft delete de conta (LGPD) |
+| `lib/oauth-token-adapter.ts` | Adaptador de token OAuth |
+| `lib/cnis-status.ts` | Helpers de status CNIS |
+| `lib/fee-status.ts` | Helpers de status de honorários |
+| `lib/previdenciario-constants.ts` | Constantes previdenciárias |
+| `lib/cause-value-engine.ts` | Motor de cálculo de causa de pedir |
+| `lib/prisma-user-encryption.ts` | Criptografia de dados do usuário no Prisma |
+| `lib/prisma-bpc-encryption.ts` | Criptografia de dados BPC no Prisma |
+| `email/templates/` | Templates de email (password reset, etc.) |
+| `prompts/` | Prompts de IA por domínio |
+
+---
+
+## 9. OpenAI Client
 
 ### Arquivo
 - `src/lib/openai.ts`
@@ -465,7 +539,7 @@ type PlanFeature =
 
 ---
 
-## 9. Libs Auxiliares
+## 10. Libs Auxiliares (Core)
 
 | Arquivo | Função |
 |---------|--------|
@@ -494,7 +568,7 @@ type PlanFeature =
 
 ---
 
-## 10. Known Fixes & Patches
+## 11. Known Fixes & Patches
 
 ### 2026-07-07 — Security Hardening
 - **OpenAPI CORS**: Removido `Access-Control-Allow-Origin: '*'` da rota `/api/openapi`

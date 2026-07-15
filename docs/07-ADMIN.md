@@ -1,6 +1,6 @@
 # 07 — ADMIN
 > Painel Administrativo — app.previando.com.br/admin
-> Última atualização: 2026-06-27
+> Última atualização: 2026-07-15
 
 ---
 
@@ -31,7 +31,7 @@ Arquivo: `src/app/admin/layout.tsx`
 - Sidebar escura (`bg-slate-900`) + header branco
 - Botão "Voltar ao App" no rodapé
 
-### Navegação (8 itens)
+### Navegação (9 itens)
 
 | Rota | Label | Ícone |
 |------|-------|-------|
@@ -43,6 +43,7 @@ Arquivo: `src/app/admin/layout.tsx`
 | `/admin/salario-minimo` | Salário Mínimo | DollarSign |
 | `/admin/modalidades` | Modalidades | Tags |
 | `/admin/regras-aposentadoria` | Regras Previdenciárias | BookOpen |
+| `/admin/suporte` | Suporte | Headphones |
 
 ---
 
@@ -81,6 +82,10 @@ Redireciona para `/admin/dashboard`.
 - Agrupadas por modalidade (accordion)
 - Upsert por `{ modality, gender, effectiveDate }`
 
+### `/admin/suporte` — Gestão de Chamados
+- Lista de tickets com filtro por status/prioridade
+- Ações: responder, alterar status, fechar chamado
+
 ### `/admin/salario-minimo` — CRUD de Salários
 - Tabela histórica
 - Primeiro registro: badge "Vigente"
@@ -92,6 +97,8 @@ Redireciona para `/admin/dashboard`.
 
 ### Métricas
 `GET /api/admin/metrics` — Métricas agregadas (users, revenue, usage, cases)
+`GET /api/admin/conversion-funnel` — Funil de conversão (marketing)
+`GET /api/admin/audit-integrity` — Integridade da cadeia de auditoria
 
 ### Usuários
 `GET /api/admin/users` — Lista paginada (page, search, plan, status)

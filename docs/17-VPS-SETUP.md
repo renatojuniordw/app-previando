@@ -1,6 +1,6 @@
 # 17 — VPS Setup (Cloudflare Tunnel + Docker Compose)
 > Contabo VPS — Docker Compose, Nginx local, Cloudflare Tunnel
-> Última atualização: 2026-07-07
+> Última atualização: 2026-07-15
 
 ---
 

@@ -1,6 +1,6 @@
 # 05 — STORAGE
 > Cloudflare R2 + PostgreSQL + Processamento Híbrido de CNIS
-> Última atualização: 2026-06-27
+> Última atualização: 2026-07-15
 
 ---
 
