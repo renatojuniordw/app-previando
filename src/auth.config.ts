@@ -11,7 +11,7 @@ import { prisma } from '@/lib/prisma'
 // cliente gerado não faz `require` estático de node:builtins incompatíveis
 // (ao contrário do `ioredis`, que faz isso em `tracing.js`).
 
-export const SESSION_MAX_AGE = 86400 // 24h
+export const SESSION_MAX_AGE = 3600 // 1h — reduz janela de stale JWT
 
 declare module 'next-auth' {
   interface Session {

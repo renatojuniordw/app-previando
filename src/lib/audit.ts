@@ -46,7 +46,11 @@ export async function logAudit({ userId, action, resource, req, metadata }: Audi
   }
 
   try {
-    await getAuditQueue().add('write-audit', jobData)
+    await getAuditQueue().add('write-audit', jobData, {
+      attempts: 2,
+      backoff: { type: 'exponential', delay: 2000 },
+      removeOnComplete: true,
+    })
   } catch {
     // Fallback síncrono se a queue não estiver disponível
     await writeAuditDirect(jobData)
@@ -96,58 +100,72 @@ export interface AuditChainVerificationResult {
 
 /**
  * Recalcula a cadeia de hashes do zero e confere contra o que está gravado.
+ * Processa em lotes de 1000 para evitar OOM com tabelas grandes.
  * Se alguém alterar ou apagar uma linha diretamente no banco, a cadeia quebra
  * a partir dali — é a "prova de integridade" do prontuário/trilha de auditoria.
  */
 export async function verifyAuditChainIntegrity(): Promise<AuditChainVerificationResult> {
-  const logs = await prisma.auditLog.findMany({
-    orderBy: { createdAt: 'asc' },
-    select: {
-      id: true, userId: true, action: true, resource: true,
-      ipAddress: true, userAgent: true, metadata: true,
-      createdAt: true, previousHash: true, hash: true,
-    },
-  })
-
+  const BATCH_SIZE = 1000
   let expectedPrevious = 'genesis'
   let checkedCount = 0
+  let cursorId: string | undefined = undefined
+  let hasMore = true
 
-  for (const log of logs) {
-    // Registros anteriores à introdução do hash encadeado não têm o que verificar
-    if (log.hash === null) continue
+  while (hasMore) {
+    const batch = await prisma.auditLog.findMany({
+      orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
+      take: BATCH_SIZE,
+      ...(cursorId ? { cursor: { id: cursorId }, skip: 1 } : {}),
+      select: {
+        id: true, userId: true, action: true, resource: true,
+        ipAddress: true, userAgent: true, metadata: true,
+        createdAt: true, previousHash: true, hash: true,
+      },
+    }).then((r) => r) as Array<{
+      id: string; userId: string | null; action: string; resource: string;
+      ipAddress: string | null; userAgent: string | null; metadata: unknown;
+      createdAt: Date; previousHash: string | null; hash: string | null;
+    }>
 
-    // A continuidade da cadeia (previousHash → hash) é sempre verificável e
-    // pega qualquer linha inserida, removida ou reordenada fora da aplicação.
-    if (log.previousHash !== expectedPrevious) {
-      return { valid: false, checkedCount, brokenAtId: log.id }
-    }
+    if (batch.length === 0) break
+    hasMore = batch.length === BATCH_SIZE
 
-    // O conteúdo só é re-verificável por completo se o userId original ainda
-    // está intacto. Quando a conta é excluída, AuditLog.userId vira NULL por
-    // design (ver M6 — a trilha sobrevive à exclusão da conta), uma mutação
-    // legítima da aplicação que não deve ser confundida com adulteração.
-    // Ainda assim a cadeia continua a partir do hash já gravado (imutável).
-    if (log.userId !== null) {
-      const recomputed = computeEntryHash(
-        expectedPrevious,
-        {
-          userId: log.userId,
-          action: log.action,
-          resource: log.resource,
-          ipAddress: log.ipAddress,
-          userAgent: log.userAgent,
-          metadata: log.metadata ?? undefined,
-        },
-        log.createdAt
-      )
+    for (const log of batch) {
+      // Registros anteriores à introdução do hash encadeado não têm o que verificar
+      if (log.hash === null) continue
 
-      if (recomputed !== log.hash) {
+      // A continuidade da cadeia (previousHash → hash) é sempre verificável
+      if (log.previousHash !== expectedPrevious) {
         return { valid: false, checkedCount, brokenAtId: log.id }
       }
+
+      // Verifica conteúdo quando userId não foi anonimizado
+      if (log.userId !== null) {
+        const recomputed = computeEntryHash(
+          expectedPrevious,
+          {
+            userId: log.userId,
+            action: log.action,
+            resource: log.resource,
+            ipAddress: log.ipAddress,
+            userAgent: log.userAgent,
+            metadata: log.metadata ?? undefined,
+          },
+          log.createdAt
+        )
+
+        if (recomputed !== log.hash) {
+          return { valid: false, checkedCount, brokenAtId: log.id }
+        }
+      }
+
+      expectedPrevious = log.hash
+      checkedCount++
     }
 
-    expectedPrevious = log.hash
-    checkedCount++
+    if (batch.length > 0) {
+      cursorId = batch[batch.length - 1].id
+    }
   }
 
   return { valid: true, checkedCount }

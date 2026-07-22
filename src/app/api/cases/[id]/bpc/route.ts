@@ -3,7 +3,7 @@ import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
 import { rateLimit } from '@/lib/rate-limit'
 import { verifyCaseOwnership, verifyCaseOwnershipAndActive } from '@/lib/ownership'
-import { guardFeature, guardBpcAnalysisLimit, tryConsumeMonthlyUsage } from '@/lib/plan-guard'
+import { guardFeature, guardBpcAnalysisLimit } from '@/lib/plan-guard'
 import { handleApiError } from '@/lib/api-error'
 import { NoteType } from '@prisma/client'
 import { z } from 'zod'
@@ -72,8 +72,6 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       update: { ...rest, barreiras: barreirasRelatadas },
       create: { ...rest, barreiras: barreirasRelatadas, caseId: params.id },
     })
-
-    await tryConsumeMonthlyUsage(session.user.id, session.user.plan, 'bpcAnalysesThisMonth')
 
     return NextResponse.json(analysis)
   } catch (err: unknown) {

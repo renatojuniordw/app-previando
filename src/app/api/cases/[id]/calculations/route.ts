@@ -3,7 +3,7 @@ import { authWithFreshPlan as auth } from '@/lib/auth-server'
 import { prisma } from '@/lib/prisma'
 import { rateLimit } from '@/lib/rate-limit'
 import { verifyCaseOwnership, verifyCaseOwnershipAndActive } from '@/lib/ownership'
-import { guardCalculationLimit, tryConsumeMonthlyUsage } from '@/lib/plan-guard'
+import { guardCalculationLimit } from '@/lib/plan-guard'
 import { handleApiError } from '@/lib/api-error'
 import { logAudit } from '@/lib/audit'
 import { runCalculationSchema } from './schema'
@@ -57,9 +57,6 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       disabilityDegree: parsed.data.disabilityDegree,
       converterTempoComumPCD: parsed.data.converterTempoComumPCD,
     })
-
-    // Incrementa contador mensal de uso do plano (atômico — evita estourar o limite em corridas)
-    await tryConsumeMonthlyUsage(session.user.id, session.user.plan, 'calculationsThisMonth')
 
     // Registrar log de atividade
     await logAudit({

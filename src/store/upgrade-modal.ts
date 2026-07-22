@@ -16,5 +16,5 @@ export const useUpgradeModal = create<UpgradeModalState>((set) => ({
   upgradeRequired: 'SOLO',
   openModal: ({ message, feature, upgradeRequired }) =>
     set({ open: true, message, feature, upgradeRequired }),
-  closeModal: () => set({ open: false }),
+  closeModal: () => set({ open: false, message: '', feature: '', upgradeRequired: 'SOLO' }),
 }))

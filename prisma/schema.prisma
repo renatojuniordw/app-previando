@@ -215,6 +215,7 @@ model Client {
   cases        Case[]
   cnisDocument CnisDocument?
 
+  @@index([cpfHash])
   @@index([userId])
   @@map("clients")
 }
@@ -355,6 +356,7 @@ model CnisDocument {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@index([processingStatus])
   @@map("cnis_documents")
 }
 
@@ -567,7 +569,7 @@ model Simulation {
 model Payment {
   id     String @id @default(cuid())
   userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   mpPaymentId      String        @unique
   mpSubscriptionId String?
@@ -609,6 +611,7 @@ model WebhookEvent {
 
   @@index([provider, externalId])
   @@index([processedAt])
+  @@index([createdAt])
   @@map("webhook_events")
 }
 

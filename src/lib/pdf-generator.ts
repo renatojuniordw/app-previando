@@ -135,10 +135,20 @@ export interface CasePDFData {
 
 function collectBuffer(doc: PDFKit.PDFDocument): Promise<Buffer> {
   return new Promise<Buffer>((resolve, reject) => {
+    const timeout = setTimeout(() => {
+      reject(new Error('PDF generation timed out after 30s'))
+    }, 30_000)
+
     const chunks: Buffer[] = []
     doc.on('data', (chunk: Buffer) => chunks.push(chunk))
-    doc.on('end', () => resolve(Buffer.concat(chunks)))
-    doc.on('error', reject)
+    doc.on('end', () => {
+      clearTimeout(timeout)
+      resolve(Buffer.concat(chunks))
+    })
+    doc.on('error', (err) => {
+      clearTimeout(timeout)
+      reject(err)
+    })
   })
 }
 

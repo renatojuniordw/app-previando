@@ -1,13 +1,5 @@
-import { useState, useEffect } from 'react'
-import api from '@/lib/api'
+import { usePollingCount } from './usePollingCount'
 
-export function usePendingCasesCount() {
-  const [count, setCount] = useState(0)
-  useEffect(() => {
-    const fetch = () => api.get('/cases?limit=1').then(r => setCount(r.data.total ?? 0)).catch(() => {})
-    fetch()
-    const interval = setInterval(fetch, 60000)
-    return () => clearInterval(interval)
-  }, [])
-  return count
+export function usePendingCasesCount(): number {
+  return usePollingCount('/cases?limit=1')
 }

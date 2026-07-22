@@ -201,28 +201,22 @@ export async function guardCalculationLimit(userId: string, plan: string): Promi
     throw new PlanLimitError('Simulação não está disponível no seu plano.', 'CALCULATIONS', plan === 'FREE' ? 'SOLO' : 'PRO')
   }
 
-  if (limit.maxCalculationsPerMonth === -1) return
-
-  const record = await getOrResetUsageRecord(userId)
-  const currentCount = record?.calculationsThisMonth ?? 0
-
-  if (currentCount >= limit.maxCalculationsPerMonth) {
-    throw new PlanLimitError(
-      `Limite de ${limit.maxCalculationsPerMonth} simulações/mês atingido. Atualize seu plano ou aguarde o próximo mês.`,
-      'CALCULATIONS',
-      plan === 'FREE' ? 'SOLO' : 'PRO'
-    )
-  }
-
-  if (
-    limit.maxCalculationsPerMonth > 0 &&
-    currentCount / limit.maxCalculationsPerMonth >= NEAR_LIMIT_THRESHOLD
-  ) {
-    notifyLimitNear(
-      userId,
-      'CALCULATIONS',
-      `Você usou ${currentCount} de ${limit.maxCalculationsPerMonth} cálculos disponíveis neste mês.`
-    )
+  if (limit.maxCalculationsPerMonth !== -1) {
+    const nearThreshold = Math.round(limit.maxCalculationsPerMonth * NEAR_LIMIT_THRESHOLD)
+    const consumed = await tryConsumeMonthlyUsage(userId, plan, 'calculationsThisMonth')
+    if (!consumed) {
+      throw new PlanLimitError(
+        `Limite de ${limit.maxCalculationsPerMonth} simulações/mês atingido. Atualize seu plano ou aguarde o próximo mês.`,
+        'CALCULATIONS',
+        plan === 'FREE' ? 'SOLO' : 'PRO'
+      )
+    }
+    // Aviso perto do limite após consumir (aproximado)
+    const record = await getOrResetUsageRecord(userId).catch(() => null)
+    const used = record?.calculationsThisMonth ?? 1
+    if (used >= nearThreshold && used <= limit.maxCalculationsPerMonth) {
+      notifyLimitNear(userId, 'CALCULATIONS', `Você usou ${used} de ${limit.maxCalculationsPerMonth} cálculos disponíveis neste mês.`)
+    }
   }
 }
 
@@ -232,28 +226,20 @@ export async function guardOpinionLimit(userId: string, plan: string): Promise<v
     throw new PlanLimitError('Consulta de jurisprudência não está disponível no seu plano.', 'OPINIONS', plan === 'FREE' ? 'SOLO' : 'PRO')
   }
 
-  if (limit.maxOpinionsPerMonth === -1) return
-
-  const record = await getOrResetUsageRecord(userId)
-  const currentCount = record?.opinionsThisMonth ?? 0
-
-  if (currentCount >= limit.maxOpinionsPerMonth) {
-    throw new PlanLimitError(
-      `Limite de ${limit.maxOpinionsPerMonth} consultas/mês atingido. Atualize seu plano ou aguarde o próximo mês.`,
-      'OPINIONS',
-      plan === 'FREE' ? 'SOLO' : 'PRO'
-    )
-  }
-
-  if (
-    limit.maxOpinionsPerMonth > 0 &&
-    currentCount / limit.maxOpinionsPerMonth >= NEAR_LIMIT_THRESHOLD
-  ) {
-    notifyLimitNear(
-      userId,
-      'OPINIONS',
-      `Você usou ${currentCount} de ${limit.maxOpinionsPerMonth} pareceres IA disponíveis neste mês.`
-    )
+  if (limit.maxOpinionsPerMonth !== -1) {
+    const consumed = await tryConsumeMonthlyUsage(userId, plan, 'opinionsThisMonth')
+    if (!consumed) {
+      throw new PlanLimitError(
+        `Limite de ${limit.maxOpinionsPerMonth} consultas/mês atingido. Atualize seu plano ou aguarde o próximo mês.`,
+        'OPINIONS',
+        plan === 'FREE' ? 'SOLO' : 'PRO'
+      )
+    }
+    const record = await getOrResetUsageRecord(userId).catch(() => null)
+    const used = record?.opinionsThisMonth ?? 1
+    if (limit.maxOpinionsPerMonth > 0 && used >= Math.round(limit.maxOpinionsPerMonth * NEAR_LIMIT_THRESHOLD)) {
+      notifyLimitNear(userId, 'OPINIONS', `Você usou ${used} de ${limit.maxOpinionsPerMonth} pareceres IA disponíveis neste mês.`)
+    }
   }
 }
 
@@ -263,17 +249,15 @@ export async function guardBpcAnalysisLimit(userId: string, plan: string): Promi
     throw new PlanLimitError('Análise BPC não está disponível no seu plano.', 'BPC_ANALYSIS', plan === 'FREE' ? 'SOLO' : 'PRO')
   }
 
-  if (limit.bpcAnalysesPerMonth === -1) return
-
-  const record = await getOrResetUsageRecord(userId)
-  const currentCount = record?.bpcAnalysesThisMonth ?? 0
-
-  if (currentCount >= limit.bpcAnalysesPerMonth) {
-    throw new PlanLimitError(
-      `Limite de ${limit.bpcAnalysesPerMonth} análises BPC/mês atingido. Atualize seu plano ou aguarde o próximo mês.`,
-      'BPC_ANALYSIS',
-      plan === 'FREE' ? 'SOLO' : 'PRO'
-    )
+  if (limit.bpcAnalysesPerMonth !== -1) {
+    const consumed = await tryConsumeMonthlyUsage(userId, plan, 'bpcAnalysesThisMonth')
+    if (!consumed) {
+      throw new PlanLimitError(
+        `Limite de ${limit.bpcAnalysesPerMonth} análises BPC/mês atingido. Atualize seu plano ou aguarde o próximo mês.`,
+        'BPC_ANALYSIS',
+        plan === 'FREE' ? 'SOLO' : 'PRO'
+      )
+    }
   }
 }
 
@@ -287,28 +271,20 @@ export async function guardPeticaoLimit(userId: string, plan: string): Promise<v
     )
   }
 
-  if (limit.maxPeticoesPerMonth === -1) return
-
-  const record = await getOrResetUsageRecord(userId)
-  const currentCount = record?.peticoesThisMonth ?? 0
-
-  if (currentCount >= limit.maxPeticoesPerMonth) {
-    throw new PlanLimitError(
-      `Limite de ${limit.maxPeticoesPerMonth} petições/mês atingido. Atualize para PRO para petições ilimitadas.`,
-      'PETICAO',
-      'PRO'
-    )
-  }
-
-  if (
-    limit.maxPeticoesPerMonth > 0 &&
-    currentCount / limit.maxPeticoesPerMonth >= NEAR_LIMIT_THRESHOLD
-  ) {
-    notifyLimitNear(
-      userId,
-      'PETICAO',
-      `Você usou ${currentCount} de ${limit.maxPeticoesPerMonth} petições disponíveis neste mês.`
-    )
+  if (limit.maxPeticoesPerMonth !== -1) {
+    const consumed = await tryConsumeMonthlyUsage(userId, plan, 'peticoesThisMonth')
+    if (!consumed) {
+      throw new PlanLimitError(
+        `Limite de ${limit.maxPeticoesPerMonth} petições/mês atingido. Atualize para PRO para petições ilimitadas.`,
+        'PETICAO',
+        'PRO'
+      )
+    }
+    const record = await getOrResetUsageRecord(userId).catch(() => null)
+    const used = record?.peticoesThisMonth ?? 1
+    if (limit.maxPeticoesPerMonth > 0 && used >= Math.round(limit.maxPeticoesPerMonth * NEAR_LIMIT_THRESHOLD)) {
+      notifyLimitNear(userId, 'PETICAO', `Você usou ${used} de ${limit.maxPeticoesPerMonth} petições disponíveis neste mês.`)
+    }
   }
 }
 
@@ -322,28 +298,20 @@ export async function guardRevisionLimit(userId: string, plan: string): Promise<
     )
   }
 
-  if (limit.maxRevisionsPerMonth === -1) return
-
-  const record = await getOrResetUsageRecord(userId)
-  const currentCount = record?.revisionsThisMonth ?? 0
-
-  if (currentCount >= limit.maxRevisionsPerMonth) {
-    throw new PlanLimitError(
-      `Limite de ${limit.maxRevisionsPerMonth} revisões/mês atingido. Atualize para PRO para revisões ilimitadas.`,
-      'REVISION_MODULE',
-      'PRO'
-    )
-  }
-
-  if (
-    limit.maxRevisionsPerMonth > 0 &&
-    currentCount / limit.maxRevisionsPerMonth >= NEAR_LIMIT_THRESHOLD
-  ) {
-    notifyLimitNear(
-      userId,
-      'REVISION_MODULE',
-      `Você usou ${currentCount} de ${limit.maxRevisionsPerMonth} revisões de benefício disponíveis neste mês.`
-    )
+  if (limit.maxRevisionsPerMonth !== -1) {
+    const consumed = await tryConsumeMonthlyUsage(userId, plan, 'revisionsThisMonth')
+    if (!consumed) {
+      throw new PlanLimitError(
+        `Limite de ${limit.maxRevisionsPerMonth} revisões/mês atingido. Atualize para PRO para revisões ilimitadas.`,
+        'REVISION_MODULE',
+        'PRO'
+      )
+    }
+    const record = await getOrResetUsageRecord(userId).catch(() => null)
+    const used = record?.revisionsThisMonth ?? 1
+    if (limit.maxRevisionsPerMonth > 0 && used >= Math.round(limit.maxRevisionsPerMonth * NEAR_LIMIT_THRESHOLD)) {
+      notifyLimitNear(userId, 'REVISION_MODULE', `Você usou ${used} de ${limit.maxRevisionsPerMonth} revisões de benefício disponíveis neste mês.`)
+    }
   }
 }
 

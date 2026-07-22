@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { authWithFreshPlan as auth } from '@/lib/auth-server'
 import { prisma } from '@/lib/prisma'
 import { verifyCaseOwnership, verifyCaseOwnershipAndActive } from '@/lib/ownership'
-import { guardOpinionLimit, tryConsumeMonthlyUsage, getPlanLimit } from '@/lib/plan-guard'
+import { guardOpinionLimit, getPlanLimit } from '@/lib/plan-guard'
 import { generateOpinion } from '@/services/opinion-generator'
 import { rateLimit } from '@/lib/rate-limit'
 import { handleApiError } from '@/lib/api-error'
@@ -113,8 +113,6 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
         status: 'GENERATED',
       },
     })
-
-    await tryConsumeMonthlyUsage(session.user.id, session.user.plan, 'opinionsThisMonth')
 
     await logAudit({
       userId: session.user.id,

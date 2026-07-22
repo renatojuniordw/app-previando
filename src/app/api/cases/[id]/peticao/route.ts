@@ -4,7 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { verifyCaseOwnershipAndActive } from '@/lib/ownership'
 import { handleApiError } from '@/lib/api-error'
 import { rateLimit } from '@/lib/rate-limit'
-import { guardPeticaoLimit, tryConsumeMonthlyUsage } from '@/lib/plan-guard'
+import { guardPeticaoLimit } from '@/lib/plan-guard'
 import { generatePeticao } from '@/services/peticao-generator'
 import { BENEFIT_LABELS } from '@/lib/constants'
 
@@ -72,8 +72,6 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       },
       retroativoTotal: retroativo?.finalNetValue != null ? Number(retroativo.finalNetValue) : undefined,
     })
-
-    await tryConsumeMonthlyUsage(session.user.id, session.user.plan, 'peticoesThisMonth')
 
     return NextResponse.json({
       content: result.content,

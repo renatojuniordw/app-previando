@@ -48,18 +48,35 @@ export async function deletePDF(key: string): Promise<void> {
 
 export async function deleteObjectsByPrefix(prefix: string): Promise<void> {
   let continuationToken: string | undefined
+  const deleteKeys: string[] = []
 
   do {
-    const listed = await r2.send(
-      new ListObjectsV2Command({ Bucket: BUCKET, Prefix: prefix, ContinuationToken: continuationToken })
-    )
+    try {
+      const listed = await r2.send(
+        new ListObjectsV2Command({ Bucket: BUCKET, Prefix: prefix, ContinuationToken: continuationToken })
+      )
 
-    for (const obj of listed.Contents ?? []) {
-      if (obj.Key) await r2.send(new DeleteObjectCommand({ Bucket: BUCKET, Key: obj.Key }))
+      for (const obj of listed.Contents ?? []) {
+        if (obj.Key) deleteKeys.push(obj.Key)
+      }
+
+      continuationToken = listed.IsTruncated ? listed.NextContinuationToken : undefined
+    } catch (err) {
+      console.error('[R2] Erro ao listar objetos:', err)
+      throw err
     }
-
-    continuationToken = listed.IsTruncated ? listed.NextContinuationToken : undefined
   } while (continuationToken)
+
+  // R2 suporta delete em lote de até 1000 objetos por requisição
+  while (deleteKeys.length > 0) {
+    const batch = deleteKeys.splice(0, 1000)
+    try {
+      await Promise.all(batch.map((key) => r2.send(new DeleteObjectCommand({ Bucket: BUCKET, Key: key }))))
+    } catch (err) {
+      console.error('[R2] Erro ao deletar lote de objetos:', err)
+      throw err
+    }
+  }
 }
 
 export async function uploadDocument(
