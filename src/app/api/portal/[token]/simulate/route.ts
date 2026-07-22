@@ -5,6 +5,7 @@ import { calculatePrevidenciario } from '@/lib/previdencia-engine'
 import { getRegrasVigentes } from '@/lib/regras-aposentadoria'
 import { getSalarioVigente } from '@/lib/salario-minimo'
 import { handleApiError } from '@/lib/api-error'
+import { hashPortalToken } from '@/lib/portal-session'
 import { rateLimit } from '@/lib/rate-limit'
 import { PORTAL_SESSION_COOKIE, isPortalSessionValid } from '@/lib/portal-session'
 import type { CnisExtractedData } from '@/services/cnis/types'
@@ -22,7 +23,7 @@ const simulateSchema = z.object({
 export async function POST(req: NextRequest, { params }: { params: { token: string } }) {
   try {
     const access = await prisma.clientAccess.findUnique({
-      where: { token: params.token },
+      where: { tokenHash: hashPortalToken(params.token) },
       include: {
         case: {
           include: {

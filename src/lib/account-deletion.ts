@@ -37,7 +37,42 @@ export async function deleteAccount(userId: string): Promise<void> {
   const now = new Date()
 
   await prisma.$transaction(async (tx) => {
-    await tx.client.deleteMany({ where: { userId } })
+    // Anonimizar clientes em vez de deletar (LGPD Art. 18, IV — histórico preservado)
+    const clients = await tx.client.findMany({ where: { userId }, select: { id: true } })
+    for (const client of clients) {
+      await tx.client.update({
+        where: { id: client.id },
+        data: {
+          name: 'Cliente Excluído',
+          cpfHash: `DELETED-${client.id.slice(0, 8)}`,
+          phone: null,
+          email: null,
+          street: null,
+          streetNumber: null,
+          complement: null,
+          neighborhood: null,
+          city: null,
+          state: null,
+          zipCode: null,
+          notes: null,
+          anonymizedAt: now,
+          active: false,
+        },
+      })
+    }
+
+    // Anonimizar casos (preservar estrutura, limpar dados sensíveis)
+    const cases = await tx.case.findMany({ where: { userId }, select: { id: true } })
+    for (const c of cases) {
+      await tx.case.update({
+        where: { id: c.id },
+        data: {
+          notes: '[EXCLUÍDO]',
+          deadlineDate: null,
+        },
+      })
+    }
+
     await tx.account.deleteMany({ where: { userId } })
     await tx.session.deleteMany({ where: { userId } })
     await tx.notification.deleteMany({ where: { userId } })

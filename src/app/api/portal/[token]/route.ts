@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
 import { handleApiError } from '@/lib/api-error'
+import { getPortalAccess } from '@/lib/portal-access'
 import type { PortalConfig } from '@/lib/portal-config'
 import { PORTAL_SESSION_COOKIE, isPortalSessionValid } from '@/lib/portal-session'
 
@@ -12,60 +12,21 @@ import { PORTAL_SESSION_COOKIE, isPortalSessionValid } from '@/lib/portal-sessio
  */
 export async function GET(req: NextRequest, { params }: { params: { token: string } }) {
   try {
-    const access = await prisma.clientAccess.findUnique({
-      where: { token: params.token },
-      include: {
-        case: {
-          include: {
-            client: { select: { name: true, birthDate: true } },
-            calculations: {
-              where: { isSelected: true },
-              select: {
-                modality: true,
-                rmi: true,
-                rma: true,
-                benefitSalary: true,
-                eligible: true,
-                expectedDib: true,
-                contributionTime: true,
-              },
-            },
-            retroactives: {
-              select: {
-                entitlementStartDate: true,
-                requestDate: true,
-                monthsLate: true,
-                totalGrossValue: true,
-                totalCorrectedValue: true,
-                finalNetValue: true,
-                correctionIndex: true,
-              },
-            },
-            user: { select: { name: true, oabNumber: true, plan: true } },
-          },
-        },
-      },
-    })
-
+    const access = await getPortalAccess(params.token)
     if (!access) {
       return NextResponse.json({ error: 'Link inválido ou expirado.' }, { status: 404 })
-    }
-
-    if (access.expiresAt < new Date()) {
-      return NextResponse.json({ error: 'Este link expirou.' }, { status: 410 })
     }
 
     const { case: c } = access
     const hasWatermark = c.user.plan === 'FREE'
 
-    // Lê a config do portal — o advogado decide o que o cliente vê
-    const caso = c as unknown as { portalConfig: PortalConfig }
-    const portalConfig = caso.portalConfig ?? {
+    // Lê a config do portal
+    const portalConfig = (c.portalConfig ?? {
       showCalculations: true,
       showRetroactives: false,
       showBpcSocialAnalysis: false,
       requireIdentity: false,
-    }
+    }) as unknown as PortalConfig
 
     // Se o advogado exigiu verificação de identidade, só libera os campos
     // sensíveis (cálculos/retroativos) com o cookie de sessão do portal válido.
@@ -73,27 +34,20 @@ export async function GET(req: NextRequest, { params }: { params: { token: strin
     const identityVerified =
       !portalConfig.requireIdentity || isPortalSessionValid(verifiedCookie, params.token)
 
-    // Monta resposta respeitando a config — spreads condicionais (sem mutation)
     return NextResponse.json({
       hasWatermark,
       portalConfig,
       requiresVerification: portalConfig.requireIdentity && !identityVerified,
-      lawyer: {
-        name: c.user.name,
-        oabNumber: c.user.oabNumber,
-      },
-      client: {
-        name: c.client.name,
-        birthDate: c.client.birthDate,
-      },
+      lawyer: { name: c.user.name, oabNumber: c.user.oabNumber },
+      client: { name: c.client.name, birthDate: c.client.birthDate },
       case: {
         id: c.id,
         status: c.status,
         benefitType: c.benefitType,
         createdAt: c.createdAt,
       },
-      ...(portalConfig.showCalculations && identityVerified && { calculations: c.calculations }),
-      ...(portalConfig.showRetroactives && identityVerified && { retroactives: c.retroactives }),
+      ...(portalConfig.showCalculations && identityVerified && { calculations: (access as any).case.calculations }),
+      ...(portalConfig.showRetroactives && identityVerified && { retroactives: (access as any).case.retroactives }),
       expiresAt: access.expiresAt,
     })
   } catch (err) {

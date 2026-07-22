@@ -40,6 +40,15 @@ export function validateEnv(): { ok: boolean; missing: string[] } {
     }
   }
 
+  // Lista opcionais que não estão configuradas (apenas info, não blocking)
+  const optionalMissing = OPTIONAL_VARS.filter((key) => !process.env[key])
+  if (missing.length === 0 && optionalMissing.length > 0) {
+    console.info(
+      `[env-validator] ${optionalMissing.length} variável(is) opcional(is) não configurada(s):\n` +
+        optionalMissing.map((k) => `  • ${k}`).join('\n')
+    )
+  }
+
   if (missing.length > 0) {
     console.error(
       `[env-validator] ${missing.length} variável(is) obrigatória(s) não configurada(s):\n` +

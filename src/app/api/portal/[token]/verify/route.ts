@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { hashCPF } from '@/lib/sanitize-server'
 import { handleApiError } from '@/lib/api-error'
+import { hashPortalToken } from '@/lib/portal-session'
 import { rateLimit } from '@/lib/rate-limit'
 import { Logger } from '@/lib/logger'
 import { PORTAL_SESSION_COOKIE, createPortalSessionValue } from '@/lib/portal-session'
@@ -39,7 +40,7 @@ export async function POST(req: NextRequest, { params }: { params: { token: stri
     }
 
     const access = await prisma.clientAccess.findUnique({
-      where: { token: params.token },
+      where: { tokenHash: hashPortalToken(params.token) },
       include: {
         case: {
           include: {

@@ -950,6 +950,7 @@ model ClientAccess {
   // Gerado em código com crypto.randomBytes(32) — nunca usar valor previsível (cuid, uuid v1, sequencial).
   // É um bearer token com acesso a dados financeiros e de saúde do cliente.
   token     String   @unique
+  tokenHash String?  @unique // SHA-256(token) — lookup sem expor o token raw no banco
   expiresAt DateTime
   createdAt DateTime @default(now())
 
@@ -957,6 +958,7 @@ model ClientAccess {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([token])
+  @@index([tokenHash])
   @@map("client_access")
 }
 

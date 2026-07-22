@@ -1,5 +1,10 @@
 import { createHmac, timingSafeEqual } from 'crypto'
 
+// Hash do token do portal para lookup seguro (evita token raw no banco)
+export function hashPortalToken(token: string): string {
+  return createHmac('sha256', getSecret()).update(token).digest('hex')
+}
+
 // Sessão de verificação de identidade do Portal do Cliente.
 // O portal é acessado sem conta (token na URL); quando o advogado ativa
 // `requireIdentity`, os dados sensíveis só são liberados após o cliente

@@ -36,15 +36,16 @@ describe('useUpgradeModal', () => {
     expect(useUpgradeModal.getState().open).toBe(false)
   })
 
-  it('closeModal não limpa message e feature', () => {
+  it('closeModal limpa message e feature (prevenção de stale data)', () => {
     useUpgradeModal.getState().openModal({
       message: 'Teste',
       feature: 'test',
       upgradeRequired: 'SOLO',
     })
     useUpgradeModal.getState().closeModal()
-    expect(useUpgradeModal.getState().message).toBe('Teste')
-    expect(useUpgradeModal.getState().feature).toBe('test')
+    expect(useUpgradeModal.getState().message).toBe('')
+    expect(useUpgradeModal.getState().feature).toBe('')
+    expect(useUpgradeModal.getState().upgradeRequired).toBe('SOLO')
   })
 
   it('openModal sobrescreve estado anterior', () => {

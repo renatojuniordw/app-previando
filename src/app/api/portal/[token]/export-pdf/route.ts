@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { handleApiError } from '@/lib/api-error'
+import { hashPortalToken } from '@/lib/portal-session'
 import PDFDocument from 'pdfkit'
 
 export async function GET(_req: NextRequest, { params }: { params: { token: string } }) {
   try {
     const access = await prisma.clientAccess.findUnique({
-      where: { token: params.token },
+      where: { tokenHash: hashPortalToken(params.token) },
       include: {
         case: {
           include: {

@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma'
 import { rateLimit } from '@/lib/rate-limit'
 import { verifyCaseOwnership, verifyCaseOwnershipAndActive } from '@/lib/ownership'
 import { handleApiError } from '@/lib/api-error'
+import { hashPortalToken } from '@/lib/portal-session'
 
 const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000
 
@@ -52,11 +53,13 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     if (!limitOk) return NextResponse.json({ error: 'Muitas tentativas. Tente novamente em 1 hora.' }, { status: 429 })
 
     const expiresAt = new Date(Date.now() + THIRTY_DAYS_MS)
+    const rawToken = generatePortalToken()
+    const tokenHash = hashPortalToken(rawToken)
 
     const access = await prisma.clientAccess.upsert({
       where: { caseId: params.id },
-      create: { caseId: params.id, userId: session.user.id, expiresAt, token: generatePortalToken() },
-      update: { expiresAt },
+      create: { caseId: params.id, userId: session.user.id, expiresAt, token: rawToken, tokenHash },
+      update: { expiresAt, token: rawToken, tokenHash },
     })
 
     const link = `${process.env.NEXTAUTH_URL ?? ''}/portal/${access.token}`
