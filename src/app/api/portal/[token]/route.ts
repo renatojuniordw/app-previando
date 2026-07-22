@@ -46,7 +46,9 @@ export async function GET(req: NextRequest, { params }: { params: { token: strin
         benefitType: c.benefitType,
         createdAt: c.createdAt,
       },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ...(portalConfig.showCalculations && identityVerified && { calculations: (access as any).case.calculations }),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ...(portalConfig.showRetroactives && identityVerified && { retroactives: (access as any).case.retroactives }),
       expiresAt: access.expiresAt,
     })

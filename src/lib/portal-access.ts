@@ -72,5 +72,5 @@ export async function getPortalAccess(token: string): Promise<PortalAccessResult
   if (!access) return null
   if (access.expiresAt < new Date()) return null
 
-  return access as unknown as PortalAccessResult['access']
+  return access as PortalAccessResult['access']
 }
