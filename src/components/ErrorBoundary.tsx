@@ -34,10 +34,10 @@ export class ErrorBoundary extends Component<Props, State> {
 
       return (
         <div className="rounded-lg border border-red-200 bg-red-50 p-4">
-          <p className="font-sans text-sm font-medium text-red-800">
+          <p className="font-sans text-sm font-medium text-red-900">
             Algo deu errado ao carregar este componente.
           </p>
-          <p className="font-sans text-xs text-red-600 mt-1">
+          <p className="font-sans text-xs text-red-700 mt-1">
             {this.state.error?.message ?? 'Erro desconhecido'}
           </p>
           <button

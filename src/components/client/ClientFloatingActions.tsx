@@ -103,7 +103,7 @@ export function ClientFloatingActions({ email, cpf, onCopyCpf }: ClientFloatingA
             aria-haspopup="true"
             aria-label="Ações rápidas do cliente"
           >
-            {isOpen ? <X className="w-5 h-5 animate-fade-in" /> : <Zap className="w-5 h-5 animate-fade-in" />}
+            {isOpen ? <X className="w-5 h-5 animate-fade-in" aria-hidden="true" /> : <Zap className="w-5 h-5 animate-fade-in" />}
           </button>
         </div>
       </div>

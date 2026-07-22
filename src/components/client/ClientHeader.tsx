@@ -37,7 +37,7 @@ export function ClientHeader({ name, cpf, priority, editHref }: Props) {
               className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg text-slate-400 hover:text-amber-600 hover:bg-amber-50 transition-colors -ml-1"
               aria-label="Editar dados do cliente"
             >
-              <Pencil className="w-4 h-4" />
+              <Pencil className="w-4 h-4" aria-hidden="true" />
             </Link>
           )}
           {priority && (

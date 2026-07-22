@@ -81,7 +81,7 @@ export function ContextualTooltip({
                 aria-label="Fechar dica"
                 className="shrink-0 mt-0.5 text-amber-700 hover:text-amber-900 transition-colors"
               >
-                <X className="w-3.5 h-3.5" />
+                <X className="w-3.5 h-3.5" aria-hidden="true" />
               </button>
             </div>
           </div>

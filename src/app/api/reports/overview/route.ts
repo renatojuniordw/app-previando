@@ -4,6 +4,33 @@ import { prisma } from '@/lib/prisma'
 import { redis } from '@/lib/redis'
 import { handleApiError } from '@/lib/api-error'
 
+/**
+ * TODO — Otimização de queries (Performance/Arquitetura):
+ *
+ * O fetchOverview() faz 5 queries independentes dentro de Promise.all:
+ *   1. client.count     (totalClients)
+ *   2. case.count       (totalCases)
+ *   3. calculation.count(totalCalculations)
+ *   4. calculation.findMany + rmi filter  (avgRmi)
+ *   5. fee.aggregate    (totalFeesEsperado/Recebido)
+ *
+ * As queries 1, 2 e 3 poderiam ser combinadas em uma única query SQL com
+ * COUNT + GROUP BY por tabela (ex.: UNION ALL com agregação), reduzindo
+ * de 5 para 3 ou até 2 round-trips ao banco.
+ *
+ * Exemplo conceitual (raw SQL):
+ *   SELECT 'clients' AS entity, COUNT(*) AS value FROM "clients" WHERE "userId" = $1
+ *   UNION ALL
+ *   SELECT 'cases', COUNT(*) FROM "cases" WHERE "userId" = $1
+ *   UNION ALL
+ *   SELECT 'calculations', COUNT(*) FROM "calculations" WHERE "case"."userId" = $1
+ *
+ * A query 4 (avgRmi) também poderia ser agregada na query de cases/calculations
+ * se usarmos AVG(rmi) com FILTER(WHERE isSelected).
+ *
+ * Pendente de refatoração quando a performance do dashboard for priorizada.
+ */
+
 const CACHE_TTL = 300 // 5 minutes
 const CACHE_KEY_PREFIX = 'reports:overview:'
 

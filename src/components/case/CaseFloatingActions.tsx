@@ -198,7 +198,7 @@ export function CaseFloatingActions({ activeDrawer, setDrawer, benefitType }: Ca
           aria-label="Abrir menu de ferramentas rápidas do caso"
         >
           {isOpen ? (
-            <X className="w-5 h-5" />
+            <X className="w-5 h-5" aria-hidden="true" />
           ) : (
             <Briefcase className="w-5 h-5" />
           )}

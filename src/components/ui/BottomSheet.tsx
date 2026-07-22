@@ -34,7 +34,7 @@ export function BottomSheet({ open, onClose, children, title, className }: Botto
   if (!open) return null
 
   return (
-    <div className="fixed inset-0 z-[65]" role="dialog" aria-modal="true" aria-labelledby={title ? 'bottom-sheet-title' : undefined}>
+    <div className="fixed inset-0 z-[65]" role="dialog" aria-modal="true" aria-labelledby={title ? 'bottom-sheet-title' : undefined} aria-label={!title ? 'Painel inferior' : undefined}>
       <div
         className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs animate-fade-in"
         onClick={onClose}
@@ -63,7 +63,7 @@ export function BottomSheet({ open, onClose, children, title, className }: Botto
               className="flex items-center justify-center rounded-lg min-w-[44px] min-h-[44px] text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/50"
               aria-label="Fechar"
             >
-              <X className="w-5 h-5" />
+              <X className="w-5 h-5" aria-hidden="true" />
             </button>
           </div>
         )}

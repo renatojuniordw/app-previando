@@ -61,7 +61,7 @@ export function Modal({ open, onClose, title, children, className, size = 'md' }
             className="flex items-center justify-center rounded-lg min-w-[44px] min-h-[44px] text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
             aria-label="Fechar"
           >
-            <X className="h-5 w-5" />
+            <X className="h-5 w-5" aria-hidden="true" />
           </button>
         </div>
         <div className="flex-1 min-h-0 p-4 sm:p-6 pb-20 lg:pb-6 overflow-y-auto">{children}</div>

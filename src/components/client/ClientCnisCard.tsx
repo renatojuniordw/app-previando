@@ -6,6 +6,7 @@ import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
+import { ProgressBar } from '@/components/ui/ProgressBar'
 import { formatDate, cn } from '@/lib/utils'
 import { useCnis } from '@/hooks/useCnis'
 import { useCnisUpload } from '@/hooks/useCnisUpload'
@@ -19,7 +20,7 @@ interface Props {
 
 export function ClientCnisCard({ clientId, caseCount }: Props) {
   const { cnis, loading, showSuccessBanner, load, handleDelete, handleReprocess } = useCnis(clientId)
-  const { uploading, uploadError, isDragging, fileRef, handleUpload, handleDragOver, handleDragLeave, handleDrop } = useCnisUpload(clientId, load)
+  const { uploading, uploadProgress, uploadError, isDragging, fileRef, handleUpload, handleDragOver, handleDragLeave, handleDrop } = useCnisUpload(clientId, load)
 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [deleting, setDeleting] = useState(false)
@@ -119,6 +120,11 @@ export function ClientCnisCard({ clientId, caseCount }: Props) {
               <><Upload className="h-4 w-4" /> Selecionar PDF</>
             )}
           </Button>
+          {uploading && (
+            <div className="w-full max-w-xs">
+              <ProgressBar progress={uploadProgress} variant="amber" />
+            </div>
+          )}
         </div>
       ) : (
         <div className="space-y-3">

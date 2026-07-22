@@ -1,4 +1,5 @@
 import { randomUUID } from 'crypto'
+import { LRUCache } from 'lru-cache'
 import { redis } from './redis'
 
 interface RateLimitResult {
@@ -8,28 +9,23 @@ interface RateLimitResult {
 }
 
 // In-memory fallback rate limiter (used when Redis is unavailable)
-const localRateLimits = new Map<string, { count: number; reset: number }>()
+const localRateLimits = new LRUCache<string, { count: number; reset: number }>({
+  max: 10000,
+})
 
 function localRateLimit(key: string, limit: number, windowMs: number): RateLimitResult {
   const now = Date.now()
   const existing = localRateLimits.get(key)
 
-  if (!existing || now > existing.reset) {
-    localRateLimits.set(key, { count: 1, reset: now + windowMs })
-    return { success: true, remaining: limit - 1, reset: now + windowMs }
+  if (!existing) {
+    const reset = now + windowMs
+    localRateLimits.set(key, { count: 1, reset }, { ttl: windowMs })
+    return { success: true, remaining: limit - 1, reset }
   }
 
   existing.count++
   return { success: existing.count <= limit, remaining: Math.max(0, limit - existing.count), reset: existing.reset }
 }
-
-// Periodically clean expired entries from local rate limiter
-setInterval(() => {
-  const now = Date.now()
-  localRateLimits.forEach((val, key) => {
-    if (now > val.reset) localRateLimits.delete(key)
-  })
-}, 60000)
 
 export async function rateLimit(
   key: string,

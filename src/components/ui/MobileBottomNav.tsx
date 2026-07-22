@@ -9,11 +9,13 @@ import {
   FolderOpen,
   CalendarDays,
   MoreHorizontal,
+  Bell,
 } from 'lucide-react'
 import { useSidebarStore } from '@/store/sidebar'
 import { useUrgentDeadlines } from '@/hooks/useUrgentDeadlines'
 import { useClientCount } from '@/hooks/useClientCount'
 import { usePendingCasesCount } from '@/hooks/usePendingCasesCount'
+import { usePollingCount } from '@/hooks/usePollingCount'
 import { ContextualTooltip } from '@/components/onboarding/ContextualTooltip'
 
 const NAV_ITEMS = [
@@ -29,6 +31,7 @@ export function MobileBottomNav() {
   const urgentDeadlines = useUrgentDeadlines()
   const clientCount = useClientCount()
   const pendingCount = usePendingCasesCount()
+  const unreadNotifications = usePollingCount('/notifications?unread=true')
 
   return (
     <nav
@@ -77,6 +80,28 @@ export function MobileBottomNav() {
             </li>
           )
         })}
+        <li className="flex-1">
+          <Link
+            href="/notifications"
+            aria-label={`Notificações${unreadNotifications > 0 ? ` — ${unreadNotifications} não lidas` : ''}`}
+            className={cn(
+              'relative flex flex-col items-center gap-0.5 py-2 text-[11px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:ring-inset',
+              pathname === '/notifications'
+                ? 'text-amber-700'
+                : 'text-slate-500 hover:text-slate-700'
+            )}
+          >
+            <span className="relative">
+              <Bell className="h-5 w-5" aria-hidden="true" />
+              {unreadNotifications > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] rounded-full w-4 h-4 flex items-center justify-center">
+                  {unreadNotifications > 9 ? '9+' : unreadNotifications}
+                </span>
+              )}
+            </span>
+            <span>Notificações</span>
+          </Link>
+        </li>
         <li className="flex-1 flex items-center justify-center">
           <ContextualTooltip content="Acesse todas as seções: relatórios, configurações e mais" storageKey="mobile-mais" position="top">
             <button

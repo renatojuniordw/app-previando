@@ -8,6 +8,8 @@ import { FEATURE_MARKETING, PLAN_DISPLAY_NAMES } from '@/lib/feature-marketing'
 import { trackConversion } from '@/lib/track-conversion'
 import { CheckCircle2, Sparkles } from 'lucide-react'
 
+const PLAN_PRICES: Record<string, string> = { SOLO: 'R$ 97/mês', PRO: 'R$ 197/mês' }
+
 export function UpgradeModal() {
   const { open, message, feature, upgradeRequired, closeModal } = useUpgradeModal()
   const router = useRouter()
@@ -43,7 +45,7 @@ export function UpgradeModal() {
         <div className="px-6 pt-6 pb-5 bg-gradient-to-b from-amber-50/70 to-white border-b border-amber-100/60">
           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 font-sans font-extrabold text-[10px] uppercase tracking-wider border rounded-full bg-amber-100/70 text-amber-800 border-amber-200 mb-3 w-fit">
             <Sparkles className="w-3 h-3" />
-            {isClientOverLimit ? 'Limite do plano' : `Disponível no plano ${planName}`}
+            {isClientOverLimit ? 'Limite do plano' : `Disponível no plano ${planName} · ${PLAN_PRICES[upgradeRequired] ?? ''}`}
           </span>
           <h2 className="font-serif font-bold text-xl text-slate-900 leading-snug">
             {marketing?.title ?? `Plano ${planName} necessário`}

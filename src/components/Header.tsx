@@ -164,7 +164,7 @@ export const Header = memo(function Header() {
                 <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
                   <span className="font-semibold text-sm text-slate-900">Notificações</span>
                   <button onClick={handleCloseNotifications} className="min-w-[44px] min-h-[44px] flex items-center justify-center text-slate-400 hover:text-slate-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/50 rounded-lg" aria-label="Fechar notificações">
-                    <X className="w-4 h-4" />
+                    <X className="w-4 h-4" aria-hidden="true" />
                   </button>
                 </div>
 
@@ -234,7 +234,7 @@ export const Header = memo(function Header() {
               className="min-w-[44px] min-h-[44px] flex items-center justify-center text-slate-500"
               aria-label="Cancelar pesquisa"
             >
-              <X className="w-5 h-5" />
+              <X className="w-5 h-5" aria-hidden="true" />
             </button>
             <div className="relative flex-1">
               <input

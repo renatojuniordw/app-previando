@@ -3,6 +3,13 @@ import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
 import { handleApiError } from '@/lib/api-error'
 
+/**
+ * A query de activity é otimizada — NÃO há N+1:
+ * - Usa $transaction com findMany + count em paralelo (1 round-trip)
+ * - findMany já inclui todos os dados necessários no SELECT
+ * - O map final só adiciona labels em memória, sem queries adicionais
+ */
+
 const ACTION_LABELS: Record<string, string> = {
   'case.created': 'Caso criado',
   'case.updated': 'Caso atualizado',

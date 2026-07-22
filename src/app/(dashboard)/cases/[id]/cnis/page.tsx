@@ -23,6 +23,7 @@ import { EditPeriodModal } from './_components/modals/EditPeriodModal'
 import { EditSalariesModal } from './_components/modals/EditSalariesModal'
 import { CnisIndicatorsDrawer } from './_components/CnisIndicatorsDrawer'
 import { Drawer } from '@/components/ui/Drawer'
+import { ProgressBar } from '@/components/ui/ProgressBar'
 import type { CnisExtractedData } from '@/types/cnis'
 
 export default function CnisCasePage() {
@@ -39,7 +40,7 @@ export default function CnisCasePage() {
   }, [caseId])
 
   const { cnis, setCnis, loading, showSuccessBanner, setShowSuccessBanner, stuckWarning, load, handleDelete, handleReprocess } = useCnis(clientId)
-  const { uploading, uploadError, isDragging, fileRef, handleUpload, handleDragOver, handleDragLeave, handleDrop } = useCnisUpload(clientId, load)
+  const { uploading, uploadProgress, uploadError, isDragging, fileRef, handleUpload, handleDragOver, handleDragLeave, handleDrop } = useCnisUpload(clientId, load)
   const editing = useCnisEditing(cnis, setCnis)
 
   const [showPdfViewer, setShowPdfViewer] = useState(false)
@@ -111,7 +112,12 @@ export default function CnisCasePage() {
   return (
     <ErrorBoundary>
     <div className="space-y-6 max-w-7xl mx-auto relative px-4 sm:px-6">
-      {uploading && <CnisUploadOverlay />}
+      {uploading && (
+        <div className="space-y-3">
+          <CnisUploadOverlay />
+          <ProgressBar progress={uploadProgress} variant="amber" />
+        </div>
+      )}
 
       <CnisHeader
         hasCnis={!!cnis}

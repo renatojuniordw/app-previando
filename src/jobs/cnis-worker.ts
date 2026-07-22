@@ -40,7 +40,7 @@ export function createCnisWorker(redis: Redis): Worker {
         const pdfParse = await import('pdf-parse')
         let pdfText = ''
         try {
-          const parsed = await pdfParse.default(buffer, { max: 0 })
+          const parsed = await pdfParse.default(buffer, { max: 200 })
           pdfText = parsed.text
         } catch {
           // pdf-parse falhou — tenta OCR

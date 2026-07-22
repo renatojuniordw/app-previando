@@ -9,6 +9,7 @@ import { useToast } from '@/store/toast'
  */
 export function useCnisUpload(clientId: string, onUploaded: () => void) {
   const [uploading, setUploading] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState(0)
   const [uploadError, setUploadError] = useState('')
   const [isDragging, setIsDragging] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
@@ -30,11 +31,21 @@ export function useCnisUpload(clientId: string, onUploaded: () => void) {
 
     setUploading(true)
     setUploadError('')
+    setUploadProgress(0)
     try {
       const formData = new FormData()
       formData.append('file', file)
       formData.append('clientId', clientId)
-      await api.post('/cnis/upload', formData, { headers: { 'Content-Type': 'multipart/form-data' } })
+      await api.post('/cnis/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+        onUploadProgress: (progressEvent) => {
+          if (progressEvent.total) {
+            const pct = Math.round((progressEvent.loaded * 100) / progressEvent.total)
+            setUploadProgress(Math.min(pct, 99))
+          }
+        },
+      })
+      setUploadProgress(100)
       addToast({ type: 'info', title: 'CNIS enviado', message: 'Processando extrato do segurado...' })
       await onUploaded()
     } catch (err: unknown) {
@@ -64,5 +75,5 @@ export function useCnisUpload(clientId: string, onUploaded: () => void) {
     if (file) uploadFile(file)
   }
 
-  return { uploading, uploadError, isDragging, fileRef, handleUpload, handleDragOver, handleDragLeave, handleDrop }
+  return { uploading, uploadProgress, uploadError, isDragging, fileRef, handleUpload, handleDragOver, handleDragLeave, handleDrop }
 }

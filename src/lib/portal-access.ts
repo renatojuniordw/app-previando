@@ -1,6 +1,8 @@
 import { prisma } from '@/lib/prisma'
 import { hashPortalToken } from '@/lib/portal-session'
+import { validateJsonSchema, PortalConfigSchema } from '@/lib/json-schema'
 import type { Prisma } from '@prisma/client'
+import type { PortalConfig } from '@/lib/json-schema'
 
 export interface PortalAccessResult {
   access: {
@@ -71,6 +73,33 @@ export async function getPortalAccess(token: string): Promise<PortalAccessResult
 
   if (!access) return null
   if (access.expiresAt < new Date()) return null
+
+  // Valida o portalConfig armazenado como JSON no banco
+  // Se estiver corrompido, usa fallback com valores padrão
+  const validatedPortalConfig: PortalConfig = (() => {
+    try {
+      return validateJsonSchema(access.case.portalConfig, PortalConfigSchema)
+    } catch {
+      if (process.env.NODE_ENV === 'development') {
+        console.warn(
+          `[portal-access] portalConfig inválido para case ${access.caseId}, usando fallback padrão`,
+        )
+      }
+      return {
+        showCalculations: true,
+        showRetroactives: false,
+        showBpcSocialAnalysis: false,
+        showTimeline: false,
+        showDocuments: false,
+        showFaq: false,
+        showGlossary: false,
+        showPdfExport: false,
+        requireIdentity: false,
+      }
+    }
+  })()
+  // Substitui o JsonValue bruto pelo objeto validado para consumidores posteriores
+  ;(access.case as Record<string, unknown>).portalConfig = validatedPortalConfig
 
   return access as PortalAccessResult['access']
 }

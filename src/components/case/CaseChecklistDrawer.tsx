@@ -183,6 +183,15 @@ export function CaseChecklistDrawer({ open, onClose, caseId }: CaseChecklistDraw
               <div
                 key={item.id}
                 onClick={() => handleToggle(item.id)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault()
+                    handleToggle(item.id)
+                  }
+                }}
+                role="checkbox"
+                aria-checked={item.checked}
+                tabIndex={0}
                 className={`border p-3 rounded-lg flex items-start gap-3 cursor-pointer transition-all ${
                   item.checked
                     ? 'border-slate-200 bg-slate-50/70 opacity-60'
@@ -193,8 +202,9 @@ export function CaseChecklistDrawer({ open, onClose, caseId }: CaseChecklistDraw
                   className={`mt-0.5 w-4 h-4 flex-shrink-0 rounded border flex items-center justify-center transition-colors ${
                     item.checked ? 'bg-amber-500 border-amber-500' : 'border-slate-300 bg-white'
                   }`}
+                  aria-hidden="true"
                 >
-                  {item.checked && <span className="text-white text-[10px] font-bold">✓</span>}
+                  {item.checked && <span className="text-white text-[10px] font-bold" aria-hidden="true">✓</span>}
                 </div>
                 <div className="flex-1 min-w-0">
                   <p

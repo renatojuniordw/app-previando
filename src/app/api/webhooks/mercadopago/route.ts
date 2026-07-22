@@ -5,7 +5,7 @@ import { prisma } from '@/lib/prisma'
 import { redis } from '@/lib/redis'
 import { invalidatePlanLimitCache, reconcileClientActivation } from '@/lib/plan-guard'
 import { Logger } from '@/lib/logger'
-import type { PaymentStatus, Prisma } from '@prisma/client'
+import type { PaymentStatus, Plan, PlanStatus, Prisma } from '@prisma/client'
 
 const webhookSchema = z.object({
   type: z.string().min(1),
@@ -214,8 +214,8 @@ export async function POST(req: NextRequest) {
           await tx.user.update({
             where: { id: user.id },
             data: {
-              plan: plan as never,
-              planStatus: planStatus as never,
+              plan: plan as Plan,
+              planStatus: planStatus as PlanStatus,
               mpSubscriptionId: subId,
               mpSubscriptionStatus: mpSub.status,
             },
@@ -274,7 +274,7 @@ export async function POST(req: NextRequest) {
           userId: user.id,
           mpPaymentId: paymentId,
           mpSubscriptionId: mpPayment.preapproval_id ?? null,
-          plan: user.plan as never,
+          plan: user.plan as Plan,
           amount: mpPayment.transaction_amount ?? 0,
           currency: mpPayment.currency_id ?? 'BRL',
           status: paymentStatus,

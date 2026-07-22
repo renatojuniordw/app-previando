@@ -53,7 +53,7 @@ export function ToastContainer() {
               className="shrink-0 p-1.5 -m-1.5 opacity-60 hover:opacity-100 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 rounded"
               aria-label="Fechar notificação"
             >
-              <X className="w-4 h-4" />
+              <X className="w-4 h-4" aria-hidden="true" />
             </button>
           </div>
         )

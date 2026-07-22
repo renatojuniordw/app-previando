@@ -1,3 +1,4 @@
+import { differenceInCalendarMonths } from 'date-fns'
 import { prisma } from './prisma'
 import { redis } from './redis'
 import { PlanLimitError } from './api-error'
@@ -107,7 +108,7 @@ export async function invalidatePlanLimitCache(plan: string): Promise<void> {
 }
 
 function isSameMonth(a: Date, b: Date): boolean {
-  return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth()
+  return differenceInCalendarMonths(a, b) === 0
 }
 
 async function getOrResetUsageRecord(userId: string): Promise<UsageRecord | null> {

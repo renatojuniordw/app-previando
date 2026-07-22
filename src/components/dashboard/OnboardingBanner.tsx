@@ -61,7 +61,7 @@ export function OnboardingBanner() {
         className="absolute top-4 right-4 p-1.5 text-slate-400 hover:text-slate-600 hover:bg-white/60 rounded-lg transition-colors"
         aria-label="Fechar"
       >
-        <X className="w-4 h-4" />
+        <X className="w-4 h-4" aria-hidden="true" />
       </button>
 
       <div className="mb-5">

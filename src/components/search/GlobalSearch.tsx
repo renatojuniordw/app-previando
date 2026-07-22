@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { Search, Users, FolderOpen, Zap, FileText, X, LayoutDashboard, DollarSign, CalendarDays, BarChart3, Settings } from 'lucide-react'
+import { ContextualEmptyState } from '@/components/ui/ContextualEmptyState'
 import { useSearchStore } from '@/store/search-store'
 import { useFocusTrap } from '@/hooks/useFocusTrap'
 import { useRecentStore } from '@/store/recent-store'
@@ -134,7 +135,7 @@ export function GlobalSearch() {
           />
           {loading && <div className="w-4 h-4 border-2 border-amber-500 border-t-transparent animate-spin rounded-full" />}
           <button onClick={close} className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg hover:bg-slate-100 text-slate-400" aria-label="Fechar">
-            <X className="w-5 h-5" />
+            <X className="w-5 h-5" aria-hidden="true" />
           </button>
         </div>
 
@@ -188,12 +189,11 @@ export function GlobalSearch() {
             </Section>
           )}
 
-          {query.length >= 2 && allResults.length === 0 && !loading && (
-            <div className="py-12 text-center">
-              <Search className="w-8 h-8 text-slate-300 mx-auto mb-3" />
-              <p className="font-sans text-sm font-semibold text-slate-500">Nenhum resultado</p>
-              <p className="font-sans text-xs text-slate-400 mt-1">Tente termos diferentes</p>
-            </div>
+          {query.length >= 2 && results.clients.length === 0 && results.cases.length === 0 && !loading && (
+            <ContextualEmptyState
+              title="Nenhum resultado"
+              description="Tente buscar por nome do cliente, tipo de benefício ou CPF"
+            />
           )}
         </div>
 
