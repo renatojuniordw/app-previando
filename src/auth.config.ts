@@ -11,7 +11,8 @@ import { prisma } from '@/lib/prisma'
 // cliente gerado não faz `require` estático de node:builtins incompatíveis
 // (ao contrário do `ioredis`, que faz isso em `tracing.js`).
 
-export const SESSION_MAX_AGE = 3600 // 1h — reduz janela de stale JWT
+export const SESSION_MAX_AGE = 30 * 24 * 3600 // 30 dias — máximo, suporta remember-me
+export const SHORT_SESSION_MAX_AGE = 3600 // 1h — para sessões SEM remember-me
 
 declare module 'next-auth' {
   interface Session {
@@ -59,12 +60,16 @@ export const authConfig = {
   callbacks: {
     async jwt({ token, user, trigger }) {
       if (user) {
-        const extUser = user as typeof user & { plan?: string; isAdmin?: boolean }
+        const extUser = user as typeof user & { plan?: string; isAdmin?: boolean; remember?: boolean }
         const credPlan = extUser.plan
         const credIsAdmin = extUser.isAdmin
         if (credPlan !== undefined && credIsAdmin !== undefined) {
           token.plan = credPlan
           token.isAdmin = credIsAdmin
+        }
+        // Remember-me flag — vem do authorize (CredentialsProvider)
+        if (extUser.remember !== undefined) {
+          token.remember = extUser.remember
         }
         if (user.id) {
           const dbUser = await enrichSessionUser(user.id)
@@ -108,6 +113,14 @@ export const authConfig = {
             state: dbUser.state,
             zipCode: dbUser.zipCode,
           })
+        }
+      }
+
+      // Remember-me: sessões SEM remember expiram após SHORT_SESSION_MAX_AGE
+      if (!token.remember && token.iat) {
+        const elapsed = Date.now() / 1000 - (token.iat as number)
+        if (elapsed > SHORT_SESSION_MAX_AGE) {
+          return null
         }
       }
 

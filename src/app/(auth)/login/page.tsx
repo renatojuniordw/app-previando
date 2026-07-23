@@ -40,6 +40,7 @@ export default function LoginPage() {
       const result = await signIn('credentials', {
         email: data.email,
         password: data.password,
+        remember: data.remember ?? false,
         redirect: false,
       })
       if (result?.error) {
