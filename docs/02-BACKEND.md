@@ -44,7 +44,7 @@
 | `recharts` | ^2.15.0 | Gráficos |
 | `react-markdown` | ^10.1.0 | Renderização markdown |
 | `isomorphic-dompurify` | ^2.19.0 | Sanitização HTML |
-| `nodemailer` | ^7.0.13 | Envio de email SMTP |
+| `resend` | ^6.18.0 | Envio de email via Resend API |
 | `lucide-react` | ^0.468.0 | Ícones |
 | `clsx` / `tailwind-merge` | — | Classes CSS condicionais |
 | `react-hook-form` | ^7.54.2 | Formulários |
@@ -206,7 +206,7 @@ PDF Upload → Extração de Texto → Parser Programático (instantâneo)
 |--------|------|--------|----------|---------|
 | All | `/api/auth/[...nextauth]` | NextAuth v5 (session, signin, signout, callback) | - | - |
 | POST | `/api/auth/register` | Registro (bcrypt cost 12) | 3 | 1h |
-| POST | `/api/auth/forgot-password` | Envia email de redefinição (nodemailer) | 5 | 1h |
+| POST | `/api/auth/forgot-password` | Envia email de redefinição (Resend) | 5 | 1h |
 | POST | `/api/auth/reset-password` | Redefine senha com token | 5 | 1h |
 
 ### Usage
@@ -519,7 +519,7 @@ type PlanFeature =
 
 | Arquivo | Função |
 |---------|--------|
-| `lib/env-validator.ts` | Valida 13 env vars obrigatórias no startup (NEXT_PUBLIC_APP_URL, DATABASE_URL, REDIS_URL, NEXTAUTH_SECRET, NEXTAUTH_URL, CPF_HASH_SALT, R2_*, OPENAI_API_KEY, MERCADO_PAGO_*, ADMIN_EMAIL, ADMIN_PASSWORD, SMTP_*, GOOGLE_*) |
+| `lib/env-validator.ts` | Valida 14 env vars obrigatórias no startup (NEXT_PUBLIC_APP_URL, DATABASE_URL, REDIS_URL, NEXTAUTH_SECRET, NEXTAUTH_URL, CPF_HASH_SALT, R2_*, OPENAI_API_KEY, MERCADOPAGO_*, ADMIN_EMAIL, ADMIN_PASSWORD, RESEND_API_KEY, GOOGLE_*) |
 | `lib/json-schema.ts` | Utilitários de schema JSON (validação, transformação) |
 | `lib/portal-access.ts` | Helper `getPortalAccess()` — centraliza validação de token, expiração e acesso do portal. DRY nas 7 rotas do portal. |
 | `lib/case-import-parser.ts` | Parser de CSV para importação de casos em lote (validação, transformação, duplicatas) |
@@ -589,7 +589,8 @@ type PlanFeature =
 | `lib/upload-validator.ts` | Validação PDF (MIME, tamanho, magic bytes) |
 | `lib/bpc-notes.ts` | Helpers: saveBpcToNotes, formatRelatoSocialText |
 | `lib/pdf-generator.ts` | Geração de PDF com pdfkit |
-| `lib/email.ts` | Envio de email (nodemailer, password reset) |
+| `lib/resend.ts` | Cliente Resend compartilhado (API key validada no startup) |
+| `lib/email.ts` | Envio de email (password reset via Resend) |
 | `lib/constants.ts` | BENEFIT_LABELS, STATUS_LABELS, PRIORITY_LABELS |
 
 ---
@@ -614,10 +615,7 @@ OPENAI_API_KEY
 MERCADO_PAGO_ACCESS_TOKEN
 ADMIN_EMAIL
 ADMIN_PASSWORD
-SMTP_HOST
-SMTP_PORT
-SMTP_USER
-SMTP_PASS
+RESEND_API_KEY
 GOOGLE_CLIENT_ID
 GOOGLE_CLIENT_SECRET
 ```

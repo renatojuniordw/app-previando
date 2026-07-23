@@ -19,6 +19,7 @@ const REQUIRED_VARS = [
   'R2_BUCKET_NAME',
   'MERCADOPAGO_ACCESS_TOKEN',
   'MERCADOPAGO_WEBHOOK_SECRET',
+  'RESEND_API_KEY',
 ] as const
 
 const OPTIONAL_VARS = [
@@ -28,7 +29,6 @@ const OPTIONAL_VARS = [
   'SENTRY_DSN',
   'NEXT_PUBLIC_SENTRY_DSN',
   'TELEGRAM_BOT_TOKEN',
-  'RESEND_API_KEY',
 ]
 
 export function validateEnv(): { ok: boolean; missing: string[] } {

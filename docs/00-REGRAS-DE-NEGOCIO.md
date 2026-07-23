@@ -81,7 +81,7 @@ Histórico versionado e imutável de anotações de um caso. Cada entrada nunca 
 ### 3.1 Usuário (Advogado)
 Profissional que usa o Previando. Tem plano (FREE/SOLO/PRO).
 
-**Recuperação de senha:** fluxo de forgot/reset via email SMTP com nodemailer.
+**Recuperação de senha:** fluxo de forgot/reset via email Resend.
 
 ---
 
@@ -307,7 +307,7 @@ Todo limite verificado no banco via API — retorna 402.
 ### 5.7 Recuperação de Senha
 - Rota pública `/forgot-password`: usuário informa email → sistema gera token → envia email com link
 - Rota pública `/reset-password`: token validado → usuário define nova senha
-- Email enviado via nodemailer (SMTP configurável)
+- Email enviado via Resend
 - Token expira em 1 hora
 
 ### 5.8 Consulta de Processo
@@ -399,7 +399,7 @@ npm install next react react-dom \
   react-markdown recharts \
   zustand lucide-react \
   date-fns date-fns-tz \
-  axios nodemailer \
+  resend exceljs \
   clsx tailwind-merge
 
 # Dev

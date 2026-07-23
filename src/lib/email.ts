@@ -1,23 +1,12 @@
-import nodemailer from 'nodemailer'
+import { resend, EMAIL_FROM } from '@/lib/resend'
 
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: Number(process.env.SMTP_PORT ?? 587),
-  secure: process.env.SMTP_SECURE === 'true',
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
-  },
-})
-
-const FROM = process.env.EMAIL_FROM ?? 'Previando <noreply@previando.com.br>'
 const APP_URL = process.env.NEXTAUTH_URL ?? 'http://localhost:3000'
 
 export async function sendPasswordResetEmail(email: string, token: string): Promise<void> {
   const resetUrl = `${APP_URL}/reset-password?token=${token}`
 
-  await transporter.sendMail({
-    from: FROM,
+  const { error } = await resend.emails.send({
+    from: EMAIL_FROM,
     to: email,
     subject: 'Redefinição de senha - Previando',
     html: `
@@ -37,4 +26,8 @@ export async function sendPasswordResetEmail(email: string, token: string): Prom
       </div>
     `,
   })
+
+  if (error) {
+    throw new Error(error.message)
+  }
 }

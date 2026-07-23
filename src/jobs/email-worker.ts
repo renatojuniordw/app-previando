@@ -1,29 +1,17 @@
 /**
  * Email Worker - Previando
  *
- * Processa a fila de emails (`email-notifications`) enviando emails via nodemailer.
+ * Processa a fila de emails (`email-notifications`) enviando emails via Resend.
  *
  * A factory function `createEmailWorker()` deve ser chamada pelo `worker.ts`.
  * Não exportar uma instância diretamente para evitar workers duplicados.
  */
 
 import { Worker } from 'bullmq'
-import nodemailer from 'nodemailer'
+import { resend, EMAIL_FROM } from '@/lib/resend'
 import { bullmqConnection } from '@/lib/redis'
 import { Logger } from '@/lib/logger'
 const logger = new Logger('email-worker')
-
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: Number(process.env.SMTP_PORT ?? 587),
-  secure: process.env.SMTP_SECURE === 'true',
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
-  },
-})
-
-const FROM = process.env.EMAIL_FROM ?? 'Previando <noreply@previando.com.br>'
 
 export function createEmailWorker(): Worker {
   const worker = new Worker(
@@ -39,12 +27,16 @@ export function createEmailWorker(): Worker {
       })
 
       try {
-        await transporter.sendMail({
-          from: FROM,
+        const { error } = await resend.emails.send({
+          from: EMAIL_FROM,
           to,
           subject,
           html,
         })
+
+        if (error) {
+          throw new Error(error.message)
+        }
 
         logger.info('Email sent successfully', { jobId: job.id, to, subject })
         return { success: true, to, subject }

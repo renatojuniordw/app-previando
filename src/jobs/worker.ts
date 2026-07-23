@@ -33,8 +33,8 @@ createAuditWorker(redis)
 createDeadlineWorker(redis)
 createFeeWorker(redis)
 
-// Email worker (opcional — só inicia se SMTP estiver configurado)
-if (process.env.SMTP_HOST) {
+// Email worker (opcional — só inicia se Resend estiver configurado)
+if (process.env.RESEND_API_KEY) {
   Promise.resolve().then(() => {
     import('./email-worker').then(({ createEmailWorker }) => {
       createEmailWorker()

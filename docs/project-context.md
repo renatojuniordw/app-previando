@@ -46,7 +46,7 @@ O projeto é uma aplicação web Full-Stack baseada em **Next.js 14 (App Router)
 - `tailwindcss`, `clsx`, `tailwind-merge`, `lucide-react`, `react-hook-form`, `zustand`, `recharts` (dynamic import), `react-markdown`, `@dnd-kit/core`, `@dnd-kit/sortable`, `@mui/material`, `@emotion/react`, `@ag-media/react-pdf-table`
 
 ### Utilitários
-- `date-fns`, `date-fns-tz`, `axios`, `axios-retry`, `nodemailer`, `exceljs` (import de clientes)
+- `date-fns`, `date-fns-tz`, `axios`, `axios-retry`, `resend`, `exceljs` (import de clientes)
 
 ### Pagamentos
 - `mercadopago` (^3.2)
@@ -189,7 +189,7 @@ Formulário (patologia, renda, laudos) → Pré-Análise (gpt-4o-mini) → Anál
 POST /subscribe → MP subscription → Webhook → Atualiza plano → Cache invalidado
 
 ### Recuperação de Senha
-POST /forgot-password → Token → Email SMTP → POST /reset-password → Hash nova senha
+POST /forgot-password → Token → Email Resend → POST /reset-password → Hash nova senha
 
 ### Monitoramento Processual (TrackJud)
 Webhook TrackJud → Atualiza processNumber, movimentações → Notificação ao advogado

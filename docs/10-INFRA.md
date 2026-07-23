@@ -150,12 +150,8 @@ ADMIN_NAME="Administrador"
 # Segurança
 CPF_HASH_SALT=""
 
-# SMTP (Email recovery)
-SMTP_HOST=""
-SMTP_PORT="587"
-SMTP_SECURE="false"
-SMTP_USER=""
-SMTP_PASS=""
+# Resend (Email)
+RESEND_API_KEY=""
 EMAIL_FROM="Previando <noreply@previando.com.br>"
 
 ```

@@ -3,9 +3,10 @@
  *
  * Sends email notifications through BullMQ queue for reliability.
  * Falls back to direct sending if queue is unavailable.
+ * Uses Resend as the email provider.
  */
 
-import nodemailer from 'nodemailer'
+import { resend, EMAIL_FROM } from '@/lib/resend'
 import { Queue } from 'bullmq'
 import { bullmqConnection } from '@/lib/redis'
 import { Logger } from '@/lib/logger'
@@ -18,18 +19,6 @@ import {
   paymentFailedEmail,
   limitNearEmail,
 } from '@/lib/email/templates'
-
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: Number(process.env.SMTP_PORT ?? 587),
-  secure: process.env.SMTP_SECURE === 'true',
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
-  },
-})
-
-const FROM = process.env.EMAIL_FROM ?? 'Previando <noreply@previando.com.br>'
 
 // Email queue for async sending
 let emailQueue: Queue | null = null
@@ -46,7 +35,11 @@ function getEmailQueue(): Queue | null {
 
 async function sendEmail(to: string, subject: string, html: string): Promise<boolean> {
   try {
-    await transporter.sendMail({ from: FROM, to, subject, html })
+    const { error } = await resend.emails.send({ from: EMAIL_FROM, to, subject, html })
+    if (error) {
+      logger.error('Resend API error', { error, to, subject })
+      return false
+    }
     logger.info('Email sent', { to, subject })
     return true
   } catch (error) {

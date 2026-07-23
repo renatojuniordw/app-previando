@@ -98,10 +98,10 @@ const ADMIN_ROUTES = ['/admin', '/api/admin']
 
 ## Recuperação de Senha
 
-- **`POST /api/auth/forgot-password`**: usuário informa email → cria token → envia nodemailer
+- **`POST /api/auth/forgot-password`**: usuário informa email → cria token → envia via Resend
 - **`POST /api/auth/reset-password`**: valida token → atualiza senha
 - Token expira em 1 hora
-- Email via nodemailer (SMTP configurável)
+- Email enviado via Resend
 
 ---
 
@@ -236,7 +236,7 @@ export async function requireAdmin(): Promise<{ error: NextResponse } | { userId
 - [ ] Middleware cobrindo 100% das rotas
 - [ ] Ownership verificado em todos os endpoints com IDs
 - [ ] Seed de `PlanLimit` rodado
-- [ ] SMTP configurado para password reset
+- [ ] Resend (RESEND_API_KEY) configurado para envio de email
 - [ ] Env vars validadas no startup via `env-validator.ts`
 
 ---
@@ -277,7 +277,7 @@ O `portalConfig` (JSON no model `Case`) define exatamente quais informações o 
 - **Arquivo:** `src/lib/env-validator.ts`
 - **Valida no startup:** 13 variáveis obrigatórias verificadas antes do servidor iniciar
 - **Fail-fast:** Se qualquer variável faltar, o app falha com mensagem clara
-- **Variáveis checadas:** `NEXT_PUBLIC_APP_URL`, `DATABASE_URL`, `REDIS_URL`, `NEXTAUTH_SECRET`, `NEXTAUTH_URL`, `CPF_HASH_SALT`, variáveis R2, `OPENAI_API_KEY`, `MERCADO_PAGO_ACCESS_TOKEN`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`, SMTP, Google OAuth
+- **Variáveis checadas:** `NEXT_PUBLIC_APP_URL`, `DATABASE_URL`, `REDIS_URL`, `NEXTAUTH_SECRET`, `NEXTAUTH_URL`, `CPF_HASH_SALT`, variáveis R2, `OPENAI_API_KEY`, `MERCADOPAGO_ACCESS_TOKEN`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `RESEND_API_KEY`, Google OAuth
 
 ---
 
