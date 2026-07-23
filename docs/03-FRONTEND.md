@@ -1,6 +1,6 @@
 # 03 — FRONTEND
-> UI, Navegação, Drawers, Padrões de código, Performance
-> Última atualização: 2026-07-15
+> UI, Navegação, Drawers, Padrões de código, Performance, Acessibilidade, PWA
+> Última atualização: 2026-07-22
 
 ---
 
@@ -15,6 +15,8 @@
 - Ícones Lucide React (não emojis)
 - **DRY + SOLID**: Buscar componentes/hooks existentes antes de criar novos
 - **useApi/useCrudActions**: Preferir hooks compartilhados para data fetching e CRUD
+- **Acessibilidade**: ARIA roles, focus trap, contraste WCAG
+- **PWA**: manifest.json, service worker, ícones
 
 ---
 
@@ -31,6 +33,7 @@
 - **Markdown:** react-markdown
 - **Formulários:** react-hook-form + zod
 - **PDF:** @react-pdf/renderer (dynamic import, ssr: false)
+- **Testes E2E:** Playwright
 
 ---
 
@@ -70,8 +73,10 @@
 │   ├── /notes                  ← Prontuário (rota legacy → redirect)
 │   ├── /checklist              ← Checklist (rota legacy → redirect)
 │   ├── /opinions               ← Pareceres IA (rota legacy → redirect)
+│   ├── /scenarios              ← Cenários de simulação (nova rota)
 │   ├── /bpc                    ← BPC/LOAS (aba condicional, só BPC_LOAS)
 │   └── /pdf                    ← Visualização de PDF
+├── /cases/import               ← Importação de casos via CSV (nova rota)
 ├── /tools
 │   ├── /pdf                    ← Ferramenta PDF
 │   └── /cnis-indicators        ← Dicionário de indicadores CNIS
@@ -112,6 +117,7 @@
 - Metadata + OpenGraph
 - `lang="pt-BR"`
 - MuiThemeProvider removido → movido para dashboard layout
+- PWA: manifest.json link, service worker registration
 
 ### Auth — Split-Panel (`src/app/(auth)/layout.tsx`)
 - Desktop: painel esquerdo (branding, slogan, gradiente) + direito (formulário)
@@ -122,7 +128,7 @@
 - `SessionProvider` com sessão NextAuth
 - Guard: `redirect('/login')` se sem sessão
 - `MuiThemeProvider` (apenas dashboard, não no root)
-- Estrutura: `Sidebar` + `Header` + `<main>` + `UpgradeModal` + `ToastContainer`
+- Estrutura: `Sidebar` + `Header` + `<main>` + `UpgradeModal` + `ToastContainer` + `ErrorBoundary`
 - Background: `bg-slate-50`
 
 ### Caso (`src/app/(dashboard)/cases/[id]/layout.tsx`)
@@ -184,9 +190,18 @@ Rota legacy `/notes`, `/checklist`, `/opinions` redirecionam para `?drawer=` via
 
 ---
 
-## Sidebar (`src/components/Sidebar.tsx`)
+## Sidebar Refatorada (SRP)
 
-### Navegação
+O componente `Sidebar.tsx` foi refatorado para delegar responsabilidades a 3 subcomponentes:
+
+### Subcomponentes
+| Componente | Arquivo | Responsabilidade |
+|---|---|---|
+| `SidebarNav` | `src/components/sidebar/SidebarNav.tsx` | Navegação principal (links, ícones, labels) |
+| `SidebarUserInfo` | `src/components/sidebar/SidebarUserInfo.tsx` | Avatar, nome, plano do usuário |
+| `SidebarRecentItems` | `src/components/sidebar/SidebarRecentItems.tsx` | Itens visitados recentemente |
+
+### Navegação (SidebarNav)
 | Rota | Label | Ícone |
 |------|-------|-------|
 | `/dashboard` | Dashboard | LayoutDashboard |
@@ -208,9 +223,18 @@ Rota legacy `/notes`, `/checklist`, `/opinions` redirecionam para `?drawer=` via
 
 ---
 
-## Header (`src/components/Header.tsx`)
+## Header Refatorado (SRP)
 
-### Elementos
+O componente `Header.tsx` foi refatorado para delegar responsabilidades a 3 subcomponentes:
+
+### Subcomponentes
+| Componente | Arquivo | Responsabilidade |
+|---|---|---|
+| `NotificationDropdown` | `src/components/header/NotificationDropdown.tsx` | Sininho de notificações com badge + dropdown |
+| `MobileSearchOverlay` | `src/components/header/MobileSearchOverlay.tsx` | Overlay de busca para mobile |
+| `UserProfileButton` | `src/components/header/UserProfileButton.tsx` | Avatar + nome + dropdown de perfil |
+
+### Elementos do Header
 - **Hamburger** (Menu): toggle sidebar
 - **Busca global**: placeholder "Pesquisar casos, clientes..."
 - **Notificações** (Bell): polling 60s, badge vermelho, mark as read
@@ -234,6 +258,9 @@ Rota legacy `/notes`, `/checklist`, `/opinions` redirecionam para `?drawer=` via
 ## Componentes
 
 ### UI Base (`src/components/ui/`)
+
+**30 primitivas:**
+
 | Componente | Descrição |
 |---|---|
 | `Button.tsx` | primary, outline, danger, ghost + sm/md/lg |
@@ -249,6 +276,9 @@ Rota legacy `/notes`, `/checklist`, `/opinions` redirecionam para `?drawer=` via
 | `PageError.tsx` | Estado de erro com reset |
 | `AlertBanner.tsx` | Banner de alerta (warning/error/success/info) |
 | `EmptyState.tsx` | Estado vazio com ícone, título, descrição, ação |
+| `FloatingActionMenu.tsx` | Menu de ações flutuante (compartilhado entre Case/Client) |
+| `ContextualEmptyState.tsx` | Estado vazio contextual com ação inteligente |
+| `ProgressBar.tsx` | Barra de progresso reutilizável |
 | `CurrencyInput.tsx` | Input monetário |
 | `DatePicker.tsx` | Seletor de data (MUI) |
 | `MonthPicker.tsx` | Seletor de mês |
@@ -263,6 +293,22 @@ Rota legacy `/notes`, `/checklist`, `/opinions` redirecionam para `?drawer=` via
 | `Select.tsx` | Select dropdown padronizado |
 | `Popover.tsx` | Popover contextual |
 | `MobileCardList.tsx` | Lista de cards otimizada para mobile |
+
+### Sidebar Subcomponentes
+
+| Componente | Descrição |
+|---|---|
+| `SidebarNav` | Navegação principal (SRP) |
+| `SidebarUserInfo` | Info do usuário (SRP) |
+| `SidebarRecentItems` | Itens recentes (SRP) |
+
+### Header Subcomponentes
+
+| Componente | Descrição |
+|---|---|
+| `NotificationDropdown` | Dropdown de notificações (SRP) |
+| `MobileSearchOverlay` | Busca mobile overlay (SRP) |
+| `UserProfileButton` | Botão de perfil (SRP) |
 
 ### Caso (`src/components/case/`)
 | Componente | Descrição |
@@ -328,11 +374,21 @@ Rota legacy `/notes`, `/checklist`, `/opinions` redirecionam para `?drawer=` via
 | `useKeyboardShortcuts` | `src/hooks/useKeyboardShortcuts.ts` | Atalhos de teclado |
 | `useUrgentDeadlines` | `src/hooks/useUrgentDeadlines.ts` | Prazos urgentes (7 dias) |
 | `useCepLookup` | `src/hooks/useCepLookup.ts` | Busca automática de CEP com debounce |
-| `useClientCount` | `src/hooks/useClientCount.ts` | Contagem de clientes (sidebar) |
 | `useClientDetail` | `src/hooks/useClientDetail.ts` | Hook de detalhe do cliente com refetch |
 | `useCnis` | `src/hooks/useCnis.ts` | Gerenciamento de CNIS do caso |
 | `useCnisUpload` | `src/hooks/useCnisUpload.ts` | Upload de CNIS com progresso |
-| `usePendingCasesCount` | `src/hooks/usePendingCasesCount.ts` | Contagem de casos pendentes |
+| `usePollingCount` | `src/hooks/usePollingCount.ts` | Polling de contagens com AbortController + mounted check (substitui `useClientCount` e `usePendingCasesCount`) |
+
+### usePollingCount
+```typescript
+// Substitui os hooks especializados useClientCount e usePendingCasesCount
+// Implementação genérica com:
+// - AbortController para cancelamento em unmount
+// - mounted check para evitar setState após desmontagem
+// - Intervalo configurável (default 30s)
+// - Retry automático em caso de falha
+function usePollingCount(url: string, interval?: number): { count: number; loading: boolean }
+```
 
 ---
 
@@ -363,6 +419,51 @@ const { create, update, remove, loading } = useCrudActions('/api/cases', {
   onSuccess: refetch,
 })
 ```
+
+### `ErrorBoundary`
+- Componente `ErrorBoundary.tsx` com `componentDidCatch`
+- Integração com Sentry para captura de erros não tratados
+- UI de fallback com botão "Tentar novamente"
+
+---
+
+## Acessibilidade
+
+### Implementado
+- **ARIA roles**: `role="checkbox"`, `aria-checked` nos checkboxes customizados
+- **BottomSheet**: `role="dialog"`, `aria-modal="true"`, `aria-labelledby`
+- **Focus trap**: `useFocusTrap(ref, active)` em modais, drawers e BottomSheet
+- **Contraste**: Paleta slate/amber verifica contraste WCAG AA
+- **Labels**: `aria-label` em botões de ícone, `aria-describedby` em inputs
+- **Teclado**: Navegação por Tab, Escape para fechar modais
+
+### Conformidade
+- WCAG 2.1 AA (alvo)
+- Contraste mínimo 4.5:1 em textos normais
+- Foco visível em todos os elementos interativos
+
+---
+
+## PWA
+
+### Manifest
+- `manifest.json` com:
+  - `name`: "Previando"
+  - `short_name`: "Previando"
+  - `start_url`: "/dashboard"
+  - `display`: "standalone"
+  - `background_color`: "#f8fafc" (slate-50)
+  - `theme_color`: "#d97706" (amber-600)
+  - `icons`: 192x192 e 512x512
+
+### Service Worker
+- Cache offline parcial de assets estáticos
+- Estratégia: Cache-first para fontes e CSS, Network-first para dados
+- Registrado no layout raiz
+
+### Ícones
+- Ícones PWA gerados (192x192, 512x512)
+- Favicon tradicional mantido
 
 ---
 
@@ -403,3 +504,22 @@ Componentes persistentes memoizados: `Header`, `Sidebar`, todos os widgets de da
 - FAB: labels visíveis no mobile, `z-[60]`
 - Global search: Cmd+K desktop, botão de busca no mobile
 - Bottom sheet: `BottomSheet` component para gestos de toque
+
+---
+
+## E2E (Playwright)
+
+### Configuração
+- **Arquivo:** `src/e2e/playwright.config.ts`
+- **Spec files:** 3 arquivos:
+  - `auth.setup.ts` — Setup de autenticação (login compartilhado)
+  - `dashboard.spec.ts` — Testes do dashboard
+  - `cases.spec.ts` — Testes de casos
+  - `clients.spec.ts` — Testes de clientes
+
+### Funcionalidades testadas
+- Login/logout
+- Criação e edição de casos
+- Criação e edição de clientes
+- Navegação pelo dashboard
+- Upload e processamento CNIS

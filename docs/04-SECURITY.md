@@ -1,6 +1,6 @@
 # 04 — SECURITY
 > Auth, Middleware, Bloqueios Físicos, Sanitização e Rate Limiting
-> Última atualização: 2026-07-15
+> Última atualização: 2026-07-22
 
 ---
 
@@ -13,13 +13,15 @@
 5. Usuário só acessa seus próprios dados (anti-IDOR)
 6. IA sempre recebe input sanitizado
 7. **Cálculos Previdenciários Blindados no Backend**
+8. **Env vars validadas no startup** — fail-fast se faltar variável obrigatória
+9. **Token do portal armazenado como hash** — lookup por SHA-256
 
 ---
 
 ## NextAuth v5
 
 - **Path:** `src/auth.ts` (não `lib/auth.ts`)
-- **`SESSION_MAX_AGE = 86400`** (24 horas)
+- **`SESSION_MAX_AGE = 3600`** (1 hora — reduzido de 24h para maior segurança)
 - **JWT callback diferencia Credentials de Google OAuth**
 - **`trigger === 'update'`:** re-busca plan/isAdmin no DB
 - **Session callback usa `token.sub`**
@@ -157,7 +159,7 @@ Arquivo: `src/lib/sanitize.ts`
 | `hashCPF(cpf)` | HMAC-SHA256 com salt |
 | `maskCPF(cpf?)` | Máscara: XXX.***.YYY-** |
 | `sanitizePhone(phone)` | Apenas dígitos, max 13 |
-| `sanitizeForAI(input, maxLen?)` | Anti-prompt injection |
+| `sanitizeForAI(input, maxLen?)` | Anti-prompt injection (melhorias: bloqueio de instruções injetadas, remoção de delimitadores de sistema, sanitização de tokens de controle) |
 
 ---
 
@@ -235,6 +237,7 @@ export async function requireAdmin(): Promise<{ error: NextResponse } | { userId
 - [ ] Ownership verificado em todos os endpoints com IDs
 - [ ] Seed de `PlanLimit` rodado
 - [ ] SMTP configurado para password reset
+- [ ] Env vars validadas no startup via `env-validator.ts`
 
 ---
 
@@ -243,6 +246,7 @@ export async function requireAdmin(): Promise<{ error: NextResponse } | { userId
 ### Link Compartilhável
 
 - Token gerado via `crypto.randomBytes(32).toString('base64url')` — 256 bits de entropia
+- Token armazenado como **SHA-256 hash** (`tokenHash`) no banco — lookup por hash
 - Expira em 30 dias (`expiresAt`)
 - Advogado pode revogar a qualquer momento via `DELETE /api/cases/[id]/portal`
 - Rate limit: 5 req/hora para simulação (proteção contra brute force)
@@ -268,6 +272,34 @@ O `portalConfig` (JSON no model `Case`) define exatamente quais informações o 
 
 ---
 
+## Variáveis de Ambiente Obrigatórias (env-validator.ts)
+
+- **Arquivo:** `src/lib/env-validator.ts`
+- **Valida no startup:** 13 variáveis obrigatórias verificadas antes do servidor iniciar
+- **Fail-fast:** Se qualquer variável faltar, o app falha com mensagem clara
+- **Variáveis checadas:** `NEXT_PUBLIC_APP_URL`, `DATABASE_URL`, `REDIS_URL`, `NEXTAUTH_SECRET`, `NEXTAUTH_URL`, `CPF_HASH_SALT`, variáveis R2, `OPENAI_API_KEY`, `MERCADO_PAGO_ACCESS_TOKEN`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`, SMTP, Google OAuth
+
+---
+
+## Retenção Fiscal (Payment.user SetNull)
+
+- `Payment.user` agora usa `onDelete: SetNull` em vez de `Cascade`
+- Quando um usuário é excluído, seus registros de pagamento **não são deletados**
+- O campo `userId` torna-se `null`, preservando o registro fiscal
+- Conformidade com legislação de retenção de registros financeiros
+
+---
+
+## Account Deletion (Anonimização)
+
+- `POST /api/users/account` agora **anonimiza** clientes e casos em vez de deletá-los fisicamente
+- Clientes: campo `anonymizedAt` preenchido, dados pessoais removidos
+- Casos: mantidos como registro, dados sensíveis removidos
+- LGPD Art. 18, VI — direito de eliminação, com retenção mínima para obrigações legais
+- Dados anonimizados não são mais recuperáveis
+
+---
+
 ## LGPD / Privacidade
 
 ### Cookie Consent
@@ -289,3 +321,13 @@ O `portalConfig` (JSON no model `Case`) define exatamente quais informações o 
 - Eventos de conversão armazenados em `ConversionEvent` (anonimizados)
 - UTM params rastreados para marketing (sem PII)
 - Consentimento necessário antes de tracking
+
+---
+
+## ErrorBoundary com Sentry
+
+- **Arquivo:** `src/components/ErrorBoundary.tsx`
+- Implementa `componentDidCatch` para captura de erros não tratados
+- Integração com Sentry via `Sentry.captureException()`
+- UI de fallback amigável com botão "Tentar novamente"
+- Loga detalhes do erro no console em desenvolvimento

@@ -1,6 +1,6 @@
 # 01 — DATABASE
 > PostgreSQL 16 + Prisma ORM — banco: previando_db
-> Última atualização: 2026-07-15
+> Última atualização: 2026-07-22
 
 ---
 
@@ -34,7 +34,7 @@ Armazena contas de provedores externos (Google, etc.).
 |---|---|---|
 | `id` | `String @id @default(cuid())` | Identificador único |
 | `userId` | `String` | FK para `User` |
-| `type` | `String` | Tipo de conta (ex: "oauth") |
+| `type` | `String` | Tipo de conta (ex: \"oauth\") |
 | `provider` | `String` | Provedor |
 | `providerAccountId` | `String` | ID no provedor |
 | `refresh_token` | `String? @db.Text` | Token de refresh |
@@ -227,7 +227,7 @@ Tabela: `clients`
 | `updatedAt` | `DateTime @updatedAt` | Atualização |
 
 **Relações:** `user -> User` (Cascade), `cases -> Case[]`, `cnisDocument -> CnisDocument?`
-**Índices:** `@@index([userId])`
+**Índices:** `@@index([userId])`, `@@index([cpfHash])`
 
 ---
 
@@ -362,6 +362,7 @@ Tabela: `cnis_documents`
 | `updatedAt` | `DateTime @updatedAt` | Atualização |
 
 **Relações:** `case -> Case` (Cascade)
+**Índices:** `@@index([processingStatus])`
 
 #### ProcessingStatus (Enum)
 | Valor | Descrição |
@@ -480,7 +481,23 @@ Tabela: `simulations`
 #### Payment
 Tabela: `payments`
 
-`mpPaymentId` (unique), `mpSubscriptionId?`, `plan`, `amount`, `currency`, `status` (PaymentStatus), `paidAt?`, `periodStart?`, `periodEnd?`, `createdAt`
+| Campo | Tipo | Descrição |
+|---|---|---|
+| `id` | `String @id @default(cuid())` | Identificador único |
+| `userId` | `String` | FK para User |
+| `mpPaymentId` | `String @unique` | ID no Mercado Pago |
+| `mpSubscriptionId` | `String?` | ID da assinatura MP |
+| `plan` | `Plan` | Plano |
+| `amount` | `Decimal(12,2)` | Valor |
+| `currency` | `String @default("BRL")` | Moeda |
+| `status` | `PaymentStatus` | Status |
+| `paidAt` | `DateTime?` | Data do pagamento |
+| `periodStart` | `DateTime?` | Início do período |
+| `periodEnd` | `DateTime?` | Fim do período |
+| `createdAt` | `DateTime @default(now())` | Criação |
+
+**Relações:** `user -> User` (SetNull on delete — retenção fiscal)
+**Nota:** `onDelete: SetNull` (migração `fix_payment_cascade_and_indexes`). O campo `userId` é mantido como nullable para preservar registros de pagamento mesmo após exclusão do usuário, conforme exigência de retenção fiscal.
 
 **Enum PaymentStatus:** `PENDING`, `APPROVED`, `REJECTED`, `CANCELLED`, `REFUNDED`
 
@@ -645,12 +662,14 @@ Tabela: `client_access`
 | `id` | `String @id @default(cuid())` | Identificador único |
 | `caseId` | `String @unique` | FK para Case |
 | `token` | `String @unique` | Token crypto random (256 bits, base64url) |
+| `tokenHash` | `String? @unique` | SHA-256 do token (lookup por hash, segurança) |
 | `expiresAt` | `DateTime` | Expira em 30 dias |
 | `active` | `Boolean @default(true)` | Pode ser revogado |
 | `lastAccessAt` | `DateTime?` | Último acesso |
 | `createdAt` | `DateTime @default(now())` | Criação |
 
 **Relações:** `case -> Case` (Cascade)
+**Nota:** O campo `tokenHash` armazena o SHA-256 do token gerado. A verificação é feita por hash, não por comparação direta do token. O `token` original é enviado ao cliente no link compartilhável.
 
 ---
 
@@ -684,7 +703,7 @@ Tabela: `conversion_events`
 Tabela: `webhook_events`
 
 `provider`, `eventType`, `externalId?`, `payload` (Json), `processedAt?`, `error?`, `createdAt`
-**Índices:** `@@index([provider, externalId])`, `@@index([processedAt])`
+**Índices:** `@@index([provider, externalId])`, `@@index([processedAt])`, `@@index([createdAt])`
 
 ---
 
@@ -715,6 +734,25 @@ Tabela: `support_tickets`
 
 #### TicketPriority Enum
 `LOW`, `NORMAL`, `HIGH`, `URGENT`
+
+---
+
+## Migration: fix_payment_cascade_and_indexes
+
+Esta migration implementou as seguintes mudanças no schema:
+
+1. **Payment.user**: `onDelete: Cascade` → `onDelete: SetNull`
+   - `userId` no model `Payment` agora é opcional
+   - Preserva registros fiscais mesmo após exclusão do usuário
+
+2. **ClientAccess.tokenHash**: Novo campo `String? @unique`
+   - Armazena SHA-256 do token do portal
+   - Lookup de acesso por hash, não por token plain text
+
+3. **Novos índices**:
+   - `Client`: `@@index([cpfHash])` — acelera busca por hash de CPF
+   - `CnisDocument`: `@@index([processingStatus])` — filtra por status de processamento
+   - `WebhookEvent`: `@@index([createdAt])` — ordenação por data de criação
 
 ---
 
@@ -765,8 +803,8 @@ npx prisma studio
 ## Variáveis de Ambiente
 
 ```env
-DATABASE_URL="postgresql://previando:senha@localhost:60003/previando_db"
-DATABASE_URL_UNPOOLED="postgresql://previando:senha@localhost:60003/previando_db"
+DATABASE_URL="postgresql://previando:***@localhost:60003/previando_db"
+DATABASE_URL_UNPOOLED="postgresql://previando:***@localhost:60003/previando_db"
 ```
 
 ---
@@ -782,3 +820,5 @@ DATABASE_URL_UNPOOLED="postgresql://previando:senha@localhost:60003/previando_db
 7. PostgreSQL exposto apenas em `127.0.0.1` (porta 60003)
 8. `.env.production` e `.env.development` no `.gitignore` — evita vazamento de secrets
 9. Todos os uploads validados: MIME, magic bytes, tamanho, extensão
+10. Token do portal armazenado como SHA-256 (tokenHash) — lookup por hash
+11. Payment.user com SetNull — retenção fiscal obrigatória

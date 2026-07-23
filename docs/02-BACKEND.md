@@ -1,6 +1,6 @@
 # 02 — BACKEND
 
-> Última atualização: 2026-07-15
+> Última atualização: 2026-07-22
 
 ---
 
@@ -94,6 +94,7 @@ PDF Upload → Extração de Texto → Parser Programático (instantâneo)
 - **Concurrency:** 2, **Rate Limiter:** 5 jobs/60s
 - **OCR Fallback:** pdf-parse < 100 chars → Tesseract.js
 - **Notificações:** `CNIS_PROCESSED` ou `CNIS_FAILED` + audit log
+- **Max páginas:** 200 (worker aborta PDFs com mais de 200 páginas)
 
 ---
 
@@ -233,6 +234,13 @@ PDF Upload → Extração de Texto → Parser Programático (instantâneo)
 | PATCH | `/api/cases/[id]` | Atualiza | 20 | 1h |
 | DELETE | `/api/cases/[id]` | Exclui | 5 | 1h |
 | PATCH | `/api/cases/[id]/status` | Status | 20 | 1h |
+| POST | `/api/cases/[id]/scenarios` | Gera cenários de simulação | 5 | 1h |
+
+### Import de Casos
+| Método | Rota | Função | Limite | Janela |
+|--------|------|--------|----------|---------|
+| POST | `/api/cases/import` | Importa casos em lote via CSV | 3 | 1h |
+| POST | `/api/cases/import/preview` | Preview/validação de importação | 10 | 1h |
 
 ### Prontuário (Notes)
 | Método | Rota | Função | Limite | Janela |
@@ -349,6 +357,8 @@ PDF Upload → Extração de Texto → Parser Programático (instantâneo)
 | POST | `/api/cases/[id]/portal` | Gera token de acesso | 5 | 1h |
 | PATCH | `/api/cases/[id]/portal/config` | Configura portal | 10 | 1h |
 
+> **Portal DRY:** As 7 rotas do portal usam `getPortalAccess()` de `src/lib/portal-access.ts` para centralizar a lógica de validação de token, expiração e acesso. Este helper substitui a repetição manual nas rotas.
+
 ### Success Analysis
 | Método | Rota | Função | Limite | Janela |
 |--------|------|--------|----------|---------|
@@ -439,6 +449,9 @@ Todas as rotas de mutação possuem rate limiting via sliding window Redis + fal
 | POST /api/clients/import/preview | 10 | 1h |
 | PATCH /api/cases/[id]/calculations/[cId]/select | 20 | 1h |
 | DELETE /api/cases/[id]/calculations/[cId] | 10 | 1h |
+| POST /api/cases/import | 3 | 1h |
+| POST /api/cases/import/preview | 10 | 1h |
+| POST /api/cases/[id]/scenarios | 5 | 1h |
 
 ---
 
@@ -451,6 +464,9 @@ Todas as rotas de mutação possuem rate limiting via sliding window Redis + fal
 - **Cache:** Redis com TTL de 300s
 - **Reset inline:** Compara `usageMonthRef` com mês/ano atual
 - **Retorna:** 402 (Payment Required)
+
+### Guards Atômicos
+Os guards agora operam de forma **atômica**: verificam e consomem o recurso numa única operação Redis (check + consume). Isso elimina race conditions entre verificação e consumo em requisições concorrentes. A função `guardAtomic()` usa `WATCH`/`MULTI` do Redis ou `INCR` com verificação de limite.
 
 ### PlanFeature
 ```typescript
@@ -492,12 +508,21 @@ type PlanFeature =
 `export.pdf`, `admin.user.suspend`, `admin.user.activate`,
 `admin.plan.change`, `admin.plan.limit.change`
 
+### Verificação de Integridade
+- `verifyAuditChainIntegrity()` agora opera em **lotes de 1000 registros**
+- Evita timeout em chains com milhões de entradas
+- Percorre a cadeia de hash SHA-256 em batches, validando cada elo
+
 ---
 
-## 8. Libs Adicionais (atualizado 2026-07-15)
+## 8. Libs Adicionais (atualizado 2026-07-22)
 
 | Arquivo | Função |
 |---------|--------|
+| `lib/env-validator.ts` | Valida 13 env vars obrigatórias no startup (NEXT_PUBLIC_APP_URL, DATABASE_URL, REDIS_URL, NEXTAUTH_SECRET, NEXTAUTH_URL, CPF_HASH_SALT, R2_*, OPENAI_API_KEY, MERCADO_PAGO_*, ADMIN_EMAIL, ADMIN_PASSWORD, SMTP_*, GOOGLE_*) |
+| `lib/json-schema.ts` | Utilitários de schema JSON (validação, transformação) |
+| `lib/portal-access.ts` | Helper `getPortalAccess()` — centraliza validação de token, expiração e acesso do portal. DRY nas 7 rotas do portal. |
+| `lib/case-import-parser.ts` | Parser de CSV para importação de casos em lote (validação, transformação, duplicatas) |
 | `lib/glossary.ts` | Glossário de termos previdenciários para portal |
 | `lib/cnj-parser.ts` | Parser de números de processo CNJ |
 | `lib/feature-marketing.ts` | Funis de conversão e marketing |
@@ -530,6 +555,7 @@ type PlanFeature =
 - **Singleton:** Lazy initialization
 - **Timeout:** 180s
 - **Max Retries:** 3
+- **loggingFetch:** Wrapper de fetch com logging de requisições para depuração
 
 ### Modelos (ai-models.ts)
 - **CRITICAL:** `gpt-4.1-mini` (CNIS, pareceres, diagnóstico)
@@ -568,7 +594,44 @@ type PlanFeature =
 
 ---
 
-## 11. Known Fixes & Patches
+## 11. Variáveis de Ambiente Obrigatórias
+
+Validadas por `env-validator.ts` no startup (13 vars):
+
+```env
+NEXT_PUBLIC_APP_URL
+DATABASE_URL
+REDIS_URL
+NEXTAUTH_SECRET
+NEXTAUTH_URL
+CPF_HASH_SALT
+R2_ACCESS_KEY_ID
+R2_SECRET_ACCESS_KEY
+R2_BUCKET_NAME
+R2_ACCOUNT_ID
+R2_PUBLIC_URL
+OPENAI_API_KEY
+MERCADO_PAGO_ACCESS_TOKEN
+ADMIN_EMAIL
+ADMIN_PASSWORD
+SMTP_HOST
+SMTP_PORT
+SMTP_USER
+SMTP_PASS
+GOOGLE_CLIENT_ID
+GOOGLE_CLIENT_SECRET
+```
+
+> **Nota:** `REQUIRED_VARS` no `env-validator.ts` contém a lista completa verificada no startup. O app falha cedo (fail-fast) se alguma variável obrigatória estiver ausente.
+
+---
+
+## 12. Known Fixes & Patches
+
+### 2026-07-22 — Guards Atômicos e Portal DRY
+- **Plan-guard atômico**: `guardAtomic()` — operação única de check + consume
+- **Portal DRY**: `getPortalAccess()` em `portal-access.ts` centraliza validação
+- **Auditoria paginada**: `verifyAuditChainIntegrity()` em lotes de 1000
 
 ### 2026-07-07 — Security Hardening
 - **OpenAPI CORS**: Removido `Access-Control-Allow-Origin: '*'` da rota `/api/openapi`

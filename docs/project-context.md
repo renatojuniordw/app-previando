@@ -1,6 +1,6 @@
 # Documentação de Contexto e Arquitetura — Previando App
 
-> Última atualização: 2026-07-15
+> Última atualização: 2026-07-22
 > Este documento fornece um panorama geral da arquitetura, bibliotecas e estrutura do projeto.
 
 ---
@@ -12,7 +12,7 @@ O projeto é uma aplicação web Full-Stack baseada em **Next.js 14 (App Router)
 ### Principais Padrões e Componentes:
 - **Frontend:** Next.js App Router com Server/Client Components, Tailwind CSS, Zustand, Lucide React, Radix UI, MUI (x-date-pickers)
 - **Backend / API:** API Routes em `src/app/api/...` com autenticação NextAuth v5
-- **Banco de Dados:** PostgreSQL via Prisma ORM (31 modelos, 1030 linhas)
+- **Banco de Dados:** PostgreSQL via Prisma ORM (31 modelos, ~1040 linhas)
 - **Filas e Processamento:** BullMQ com Redis (CNIS, audit log, deadline, email, fee)
 - **IA:** OpenAI SDK (gpt-4.1-mini, gpt-4.1-nano, gpt-4o-mini)
 - **Storage:** Cloudflare R2 (PDF CNIS e documentos)
@@ -54,18 +54,25 @@ O projeto é uma aplicação web Full-Stack baseada em **Next.js 14 (App Router)
 ### Monitoramento
 - `@sentry/nextjs` (^10.62)
 
+### Testes E2E
+- `@playwright/test` (^1.52)
+
 ---
 
 ## 3. Estrutura de Diretórios
 
 ```text
-prisma/                 # Schema (1030 linhas, 31 modelos) + migrations + seed
+prisma/                 # Schema (~1040 linhas, 31 modelos) + migrations + seed
 docs/                   # Documentação (23 arquivos + superpowers/)
 src/
 ├── app/                # Next.js App Router
 │   ├── (auth)/         # Login, Register, Forgot/Reset Password + AuthHighlights, AuthTransition, CookieConsent
 │   ├── (dashboard)/    # Dashboard, Cases, Clients, Deadlines, Calendar, Activity,
 │   │                   #   Reports, Honorarios, Suporte, Tools (PDF, CNIS Indicators), Settings
+│   │   ├── cases/
+│   │   │   ├── import/ # Página de importação de casos via CSV (nova)
+│   │   │   └── [id]/
+│   │   │       └── scenarios/  # Página de cenários de simulação (nova)
 │   ├── (public)/       # Privacidade, Termos (páginas públicas LGPD)
 │   ├── admin/          # Admin (Dashboard, Users, Payments, Metrics, Plans, Modalidades,
 │   │                   #   Regras, Salário Mínimo, Suporte, Audit Integrity)
@@ -73,12 +80,21 @@ src/
 │   └── api/            # API Routes (auth, admin, cases, cnis, billing, webhooks, cep,
 │                       #   search, export, portal, support, track, cron, etc.)
 ├── components/         # React Components
-│   ├── ui/             # 27 primitives (Button, Badge, Modal, Drawer, Card, Input, Spinner,
+│   ├── ui/             # 30 primitives (Button, Badge, Modal, Drawer, Card, Input, Spinner,
 │   │                   #   PageHeader, PageError, AlertBanner, EmptyState, ConfirmDialog,
 │   │                   #   ActionsDropdown, BottomSheet, FilterSheet, MobileBottomNav,
 │   │                   #   QuickActionSheet, Select, Tooltip, CurrencyInput, DatePicker,
 │   │                   #   MonthPicker, Skeleton, HelpText, MuiThemeProvider, Popover,
-│   │                   #   MobileCardList)
+│   │                   #   MobileCardList, FloatingActionMenu, ContextualEmptyState,
+│   │                   #   ProgressBar, IconButton)
+│   ├── sidebar/        # Subcomponentes da Sidebar (refatorados SRP)
+│   │   ├── SidebarNav.tsx
+│   │   ├── SidebarUserInfo.tsx
+│   │   └── SidebarRecentItems.tsx
+│   ├── header/         # Subcomponentes do Header (refatorados SRP)
+│   │   ├── NotificationDropdown.tsx
+│   │   ├── MobileSearchOverlay.tsx
+│   │   └── UserProfileButton.tsx
 │   ├── case/           # 9 componentes (CaseNotesDrawer, CaseChecklistDrawer, CaseOpinionsDrawer,
 │   │                   #   CaseBpcDrawer, CaseFloatingActions, CasePeticaoModal,
 │   │                   #   DrawerRedirect, ModalitySelect, ProcessTimeline)
@@ -100,21 +116,27 @@ src/
 │   ├── portal/         # IdentityVerification, PortalSimulator
 │   ├── plan/           # FeatureLockedTeaser
 │   ├── search/         # GlobalSearch, SearchResultItem
-│   ├── shared/         # AddressFields
-│   ├── Sidebar.tsx, Header.tsx, UsageBar.tsx, UpgradeModal.tsx, ToastContainer.tsx,
+│   ├── shared/         # AddressFields, FloatingActionMenu (compartilhado Case/Client)
+│   ├── Header.tsx, Sidebar.tsx, UsageBar.tsx, UpgradeModal.tsx, ToastContainer.tsx,
 │   │   ClientSwitcher.tsx, ErrorBoundary.tsx, ShortcutsModal.tsx
-├── hooks/              # 12 hooks: useApi, useCrudActions, useBodyScrollLock, useFocusTrap,
+│   │   # Nota: Header.tsx e Sidebar.tsx foram refatorados para delegar a
+│   │   # sidebar/ e header/ subcomponentes (SRP)
+├── hooks/              # 13 hooks: useApi, useCrudActions, useBodyScrollLock, useFocusTrap,
 │                       #   useKeyboardShortcuts, useUrgentDeadlines, useCepLookup,
-│                       #   useClientCount, useClientDetail, useCnis, useCnisUpload,
-│                       #   usePendingCasesCount
+│                       #   useClientDetail, useCnis, useCnisUpload, usePollingCount
+│                       #   (substitui useClientCount + usePendingCasesCount)
 ├── jobs/               # 6 BullMQ Workers (cnis, audit, deadline, email, fee, worker index)
-├── lib/                # ~59 utilitários
+├── lib/                # ~63 utilitários
 │   ├── prisma.ts, redis.ts, auth.ts, auth-server.ts
 │   ├── openai.ts, ai-models.ts
 │   ├── sanitize.ts, sanitize-server.ts, rate-limit.ts, logger.ts, api-error.ts
 │   ├── plan-guard.ts, ownership.ts, admin-guard.ts, audit.ts, audit-hash.ts
+│   ├── env-validator.ts    # (novo) Valida 13 env vars obrigatórias no startup
+│   ├── json-schema.ts      # (novo) Utilitários de schema JSON
+│   ├── portal-access.ts    # (novo) Helper getPortalAccess() — DRY nas 7 rotas do portal
+│   ├── case-import-parser.ts # (novo) Parser de CSV para importação de casos
 │   ├── previdencia-engine.ts, retroativos-engine.ts, gps-engine.ts, viability-score.ts
-│   ├── cause-value-engine.ts, revision-engine.ts, revision-engine.ts
+│   ├── cause-value-engine.ts, revision-engine.ts
 │   ├── salario-minimo.ts, regras-aposentadoria.ts, modalidades.ts
 │   ├── pdf-generator.ts, upload-validator.ts, email.ts, download-pdf.ts
 │   ├── mappers.ts, constants.ts, modalidade-labels.ts, utils.ts, masks.ts, api.ts
@@ -123,7 +145,7 @@ src/
 │   ├── feature-marketing.ts, track-conversion.ts, fetch-client-info.ts
 │   ├── client-import-parser.ts, cnis-status.ts, fee-status.ts
 │   ├── account-deletion.ts, encryption.ts, oauth-token-adapter.ts
-│   ├── request-ip.ts, cpf.ts, br-data.ts, encryption.ts
+│   ├── request-ip.ts, cpf.ts, br-data.ts
 │   └── prompts/
 │       ├── bpc/        # Pre-analysis, laudo-analysis, questions, checklist
 │       ├── peticao-inicial/
@@ -139,7 +161,13 @@ src/
 │   └── previdencia-service.ts
 ├── store/              # 6 Zustand (sidebar, upgrade-modal, toast, admin-sidebar, recent-store, search-store)
 ├── types/              # bpc-social.ts, cnis.ts, xlsx.d.ts
-└── middleware.ts       # Middleware global (auth + admin guard)
+├── middleware.ts       # Middleware global (auth + admin guard)
+└── e2e/                # Testes E2E (Playwright)
+    ├── playwright.config.ts
+    ├── auth.setup.ts
+    ├── dashboard.spec.ts
+    ├── cases.spec.ts
+    └── clients.spec.ts
 ```
 
 > **Convenções AGENTS.md:** O projeto possui um `AGENTS.md` na raiz que documenta todas as convenções de código, comandos, arquitetura e regras DRY + SOLID para agentes de IA. Consulte-o antes de qualquer modificação no código-fonte.
@@ -155,7 +183,7 @@ Upload → R2 → BullMQ → Parser Programático (regex) → Validação AI (gp
 CNIS COMPLETED → Seleciona modalidade → Busca salário mínimo + regras vigentes → Motor de cálculo → Salva
 
 ### BPC/LOAS Analysis
-Formulário (patologia, renda, laudos) → Pré-Análise (gpt-4o-mini) → Análise de Laudo → Perguntas Sociais/ Médicas → Checklist
+Formulário (patologia, renda, laudos) → Pré-Análise (gpt-4o-mini) → Análise de Laudo → Perguntas Sociais/Médicas → Checklist
 
 ### Pagamento (Mercado Pago)
 POST /subscribe → MP subscription → Webhook → Atualiza plano → Cache invalidado
@@ -167,7 +195,10 @@ POST /forgot-password → Token → Email SMTP → POST /reset-password → Hash
 Webhook TrackJud → Atualiza processNumber, movimentações → Notificação ao advogado
 
 ### Portal do Cliente
-Gerar token → Link compartilhável (30 dias) → Acesso a: processo, cálculos, retroativos, FAQ, timeline
+Gerar token → Armazenado como SHA-256 (tokenHash) → Link compartilhável (30 dias) → Acesso a: processo, cálculos, retroativos, FAQ, timeline
+
+### Importação de Casos (CSV)
+POST /api/cases/import/preview → Validação → POST /api/cases/import → Criação em lote com parser dedicado
 
 ---
 
@@ -181,6 +212,7 @@ Gerar token → Link compartilhável (30 dias) → Acesso a: processo, cálculos
 - `useCepLookup(cep)` → busca automática de CEP com debounce
 - `useClientDetail(clientId)` → hook de detalhe do cliente com refetch
 - `useCnis(caseId)` / `useCnisUpload()` → gerenciamento CNIS
+- `usePollingCount(url, interval)` → polling com AbortController + mounted check (substitui `useClientCount` e `usePendingCasesCount`)
 
 ### Componentes UI
 - Sempre preferir componentes de `src/components/ui/` a estilos inline
@@ -188,6 +220,10 @@ Gerar token → Link compartilhável (30 dias) → Acesso a: processo, cálculos
 - Inputs: usar classe `neo-input` ou componente `<Input>`
 - Cards: usar `<Card variant="light|dark">` em vez de `bg-white border...`
 - Modais mobile responsivos: `flex-1 min-h-0` no conteúdo para scroll
+- FloatingActionMenu: componente compartilhado (shared/) entre Case e Client
+- ContextualEmptyState: estado vazio com contexto e ação
+- ProgressBar: barra de progresso reutilizável
+- IconButton: botão ícone padronizado com tooltip
 
 ### Performance
 - Dynamic imports para: PDF, charts, modais/drawers, BpcResult (ssr: false)
@@ -200,10 +236,45 @@ Gerar token → Link compartilhável (30 dias) → Acesso a: processo, cálculos
 - Sidebar adaptativa: labels visíveis no mobile, ocultas em desktop collapsed
 - Modal mobile: padding adequado, z-index hierarchy
 - Global search: Cmd+K no desktop, botão no mobile
+- Accessibility: ARIA roles em checkboxes, BottomSheet, focus trap, contraste WCAG
+
+### PWA
+- manifest.json com ícones 192x192 e 512x512
+- Service worker para cache offline parcial
+- Tema slate/amber, background slate-50
+
+### E2E
+- Playwright configurado com 3 spec files: auth.setup.ts, dashboard.spec.ts, cases.spec.ts, clients.spec.ts
 
 ---
 
-## 6. Recomendações para Agentes
+## 6. Mudanças Arquiteturais Recentes
+
+### Header e Sidebar Refatorados (SRP)
+- `Header.tsx` delegou para 3 subcomponentes: `NotificationDropdown`, `MobileSearchOverlay`, `UserProfileButton`
+- `Sidebar.tsx` delegou para 3 subcomponentes: `SidebarNav`, `SidebarUserInfo`, `SidebarRecentItems`
+- Cada subcomponente com responsabilidade única, facilitando manutenção e testes
+
+### Plan Guards Atômicos
+- `plan-guard.ts`: funções de guard agora são atômicas — verificam e consomem o recurso numa única operação Redis (check + consume)
+- Elimina race conditions entre verificação e consumo
+
+### Auditoria Paginada
+- `verifyAuditChainIntegrity()` agora opera em lotes de 1000 registros
+- Evita timeout em chains com milhões de entradas
+
+### ClientAccess com tokenHash
+- Token do portal não é mais armazenado em plain text
+- Novo campo `tokenHash` (SHA-256) para lookup e verificação
+- `token` original enviado apenas no link compartilhável
+
+### Payment onDelete: SetNull
+- `Payment.user` mudou de `onDelete: Cascade` para `onDelete: SetNull`
+- Preserva registros fiscais mesmo após exclusão do usuário
+
+---
+
+## 7. Recomendações para Agentes
 
 - **Lógica de negócio pesada:** Buscar em `src/services` ou `src/lib`
 - **Rotas de API:** `src/app/api/...route.ts`
@@ -215,6 +286,9 @@ Gerar token → Link compartilhável (30 dias) → Acesso a: processo, cálculos
 - **Data fetching:** Usar `useApi<T>(url)` em vez de useState + useEffect manual
 - **CRUD:** Usar `useCrudActions(url, { onSuccess })` em vez de try/catch + toast manual
 - **CEP:** Usar `useCepLookup()` + validação regex `/^\d{8}$/`
+- **Polling:** Usar `usePollingCount(url, interval)` para contagens em tempo real
+- **Validação env:** Usar `envValidator.require()` de `src/lib/env-validator.ts`
+- **Portal access:** Usar `getPortalAccess()` de `src/lib/portal-access.ts`
 - **Antes de criar algo:** Buscar componente/hook existente (DRY + SOLID)
 - **Documentação:** Ver `docs/03-FRONTEND.md` para componentes, hooks e padrões
 - **Process Tracking:** Integração TrackJud via webhook em `/api/webhooks/trackjud`

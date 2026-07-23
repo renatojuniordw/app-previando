@@ -24,7 +24,7 @@
 - **Premium Legal Design** — slate/amber palette, Playfair Display headings, Inter UI, JetBrains Mono code
 - **State** — Zustand for global state (sidebar, upgrade-modal, toast, admin-sidebar, recent-store, search-store)
 - **DRY First + SOLID (CRITICAL)** — Never create new components/hooks/utils without: (1) searching existing code first (skill: `dry-enforcement`), (2) applying SOLID — SRP, OCP, LSP, ISP, DIP. Cada componente/hook deve ter uma única responsabilidade, ser extensível por composição, depender de abstrações (props), e nunca forçar dependências desnecessárias.
-- **12 hooks** — `useApi`, `useCrudActions` (data fetching/CRUD); `useBodyScrollLock`, `useFocusTrap`, `useKeyboardShortcuts` (UI); `useCepLookup`, `useClientCount`, `useClientDetail`, `useCnis`, `useCnisUpload`, `usePendingCasesCount`, `useUrgentDeadlines` (domain)
+- **13 hooks** — `useApi`, `useCrudActions` (data fetching/CRUD); `useBodyScrollLock`, `useFocusTrap`, `useKeyboardShortcuts` (UI); `useCepLookup`, `useClientDetail`, `useCnis`, `useCnisUpload`, `usePollingCount`, `useUrgentDeadlines` (domain)
 
 ## Architecture
 ```
@@ -34,6 +34,8 @@ src/
     (dashboard)/       main app: Sidebar + Header + UpgradeModal + Toast
       dashboard/       metrics via Recharts
       cases/[id]/      case detail with tabs + drawers + FAB + 15 sub-tabs
+      cases/import/    case import from CSV
+      cases/[id]/scenarios/  scenario simulations
       clients/         list, kanban, import, new
       calendar/        90-day calendar view + Google Calendar sync
       reports/         BI reports
@@ -48,12 +50,15 @@ src/
     portal/            client portal (FAQ, timeline, simulator, documents, verify)
     api/               all API routes
   components/
-    ui/                27 primitives: Button, Badge, Input, Modal, Drawer, Card,
+    ui/                30 primitives: Button, Badge, Input, Modal, Drawer, Card,
                        Spinner, PageHeader, PageError, AlertBanner, EmptyState,
                        ActionsDropdown, ConfirmDialog, BottomSheet, FilterSheet,
                        MobileBottomNav, QuickActionSheet, Select, Tooltip, Popover,
                        CurrencyInput, DatePicker, MonthPicker, Skeleton, HelpText,
-                       MuiThemeProvider, MobileCardList
+                       MuiThemeProvider, MobileCardList, FloatingActionMenu,
+                       ProgressBar, ContextualEmptyState
+    sidebar/           3: SidebarNav, SidebarUserInfo, SidebarRecentItems
+    header/            3: NotificationDropdown, MobileSearchOverlay, UserProfileButton
     case/              9: CaseNotesDrawer, CaseChecklistDrawer, CaseOpinionsDrawer,
                        CaseBpcDrawer, CasePeticaoModal, CaseFloatingActions,
                        DrawerRedirect, ModalitySelect, ProcessTimeline
@@ -75,15 +80,15 @@ src/
     shared/            AddressFields
     cases/             CnisInfoCard
     calendar/          CalendarEventCard
-  hooks/               12 hooks: useApi, useCrudActions, useBodyScrollLock, useFocusTrap,
+  hooks/               13 hooks: useApi, useCrudActions, useBodyScrollLock, useFocusTrap,
                        useKeyboardShortcuts, useUrgentDeadlines, useCepLookup,
-                       useClientCount, useClientDetail, useCnis, useCnisUpload,
-                       usePendingCasesCount
-  lib/                 ~59 shared modules: prisma, redis, engines, prompts, sanitize,
+                       useClientDetail, useCnis, useCnisUpload, usePollingCount
+  lib/                ~63 shared modules: prisma, redis, engines, prompts, sanitize,
                        api-error (+ extractApiError), utils (+ formatPercentage),
                        modalidade-labels (+ getModalityLabel), glossary, cnj-parser,
                        feature-marketing, track-conversion, encryption, cpf, br-data,
                        csp, request-ip, sanitize-server, account-deletion,
+                       env-validator, json-schema, portal-access, case-import-parser,
                        client-import-parser, cnis-status, fee-status, cause-value-engine,
                        prisma-user-encryption, prisma-bpc-encryption, email/templates,
                        strategies/, prompts/
@@ -93,7 +98,8 @@ src/
   jobs/                BullMQ workers
   store/               6 Zustand stores (sidebar, upgrade-modal, toast, admin-sidebar, recent-store, search-store)
   types/               TS type declarations
-prisma/schema.prisma — 1030 lines, 31 models (19 enums)
+  e2e/                 Playwright E2E tests (playwright.config.ts, auth.setup.ts, 3 spec files)
+prisma/schema.prisma — ~1040 lines, 31 models (19 enums)
 docs/*.md             — 24 comprehensive documentation files (+ superpowers spec/plans)
 ```
 
