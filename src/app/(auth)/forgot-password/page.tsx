@@ -7,6 +7,7 @@ import { z } from 'zod'
 import Link from 'next/link'
 import { AlertCircle, ArrowLeft, CheckCircle2, Loader2 } from 'lucide-react'
 import { Input } from '@/components/ui/Input'
+import { cn } from '@/lib/utils'
 
 const schema = z.object({ email: z.string().email('Email inválido') })
 type FormData = z.infer<typeof schema>
@@ -15,6 +16,7 @@ export default function ForgotPasswordPage() {
   const [loading, setLoading] = useState(false)
   const [sent, setSent] = useState(false)
   const [error, setError] = useState('')
+  const [errorKey, setErrorKey] = useState(0)
 
   const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -34,9 +36,11 @@ export default function ForgotPasswordPage() {
       } else {
         const body = await res.json()
         setError(body.error ?? 'Erro ao enviar. Tente novamente.')
+        setErrorKey((k) => k + 1)
       }
     } catch {
       setError('Erro de conexão. Tente novamente.')
+      setErrorKey((k) => k + 1)
     } finally {
       setLoading(false)
     }
@@ -55,7 +59,7 @@ export default function ForgotPasswordPage() {
         </p>
         <Link
           href="/login"
-          className="inline-flex items-center gap-2 font-sans text-sm font-semibold text-amber-600 hover:text-amber-700 transition-colors"
+          className="inline-flex items-center justify-center gap-2 px-6 min-h-[44px] border-2 border-amber-600 text-amber-700 hover:bg-amber-50 rounded-lg text-sm font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-amber-500/50"
         >
           <ArrowLeft className="w-4 h-4" />
           Voltar ao login
@@ -81,7 +85,7 @@ export default function ForgotPasswordPage() {
       </div>
 
       {error && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg font-sans font-medium text-sm text-red-600 flex items-start gap-2">
+        <div key={errorKey} role="alert" className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg font-sans font-medium text-sm text-red-600 flex items-start gap-2 animate-slide-down">
           <AlertCircle className="w-5 h-5 shrink-0" />
           <p>{error}</p>
         </div>
@@ -91,16 +95,23 @@ export default function ForgotPasswordPage() {
         <Input
           label="Email"
           type="email"
+          autoFocus
+          autoComplete="email"
           {...register('email')}
           placeholder="advogado@escritorio.com.br"
+          hint="Informe o email cadastrado na sua conta"
           error={errors.email?.message}
           disabled={loading}
         />
 
         <button
           type="submit"
+          aria-busy={loading}
+          className={cn(
+            'w-full flex items-center justify-center gap-2 px-4 min-h-[44px] bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-sm font-semibold shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-amber-500/20',
+            loading && 'animate-pulse'
+          )}
           disabled={loading}
-          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-sm font-semibold shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-amber-500/20"
         >
           {loading ? (
             <>

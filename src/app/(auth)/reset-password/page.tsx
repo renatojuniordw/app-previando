@@ -8,6 +8,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { AlertCircle, ArrowRight, CheckCircle2, Eye, EyeOff, Loader2 } from 'lucide-react'
 import { Input } from '@/components/ui/Input'
+import { cn } from '@/lib/utils'
 import { Suspense } from 'react'
 
 const schema = z
@@ -34,6 +35,7 @@ function ResetPasswordForm() {
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState('')
+  const [errorKey, setErrorKey] = useState(0)
   const [showPassword, setShowPassword] = useState(false)
 
   const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
@@ -48,8 +50,12 @@ function ResetPasswordForm() {
         <p className="font-sans text-slate-600 mb-6">
           Este link de redefinição é inválido ou já foi usado.
         </p>
-        <Link href="/forgot-password" className="text-amber-600 font-semibold hover:text-amber-700 transition-colors">
+        <Link
+          href="/forgot-password"
+          className="inline-flex items-center justify-center gap-2 px-6 min-h-[44px] border-2 border-amber-600 text-amber-700 hover:bg-amber-50 rounded-lg text-sm font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-amber-500/50"
+        >
           Solicitar novo link
+          <ArrowRight className="w-4 h-4" />
         </Link>
       </div>
     )
@@ -65,7 +71,9 @@ function ResetPasswordForm() {
         </p>
         <button
           onClick={() => router.push('/login')}
-          className="inline-flex items-center gap-2 px-6 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-sm font-semibold transition-colors"
+          className={cn(
+            'inline-flex items-center justify-center gap-2 px-6 min-h-[44px] border-2 border-amber-600 text-amber-700 hover:bg-amber-50 rounded-lg text-sm font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-amber-500/50'
+          )}
         >
           Ir para o login
           <ArrowRight className="w-4 h-4" />
@@ -88,9 +96,11 @@ function ResetPasswordForm() {
         setSuccess(true)
       } else {
         setError(body.error ?? 'Erro ao redefinir senha.')
+        setErrorKey((k) => k + 1)
       }
     } catch {
       setError('Erro de conexão. Tente novamente.')
+      setErrorKey((k) => k + 1)
     } finally {
       setLoading(false)
     }
@@ -104,7 +114,7 @@ function ResetPasswordForm() {
       </div>
 
       {error && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg font-sans font-medium text-sm text-red-600 flex items-start gap-2">
+        <div key={errorKey} role="alert" className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg font-sans font-medium text-sm text-red-600 flex items-start gap-2 animate-slide-down">
           <AlertCircle className="w-5 h-5 shrink-0" />
           <p>{error}</p>
         </div>
@@ -115,6 +125,8 @@ function ResetPasswordForm() {
           <Input
             label="Nova senha"
             type={showPassword ? 'text' : 'password'}
+            autoFocus
+            autoComplete="new-password"
             {...register('password')}
             placeholder="••••••••"
             error={errors.password?.message}
@@ -124,6 +136,7 @@ function ResetPasswordForm() {
             type="button"
             onClick={() => setShowPassword(!showPassword)}
             className="absolute right-3 top-[34px] text-slate-400 hover:text-slate-600 transition-colors"
+            tabIndex={-1}
           >
             {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
           </button>
@@ -132,6 +145,7 @@ function ResetPasswordForm() {
         <Input
           label="Confirmar senha"
           type={showPassword ? 'text' : 'password'}
+          autoComplete="off"
           {...register('confirm')}
           placeholder="••••••••"
           error={errors.confirm?.message}
@@ -140,8 +154,12 @@ function ResetPasswordForm() {
 
         <button
           type="submit"
+          aria-busy={loading}
+          className={cn(
+            'w-full flex items-center justify-center gap-2 px-4 min-h-[44px] bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-sm font-semibold shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-amber-500/20',
+            loading && 'animate-pulse'
+          )}
           disabled={loading}
-          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-sm font-semibold shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-amber-500/20"
         >
           {loading ? (
             <>
