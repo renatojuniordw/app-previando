@@ -47,7 +47,7 @@ export function DocumentShareList({ caseId }: Props) {
         prev.map((d) => (d.id === updated.id ? { ...d, shared: updated.shared } : d))
       )
     } catch {
-      // silently fail
+      setError(true)
     } finally {
       setToggling(null)
     }

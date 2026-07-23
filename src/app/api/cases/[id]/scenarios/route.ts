@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { authWithFreshPlan as auth } from '@/lib/auth-server'
+import { prisma } from '@/lib/prisma'
 import { verifyCaseOwnership } from '@/lib/ownership'
 import { handleApiError } from '@/lib/api-error'
 import { projectSimulations } from '@/lib/previdencia-engine'
@@ -44,6 +45,13 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       parsed.data.scenarios[0].modalidade
     )
 
+    // Busca gender do cliente
+    const caseData = await prisma.case.findUnique({
+      where: { id: params.id },
+      select: { client: { select: { gender: true } } },
+    })
+    const gender = (caseData?.client?.gender as 'M' | 'F') ?? 'F'
+
     // 2. Busca parâmetros legais vigentes
     const hojeStr = new Date().toISOString().slice(0, 10)
     const [salarioVigente, regrasVigentes] = await Promise.all([
@@ -55,7 +63,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     const results = parsed.data.scenarios.map((scenario) => {
       const result = projectSimulations({
         birthDate,
-        gender: 'F', // será sobrescrito pelo gender real do cliente abaixo
+        gender,
         dibProjetada: scenario.dib,
         valorContribuicaoFutura: scenario.valorContribuicaoFutura,
         extractedData: extracted,

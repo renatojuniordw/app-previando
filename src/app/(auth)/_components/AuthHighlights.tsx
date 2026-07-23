@@ -40,38 +40,34 @@ export function AuthHighlights() {
 
   return (
     <div className="relative z-10 space-y-4" role="region" aria-label="Funcionalidades do Previando">
-      <div className="relative overflow-hidden">
-        <div
-          className="transition-all duration-500 ease-in-out"
-          style={{ transform: `translateY(-${active * 100}%)` }}
-        >
-          {HIGHLIGHTS.map((item, i) => (
-            <div
-              key={i}
-              className={`flex items-start gap-4 p-4 rounded-xl transition-all duration-500 ${
-                i === active
-                  ? 'bg-white/10 opacity-100'
-                  : 'opacity-0 absolute inset-0 pointer-events-none'
-              }`}
-              aria-hidden={i !== active}
-            >
-              <div className="w-10 h-10 rounded-lg bg-amber-500/20 flex items-center justify-center shrink-0">
-                <item.icon className="w-5 h-5 text-amber-400" />
-              </div>
-              <div className="min-w-0">
-                <p className="font-sans font-bold text-white text-sm leading-tight">
-                  {item.title}
-                </p>
-                <p className="font-sans text-slate-300 text-xs mt-1 leading-relaxed">
-                  {item.description}
-                </p>
-              </div>
+      {/* Carrossel com fade */}
+      <div className="relative min-h-[140px]">
+        {HIGHLIGHTS.map((item, i) => (
+          <div
+            key={i}
+            className={`absolute inset-0 flex items-start gap-4 p-4 rounded-xl transition-all duration-500 ${
+              i === active
+                ? 'opacity-100 pointer-events-auto'
+                : 'opacity-0 pointer-events-none'
+            }`}
+            aria-hidden={i !== active}
+          >
+            <div className="w-10 h-10 rounded-lg bg-amber-500/20 flex items-center justify-center shrink-0">
+              <item.icon className="w-5 h-5 text-amber-400" />
             </div>
-          ))}
-        </div>
+            <div className="min-w-0">
+              <p className="font-sans font-bold text-white text-sm leading-tight">
+                {item.title}
+              </p>
+              <p className="font-sans text-slate-300 text-xs mt-1 leading-relaxed">
+                {item.description}
+              </p>
+            </div>
+          </div>
+        ))}
       </div>
 
-      {/* Dots */}
+      {/* Dots de navegação */}
       <div className="flex items-center gap-2" role="tablist" aria-label="Navegação de funcionalidades">
         {HIGHLIGHTS.map((_, i) => (
           <button
@@ -87,6 +83,7 @@ export function AuthHighlights() {
         ))}
       </div>
 
+      {/* Tagline */}
       <p className="flex items-center gap-1.5 font-sans text-xs text-slate-400">
         <Sparkles className="w-3 h-3 text-amber-500" />
         Tudo que você precisa para uma previdência eficiente

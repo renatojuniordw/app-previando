@@ -17,8 +17,8 @@ export const PORTAL_SESSION_COOKIE = 'portal_verified'
 const SESSION_TTL_SECONDS = 60 * 60 * 2 // 2 horas
 
 function getSecret(): string {
-  const secret = process.env.NEXTAUTH_SECRET
-  if (!secret) throw new Error('NEXTAUTH_SECRET não configurado.')
+  const secret = process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET
+  if (!secret) throw new Error('AUTH_SECRET ou NEXTAUTH_SECRET não configurado.')
   return secret
 }
 

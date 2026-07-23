@@ -143,7 +143,9 @@ export function PortalConfigCard({ caseId, benefitType, portalConfig, onUpdate }
       setLink(r.data.link)
       setExpiresAt(r.data.expiresAt ?? null)
       onUpdate()
-    } catch {
+    } catch (err) {
+      const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error ?? 'Erro ao gerar link. Verifique se o NEXTAUTH_URL está configurado.'
+      alert(msg)
       setLink(null)
     } finally {
       setLoadingLink(false)
