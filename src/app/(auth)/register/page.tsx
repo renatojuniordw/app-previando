@@ -7,8 +7,9 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { signIn } from 'next-auth/react'
 import Link from 'next/link'
-import { AlertCircle, ArrowRight, Loader2, Eye, EyeOff } from 'lucide-react'
+import { AlertCircle, ArrowRight, CheckCircle2, Loader2, Eye, EyeOff, XCircle } from 'lucide-react'
 import { Input } from '@/components/ui/Input'
+import { cn } from '@/lib/utils'
 
 const schema = z.object({
   name: z.string().min(2, 'Mínimo 2 caracteres').max(100),
@@ -30,15 +31,20 @@ export default function RegisterPage() {
 
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [errorKey, setErrorKey] = useState(0)
   const [googleLoading, setGoogleLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [googleTermsAccepted, setGoogleTermsAccepted] = useState(false)
+  const [googleTermsError, setGoogleTermsError] = useState('')
 
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors },
   } = useForm<FormData>({ resolver: zodResolver(schema) })
+
+  const passwordValue = watch('password')
 
   const onSubmit = async (data: FormData) => {
     setLoading(true)
@@ -53,6 +59,7 @@ export default function RegisterPage() {
 
       if (!res.ok) {
         setError(json.error || 'Erro ao criar conta.')
+        setErrorKey((k) => k + 1)
         return
       }
 
@@ -68,6 +75,11 @@ export default function RegisterPage() {
   }
 
   const handleGoogle = async () => {
+    if (!googleTermsAccepted) {
+      setGoogleTermsError('É necessário aceitar os Termos de Uso e a Política de Privacidade')
+      return
+    }
+    setGoogleTermsError('')
     setGoogleLoading(true)
     await signIn('google', { callbackUrl: '/dashboard' })
   }
@@ -84,7 +96,11 @@ export default function RegisterPage() {
       </div>
 
       {error && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg font-sans font-medium text-sm text-red-600 flex items-start gap-2">
+        <div
+          key={errorKey}
+          role="alert"
+          className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg font-sans font-medium text-sm text-red-600 flex items-start gap-2 animate-slide-down"
+        >
           <AlertCircle className="w-5 h-5 shrink-0" />
           <p>{error}</p>
         </div>
@@ -92,16 +108,21 @@ export default function RegisterPage() {
 
       <div className="mb-4 space-y-3">
         <button
-          onClick={() => {
-            if (!googleTermsAccepted) return
-            handleGoogle()
-          }}
-          disabled={googleLoading || !googleTermsAccepted}
-          className="w-full flex items-center justify-center gap-3 px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-slate-700 font-sans font-medium hover:bg-slate-50 hover:text-slate-900 shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-amber-500/50 disabled:opacity-50 disabled:cursor-not-allowed"
+          onClick={() => handleGoogle()}
+          disabled={googleLoading}
+          className={cn(
+            'w-full flex items-center justify-center gap-3 px-4 min-h-[44px] bg-white border border-slate-200 rounded-lg text-slate-700 font-sans font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-amber-500/50',
+            googleLoading
+              ? 'opacity-50 cursor-not-allowed'
+              : 'hover:bg-slate-50 hover:text-slate-900 hover:shadow-elevation-md active:shadow-sm active:translate-y-px'
+          )}
         >
           {googleLoading ? (
             <span className="flex items-center gap-2">
-              <Loader2 className="w-5 h-5 animate-spin text-slate-400" />
+              <svg className="w-5 h-5 animate-spin" viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" className="text-slate-200" />
+                <path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" strokeWidth="3" strokeLinecap="round" className="text-slate-500" />
+              </svg>
               Conectando...
             </span>
           ) : (
@@ -121,7 +142,10 @@ export default function RegisterPage() {
           <input
             type="checkbox"
             checked={googleTermsAccepted}
-            onChange={(e) => setGoogleTermsAccepted(e.target.checked)}
+            onChange={(e) => {
+              setGoogleTermsAccepted(e.target.checked)
+              if (e.target.checked) setGoogleTermsError('')
+            }}
             className="mt-0.5 w-4 h-4 rounded border-slate-300 text-amber-600 focus:ring-amber-500/50 shrink-0"
           />
           <span className="font-sans text-xs text-slate-600 leading-relaxed">
@@ -135,6 +159,12 @@ export default function RegisterPage() {
             </Link>
           </span>
         </label>
+        {googleTermsError && (
+          <p className="font-sans text-sm text-red-600 flex items-center gap-1.5">
+            <AlertCircle className="w-4 h-4 shrink-0" />
+            {googleTermsError}
+          </p>
+        )}
       </div>
 
       <div className="mb-6 flex items-center gap-3">
@@ -146,6 +176,8 @@ export default function RegisterPage() {
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <Input
           label="Nome completo"
+          autoFocus
+          autoComplete="name"
           {...register('name')}
           placeholder="Dr. João da Silva"
           error={errors.name?.message}
@@ -155,6 +187,7 @@ export default function RegisterPage() {
         <Input
           label="Email profissional"
           type="email"
+          autoComplete="email"
           {...register('email')}
           placeholder="advogado@escritorio.com.br"
           error={errors.email?.message}
@@ -172,6 +205,7 @@ export default function RegisterPage() {
           <Input
             label="Senha"
             type={showPassword ? 'text' : 'password'}
+            autoComplete="new-password"
             {...register('password')}
             placeholder="Mín. 8 chars, 1 maiúscula, 1 número"
             error={errors.password?.message}
@@ -182,6 +216,7 @@ export default function RegisterPage() {
             onClick={() => setShowPassword(!showPassword)}
             className="absolute right-3 top-[34px] text-slate-400 hover:text-slate-600 transition-colors"
             aria-label={showPassword ? 'Esconder senha' : 'Mostrar senha'}
+            tabIndex={-1}
           >
             {showPassword ? (
               <EyeOff className="w-4 h-4" />
@@ -190,6 +225,27 @@ export default function RegisterPage() {
             )}
           </button>
         </div>
+
+        {passwordValue && passwordValue.length > 0 && (
+          <div className="space-y-1.5 -mt-2">
+            {[
+              { label: 'Mínimo 8 caracteres', check: passwordValue.length >= 8 },
+              { label: '1 letra maiúscula', check: /[A-Z]/.test(passwordValue) },
+              { label: '1 número', check: /[0-9]/.test(passwordValue) },
+            ].map((req) => (
+              <div key={req.label} className="flex items-center gap-1.5">
+                {req.check ? (
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                ) : (
+                  <XCircle className="w-3.5 h-3.5 text-slate-300 shrink-0" />
+                )}
+                <span className={`font-sans text-xs ${req.check ? 'text-emerald-600' : 'text-slate-400'}`}>
+                  {req.label}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
 
         <div>
           <label className="flex items-start gap-2.5 cursor-pointer">
@@ -217,7 +273,11 @@ export default function RegisterPage() {
 
         <button
           type="submit"
-          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-sm font-semibold shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:ring-offset-2 mt-4"
+          aria-busy={loading}
+          className={cn(
+            'w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-sm font-semibold shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:ring-offset-2 mt-4',
+            loading && 'animate-pulse'
+          )}
           disabled={loading}
         >
           {loading ? (
@@ -234,12 +294,15 @@ export default function RegisterPage() {
         </button>
       </form>
 
-      <p className="text-center font-sans text-sm text-slate-600 mt-8">
-        Já tem uma conta?{' '}
-        <Link href="/login" className="text-amber-700 font-semibold hover:text-amber-800 transition-colors">
-          Entrar na Plataforma
+      <div className="text-center mt-8">
+        <Link
+          href="/login"
+          className="inline-flex items-center justify-center gap-2 px-6 min-h-[44px] border-2 border-amber-600 text-amber-700 hover:bg-amber-50 rounded-lg text-sm font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-amber-500/50"
+        >
+          Já tem conta? Entrar na Plataforma
+          <ArrowRight className="w-4 h-4" />
         </Link>
-      </p>
+      </div>
     </div>
   )
 }
