@@ -1,0 +1,4 @@
+cliente_nome,cliente_cpf,beneficio,status,prazo_dias,observacoes
+João da Silva,12345678901,APOSENTADORIA_IDADE,PROSPECCAO,30,Cliente com data provável de aquisição
+Maria Oliveira,98765432100,PENSAO_POR_MORTE,ANALISE,15,Pensão por morte do cônjuge
+Carlos Pereira,11122233344,BPC_LOAS,PRONTO_PARA_REQUERER,,BPC LOAS requerimento imediato

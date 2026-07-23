@@ -43,9 +43,14 @@ export function ActionsDropdown({ actions, ariaLabel = 'Abrir menu de ações', 
   const updatePos = useCallback(() => {
     if (ref.current) {
       const rect = ref.current.getBoundingClientRect()
-      setPos({ top: rect.bottom + 4, right: window.innerWidth - rect.right })
+      const menuHeight = actions.length * 44 + 8 // estimativa: 44px por item + padding
+      const bottomSpace = window.innerHeight - rect.bottom
+      const top = bottomSpace >= menuHeight
+        ? rect.bottom + 4      // cabe abaixo → abre pra baixo
+        : Math.max(4, rect.top - menuHeight)  // não cabe → abre pra cima
+      setPos({ top, right: window.innerWidth - rect.right })
     }
-  }, [])
+  }, [actions.length])
 
   useEffect(() => {
     if (open) {
