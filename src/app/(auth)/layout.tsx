@@ -85,18 +85,18 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         </div>
 
         {/* Security badges */}
-        <div className="mt-8 flex items-center gap-4 text-slate-300">
+        <div className="mt-8 flex items-center gap-5 text-slate-300">
           <div className="flex items-center gap-1.5">
-            <Lock className="w-3 h-3" />
-            <span className="font-sans text-[10px] font-medium">Criptografado</span>
+            <Lock className="w-3.5 h-3.5" />
+            <span className="font-sans text-xs font-medium">Criptografado</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <ShieldCheck className="w-3 h-3" />
-            <span className="font-sans text-[10px] font-medium">LGPD</span>
+            <ShieldCheck className="w-3.5 h-3.5" />
+            <span className="font-sans text-xs font-medium">LGPD</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <CheckCircle className="w-3 h-3" />
-            <span className="font-sans text-[10px] font-medium">SSL</span>
+            <CheckCircle className="w-3.5 h-3.5" />
+            <span className="font-sans text-xs font-medium">SSL</span>
           </div>
         </div>
       </div>

@@ -38,6 +38,10 @@ const config: Config = {
           '0%': { transform: 'translateY(100%)' },
           '100%': { transform: 'translateY(0)' },
         },
+        'slide-down': {
+          '0%': { transform: 'translateY(-10px)', opacity: '0' },
+          '100%': { transform: 'translateY(0)', opacity: '1' },
+        },
         'fade-in': {
           '0%': { opacity: '0' },
           '100%': { opacity: '1' },
@@ -47,6 +51,7 @@ const config: Config = {
         'spin-slow': 'spin 3s linear infinite',
         'slide-in': 'slide-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards',
         'slide-up': 'slide-up 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+        'slide-down': 'slide-down 0.3s ease-out forwards',
         'fade-in': 'fade-in 0.2s ease-out forwards',
       },
     },

@@ -7,12 +7,14 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import Link from 'next/link'
-import { AlertCircle, ArrowRight, Loader2, Eye, EyeOff } from 'lucide-react'
+import { AlertCircle, ArrowRight, Loader2, Eye, EyeOff, Lock } from 'lucide-react'
 import { Input } from '@/components/ui/Input'
+import { cn } from '@/lib/utils'
 
 const schema = z.object({
   email: z.string().email('Email inválido'),
   password: z.string().min(1, 'Senha obrigatória'),
+  remember: z.boolean().optional(),
 })
 
 type FormData = z.infer<typeof schema>
@@ -23,6 +25,7 @@ export default function LoginPage() {
   const [error, setError] = useState('')
   const [googleLoading, setGoogleLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
+  const [errorKey, setErrorKey] = useState(0)
 
   const {
     register,
@@ -41,6 +44,7 @@ export default function LoginPage() {
       })
       if (result?.error) {
         setError('Email ou senha incorretos.')
+        setErrorKey((k) => k + 1)
       } else {
         router.push('/dashboard')
         router.refresh()
@@ -67,7 +71,14 @@ export default function LoginPage() {
       </div>
 
       {error && (
-        <div role="alert" className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg font-sans font-medium text-sm text-red-600 flex items-start gap-2">
+        <div
+          key={errorKey}
+          role="alert"
+          className={cn(
+            'mb-6 p-4 bg-red-50 border border-red-200 rounded-lg font-sans font-medium text-sm text-red-600 flex items-start gap-2',
+            'animate-slide-down'
+          )}
+        >
           <AlertCircle className="w-5 h-5 shrink-0" />
           <p>{error}</p>
         </div>
@@ -76,11 +87,19 @@ export default function LoginPage() {
       <button
         onClick={handleGoogle}
         disabled={googleLoading}
-        className="w-full flex items-center justify-center gap-3 px-4 min-h-[44px] bg-white border border-slate-200 rounded-lg text-slate-700 font-sans font-medium hover:bg-slate-50 hover:text-slate-900 shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-amber-500/50 mb-6"
+        className={cn(
+          'w-full flex items-center justify-center gap-3 px-4 min-h-[44px] bg-white border border-slate-200 rounded-lg text-slate-700 font-sans font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-amber-500/50 mb-6',
+          googleLoading
+            ? 'opacity-70 cursor-not-allowed'
+            : 'hover:bg-slate-50 hover:text-slate-900 hover:shadow-elevation-md active:shadow-sm active:translate-y-px'
+        )}
       >
         {googleLoading ? (
           <span className="flex items-center gap-2">
-            <Loader2 className="w-5 h-5 animate-spin text-slate-400" />
+            <svg className="w-5 h-5 animate-spin" viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" className="text-slate-200" />
+              <path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" strokeWidth="3" strokeLinecap="round" className="text-slate-500" />
+            </svg>
             Conectando...
           </span>
         ) : (
@@ -118,6 +137,8 @@ export default function LoginPage() {
         <Input
           label="Email profissional"
           type="email"
+          autoFocus
+          autoComplete="email"
           {...register('email')}
           placeholder="advogado@escritorio.com.br"
           error={errors.email?.message}
@@ -128,6 +149,7 @@ export default function LoginPage() {
           <Input
             label="Senha"
             type={showPassword ? 'text' : 'password'}
+            autoComplete="current-password"
             {...register('password')}
             placeholder="••••••••"
             error={errors.password?.message}
@@ -136,8 +158,9 @@ export default function LoginPage() {
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
-          className="absolute right-3 top-[30px] min-w-[44px] min-h-[44px] flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors"
-          aria-label={showPassword ? 'Esconder senha' : 'Mostrar senha'}
+            className="absolute right-3 top-[30px] min-w-[44px] min-h-[44px] flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors"
+            aria-label={showPassword ? 'Esconder senha' : 'Mostrar senha'}
+            tabIndex={-1}
           >
             {showPassword ? (
               <EyeOff className="w-4 h-4" />
@@ -147,15 +170,34 @@ export default function LoginPage() {
           </button>
         </div>
 
-        <div className="flex justify-end">
-          <Link href="/forgot-password" className="font-sans text-sm text-amber-700 hover:text-amber-800 font-medium transition-colors">
+        <div className="flex items-center justify-between">
+          <label className="flex items-center gap-2 cursor-pointer group">
+            <input
+              type="checkbox"
+              {...register('remember')}
+              className="w-4 h-4 rounded border-slate-300 text-amber-600 focus:ring-amber-500/50 focus:ring-offset-1 cursor-pointer"
+            />
+            <span className="font-sans text-sm text-slate-600 group-hover:text-slate-800 transition-colors">
+              Lembrar-me
+            </span>
+          </label>
+
+          <Link
+            href="/forgot-password"
+            className="flex items-center gap-1.5 font-sans text-sm text-amber-700 hover:text-amber-800 font-semibold transition-colors"
+          >
+            <Lock className="w-3.5 h-3.5" />
             Esqueci minha senha
           </Link>
         </div>
 
         <button
           type="submit"
-          className="w-full flex items-center justify-center gap-2 px-4 min-h-[44px] bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-sm font-semibold shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:ring-offset-2 mt-2"
+          aria-busy={loading}
+          className={cn(
+            'w-full flex items-center justify-center gap-2 px-4 min-h-[44px] bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-sm font-semibold shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:ring-offset-2',
+            loading && 'animate-pulse'
+          )}
           disabled={loading}
         >
           {loading ? (
@@ -172,12 +214,15 @@ export default function LoginPage() {
         </button>
       </form>
 
-      <p className="text-center font-sans text-sm text-slate-600 mt-8">
-        Ainda não tem uma conta?{' '}
-        <Link href="/register" className="text-amber-700 font-semibold hover:text-amber-800 transition-colors">
-          Cadastre-se grátis
+      <div className="text-center mt-8">
+        <Link
+          href="/register"
+          className="inline-flex items-center justify-center gap-2 px-6 min-h-[44px] border-2 border-amber-600 text-amber-700 hover:bg-amber-50 rounded-lg text-sm font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-amber-500/50"
+        >
+          Ainda não tem conta? Cadastre-se grátis
+          <ArrowRight className="w-4 h-4" />
         </Link>
-      </p>
+      </div>
     </div>
   )
 }

@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import { Calculator, FileText, Globe, BarChart3, Sparkles } from 'lucide-react'
+import { Calculator, FileText, Globe, BarChart3, Sparkles, Users } from 'lucide-react'
 
 const HIGHLIGHTS = [
   {
@@ -88,6 +88,28 @@ export function AuthHighlights() {
         <Sparkles className="w-3 h-3 text-amber-500" />
         Tudo que você precisa para uma previdência eficiente
       </p>
+
+      {/* Trust indicators */}
+      <div className="pt-4 border-t border-slate-800/60 space-y-2.5">
+        <div className="flex items-center gap-2.5">
+          <div className="w-7 h-7 rounded-md bg-amber-500/15 flex items-center justify-center">
+            <Users className="w-3.5 h-3.5 text-amber-400" />
+          </div>
+          <div>
+            <p className="font-sans font-semibold text-white text-xs">+500 advogados</p>
+            <p className="font-sans text-[11px] text-slate-400">confiam no Previando</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2.5">
+          <div className="w-7 h-7 rounded-md bg-amber-500/15 flex items-center justify-center">
+            <FileText className="w-3.5 h-3.5 text-amber-400" />
+          </div>
+          <div>
+            <p className="font-sans font-semibold text-white text-xs">+10.000 casos</p>
+            <p className="font-sans text-[11px] text-slate-400">processados com sucesso</p>
+          </div>
+        </div>
+      </div>
     </div>
   )
 }
