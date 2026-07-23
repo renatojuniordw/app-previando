@@ -14,6 +14,45 @@ const schema = z.object({
     .regex(/[0-9]/, 'Precisa ter ao menos um número'),
 })
 
+/**
+ * GET /api/auth/reset-password?token=xxx
+ * Valida se o token é válido sem consumi-lo (apenas verificação).
+ * Útil para feedback imediato na página de reset.
+ */
+export async function GET(req: NextRequest) {
+  const token = req.nextUrl.searchParams.get('token')
+  if (!token || token.length < 1) {
+    return NextResponse.json(
+      { valid: false, reason: 'missing' },
+      { status: 200 }
+    )
+  }
+
+  const record = await prisma.verificationToken.findFirst({
+    where: {
+      token,
+      identifier: { startsWith: 'reset:' },
+    },
+    select: { expires: true },
+  })
+
+  if (!record) {
+    return NextResponse.json(
+      { valid: false, reason: 'invalid' },
+      { status: 200 }
+    )
+  }
+
+  if (record.expires <= new Date()) {
+    return NextResponse.json(
+      { valid: false, reason: 'expired' },
+      { status: 200 }
+    )
+  }
+
+  return NextResponse.json({ valid: true }, { status: 200 })
+}
+
 export async function POST(req: NextRequest) {
   const ip = getClientIp(req)
 
