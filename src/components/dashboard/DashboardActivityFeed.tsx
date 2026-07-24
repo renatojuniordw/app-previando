@@ -54,6 +54,14 @@ export const DashboardActivityFeed = memo(function DashboardActivityFeed({ notes
           <p className="text-xs text-slate-400 text-center py-6 font-medium">Nenhuma atividade recente</p>
         )}
       </div>
+      {notes.length > 0 && (
+        <Link
+          href="/activity"
+          className="block px-4 py-3 border-t border-slate-100 text-center text-xs font-semibold text-amber-700 hover:text-amber-800 hover:bg-slate-50/50 transition-colors duration-200"
+        >
+          Ver toda atividade →
+        </Link>
+      )}
     </Card>
   )
 })

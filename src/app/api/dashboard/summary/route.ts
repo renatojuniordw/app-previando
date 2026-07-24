@@ -168,7 +168,7 @@ export async function GET() {
         content: n.content.slice(0, 120) + (n.content.length > 120 ? '...' : ''),
       })),
     }, {
-      headers: { 'Cache-Control': 'private, max-age=0, stale-while-revalidate=60' },
+      headers: { 'Cache-Control': 'private, max-age=0, stale-while-revalidate=300' },
     })
   } catch (err) {
     return handleApiError(err)

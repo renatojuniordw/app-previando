@@ -39,25 +39,15 @@ const STEPS = [
   },
 ]
 
-const LOCAL_KEY = 'previando:onboarding-dismissed'
-
 export function OnboardingBanner() {
-  const [dismissed, setDismissed] = useState(() => {
-    if (typeof window === 'undefined') return false
-    return localStorage.getItem(LOCAL_KEY) === '1'
-  })
-
-  function dismiss() {
-    localStorage.setItem(LOCAL_KEY, '1')
-    setDismissed(true)
-  }
+  const [dismissed, setDismissed] = useState(false)
 
   if (dismissed) return null
 
   return (
     <div className="bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 rounded-2xl p-6 relative">
       <button
-        onClick={dismiss}
+        onClick={() => setDismissed(true)}
         className="absolute top-4 right-4 p-1.5 text-slate-400 hover:text-slate-600 hover:bg-white/60 rounded-lg transition-colors"
         aria-label="Fechar"
       >

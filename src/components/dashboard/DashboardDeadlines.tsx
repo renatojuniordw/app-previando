@@ -1,12 +1,13 @@
 import { memo } from 'react'
 import { Card } from '@/components/ui/Card'
-import { Clock, Calendar } from 'lucide-react'
+import { Clock, Calendar, RefreshCw } from 'lucide-react'
 import Link from 'next/link'
 import { daysUntil } from '@/lib/utils'
 
 interface Deadline {
   id: string
   deadlineDate: string
+  benefitType?: string
   client: { name: string }
 }
 
@@ -23,7 +24,7 @@ interface UpcomingEvents {
 
 export const DashboardDeadlines = memo(function DashboardDeadlines({ events }: { events: UpcomingEvents }) {
   const total = events.deadlines.length + events.calendarEvents.length
-  if (!total) return null
+  if (!total && events.calendarEvents.length === 0 && events.deadlines.length === 0) return null
 
   return (
     <Card variant="light" className="p-0 overflow-hidden bg-white border-slate-200 shadow-sm rounded-xl">
@@ -57,6 +58,7 @@ export const DashboardDeadlines = memo(function DashboardDeadlines({ events }: {
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-semibold text-slate-800 truncate group-hover:text-amber-700 transition-colors duration-200">{d.client.name}</p>
                 <p className="text-xs text-slate-400 mt-0.5 truncate">
+                  {d.benefitType && <span className="font-medium text-slate-500">{d.benefitType} · </span>}
                   {new Date(d.deadlineDate).toLocaleDateString('pt-BR')}
                 </p>
               </div>
@@ -89,6 +91,16 @@ export const DashboardDeadlines = memo(function DashboardDeadlines({ events }: {
           )
         })}
       </div>
+
+      {/* Hint quando Google Calendar não está conectado */}
+      {events.deadlines.length > 0 && events.calendarEvents.length === 0 && (
+        <div className="px-4 py-3 bg-slate-50/50 border-t border-slate-100">
+          <p className="flex items-center gap-1.5 text-[11px] text-slate-400">
+            <RefreshCw className="w-3 h-3" />
+            Conecte seu Google Calendar para ver eventos aqui
+          </p>
+        </div>
+      )}
     </Card>
   )
 })

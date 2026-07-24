@@ -65,31 +65,36 @@ export const DashboardKpiGrid = memo(function DashboardKpiGrid({ data }: { data:
         })}
       </div>
 
-      {(data.calculationsTotal ?? 0) > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card variant="light" className="p-6 flex flex-col gap-2 bg-white border-slate-200 shadow-sm rounded-xl hover:shadow-md hover:border-slate-300 transition-all duration-300 hover:-translate-y-0.5">
-            <div className="flex items-center gap-2 text-slate-500 mb-1">
-              <TrendingUp className="w-4 h-4 text-amber-500" />
-              <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400">Cálculos Realizados</span>
-            </div>
-            <p className="font-serif font-bold text-3xl text-slate-900">{data.calculationsTotal}</p>
-          </Card>
-          <Card variant="light" className="p-6 flex flex-col gap-2 bg-white border-slate-200 shadow-sm rounded-xl hover:shadow-md hover:border-slate-300 transition-all duration-300 hover:-translate-y-0.5">
-            <div className="flex items-center gap-2 text-slate-500 mb-1">
-              <TrendingUp className="w-4 h-4 text-amber-500" />
-              <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400">RMI Médio</span>
-            </div>
-            <p className="font-serif font-bold text-3xl text-slate-900">{formatCurrency(data.avgRmi)}</p>
-          </Card>
-          <Card variant="light" className="p-6 flex flex-col gap-2 bg-white border-slate-200 shadow-sm rounded-xl hover:shadow-md hover:border-slate-300 transition-all duration-300 hover:-translate-y-0.5">
-            <div className="flex items-center gap-2 text-slate-500 mb-1">
-              <TrendingUp className="w-4 h-4 text-amber-500" />
-              <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400">RMI Total Potencial</span>
-            </div>
-            <p className="font-serif font-bold text-3xl text-slate-900">{formatCurrency(data.totalRmiPotencial)}</p>
-          </Card>
-        </div>
-      )}
+      {/* Métricas de Cálculo — sempre visível, ghost quando vazio */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card variant="light" className="p-6 flex flex-col gap-2 bg-white border-slate-200 shadow-sm rounded-xl hover:shadow-md hover:border-slate-300 transition-all duration-300 hover:-translate-y-0.5">
+          <div className="flex items-center gap-2 text-slate-500 mb-1">
+            <TrendingUp className="w-4 h-4 text-amber-500" />
+            <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400">Cálculos Realizados</span>
+          </div>
+          <p className="font-serif font-bold text-3xl text-slate-900">
+            {data.calculationsTotal > 0 ? data.calculationsTotal : <span className="text-slate-300 font-normal text-lg">Nenhum ainda</span>}
+          </p>
+        </Card>
+        <Card variant="light" className="p-6 flex flex-col gap-2 bg-white border-slate-200 shadow-sm rounded-xl hover:shadow-md hover:border-slate-300 transition-all duration-300 hover:-translate-y-0.5">
+          <div className="flex items-center gap-2 text-slate-500 mb-1">
+            <TrendingUp className="w-4 h-4 text-amber-500" />
+            <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400">RMI Médio</span>
+          </div>
+          <p className="font-serif font-bold text-3xl text-slate-900">
+            {data.avgRmi > 0 ? formatCurrency(data.avgRmi) : <span className="text-slate-300 font-normal text-lg">—</span>}
+          </p>
+        </Card>
+        <Card variant="light" className="p-6 flex flex-col gap-2 bg-white border-slate-200 shadow-sm rounded-xl hover:shadow-md hover:border-slate-300 transition-all duration-300 hover:-translate-y-0.5">
+          <div className="flex items-center gap-2 text-slate-500 mb-1">
+            <TrendingUp className="w-4 h-4 text-amber-500" />
+            <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400">RMI Total Potencial</span>
+          </div>
+          <p className="font-serif font-bold text-3xl text-slate-900">
+            {data.totalRmiPotencial > 0 ? formatCurrency(data.totalRmiPotencial) : <span className="text-slate-300 font-normal text-lg">—</span>}
+          </p>
+        </Card>
+      </div>
     </div>
   )
 })
