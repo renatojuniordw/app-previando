@@ -25,6 +25,8 @@ export async function GET() {
       upcomingDeadlines,
       calendarEvents,
       clientsByPriority,
+      prospectingCases,
+      casesWithoutCalculation,
     ] = await Promise.all([
       prisma.client.count({ where: { userId } }),
 
@@ -125,6 +127,20 @@ export async function GET() {
         where: { userId },
         _count: { priority: true },
       }),
+
+      // Casos em prospecção (precisam de setup inicial)
+      prisma.case.count({
+        where: { userId, status: 'PROSPECTING' },
+      }),
+
+      // Casos sem nenhum cálculo
+      prisma.case.count({
+        where: {
+          userId,
+          calculations: { none: {} },
+          status: { not: 'FINISHED' },
+        },
+      }),
     ])
 
     const statusMap = Object.fromEntries(
@@ -162,6 +178,11 @@ export async function GET() {
       clientsByPriority: Object.fromEntries(
         clientsByPriority.map((g) => [g.priority, g._count.priority])
       ),
+      attention: {
+        prospecting: prospectingCases,
+        withoutCalculation: casesWithoutCalculation,
+        critical: criticalCases,
+      },
       recentNotes: recentNotes.map((n) => ({
         ...n,
         type: mapNoteTypeToApi(n.type),

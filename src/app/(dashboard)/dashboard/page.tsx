@@ -4,31 +4,16 @@ import { useEffect, useState, useCallback } from 'react'
 import api from '@/lib/api'
 import { useToast } from '@/store/toast'
 import { LayoutDashboard, RefreshCw } from 'lucide-react'
-import dynamic from 'next/dynamic'
 import { DashboardQuickActions } from '@/components/dashboard/DashboardQuickActions'
+import { DashboardAttention } from '@/components/dashboard/DashboardAttention'
+import { DashboardKpiGrid } from '@/components/dashboard/DashboardKpiGrid'
+import { DashboardCharts } from '@/components/dashboard/DashboardCharts'
+import { DashboardPipeline } from '@/components/dashboard/DashboardPipeline'
+import { DashboardDeadlines } from '@/components/dashboard/DashboardDeadlines'
+import { DashboardActivityFeed } from '@/components/dashboard/DashboardActivityFeed'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { OnboardingBanner } from '@/components/dashboard/OnboardingBanner'
 import { cn } from '@/lib/utils'
-
-const DashboardKpiGrid = dynamic(() => import('@/components/dashboard/DashboardKpiGrid').then((m) => ({ default: m.DashboardKpiGrid })), {
-  loading: () => <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">{[...Array(4)].map((_, i) => <div key={i} className="h-24 bg-slate-100 rounded-xl animate-pulse" />)}</div>,
-})
-
-const DashboardCharts = dynamic(() => import('@/components/dashboard/DashboardCharts').then((m) => ({ default: m.DashboardCharts })), {
-  loading: () => <div className="h-64 bg-slate-100 rounded-xl animate-pulse" />,
-})
-
-const DashboardPipeline = dynamic(() => import('@/components/dashboard/DashboardPipeline').then((m) => ({ default: m.DashboardPipeline })), {
-  loading: () => <div className="h-48 bg-slate-100 rounded-xl animate-pulse" />,
-})
-
-const DashboardDeadlines = dynamic(() => import('@/components/dashboard/DashboardDeadlines').then((m) => ({ default: m.DashboardDeadlines })), {
-  loading: () => <div className="h-48 bg-slate-100 rounded-xl animate-pulse" />,
-})
-
-const DashboardActivityFeed = dynamic(() => import('@/components/dashboard/DashboardActivityFeed').then((m) => ({ default: m.DashboardActivityFeed })), {
-  loading: () => <div className="h-48 bg-slate-100 rounded-xl animate-pulse" />,
-})
 
 interface DashboardData {
   totalClients: number
@@ -51,6 +36,11 @@ interface DashboardData {
     calendarEvents: Array<{ id: string; title: string; date: string }>
   }
   clientsByPriority: Record<string, number>
+  attention: {
+    prospecting: number
+    withoutCalculation: number
+    critical: number
+  }
   recentNotes: Array<{
     id: string; type: string; content: string; createdAt: string
     case: { id: string; client: { name: string } }
@@ -179,6 +169,11 @@ export default function DashboardPage() {
 
       {/* Onboarding — só para usuários sem clientes */}
       {data?.totalClients === 0 && !error && <OnboardingBanner />}
+
+      {/* Precisa de atenção — casos pendentes */}
+      {data && !error && data.totalClients > 0 && (
+        <DashboardAttention data={data.attention} />
+      )}
 
       <ErrorBoundary>
         {/* KPIs + RMI Metrics */}
