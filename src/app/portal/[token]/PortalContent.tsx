@@ -1,9 +1,10 @@
 'use client'
 
-import { useState } from 'react'
-import { Calculator, Clock, CheckCircle2, XCircle, AlertCircle, Shield } from 'lucide-react'
+import { useState, useEffect, useCallback } from 'react'
+import { Calculator, Clock, CheckCircle2, XCircle, AlertCircle, Shield, Loader2 } from 'lucide-react'
 import { IdentityVerification } from '@/components/portal/IdentityVerification'
 import { formatCurrency, formatDate } from '@/lib/utils'
+import { PORTAL_BENEFIT_LABELS } from './portal-labels'
 
 interface CalculationData {
   modality: string
@@ -34,34 +35,37 @@ interface Props {
   initialVerified?: boolean
 }
 
-const MODALITY_LABELS: Record<string, string> = {
-  POINTS_86_96: 'Regra de Transição — Pontos (86/96)',
-  TOLL_50: 'Regra de Transição — Pedágio 50%',
-  TOLL_100: 'Regra de Transição — Pedágio 100%',
-  MINIMUM_AGE_65_62: 'Regra de Transição — Idade Mínima',
-  CONTRIBUTION_TIME: 'Aposentadoria por Tempo de Contribuição',
-  RETIREMENT_BY_AGE: 'Aposentadoria por Idade',
-  SPECIAL_RETIREMENT: 'Aposentadoria Especial',
-  HYBRID: 'Aposentadoria Híbrida',
-  SICKNESS_BENEFIT_B31: 'Auxílio-Doença Previdenciário (B31)',
-  SICKNESS_BENEFIT_B91: 'Auxílio-Doença Acidentário (B91)',
-  MATERNITY_PAY: 'Salário-Maternidade',
-  PRISONER_BENEFIT: 'Auxílio-Reclusão',
-  DEATH_PENSION: 'Pensão por Morte',
-  BPC_LOAS: 'BPC/LOAS',
-}
-
-/**
- * PortalContent — exibe cálculos e retroativos, protegidos por
- * IdentityVerification quando requireIdentity=true.
- */
-export function PortalContent({ token, calculations, retroactives, requireIdentity, initialVerified = false }: Props) {
+export function PortalContent({ token, calculations: initialCalc, retroactives: initialRetro, requireIdentity, initialVerified = false }: Props) {
   const [identityVerified, setIdentityVerified] = useState(initialVerified)
+  const [calculations, setCalculations] = useState(initialCalc)
+  const [retroactives, setRetroactives] = useState(initialRetro)
+  const [fetching, setFetching] = useState(false)
+
+  const fetchData = useCallback(async () => {
+    setFetching(true)
+    try {
+      const res = await fetch(`/api/portal/${token}`)
+      if (!res.ok) return
+      const data = await res.json()
+      if (data.calculations) setCalculations(data.calculations)
+      if (data.retroactives) setRetroactives(data.retroactives)
+    } catch {
+      // silent — mantém dados iniciais
+    } finally {
+      setFetching(false)
+    }
+  }, [token])
+
+  // Após verificar identidade no cliente, busca dados que o servidor não enviou
+  useEffect(() => {
+    if (requireIdentity && identityVerified && !initialVerified) {
+      fetchData()
+    }
+  }, [identityVerified, requireIdentity, initialVerified, fetchData])
 
   const bestCalc = calculations[0]
   const needsVerification = requireIdentity && !identityVerified
 
-  // Se precisa de verificação e ainda não foi feita, exibe o formulário
   if (needsVerification) {
     return (
       <IdentityVerification
@@ -75,6 +79,13 @@ export function PortalContent({ token, calculations, retroactives, requireIdenti
 
   return (
     <>
+      {fetching && (
+        <div className="flex items-center justify-center gap-2 py-8 text-slate-400">
+          <Loader2 className="w-5 h-5 animate-spin" />
+          <p className="font-sans text-sm">Carregando dados do caso...</p>
+        </div>
+      )}
+
       {/* Cálculos selecionados */}
       {showContent && calculations.length > 0 && (
         <div className="bg-white border border-slate-200 rounded-xl p-6 space-y-4">
@@ -94,7 +105,7 @@ export function PortalContent({ token, calculations, retroactives, requireIdenti
                   <AlertCircle className="w-5 h-5 text-amber-500" aria-hidden="true" />
                 )}
                 <span className="font-sans text-sm font-semibold text-slate-800">
-                  {MODALITY_LABELS[bestCalc.modality] ?? bestCalc.modality}
+                  {PORTAL_BENEFIT_LABELS[bestCalc.modality] ?? bestCalc.modality}
                 </span>
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -148,7 +159,7 @@ export function PortalContent({ token, calculations, retroactives, requireIdenti
                       <XCircle className="w-4 h-4 text-slate-300 flex-shrink-0" aria-hidden="true" />
                     )}
                     <span className="font-sans text-sm text-slate-700">
-                      {MODALITY_LABELS[calc.modality] ?? calc.modality}
+                      {PORTAL_BENEFIT_LABELS[calc.modality] ?? calc.modality}
                     </span>
                   </div>
                   <span className="font-sans text-sm font-semibold text-slate-800">
@@ -206,7 +217,7 @@ export function PortalContent({ token, calculations, retroactives, requireIdenti
       )}
 
       {/* Estado vazio quando não há dados */}
-      {calculations.length === 0 && retroactives.length === 0 && identityVerified && (
+      {!fetching && calculations.length === 0 && retroactives.length === 0 && identityVerified && (
         <div className="bg-white border border-slate-200 rounded-xl p-6 text-center">
           <Shield className="w-8 h-8 text-emerald-500 mx-auto mb-2" />
           <p className="font-sans font-semibold text-slate-700">Identidade verificada</p>

@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import { cookies } from 'next/headers'
 import { prisma } from '@/lib/prisma'
 import { formatDate } from '@/lib/utils'
+import { Badge } from '@/components/ui/Badge'
 import { Scale, FileText, Download } from 'lucide-react'
 import { PortalSimulator } from '@/components/portal/PortalSimulator'
 import { PortalContent } from './PortalContent'
@@ -12,21 +13,7 @@ import { PortalFaq } from './PortalFaq'
 import { PortalDocuments } from './PortalDocuments'
 import { PORTAL_SESSION_COOKIE, isPortalSessionValid } from '@/lib/portal-session'
 import { shouldShowSensitiveData } from '@/lib/portal-config'
-
-const BENEFIT_LABELS: Record<string, string> = {
-  RETIREMENT_BY_AGE: 'Aposentadoria por Idade',
-  RETIREMENT_BY_CONTRIBUTION_TIME: 'Aposentadoria por Tempo de Contribuição',
-  SPECIAL_RETIREMENT: 'Aposentadoria Especial',
-  HYBRID_RETIREMENT: 'Aposentadoria Híbrida',
-  POINTS_RETIREMENT: 'Aposentadoria por Pontos',
-  SICKNESS_BENEFIT: 'Auxílio-Doença',
-  ACCIDENT_BENEFIT: 'Auxílio-Acidente',
-  MATERNITY_PAY: 'Salário-Maternidade',
-  PRISONER_BENEFIT: 'Auxílio-Reclusão',
-  DEATH_PENSION: 'Pensão por Morte',
-  BPC_LOAS: 'BPC/LOAS',
-  BENEFIT_REVIEW: 'Revisão de Benefício',
-}
+import { PORTAL_BENEFIT_LABELS, PORTAL_STATUS_LABELS } from './portal-labels'
 
 interface Props {
   params: { token: string }
@@ -45,7 +32,7 @@ export default async function PortalPage({ params }: Props) {
     include: {
       case: {
         include: {
-          client: { select: { name: true, birthDate: true, cpfHash: true } },
+          client: { select: { name: true, birthDate: true } },
           calculations: {
             where: { isSelected: true },
             orderBy: { rmi: 'desc' },
@@ -142,8 +129,14 @@ export default async function PortalPage({ params }: Props) {
             <div>
               <p className="font-sans text-xs text-slate-400">Tipo de Benefício</p>
               <p className="font-sans font-semibold text-slate-900">
-                {BENEFIT_LABELS[c.benefitType] ?? c.benefitType}
+                {PORTAL_BENEFIT_LABELS[c.benefitType] ?? c.benefitType}
               </p>
+            </div>
+            <div>
+              <p className="font-sans text-xs text-slate-400">Status do Caso</p>
+              <Badge variant={c.status === 'FINISHED' ? 'green' : c.status === 'PROCESSING' ? 'lime' : c.status === 'READY_TO_REQUEST' ? 'yellow' : c.status === 'ANALYSIS' ? 'blue' : 'slate'}>
+                {PORTAL_STATUS_LABELS[c.status] ?? c.status}
+              </Badge>
             </div>
           </div>
 
