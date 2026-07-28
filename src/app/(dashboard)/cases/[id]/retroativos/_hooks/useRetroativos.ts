@@ -137,7 +137,7 @@ export function useRetroativos() {
 
     setCreating(true)
     try {
-      await api.post(`/cases/${params.id}/retroativos`, {
+      const response = await api.post(`/cases/${params.id}/retroativos`, {
         dataInicioDireito,
         dataRequerimento,
         valorMensalBruto: valorBrutoNum,
@@ -145,6 +145,20 @@ export function useRetroativos() {
         descricaoDescontos: descricaoDescontos.trim() || undefined,
         percentualHonorarios: percentualHonorariosNum
       })
+
+      // Auto-vincular honorário advocatício
+      if (percentualHonorariosNum && percentualHonorariosNum > 0) {
+        const retroativo = response.data.retroativo
+        const valorHonorarios = retroativo?.feeValue
+        if (valorHonorarios && Number(valorHonorarios) > 0) {
+          await api.post(`/cases/${params.id}/fees`, {
+            description: `Honorários advocatícios (${percentualHonorariosNum}% sobre retroativo)`,
+            type: 'PERCENTAGE',
+            totalAmount: Number(valorHonorarios),
+            notes: `Vinculado ao cálculo retroativo de ${dataInicioDireito} a ${dataRequerimento}`,
+          })
+        }
+      }
 
       setShowModal(false)
       setDataInicioDireito('')

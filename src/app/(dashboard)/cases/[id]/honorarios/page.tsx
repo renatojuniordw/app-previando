@@ -11,6 +11,7 @@ import {
   CheckCircle2, Clock, XCircle, AlertTriangle, TrendingUp,
   Wallet, Ban, Receipt, Undo2, RotateCcw,
 } from 'lucide-react'
+import { Skeleton } from '@/components/ui/Skeleton'
 import { DatePicker } from '@/components/ui/DatePicker'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { useToast } from '@/store/toast'
@@ -74,7 +75,7 @@ const EMPTY_FORM = {
 
 const EMPTY_PAYMENT_FORM = {
   amount: '',
-  paidAt: '',
+  paidAt: new Date().toISOString().split('T')[0],
   notes: '',
 }
 
@@ -95,6 +96,9 @@ export default function HonorariosPage() {
   const [savingPayment, setSavingPayment] = useState(false)
   const [removingPaymentId, setRemovingPaymentId] = useState<string | null>(null)
   const { addToast } = useToast()
+
+  const isFormDirty = form.description !== '' || form.totalAmount !== ''
+  const isPaymentDirty = paymentForm.amount !== ''
 
   const load = useCallback(() => {
     setLoading(true)
@@ -224,11 +228,17 @@ export default function HonorariosPage() {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center py-24">
-        <Loader2 className="h-8 w-8 animate-spin text-amber-500" />
-        <p className="mt-4 animate-pulse font-sans text-sm font-medium text-slate-500">
-          Carregando honorários...
-        </p>
+      <div className="mx-auto max-w-5xl space-y-6 px-4 sm:px-0">
+        <div className="flex items-start justify-between gap-4">
+          <div className="space-y-2">
+            <Skeleton variant="text" className="w-48 h-8" />
+            <Skeleton variant="text" className="w-72 h-4" />
+          </div>
+        </div>
+        <div className="grid grid-cols-3 gap-0 overflow-hidden rounded-2xl border border-slate-200/80">
+          <Skeleton variant="rectangular" className="h-24" count={3} />
+        </div>
+        <Skeleton variant="card" className="h-32" count={2} />
       </div>
     )
   }
@@ -291,8 +301,8 @@ export default function HonorariosPage() {
 
       {/* Empty State */}
       {fees.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-250 bg-white py-20 text-center shadow-sm">
-          <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-2xl border border-amber-100 bg-amber-50 shadow-xs">
+        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-white py-20 text-center shadow-sm">
+          <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-2xl border border-amber-100 bg-amber-50 shadow-sm">
             <DollarSign className="h-8 w-8 text-amber-500" />
           </div>
           <h2 className="mb-2 font-serif text-lg font-bold text-slate-900">
@@ -311,7 +321,14 @@ export default function HonorariosPage() {
         </div>
       ) : (
         <div className="space-y-3">
-          {fees.map((fee) => {
+          {[...fees].sort((a, b) => {
+            const statusOrder: Record<string, number> = { OVERDUE: 0, PENDING: 1, PARTIAL: 2, PAID: 3, CANCELLED: 4 }
+            const aOrder = statusOrder[a.status] ?? 99
+            const bOrder = statusOrder[b.status] ?? 99
+            if (aOrder !== bOrder) return aOrder - bOrder
+            if (a.dueDate && b.dueDate) return a.dueDate.localeCompare(b.dueDate)
+            return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          }).map((fee) => {
             const cfg = STATUS_CONFIG[fee.status]
             const Icon = cfg.icon
             const progress = fee.totalAmount > 0 ? (fee.paidAmount / fee.totalAmount) * 100 : 0
@@ -515,7 +532,10 @@ export default function HonorariosPage() {
       {/* Modal — Formulário de Honorário */}
       <Modal
         open={showForm}
-        onClose={() => setShowForm(false)}
+        onClose={() => {
+          if (isFormDirty && !window.confirm('Há alterações não salvas. Deseja realmente sair?')) return
+          setShowForm(false)
+        }}
         title={editingFee ? 'Editar Honorário' : 'Novo Honorário'}
         size="lg"
       >
@@ -597,7 +617,10 @@ export default function HonorariosPage() {
       {/* Modal — Registrar Pagamento */}
       <Modal
         open={payingFee !== null}
-        onClose={() => setPayingFee(null)}
+        onClose={() => {
+          if (isPaymentDirty && !window.confirm('Há alterações não salvas. Deseja realmente sair?')) return
+          setPayingFee(null)
+        }}
         title="Registrar Pagamento"
         size="sm"
       >
