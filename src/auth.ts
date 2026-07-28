@@ -57,7 +57,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           .object({
             email: z.string().email(),
             password: z.string().min(8).max(100),
-            remember: z.boolean().optional(),
           })
           .safeParse(credentials)
 
@@ -89,13 +88,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const valid = await bcrypt.compare(parsed.data.password, user.password)
         if (!valid) return null
 
+        // remember vem como string "true"|"false" via URLSearchParams
+        const remember = credentials?.remember === true || credentials?.remember === 'true'
+
         return {
           id: user.id,
           name: user.name,
           email: user.email,
           plan: user.plan,
           isAdmin: user.isAdmin,
-          remember: parsed.data.remember ?? false,
+          remember,
         }
       },
     }),

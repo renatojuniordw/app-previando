@@ -1,11 +1,11 @@
-import { resend, EMAIL_FROM } from '@/lib/resend'
+import { getResend, EMAIL_FROM } from '@/lib/resend'
 
 const APP_URL = process.env.NEXTAUTH_URL ?? 'http://localhost:3000'
 
 export async function sendPasswordResetEmail(email: string, token: string): Promise<void> {
   const resetUrl = `${APP_URL}/reset-password?token=${token}`
 
-  const { error } = await resend.emails.send({
+  const { error } = await getResend().emails.send({
     from: EMAIL_FROM,
     to: email,
     subject: 'Redefinição de senha - Previando',

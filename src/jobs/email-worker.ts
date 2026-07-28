@@ -8,7 +8,7 @@
  */
 
 import { Worker } from 'bullmq'
-import { resend, EMAIL_FROM } from '@/lib/resend'
+import { getResend, EMAIL_FROM } from '@/lib/resend'
 import { bullmqConnection } from '@/lib/redis'
 import { Logger } from '@/lib/logger'
 const logger = new Logger('email-worker')
@@ -27,7 +27,7 @@ export function createEmailWorker(): Worker {
       })
 
       try {
-        const { error } = await resend.emails.send({
+        const { error } = await getResend().emails.send({
           from: EMAIL_FROM,
           to,
           subject,

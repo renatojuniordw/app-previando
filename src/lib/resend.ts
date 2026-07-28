@@ -1,13 +1,20 @@
 import { Resend } from 'resend'
 
-const apiKey = process.env.RESEND_API_KEY
+let _resend: Resend | null = null
 
-if (!apiKey) {
-  throw new Error(
-    'RESEND_API_KEY não configurada. Defina a variável de ambiente RESEND_API_KEY com sua API key do Resend.'
-  )
+function getResend(): Resend {
+  if (!_resend) {
+    const apiKey = process.env.RESEND_API_KEY
+    if (!apiKey) {
+      throw new Error(
+        'RESEND_API_KEY não configurada. Defina a variável de ambiente RESEND_API_KEY com sua API key do Resend.'
+      )
+    }
+    _resend = new Resend(apiKey)
+  }
+  return _resend
 }
 
-export const resend = new Resend(apiKey)
+export { getResend }
 
 export const EMAIL_FROM = process.env.EMAIL_FROM ?? 'Previando <noreply@previando.com.br>'

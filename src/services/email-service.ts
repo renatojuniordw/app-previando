@@ -6,7 +6,7 @@
  * Uses Resend as the email provider.
  */
 
-import { resend, EMAIL_FROM } from '@/lib/resend'
+import { getResend, EMAIL_FROM } from '@/lib/resend'
 import { Queue } from 'bullmq'
 import { bullmqConnection } from '@/lib/redis'
 import { Logger } from '@/lib/logger'
@@ -35,7 +35,7 @@ function getEmailQueue(): Queue | null {
 
 async function sendEmail(to: string, subject: string, html: string): Promise<boolean> {
   try {
-    const { error } = await resend.emails.send({ from: EMAIL_FROM, to, subject, html })
+    const { error } = await getResend().emails.send({ from: EMAIL_FROM, to, subject, html })
     if (error) {
       logger.error('Resend API error', { error, to, subject })
       return false
