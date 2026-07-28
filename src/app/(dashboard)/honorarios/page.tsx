@@ -1,17 +1,17 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import api from '@/lib/api'
 import { EmptyState } from '@/components/ui/EmptyState'
+import { Skeleton } from '@/components/ui/Skeleton'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import {
-  DollarSign, Loader2, AlertCircle, CheckCircle2, Clock,
+  DollarSign, AlertCircle, CheckCircle2, Clock,
   XCircle, AlertTriangle, TrendingUp, Wallet, Search,
-  SlidersHorizontal,
+  SlidersHorizontal, WalletCards,
 } from 'lucide-react'
 import { FilterSheet } from '@/components/ui/FilterSheet'
-import { DatePicker } from '@/components/ui/DatePicker'
 import { MobileCardList } from '@/components/ui/MobileCardList'
 import { formatCurrency, cn } from '@/lib/utils'
 import { BENEFIT_DB_LABELS } from '@/lib/constants'
@@ -70,6 +70,7 @@ export default function HonorariosGlobalPage() {
   const [from, setFrom] = useState('')
   const [to, setTo] = useState('')
   const [filterSheetOpen, setFilterSheetOpen] = useState(false)
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>()
 
   function clearFilters() {
     setStatusFilter('ALL')
@@ -80,6 +81,7 @@ export default function HonorariosGlobalPage() {
 
   const load = useCallback(() => {
     setLoading(true)
+    setError(null)
     const params: Record<string, string> = {}
     if (statusFilter !== 'ALL') params.status = statusFilter
     if (search.trim()) params.search = search.trim()
@@ -93,13 +95,14 @@ export default function HonorariosGlobalPage() {
   }, [statusFilter, search, from, to])
 
   useEffect(() => {
-    const timeout = setTimeout(load, 300)
-    return () => clearTimeout(timeout)
+    clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(load, 300)
+    return () => clearTimeout(debounceRef.current)
   }, [load])
 
-  if (error) {
+  if (error && fees.length === 0) {
     return (
-      <div className="mx-auto max-w-6xl px-4 py-12 sm:px-0">
+      <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
         <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-slate-200 bg-white p-10 text-center">
           <AlertCircle className="h-10 w-10 text-slate-300" aria-hidden="true" />
           <p className="font-sans text-sm text-slate-600">{error}</p>
@@ -110,65 +113,99 @@ export default function HonorariosGlobalPage() {
 
   return (
     <ErrorBoundary>
-    <div className="mx-auto max-w-6xl space-y-6 px-4 sm:px-0">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6 lg:space-y-8 animate-fade-in">
 
-      {/* Page Header */}
-      <div>
-        <h1 className="font-serif text-2xl font-bold tracking-tight text-slate-900">Honorários</h1>
-        <p className="mt-1 font-sans text-sm text-slate-500">
-          Visão consolidada de todos os honorários de todos os casos.
-        </p>
+      {/* Header */}
+      <div className="flex items-center gap-4 border-b border-slate-200 pb-6">
+        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center shadow-lg flex-shrink-0">
+          <WalletCards className="w-7 h-7 text-white" />
+        </div>
+        <div>
+          <h1 className="font-serif font-bold text-3xl text-slate-900 tracking-tight">Honorários</h1>
+          <p className="font-sans text-sm text-slate-500 mt-0.5 font-medium">
+            Visão consolidada de todos os honorários de todos os casos.
+          </p>
+        </div>
       </div>
 
       {/* Summary Strip */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <SummaryCell label="Total Esperado" value={summary.total} icon={<Wallet className="h-4 w-4 text-slate-400" />} />
-        <SummaryCell label="Total Recebido" value={summary.paid} icon={<CheckCircle2 className="h-4 w-4 text-emerald-500" />} valueColor="text-emerald-700" highlight="emerald" />
-        <SummaryCell label="Total Pendente" value={summary.pending} icon={<Clock className="h-4 w-4 text-amber-500" />} valueColor="text-amber-700" highlight="amber" />
-        <SummaryCell label="Taxa de Cobrança" value={summary.collectionRate} icon={<TrendingUp className="h-4 w-4 text-indigo-500" />} valueColor="text-indigo-700" isPercentage />
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-5">
+        <div className="bg-white border border-slate-200/80 rounded-xl p-4 sm:p-5 shadow-sm flex flex-col gap-1.5">
+          <div className="flex items-center gap-2 text-slate-400">
+            <Wallet className="w-4 h-4" />
+            <span className="font-sans text-[10px] font-extrabold uppercase tracking-wider">Total Esperado</span>
+          </div>
+          <span className="font-mono font-bold text-lg sm:text-xl text-slate-900">{formatCurrency(summary.total)}</span>
+        </div>
+        <div className="bg-white border border-slate-200/80 rounded-xl p-4 sm:p-5 shadow-sm flex flex-col gap-1.5">
+          <div className="flex items-center gap-2 text-emerald-500">
+            <CheckCircle2 className="w-4 h-4" />
+            <span className="font-sans text-[10px] font-extrabold uppercase tracking-wider">Recebido</span>
+          </div>
+          <span className="font-mono font-bold text-lg sm:text-xl text-emerald-700">{formatCurrency(summary.paid)}</span>
+        </div>
+        <div className="bg-white border border-slate-200/80 rounded-xl p-4 sm:p-5 shadow-sm flex flex-col gap-1.5">
+          <div className="flex items-center gap-2 text-amber-500">
+            <Clock className="w-4 h-4" />
+            <span className="font-sans text-[10px] font-extrabold uppercase tracking-wider">Pendente</span>
+          </div>
+          <span className="font-mono font-bold text-lg sm:text-xl text-amber-700">{formatCurrency(summary.pending)}</span>
+        </div>
+        <div className="bg-white border border-slate-200/80 rounded-xl p-4 sm:p-5 shadow-sm flex flex-col gap-1.5">
+          <div className="flex items-center gap-2 text-slate-400">
+            <TrendingUp className="w-4 h-4" />
+            <span className="font-sans text-[10px] font-extrabold uppercase tracking-wider">Taxa de Cobrança</span>
+          </div>
+          <span className="font-mono font-bold text-lg sm:text-xl text-slate-900">{Math.round(summary.collectionRate)}%</span>
+        </div>
       </div>
 
       {/* Filters */}
-      <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm">
-        {/* Desktop filters */}
-        <div className="hidden md:flex flex-wrap items-end gap-3">
-          <div className="min-w-[200px] flex-1">
-            <label htmlFor="fee-search" className="neo-label">Buscar por cliente</label>
-            <div className="relative">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-              <input
-                id="fee-search"
-                type="text"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Nome do cliente..."
-                className="neo-input pl-9"
-              />
-            </div>
+      <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
+        {/* Desktop filters — linha única */}
+        <div className="hidden md:flex items-center gap-3">
+          <div className="relative flex-1 max-w-xs">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Buscar cliente..."
+              className="w-full pl-9 pr-3 h-9 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-slate-400 focus:ring-1 focus:ring-slate-400 transition-all placeholder:text-slate-400 text-slate-900"
+            />
           </div>
-
-          <div>
-            <label htmlFor="fee-status" className="neo-label">Status</label>
-            <select
-              id="fee-status"
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value as FeeStatus | 'ALL')}
-              className="neo-input"
-            >
-              {STATUS_FILTERS.map((s) => (
-                <option key={s.value} value={s.value}>{s.label}</option>
-              ))}
-            </select>
-          </div>
-
-          <DatePicker label="De" value={from} onChange={(d) => setFrom(d ? d.toISOString().split('T')[0] : '')} />
-          <DatePicker label="Até" value={to} onChange={(d) => setTo(d ? d.toISOString().split('T')[0] : '')} />
+          <div className="w-px h-6 bg-slate-200" />
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value as FeeStatus | 'ALL')}
+            className="h-9 text-xs bg-slate-50 border border-slate-200 rounded-lg px-3 focus:outline-none focus:border-slate-400 text-slate-700 font-medium"
+          >
+            {STATUS_FILTERS.map((s) => (
+              <option key={s.value} value={s.value}>{s.label}</option>
+            ))}
+          </select>
+          <div className="w-px h-6 bg-slate-200" />
+          <input
+            type="date"
+            value={from}
+            onChange={(e) => setFrom(e.target.value)}
+            className="h-9 text-xs bg-slate-50 border border-slate-200 rounded-lg px-3 focus:outline-none focus:border-slate-400 text-slate-700"
+            title="Data inicial"
+          />
+          <span className="text-xs text-slate-400">até</span>
+          <input
+            type="date"
+            value={to}
+            onChange={(e) => setTo(e.target.value)}
+            className="h-9 text-xs bg-slate-50 border border-slate-200 rounded-lg px-3 focus:outline-none focus:border-slate-400 text-slate-700"
+            title="Data final"
+          />
         </div>
 
         {/* Mobile filter button */}
         <button
           onClick={() => setFilterSheetOpen(true)}
-          className="flex md:hidden items-center justify-center gap-2 w-full py-2.5 text-xs font-bold rounded-lg border border-slate-200 text-slate-650 hover:bg-slate-50 transition-colors"
+          className="flex md:hidden items-center justify-center gap-2 w-full py-2.5 text-xs font-bold rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 transition-colors"
         >
           <SlidersHorizontal className="w-3.5 h-3.5" />
           Filtros
@@ -195,10 +232,14 @@ export default function HonorariosGlobalPage() {
       />
 
       {/* Table / List */}
-      {loading ? (
-        <div className="flex flex-col items-center justify-center py-24">
-          <Loader2 className="h-8 w-8 animate-spin text-amber-500" />
-          <p className="mt-4 animate-pulse font-sans text-sm font-medium text-slate-500">Carregando honorários...</p>
+      {loading && fees.length === 0 ? (
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-5">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <Skeleton key={i} variant="rectangular" className="h-24" />
+            ))}
+          </div>
+          <Skeleton variant="rectangular" className="h-64 w-full rounded-xl" />
         </div>
       ) : fees.length === 0 ? (
         <EmptyState
@@ -208,18 +249,27 @@ export default function HonorariosGlobalPage() {
         />
       ) : (
         <>
+          {/* Loading overlay for refresh */}
+          {loading && fees.length > 0 && (
+            <div className="flex items-center justify-center gap-2 py-2 text-slate-400">
+              <div className="w-4 h-4 border-2 border-amber-500 border-t-transparent animate-spin rounded-full" />
+              <p className="font-sans text-xs font-medium">Atualizando...</p>
+            </div>
+          )}
+
           {/* Desktop table */}
-          <div className="hidden md:block overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
+          <div className={cn('hidden md:block overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm', loading && 'opacity-60 pointer-events-none')}>
             <div className="overflow-x-auto">
               <table className="w-full text-left font-sans text-sm" role="table">
                 <thead>
                   <tr className="border-b border-slate-200 bg-slate-50">
-                    <th scope="col" className="px-4 py-3 font-sans text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Cliente</th>
-                    <th scope="col" className="px-4 py-3 font-sans text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Caso</th>
-                    <th scope="col" className="px-4 py-3 font-sans text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Descrição</th>
-                    <th scope="col" className="px-4 py-3 text-right font-sans text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Total</th>
-                    <th scope="col" className="px-4 py-3 text-right font-sans text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Recebido</th>
-                    <th scope="col" className="px-4 py-3 font-sans text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Status</th>
+                    <th scope="col" className="px-4 py-4 font-sans text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Cliente</th>
+                    <th scope="col" className="px-4 py-4 font-sans text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Caso</th>
+                    <th scope="col" className="px-4 py-4 font-sans text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Descrição</th>
+                    <th scope="col" className="px-4 py-4 text-right font-sans text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Total</th>
+                    <th scope="col" className="px-4 py-4 text-right font-sans text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Recebido</th>
+                    <th scope="col" className="px-4 py-4 text-right font-sans text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Pendente</th>
+                    <th scope="col" className="px-4 py-4 font-sans text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Status</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -232,12 +282,19 @@ export default function HonorariosGlobalPage() {
                         onClick={() => router.push(`/cases/${fee.case.id}/honorarios`)}
                         className="cursor-pointer transition-colors hover:bg-slate-50/60"
                       >
-                        <td className="px-4 py-3 font-semibold text-slate-800">{fee.case.client.name}</td>
-                        <td className="px-4 py-3 text-slate-500">{BENEFIT_DB_LABELS[fee.case.benefitType] ?? fee.case.benefitType}</td>
-                        <td className="px-4 py-3 text-slate-600">{fee.description}</td>
-                        <td className="px-4 py-3 text-right font-mono font-bold text-slate-800">{formatCurrency(fee.totalAmount)}</td>
-                        <td className="px-4 py-3 text-right font-mono font-bold text-emerald-700">{formatCurrency(fee.paidAmount)}</td>
-                        <td className="px-4 py-3">
+                        <td className="px-4 py-4 font-semibold text-slate-800">{fee.case.client.name}</td>
+                        <td className="px-4 py-4 text-slate-500">{BENEFIT_DB_LABELS[fee.case.benefitType] ?? fee.case.benefitType}</td>
+                        <td className="px-4 py-4 text-slate-600">{fee.description}</td>
+                        <td className="px-4 py-4 text-right font-mono font-bold text-slate-800">{formatCurrency(fee.totalAmount)}</td>
+                        <td className="px-4 py-4 text-right font-mono font-bold text-emerald-700">{formatCurrency(fee.paidAmount)}</td>
+                        <td className="px-4 py-4 text-right">
+                          {fee.totalAmount - fee.paidAmount > 0 ? (
+                            <span className="font-mono font-bold text-amber-700">{formatCurrency(fee.totalAmount - fee.paidAmount)}</span>
+                          ) : (
+                            <span className="font-mono text-slate-400">—</span>
+                          )}
+                        </td>
+                        <td className="px-4 py-4">
                           <span className={cn(
                             'inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wider',
                             cfg.bg, cfg.color, cfg.border
@@ -275,6 +332,7 @@ export default function HonorariosGlobalPage() {
                 fields: [
                   { label: 'Total', value: formatCurrency(fee.totalAmount), className: 'text-right' },
                   { label: 'Recebido', value: formatCurrency(fee.paidAmount), className: 'text-right' },
+                  { label: 'Pendente', value: fee.totalAmount - fee.paidAmount > 0 ? formatCurrency(fee.totalAmount - fee.paidAmount) : '—', className: 'text-right' },
                 ],
                 onClick: () => router.push(`/cases/${fee.case.id}/honorarios`),
               }
@@ -284,32 +342,5 @@ export default function HonorariosGlobalPage() {
       )}
     </div>
     </ErrorBoundary>
-  )
-}
-
-function SummaryCell({
-  label, value, icon, valueColor = 'text-slate-900', highlight, isPercentage,
-}: {
-  label: string
-  value: number
-  icon: React.ReactNode
-  valueColor?: string
-  highlight?: 'emerald' | 'amber'
-  isPercentage?: boolean
-}) {
-  return (
-    <div className={cn(
-      'rounded-xl border border-slate-200/80 bg-white p-4 shadow-sm flex items-center gap-3',
-      highlight === 'emerald' && 'bg-emerald-50/20',
-      highlight === 'amber' && 'bg-amber-50/20'
-    )}>
-      <div className="shrink-0">{icon}</div>
-      <div className="min-w-0">
-        <p className="font-sans text-[10px] font-extrabold uppercase tracking-wider text-slate-400 truncate">{label}</p>
-        <p className={cn('font-mono text-lg font-bold tracking-tight', valueColor)}>
-          {isPercentage ? `${value}%` : formatCurrency(value)}
-        </p>
-      </div>
-    </div>
   )
 }
