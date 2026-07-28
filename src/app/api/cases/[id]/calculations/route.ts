@@ -58,6 +58,19 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       converterTempoComumPCD: parsed.data.converterTempoComumPCD,
     })
 
+    // Se for o primeiro cálculo do caso, auto-seleciona como principal
+    const hasSelected = await prisma.calculation.findFirst({
+      where: { caseId: params.id, isSelected: true, id: { not: calc.id } },
+      select: { id: true },
+    })
+    if (!hasSelected) {
+      await prisma.calculation.update({
+        where: { id: calc.id },
+        data: { isSelected: true },
+      })
+      calc.isSelected = true
+    }
+
     // Registrar log de atividade
     await logAudit({
       userId: session.user.id,
