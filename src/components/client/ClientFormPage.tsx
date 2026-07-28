@@ -26,8 +26,8 @@ const formSchema = z.object({
   name: z.string().min(2, 'Mínimo 2 caracteres').max(100),
   cpf: z
     .string()
-    .optional()
-    .refine((v) => !v || isValidCPF(v), 'CPF inválido.'),
+    .min(11, 'CPF é obrigatório')
+    .refine((v) => isValidCPF(v), 'CPF inválido.'),
   birthDate: z.string().min(1, 'Data obrigatória'),
   gender: z.preprocess(
     (v) => (v === '' ? null : v),
@@ -72,11 +72,28 @@ export function ClientFormPage({ clientId }: ClientFormPageProps) {
     reset,
     setValue,
     watch,
-    formState: { errors, touchedFields },
+    formState: { errors, touchedFields, dirtyFields },
   } = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(isEdit ? formSchema.omit({ cpf: true }) : formSchema),
     mode: 'onTouched',
+    defaultValues: { cpf: '' },
   })
+
+  const isDirty = Object.keys(dirtyFields).length > 0
+
+  useEffect(() => {
+    if (!isDirty) return
+    const onBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault()
+    }
+    window.addEventListener('beforeunload', onBeforeUnload)
+    return () => window.removeEventListener('beforeunload', onBeforeUnload)
+  }, [isDirty])
+
+  const handleCancel = () => {
+    if (isDirty && !window.confirm('Há alterações não salvas. Deseja realmente sair?')) return
+    router.push('/clients/list')
+  }
 
   const isFieldSuccess = (fieldName: keyof FormValues) => {
     return !!touchedFields[fieldName] && !errors[fieldName] && !!watch(fieldName)
@@ -121,12 +138,6 @@ export function ClientFormPage({ clientId }: ClientFormPageProps) {
   })
 
   const onSubmit = async (data: FormValues) => {
-    if (!isEdit && !data.cpf) {
-      setError('CPF é obrigatório.')
-      setSaving(false)
-      return
-    }
-
     setSaving(true)
     setError('')
     try {
@@ -150,7 +161,7 @@ export function ClientFormPage({ clientId }: ClientFormPageProps) {
         await api.put(`/clients/${clientId}`, payload)
         addToast({ type: 'success', title: 'Cliente atualizado' })
       } else {
-        payload.cpf = stripNonDigits(data.cpf!)
+        payload.cpf = stripNonDigits(data.cpf)
         await api.post('/clients', payload)
         addToast({
           type: 'success',
@@ -191,7 +202,7 @@ export function ClientFormPage({ clientId }: ClientFormPageProps) {
         <div>
           <div className="mb-0.5 flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-amber-600">
             <button
-              onClick={() => router.push('/clients/list')}
+              onClick={handleCancel}
               className="flex items-center gap-1 transition-colors hover:text-amber-700"
             >
               <ArrowLeft className="h-3.5 w-3.5" /> Clientes
@@ -211,11 +222,6 @@ export function ClientFormPage({ clientId }: ClientFormPageProps) {
       <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
         <form
           onSubmit={handleSubmit(onSubmit)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' && (e.target as HTMLElement).tagName !== 'TEXTAREA') {
-              e.preventDefault()
-            }
-          }}
           className="space-y-8 p-6 sm:p-8"
         >
           {error && (
@@ -240,50 +246,37 @@ export function ClientFormPage({ clientId }: ClientFormPageProps) {
                 placeholder="Ex: João da Silva"
               />
 
-              {!isEdit ? (
-                <div className="grid grid-cols-2 gap-4">
-                  <Input
-                    label="CPF"
-                    {...register('cpf', {
-                      onChange: (e) => {
-                        const raw = stripNonDigits(e.target.value).slice(0, 11)
-                        setValue('cpf', formatCPF(raw), { shouldValidate: true })
-                      },
-                    })}
-                    error={errors.cpf?.message}
-                    success={isFieldSuccess('cpf')}
-                    placeholder="000.000.000-00"
-                  />
-                  <DatePicker
-                    label="Data de nascimento"
-                    value={watch('birthDate') ?? ''}
-                    onChange={(d: Date | null) =>
-                      setValue('birthDate', d ? d.toISOString().split('T')[0] : '', {
-                        shouldValidate: true,
-                        shouldTouch: true,
-                      })
-                    }
-                    error={errors.birthDate?.message}
-                    success={isFieldSuccess('birthDate')}
-                  />
-                </div>
-              ) : (
-                <DatePicker
-                  label="Data de nascimento"
-                  value={watch('birthDate') ?? ''}
-                  onChange={(d: Date | null) =>
-                    setValue('birthDate', d ? d.toISOString().split('T')[0] : '', {
-                      shouldValidate: true,
-                      shouldTouch: true,
-                    })
-                  }
-                  error={errors.birthDate?.message}
-                  success={isFieldSuccess('birthDate')}
-                />
-              )}
+              <DatePicker
+                label="Data de nascimento"
+                value={watch('birthDate') ?? ''}
+                onChange={(d: Date | null) =>
+                  setValue('birthDate', d ? d.toISOString().split('T')[0] : '', {
+                    shouldValidate: true,
+                    shouldTouch: true,
+                  })
+                }
+                error={errors.birthDate?.message}
+                success={isFieldSuccess('birthDate')}
+              />
             </div>
 
             <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+              {!isEdit ? (
+                <Input
+                  label="CPF"
+                  {...register('cpf', {
+                    onChange: (e) => {
+                      const raw = stripNonDigits(e.target.value).slice(0, 11)
+                      setValue('cpf', formatCPF(raw), { shouldValidate: true })
+                    },
+                  })}
+                  error={errors.cpf?.message}
+                  success={isFieldSuccess('cpf')}
+                  placeholder="000.000.000-00"
+                />
+              ) : (
+                <div />
+              )}
               <Input
                 label="Telefone"
                 {...register('phone', {
@@ -296,17 +289,9 @@ export function ClientFormPage({ clientId }: ClientFormPageProps) {
                 success={isFieldSuccess('phone')}
                 placeholder="(11) 99999-9999"
               />
-              <Input
-                label="Email (opcional)"
-                type="email"
-                {...register('email')}
-                error={errors.email?.message}
-                success={isFieldSuccess('email')}
-                placeholder="email@exemplo.com"
-              />
             </div>
 
-            <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+            <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
               <Select
                 label="Estado Civil"
                 {...register('maritalStatus')}
@@ -320,16 +305,6 @@ export function ClientFormPage({ clientId }: ClientFormPageProps) {
                   </option>
                 ))}
               </Select>
-              <Input
-                label="Profissão"
-                {...register('profession')}
-                error={errors.profession?.message}
-                success={isFieldSuccess('profession')}
-                placeholder="Ex: Metalúrgico, Aposentado"
-              />
-            </div>
-
-            <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
               <Select
                 label="Sexo"
                 {...register('gender')}
@@ -344,7 +319,23 @@ export function ClientFormPage({ clientId }: ClientFormPageProps) {
                   </option>
                 ))}
               </Select>
+              <Input
+                label="Profissão"
+                {...register('profession')}
+                error={errors.profession?.message}
+                success={isFieldSuccess('profession')}
+                placeholder="Ex: Metalúrgico"
+              />
             </div>
+
+            <Input
+              label="Email"
+              type="email"
+              {...register('email')}
+              error={errors.email?.message}
+              success={isFieldSuccess('email')}
+              placeholder="email@exemplo.com"
+            />
           </div>
 
           {/* Seção 2: Endereço */}
@@ -432,42 +423,40 @@ export function ClientFormPage({ clientId }: ClientFormPageProps) {
             </div>
           </div>
 
-          {/* Seção 3: Prioridade */}
-          <div className="space-y-5">
-            <h3 className="border-b border-slate-100 pb-2 font-serif text-base font-bold text-slate-900">
-              Configurações Adicionais
-            </h3>
+          {/* Prioridade + Ações */}
+          <div className="space-y-6">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between rounded-xl border border-slate-200 bg-slate-50/50 p-4">
+              <div>
+                <p className="font-sans text-sm font-bold text-slate-800">Prioridade de Atendimento</p>
+                <p className="font-sans text-xs text-slate-500">Define a urgência do cliente na sua lista.</p>
+              </div>
+              <Select
+                {...register('priority')}
+                wrapperClassName="w-full sm:w-56"
+              >
+                <option value="NORMAL">Normal</option>
+                <option value="ATTENTION">Atenção</option>
+                <option value="CRITICAL">Crítico</option>
+              </Select>
+            </div>
 
-            <Select
-              label="Prioridade de Atendimento"
-              {...register('priority')}
-              error={errors.priority?.message}
-              success={isFieldSuccess('priority')}
-              wrapperClassName="w-full md:w-1/2"
-            >
-              <option value="NORMAL">Normal — Padrão</option>
-              <option value="ATTENTION">Atenção — Prioridade Média</option>
-              <option value="CRITICAL">Crítico — Prioridade Alta (Urgente)</option>
-            </Select>
-          </div>
-
-          {/* Ações */}
-          <div className="flex gap-4 border-t border-slate-100 pt-6">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => router.push('/clients/list')}
-              className="h-11 flex-1 font-sans text-sm font-bold"
-            >
-              Cancelar
-            </Button>
-            <Button
-              type="submit"
-              loading={saving}
-              className="hover:bg-slate-850 h-11 flex-1 border-slate-900 bg-slate-900 font-sans text-sm font-bold text-white shadow-sm transition-all"
-            >
-              {isEdit ? 'Salvar Alterações' : 'Cadastrar Cliente'}
-            </Button>
+            <div className="flex gap-4 border-t border-slate-100 pt-6">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleCancel}
+                className="h-11 flex-1 font-sans text-sm font-bold"
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="submit"
+                loading={saving}
+                className="hover:bg-slate-850 h-11 flex-1 border-slate-900 bg-slate-900 font-sans text-sm font-bold text-white shadow-sm transition-all"
+              >
+                {isEdit ? 'Salvar Alterações' : 'Cadastrar Cliente'}
+              </Button>
+            </div>
           </div>
         </form>
       </div>
