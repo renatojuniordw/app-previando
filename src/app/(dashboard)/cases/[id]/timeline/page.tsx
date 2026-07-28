@@ -27,14 +27,14 @@ const CATEGORY_CONFIG: Record<string, {
   color: string
   border: string
 }> = {
-  case: { icon: FolderOpen, color: 'text-slate-550', border: 'border-slate-300' },
+  case: { icon: FolderOpen, color: 'text-slate-500', border: 'border-slate-300' },
   cnis: { icon: FileText, color: 'text-blue-600', border: 'border-blue-400' },
-  calculation: { icon: Calculator, color: 'text-amber-600', border: 'border-amber-450' },
+  calculation: { icon: Calculator, color: 'text-amber-600', border: 'border-amber-400' },
   note: { icon: MessageSquare, color: 'text-indigo-600', border: 'border-indigo-400' },
-  checklist: { icon: CheckSquare, color: 'text-emerald-600', border: 'border-emerald-450' },
-  opinion: { icon: MessageSquare, color: 'text-slate-700', border: 'border-slate-400' }, // Purple color removed to respect Purple Ban
+  checklist: { icon: CheckSquare, color: 'text-emerald-600', border: 'border-emerald-400' },
+  opinion: { icon: MessageSquare, color: 'text-slate-700', border: 'border-slate-400' },
   simulation: { icon: BarChart3, color: 'text-teal-600', border: 'border-teal-400' },
-  retroactive: { icon: History, color: 'text-rose-600', border: 'border-rose-450' },
+  retroactive: { icon: History, color: 'text-rose-600', border: 'border-rose-400' },
 }
 
 function groupByDate(events: TimelineEvent[]) {
@@ -74,7 +74,7 @@ export default function TimelinePage() {
       <div className="max-w-2xl mx-auto py-8">
         <Card variant="light" className="p-8 text-center border-red-200">
           <AlertCircle className="w-10 h-10 text-red-500 mx-auto mb-3" />
-          <p className="font-sans text-sm font-medium text-red-750">{error}</p>
+          <p className="font-sans text-sm font-medium text-red-600">{error}</p>
         </Card>
       </div>
     )
@@ -86,7 +86,7 @@ export default function TimelinePage() {
         <Card variant="light" className="p-12 text-center border-slate-200/80 bg-white">
           <Clock className="w-12 h-12 text-slate-300 mx-auto mb-4" />
           <h3 className="font-serif font-bold text-lg text-slate-800">Sem Eventos</h3>
-          <p className="font-sans text-xs text-slate-550 mt-1 max-w-xs mx-auto leading-relaxed">
+          <p className="font-sans text-xs text-slate-500 mt-1 max-w-xs mx-auto leading-relaxed">
             Ainda não há atividades registradas para este processo.
           </p>
         </Card>
@@ -98,7 +98,7 @@ export default function TimelinePage() {
 
   return (
     <div className="max-w-2xl mx-auto space-y-8 py-4">
-      <div className="border-b border-slate-205 pb-5">
+      <div className="border-b border-slate-200 pb-5">
         <h2 className="font-serif font-bold text-2xl text-slate-900 tracking-tight">Timeline do Caso</h2>
         <p className="font-sans text-xs text-slate-500 mt-1.5 leading-relaxed font-medium">
           Histórico cronológico e ordenado de todas as atividades e interações do processo — {events.length} evento{events.length !== 1 ? 's' : ''} registrado{events.length !== 1 ? 's' : ''}.
@@ -110,7 +110,7 @@ export default function TimelinePage() {
           const date = new Date(dateKey + 'T12:00:00')
           return (
             <div key={dateKey} className="space-y-4">
-              <p className="font-sans text-[10px] font-extrabold text-slate-455 uppercase tracking-widest sticky top-0 bg-slate-50/90 backdrop-blur-xs py-2 z-10">
+              <p className="font-sans text-[10px] font-extrabold text-slate-400 uppercase tracking-widest sticky top-0 bg-slate-50/90 backdrop-blur-sm py-2 z-10">
                 {format(date, "EEEE, dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
               </p>
 
@@ -144,7 +144,7 @@ export default function TimelinePage() {
                             </span>
                           </div>
                           {ev.description && (
-                            <p className="font-sans text-xs text-slate-550 mt-1.5 leading-relaxed font-medium">
+                            <p className="font-sans text-xs text-slate-500 mt-1.5 leading-relaxed font-medium">
                               {ev.description}
                             </p>
                           )}
