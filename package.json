@@ -17,7 +17,6 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@ag-media/react-pdf-table": "^2.0.3",
     "@auth/prisma-adapter": "^2.7.4",
     "@aws-sdk/client-s3": "^3.699.0",
     "@aws-sdk/s3-request-presigner": "^3.699.0",
@@ -30,7 +29,6 @@
     "@mui/material": "^9.1.2",
     "@mui/x-date-pickers": "^9.7.0",
     "@prisma/client": "^5.22.0",
-    "@react-pdf/renderer": "^4.5.1",
     "@tailwindcss/typography": "^0.5.20",
     "axios": "^1.18.1",
     "axios-retry": "^4.5.0",

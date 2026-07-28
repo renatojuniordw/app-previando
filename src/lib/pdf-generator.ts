@@ -63,47 +63,92 @@ function drawClientInfo(doc: PDFDocType, info: ClientInfo, startY: number): numb
   return y + 8
 }
 
-function stripMarkdown(text: string): string {
-  return text
-    .split('\n')
-    .map((line) => line
-      .replace(/^#{1,6}\s+/, '')
-      .replace(/^\s*[-*]\s+/, '• ')
-      .replace(/^\s*\d+[.)]\s+/, '')
+function isMarkdownHeading(line: string): { level: number; text: string } | null {
+  const match = line.match(/^(#{1,3})\s+(.+)$/)
+  if (match) return { level: match[1].length, text: match[2] }
+  return null
+}
+
+function renderFormattedMarkdown(doc: PDFDocType, text: string, startY: number, userName?: string) {
+  const rawLines = text.split('\n')
+  let y = startY
+  let pageNum = 1
+  const maxWidth = 510
+
+  for (let i = 0; i < rawLines.length; i++) {
+    const line = rawLines[i]
+    const trimmed = line.trim()
+
+    if (y > PAGE_MAX_Y) {
+      drawFooter(doc, pageNum, 0)
+      doc.addPage()
+      pageNum++
+      y = PAGE_MIN_Y
+    }
+
+    // Horizontal rule
+    if (/^-{3,}$/.test(trimmed)) {
+      y += 4
+      doc.lineWidth(0.5).moveTo(40, y).lineTo(550, y).stroke(BRAND.border)
+      y += 8
+      continue
+    }
+
+    // Empty line = paragraph break
+    if (trimmed === '') {
+      y += 6
+      continue
+    }
+
+    // Markdown heading
+    const heading = isMarkdownHeading(trimmed)
+    if (heading) {
+      y += 4
+      if (heading.level === 1) {
+        doc.font('Helvetica-Bold').fontSize(14).fill(BRAND.dark).text(heading.text, 40, y, { width: maxWidth })
+        y += 20
+      } else if (heading.level === 2) {
+        doc.font('Helvetica-Bold').fontSize(11).fill(BRAND.accent).text(heading.text, 40, y, { width: maxWidth })
+        doc.lineWidth(0.5).moveTo(40, y + 14).lineTo(550, y + 14).stroke(BRAND.border)
+        y += 20
+      } else {
+        doc.font('Helvetica-Bold').fontSize(10).fill(BRAND.dark).text(heading.text, 40, y, { width: maxWidth })
+        y += 16
+      }
+      continue
+    }
+
+    // Bullet list item
+    if (trimmed.startsWith('• ') || trimmed.startsWith('- ')) {
+      const bulletText = trimmed.replace(/^[•-]\s*/, '')
+      doc.font('Helvetica').fontSize(9).fill(BRAND.dark)
+      const bulletX = 50
+      doc.text('•', 40, y, { width: 8 })
+      doc.text(bulletText, bulletX, y, { width: maxWidth - 10 })
+      const height = doc.heightOfString(bulletText, { width: maxWidth - 10 })
+      y += Math.max(height + 2, 14)
+      continue
+    }
+
+    // Bold/italic text (inline)
+    const cleanLine = trimmed
       .replace(/\*\*(.+?)\*\*/g, '$1')
       .replace(/(?<!\w)_(.+?)_(?!\w)/g, '$1')
-      .replace(/^---+$/gm, '')
-      .replace(/\|/g, '')
-    )
-    .filter((line) => line !== '' || true)
-    .join('\n')
-    .replace(/\n{3,}/g, '\n\n')
-    .trim()
-}
 
-function splitTextIntoLines(doc: PDFDocType, text: string, maxWidth: number): string[] {
-  const paragraphs = text.split('\n');
-  const lines: string[] = [];
-  for (const para of paragraphs) {
-    const words = para.split(' ');
-    let currentLine = '';
-    for (const word of words) {
-      const testLine = currentLine ? `${currentLine} ${word}` : word;
-      const width = doc.widthOfString(testLine);
-      if (width > maxWidth) {
-        lines.push(currentLine);
-        currentLine = word;
-      } else {
-        currentLine = testLine;
-      }
-    }
-    if (currentLine) {
-      lines.push(currentLine);
-    }
+    // Regular text with possible bold prefix (like "RMI: R$ 4.898,95")
+    doc.font('Helvetica').fontSize(9).fill(BRAND.dark).text(cleanLine, 40, y, { width: maxWidth })
+    y += 14
   }
-  return lines;
+
+  drawFooter(doc, pageNum, pageNum, userName)
 }
 
+
+function maskCPF(cpf: string): string {
+  const digits = cpf.replace(/\D/g, '')
+  if (digits.length !== 11) return cpf
+  return `XXX.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9)}`
+}
 
 export interface ClientInfo {
   name: string
@@ -121,15 +166,24 @@ export interface CasePDFData {
   clientBirthDate?: string
   clientDeathDate?: string
   clientMaritalStatus?: string
-  clientSurvivors?: string
+  clientProfession?: string
+  clientPhone?: string
+  clientEmail?: string
+  clientAddress?: string
   selectedCalculation?: {
     type: string
     value: string
     details: Record<string, string | number>
+    formulaSummary?: string
+    averageSalary?: string
+    coefficient?: string
   }
   opinion?: string
   caseStatus?: string
   createdAt?: string
+  cnisSummary?: string
+  lawyerName?: string
+  lawyerOab?: string
   watermark?: boolean
 }
 
@@ -161,17 +215,23 @@ export async function generateCasePDF(data: CasePDFData): Promise<Buffer> {
   // Client Data Section
   y = drawSectionHeader(doc, 'Dados do Cliente', y)
   y = drawDataRow(doc, 'Nome', data.clientName || '', y)
-  y = drawDataRow(doc, 'CPF', data.clientCpf || '', y)
+  y = drawDataRow(doc, 'CPF', maskCPF(data.clientCpf || ''), y)
   y = drawDataRow(doc, 'Data de Nascimento', data.clientBirthDate || '', y)
-  if (data.clientDeathDate) {
-    y = drawDataRow(doc, 'Data de Óbito', data.clientDeathDate, y)
-  }
+  if (data.clientDeathDate) y = drawDataRow(doc, 'Data de Óbito', data.clientDeathDate, y)
   y = drawDataRow(doc, 'Estado Civil', data.clientMaritalStatus || '', y)
-  if (data.clientSurvivors) {
-    y = drawDataRow(doc, 'Dependentes', data.clientSurvivors, y)
-  }
+  if (data.clientProfession) y = drawDataRow(doc, 'Profissão', data.clientProfession, y)
+  if (data.clientPhone) y = drawDataRow(doc, 'Telefone', data.clientPhone, y)
+  if (data.clientEmail) y = drawDataRow(doc, 'Email', data.clientEmail, y)
+  if (data.clientAddress) y = drawDataRow(doc, 'Endereço', data.clientAddress, y)
 
   y += 8
+
+  // CNIS Summary
+  if (data.cnisSummary) {
+    y = drawSectionHeader(doc, 'Resumo do CNIS', y)
+    doc.font('Helvetica').fontSize(9).fill(BRAND.dark).text(data.cnisSummary, 40, y, { width: 510 })
+    y += 20
+  }
 
   // Case Info Section
   y = drawSectionHeader(doc, 'Informações do Caso', y)
@@ -184,9 +244,21 @@ export async function generateCasePDF(data: CasePDFData): Promise<Buffer> {
   if (data.selectedCalculation) {
     y = drawSectionHeader(doc, 'Cálculo Selecionado', y)
     y = drawDataRow(doc, 'Tipo', data.selectedCalculation.type, y)
-    y = drawDataRow(doc, 'Valor', data.selectedCalculation.value, y)
+    y = drawDataRow(doc, 'Valor (RMI)', data.selectedCalculation.value, y)
+    if (data.selectedCalculation.averageSalary) {
+      y = drawDataRow(doc, 'Média Salarial', data.selectedCalculation.averageSalary, y)
+    }
+    if (data.selectedCalculation.coefficient) {
+      y = drawDataRow(doc, 'Coeficiente', data.selectedCalculation.coefficient, y)
+    }
     for (const [key, val] of Object.entries(data.selectedCalculation.details)) {
       y = drawDataRow(doc, key, String(val), y)
+    }
+    if (data.selectedCalculation.formulaSummary) {
+      y += 4
+      doc.font('Helvetica-Oblique').fontSize(8).fill(BRAND.slate)
+        .text(data.selectedCalculation.formulaSummary, 40, y, { width: 510 })
+      y += 16
     }
   }
 
@@ -195,16 +267,32 @@ export async function generateCasePDF(data: CasePDFData): Promise<Buffer> {
   // Opinion Section
   if (data.opinion) {
     y = drawSectionHeader(doc, 'Parecer Jurídico', y)
-    renderTextPages(doc, data.opinion, y)
+    renderFormattedMarkdown(doc, data.opinion, y, data.lawyerName)
   } else {
-    drawFooter(doc, 1, 1)
+    drawFooter(doc, 1, 1, data.lawyerName)
+  }
+
+  // AI Disclaimer
+  if (data.opinion || data.selectedCalculation) {
+    doc.addPage()
+    let dy = 40
+    dy = drawSectionHeader(doc, 'Informações Importantes', dy)
+    doc.font('Helvetica').fontSize(8).fill(BRAND.dark).text(
+      'Este documento foi gerado automaticamente pela plataforma Previando com auxílio de inteligência artificial. ' +
+      'Os cálculos e análises apresentados são baseados nos dados fornecidos e nas regras vigentes. ' +
+      'Recomenda-se revisão por um profissional habilitado antes da utilização para fins legais.',
+      40, dy + 4, { width: 510, align: 'justify' }
+    )
   }
 
   // Watermark
   if (data.watermark) {
-    doc.fontSize(48).font('Helvetica-Bold').fill('rgba(217, 119, 6, 0.06)').text('PREVIANDO FREE', 100, 180, {
-      align: 'center',
-    })
+    for (let i = 0; i < doc.bufferedPageRange().count; i++) {
+      doc.switchToPage(i)
+      doc.fontSize(48).font('Helvetica-Bold').fillOpacity(0.06).fill(BRAND.accent)
+        .text('PREVIANDO FREE', 100, 300, { align: 'center' })
+      doc.fillOpacity(1)
+    }
   }
 
   doc.end()
@@ -221,28 +309,6 @@ interface BpcPDFData {
   clientInfo?: ClientInfo
 }
 
-function renderTextPages(doc: PDFDocType, text: string, startY: number, userName?: string) {
-  const cleanText = stripMarkdown(text)
-  if (!cleanText) return
-  const lines = splitTextIntoLines(doc, cleanText, 510)
-  let y = startY
-  let pageNum = 1
-
-  doc.font('Helvetica').fontSize(9).fill(BRAND.dark)
-  for (const line of lines) {
-    if (y > PAGE_MAX_Y) {
-      drawFooter(doc, pageNum, 0)
-      doc.addPage()
-      pageNum++
-      y = PAGE_MIN_Y
-    }
-    doc.text(line, 40, y)
-    y += 12
-  }
-
-  drawFooter(doc, pageNum, pageNum, userName)
-}
-
 export interface BpcConsolidatedPDFData {
   sections: { label: string; content: string }[]
   generatedAt?: string
@@ -252,20 +318,47 @@ export interface BpcConsolidatedPDFData {
 }
 
 function renderTextBlock(doc: PDFDocType, text: string, startY: number, pageState: { y: number; pageNum: number }) {
-  const cleanText = stripMarkdown(text)
-  if (!cleanText) return
-  const lines = splitTextIntoLines(doc, cleanText, 510)
+  const rawLines = text.split('\n')
   let y = startY
-  doc.font('Helvetica').fontSize(9).fill(BRAND.dark)
-  for (const line of lines) {
+  const maxWidth = 510
+
+  for (const rawLine of rawLines) {
+    const trimmed = rawLine.trim()
+
     if (y > PAGE_MAX_Y) {
       drawFooter(doc, pageState.pageNum, 0)
       doc.addPage()
       pageState.pageNum++
       y = PAGE_MIN_Y
     }
-    doc.text(line, 40, y)
-    y += 12
+
+    if (trimmed === '') {
+      y += 4
+      continue
+    }
+
+    const heading = isMarkdownHeading(trimmed)
+    if (heading) {
+      y += 2
+      if (heading.level <= 2) {
+        doc.font('Helvetica-Bold').fontSize(11).fill(BRAND.accent)
+        doc.text(heading.text, 40, y, { width: maxWidth })
+        y += 16
+      } else {
+        doc.font('Helvetica-Bold').fontSize(9).fill(BRAND.dark)
+        doc.text(heading.text, 40, y, { width: maxWidth })
+        y += 14
+      }
+      continue
+    }
+
+    const cleanText = trimmed
+      .replace(/^\s*[-*]\s+/, '• ')
+      .replace(/\*\*(.+?)\*\*/g, '$1')
+      .replace(/(?<!\w)_(.+?)_(?!\w)/g, '$1')
+
+    doc.font('Helvetica').fontSize(9).fill(BRAND.dark).text(cleanText, 40, y, { width: maxWidth })
+    y += 14
   }
   pageState.y = y
 }
@@ -323,7 +416,7 @@ export async function generateBpcPDF(data: BpcPDFData): Promise<Buffer> {
   }
 
   y = drawSectionHeader(doc, 'Resultado da Análise', y)
-  renderTextPages(doc, data.result, y, data.userName)
+  renderFormattedMarkdown(doc, data.result, y, data.userName)
 
   doc.end()
   return pdfPromise
