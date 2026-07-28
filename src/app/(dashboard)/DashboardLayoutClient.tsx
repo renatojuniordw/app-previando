@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { OnboardingChecklist } from '@/components/onboarding/OnboardingChecklist'
 import { OnboardingWizard } from '@/components/onboarding/OnboardingWizard'
 import { ShortcutsModal } from '@/components/ShortcutsModal'
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts'
@@ -49,12 +48,6 @@ export function DashboardLayoutClient({ children }: { children: React.ReactNode 
 
   return (
     <>
-      {!showWizard && (
-        <div className="px-4 sm:px-6 lg:px-8 pt-4 max-w-7xl mx-auto w-full">
-          <OnboardingChecklist />
-        </div>
-      )}
-
       {children}
 
       <OnboardingWizard

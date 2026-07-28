@@ -89,7 +89,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         if (!valid) return null
 
         // remember vem como string "true"|"false" via URLSearchParams
-        const remember = credentials?.remember === true || credentials?.remember === 'true'
+        const creds = credentials as Record<string, unknown>
+        const remember = creds.remember === true || creds.remember === 'true'
 
         return {
           id: user.id,
