@@ -3,7 +3,8 @@
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { useCallback, useEffect, useState } from 'react'
 import { Card } from '@/components/ui/Card'
-import { Loader2, BarChart3, ArrowLeft } from 'lucide-react'
+import { Skeleton } from '@/components/ui/Skeleton'
+import { BarChart3, ArrowLeft, AlertCircle } from 'lucide-react'
 import api from '@/lib/api'
 import { formatCurrency } from '@/lib/utils'
 import { ReportKpiCard, ReportPeriodSelector } from '@/components/reports'
@@ -66,24 +67,26 @@ export default function ReportsPage() {
   const [financeiro, setFinanceiro] = useState<FinanceiroData | null>(null)
   const [operacional, setOperacional] = useState<OperacionalData | null>(null)
   const [loading, setLoading] = useState(true)
+  const [overviewError, setOverviewError] = useState(false)
+  const [financeiroError, setFinanceiroError] = useState(false)
+  const [operacionalError, setOperacionalError] = useState(false)
 
   const fetchAll = useCallback(async (days: PeriodOption) => {
     setLoading(true)
-    try {
-      const [overviewRes, financeiroRes, operacionalRes] = await Promise.all([
-        api.get('/reports/overview').catch(() => ({ data: null })),
-        api.get(`/reports/financeiro?days=${days}`).catch(() => ({ data: null })),
-        api.get(`/reports/operacional?days=${days}`).catch(() => ({ data: null })),
-      ])
+    setOverviewError(false)
+    setFinanceiroError(false)
+    setOperacionalError(false)
 
-      if (overviewRes.data) setOverview(overviewRes.data)
-      if (financeiroRes.data) setFinanceiro(financeiroRes.data)
-      if (operacionalRes.data) setOperacional(operacionalRes.data)
-    } catch {
-      // Silently fail
-    } finally {
-      setLoading(false)
-    }
+    const [overviewRes, financeiroRes, operacionalRes] = await Promise.all([
+      api.get('/reports/overview').catch(() => { setOverviewError(true); return { data: null } }),
+      api.get(`/reports/financeiro?days=${days}`).catch(() => { setFinanceiroError(true); return { data: null } }),
+      api.get(`/reports/operacional?days=${days}`).catch(() => { setOperacionalError(true); return { data: null } }),
+    ])
+
+    if (overviewRes.data) setOverview(overviewRes.data)
+    if (financeiroRes.data) setFinanceiro(financeiroRes.data)
+    if (operacionalRes.data) setOperacional(operacionalRes.data)
+    setLoading(false)
   }, [])
 
   useEffect(() => {
@@ -92,10 +95,18 @@ export default function ReportsPage() {
 
   if (loading && !overview) {
     return (
-      <div className="p-8 flex items-center justify-center h-[calc(100dvh-4rem)]">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="w-8 h-8 text-amber-500 animate-spin" />
-          <p className="font-sans font-medium text-slate-500 animate-pulse">Carregando relatórios...</p>
+      <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-8 lg:space-y-10 animate-fade-in">
+        <div className="flex items-center gap-4">
+          <Skeleton className="w-14 h-14 rounded-2xl" />
+          <div className="space-y-2">
+            <Skeleton variant="text" className="w-48 h-6" />
+            <Skeleton variant="text" className="w-72 h-4" />
+          </div>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <Skeleton key={i} variant="card" className="h-28" />
+          ))}
         </div>
       </div>
     )
@@ -127,10 +138,30 @@ export default function ReportsPage() {
         </div>
       </div>
 
-      {/* KPI Cards */}
+      {/* Error Banners */}
+      {overviewError && (
+        <div className="flex items-start gap-3 border border-red-200 bg-red-50 p-4 rounded-xl">
+          <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
+          <p className="font-sans text-sm text-red-700">Não foi possível carregar os indicadores gerais.</p>
+        </div>
+      )}
+      {financeiroError && (
+        <div className="flex items-start gap-3 border border-amber-200 bg-amber-50 p-4 rounded-xl">
+          <AlertCircle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+          <p className="font-sans text-sm text-amber-700">Não foi possível carregar os dados financeiros.</p>
+        </div>
+      )}
+      {operacionalError && (
+        <div className="flex items-start gap-3 border border-amber-200 bg-amber-50 p-4 rounded-xl">
+          <AlertCircle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+          <p className="font-sans text-sm text-amber-700">Não foi possível carregar os dados operacionais.</p>
+        </div>
+      )}
+
+      {/* KPI Cards — Operacionais */}
       <section className="space-y-4">
         <h2 className="font-serif font-bold text-lg text-slate-800 tracking-wide">
-          Indicadores de Performance (KPIs)
+          Operacional
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
           <ReportKpiCard
@@ -157,6 +188,15 @@ export default function ReportsPage() {
             icon="trending"
             color="green"
           />
+        </div>
+      </section>
+
+      {/* KPI Cards — Financeiros */}
+      <section className="space-y-4">
+        <h2 className="font-serif font-bold text-lg text-slate-800 tracking-wide">
+          Financeiro
+        </h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
           <ReportKpiCard
             label="Honorários Previstos"
             value={formatCurrency(overview?.totalFeesExpected ?? 0)}

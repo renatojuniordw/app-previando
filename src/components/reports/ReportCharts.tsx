@@ -15,6 +15,7 @@ import {
   ComposedChart,
 } from 'recharts'
 import { Card } from '@/components/ui/Card'
+import { formatCurrency } from '@/lib/utils'
 
 interface ReportChartProps {
   title: string
@@ -30,7 +31,6 @@ interface ReportChartProps {
 
 function formatMonthLabel(monthStr: string): string {
   if (!monthStr) return ''
-  // YYYY-MM -> "MMM/YY"
   const [y, m] = monthStr.split('-')
   const months = [
     'Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun',
@@ -42,21 +42,28 @@ function formatMonthLabel(monthStr: string): string {
     : monthStr
 }
 
+function formatValue(value: number): string {
+  if (value >= 1000000) return `R$${(value / 1000000).toFixed(2).replace('.', ',')}M`
+  return formatCurrency(value)
+}
+
+function formatCount(value: number): string {
+  return value.toLocaleString('pt-BR')
+}
+
 const CustomTooltip = ({
   active,
   payload,
   label,
+  isCurrency = true,
 }: {
   active?: boolean
   payload?: Array<{ name: string; value: number; color: string }>
   label?: string
+  isCurrency?: boolean
 }) => {
   if (!active || !payload || !payload.length) return null
-  const fmt = (v: number) =>
-    v.toLocaleString('pt-BR', {
-      style: 'currency',
-      currency: 'BRL',
-    })
+  const fmt = isCurrency ? formatValue : formatCount
 
   return (
     <div className="bg-white border border-slate-200 shadow-lg rounded-lg p-3 text-sm">
@@ -75,10 +82,10 @@ const CustomTooltip = ({
   )
 }
 
-function currencyFormatter(value: number) {
+function YAxisFormatter(value: number, isCurrency: boolean): string {
+  if (!isCurrency) return formatCount(value)
   if (value >= 1000000) return `R$${(value / 1000000).toFixed(1)}M`
-  if (value >= 1000) return `R$${(value / 1000).toFixed(0)}k`
-  return `R$${value}`
+  return `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`
 }
 
 export const ReportBarChart = memo(function ReportBarChart({
@@ -87,102 +94,68 @@ export const ReportBarChart = memo(function ReportBarChart({
   categories,
   height = 260,
 }: ReportChartProps) {
-  if (!data || data.length === 0) return null
-
-  const hasCurrency = categories.some(
-    (c) => c.key === 'expected' || c.key === 'realized' || c.key === 'valor'
-  )
-
-  const hasMixedTypes = categories.some((c) => c.type === 'line')
-
-  if (hasMixedTypes) {
+  if (!data || data.length === 0) {
     return (
       <Card variant="light" className="p-6">
-        <h3 className="font-serif font-bold text-base text-slate-900 mb-4">
-          {title}
-        </h3>
-        <ResponsiveContainer width="100%" height={height}>
-          <ComposedChart data={data.map((d) => ({ ...d, label: formatMonthLabel(d.month as string) }))}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-            <XAxis
-              dataKey="label"
-              tick={{ fontSize: 11 }}
-              stroke="#94a3b8"
-            />
-            <YAxis
-              tick={{ fontSize: 11 }}
-              stroke="#94a3b8"
-              tickFormatter={hasCurrency ? currencyFormatter : undefined}
-            />
-            <Tooltip content={<CustomTooltip />} />
-            <Legend
-              wrapperStyle={{ fontSize: 12, paddingTop: 8 }}
-              iconType="circle"
-            />
-            {categories.map((cat) =>
-              cat.type === 'line' ? (
-                <Line
-                  key={cat.key}
-                  type="monotone"
-                  dataKey={cat.key}
-                  name={cat.name}
-                  stroke={cat.color}
-                  strokeWidth={2}
-                  dot={{ fill: cat.color, r: 3 }}
-                />
-              ) : (
-                <Bar
-                  key={cat.key}
-                  dataKey={cat.key}
-                  name={cat.name}
-                  fill={cat.color}
-                  radius={[3, 3, 0, 0]}
-                  barSize={20}
-                />
-              )
-            )}
-          </ComposedChart>
-        </ResponsiveContainer>
+        <h3 className="font-serif font-bold text-base text-slate-900 mb-4">{title}</h3>
+        <div className="h-[260px] flex items-center justify-center">
+          <p className="font-sans text-sm text-slate-400">Sem dados no período selecionado.</p>
+        </div>
       </Card>
     )
   }
 
+  const isCurrency = categories.some(
+    (c) => c.key === 'expected' || c.key === 'realized' || c.key === 'valor'
+  )
+  const hasMixedTypes = categories.some((c) => c.type === 'line')
+
+  const ChartComponent = hasMixedTypes ? ComposedChart : BarChart
+  const chartData = data.map((d) => ({
+    ...d,
+    label: formatMonthLabel(d.month as string),
+  }))
+
   return (
     <Card variant="light" className="p-6">
-      <h3 className="font-serif font-bold text-base text-slate-900 mb-4">
-        {title}
-      </h3>
+      <h3 className="font-serif font-bold text-base text-slate-900 mb-4">{title}</h3>
       <ResponsiveContainer width="100%" height={height}>
-        <BarChart
-          data={data.map((d) => ({
-            ...d,
-            label: formatMonthLabel(d.month as string),
-          }))}
-        >
+        <ChartComponent data={chartData}>
           <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
           <XAxis dataKey="label" tick={{ fontSize: 11 }} stroke="#94a3b8" />
           <YAxis
             tick={{ fontSize: 11 }}
             stroke="#94a3b8"
-            tickFormatter={hasCurrency ? currencyFormatter : undefined}
-            allowDecimals={false}
+            tickFormatter={(v: number) => YAxisFormatter(v, isCurrency)}
           />
-          <Tooltip content={<CustomTooltip />} />
+          <Tooltip content={<CustomTooltip isCurrency={isCurrency || hasMixedTypes} />} />
           <Legend
             wrapperStyle={{ fontSize: 12, paddingTop: 8 }}
             iconType="circle"
           />
-          {categories.map((cat) => (
-            <Bar
-              key={cat.key}
-              dataKey={cat.key}
-              name={cat.name}
-              fill={cat.color}
-              radius={[3, 3, 0, 0]}
-              barSize={20}
-            />
-          ))}
-        </BarChart>
+          {categories.map((cat) =>
+            cat.type === 'line' ? (
+              <Line
+                key={cat.key}
+                type="monotone"
+                dataKey={cat.key}
+                name={cat.name}
+                stroke={cat.color}
+                strokeWidth={2}
+                dot={{ fill: cat.color, r: 3 }}
+              />
+            ) : (
+              <Bar
+                key={cat.key}
+                dataKey={cat.key}
+                name={cat.name}
+                fill={cat.color}
+                radius={[3, 3, 0, 0]}
+                barSize={20}
+              />
+            )
+          )}
+        </ChartComponent>
       </ResponsiveContainer>
     </Card>
   )
@@ -194,13 +167,24 @@ export const ReportLineChart = memo(function ReportLineChart({
   categories,
   height = 260,
 }: ReportChartProps) {
-  if (!data || data.length === 0) return null
+  if (!data || data.length === 0) {
+    return (
+      <Card variant="light" className="p-6">
+        <h3 className="font-serif font-bold text-base text-slate-900 mb-4">{title}</h3>
+        <div className="h-[260px] flex items-center justify-center">
+          <p className="font-sans text-sm text-slate-400">Sem dados no período selecionado.</p>
+        </div>
+      </Card>
+    )
+  }
+
+  const isCurrency = categories.some(
+    (c) => c.key === 'expected' || c.key === 'realized' || c.key === 'valor'
+  )
 
   return (
     <Card variant="light" className="p-6">
-      <h3 className="font-serif font-bold text-base text-slate-900 mb-4">
-        {title}
-      </h3>
+      <h3 className="font-serif font-bold text-base text-slate-900 mb-4">{title}</h3>
       <ResponsiveContainer width="100%" height={height}>
         <LineChart
           data={data.map((d) => ({
@@ -213,9 +197,9 @@ export const ReportLineChart = memo(function ReportLineChart({
           <YAxis
             tick={{ fontSize: 11 }}
             stroke="#94a3b8"
-            allowDecimals={false}
+            tickFormatter={(v: number) => YAxisFormatter(v, isCurrency)}
           />
-          <Tooltip />
+          <Tooltip content={<CustomTooltip isCurrency={isCurrency} />} />
           <Legend
             wrapperStyle={{ fontSize: 12, paddingTop: 8 }}
             iconType="circle"
