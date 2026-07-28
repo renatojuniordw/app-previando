@@ -38,7 +38,7 @@ function SectionHeader({ icon: Icon, title, badge }: { icon: typeof Scale; title
   return (
     <div className="flex items-center gap-2.5 pb-3 border-b border-slate-100">
       <div className="w-8 h-8 rounded-lg bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-600 shrink-0">
-        <Icon className="w-4.5 h-4.5" aria-hidden="true" />
+        <Icon className="w-4 h-4" aria-hidden="true" />
       </div>
       <h3 className="font-serif font-bold text-base text-slate-800 flex-1 min-w-0 truncate">{title}</h3>
       {badge && (
@@ -56,12 +56,12 @@ function ResultTile({ label, value, tone = 'default' }: {
   tone?: 'default' | 'positive' | 'accent'
 }) {
   return (
-    <div className="bg-slate-50/50 border border-slate-200/60 rounded-xl p-4">
+    <div className="bg-slate-50/50 border border-slate-200/60 rounded-xl p-4 overflow-hidden">
       <span className="font-sans text-[10px] uppercase font-extrabold tracking-wider text-slate-400 block mb-1">
         {label}
       </span>
       <span className={cn(
-        'font-mono font-bold text-lg tabular-nums',
+        'font-mono font-bold text-base sm:text-lg tabular-nums block truncate',
         tone === 'positive' && 'text-emerald-700',
         tone === 'accent' && 'text-amber-700',
         tone === 'default' && 'text-slate-800',
@@ -89,6 +89,18 @@ export default function RevisaoPage() {
       .catch(() => null)
       .finally(() => setLoadingHistory(false))
   }, [caseId])
+
+  useEffect(() => {
+    if (form.rmiConcedido) return
+    api.get(`/cases/${caseId}/calculations`, { params: { limit: 1 } })
+      .then((r) => {
+        const selected = r.data.calculations?.find((c: { isSelected: boolean }) => c.isSelected)
+        if (selected?.rmi) {
+          setForm((prev) => ({ ...prev, rmiConcedido: String(Number(selected.rmi)) }))
+        }
+      })
+      .catch(() => null)
+  }, [caseId, form.rmiConcedido])
 
   const handleSubmit = async () => {
     setError('')
@@ -221,11 +233,11 @@ export default function RevisaoPage() {
                     <div className="p-5 bg-amber-50 border border-amber-200 rounded-xl">
                       <div className="flex items-center gap-2 mb-1.5">
                         <div className="w-8 h-8 rounded-lg bg-white border border-amber-200 flex items-center justify-center text-amber-600 shrink-0">
-                          <TrendingUp className="w-4.5 h-4.5" aria-hidden="true" />
+                          <TrendingUp className="w-4 h-4" aria-hidden="true" />
                         </div>
                         <h4 className="font-sans font-bold text-sm text-amber-900">Impacto Retroativo (5 anos)</h4>
                       </div>
-                      <span className="font-mono font-bold text-2xl text-amber-800 tabular-nums block">
+                      <span className="font-mono font-bold text-xl sm:text-2xl text-amber-800 tabular-nums block">
                         {formatCurrency(result.retroativos5Anos)}
                       </span>
                       <p className="font-sans text-xs text-amber-700 mt-1 leading-relaxed">

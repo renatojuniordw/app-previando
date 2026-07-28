@@ -1,13 +1,18 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useParams } from 'next/navigation'
 import { DatePicker } from '@/components/ui/DatePicker'
+import { Button } from '@/components/ui/Button'
 import {
-  AlertTriangle, CheckCircle2, XCircle, Clock, Info, Calculator, ShieldAlert,
+  AlertTriangle, CheckCircle2, XCircle, Clock, Info, Calculator, ShieldAlert, Save, FileDown,
 } from 'lucide-react'
 import { differenceInDays, addYears, format, parseISO, isValid } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { cn } from '@/lib/utils'
+import api from '@/lib/api'
+import { useToast } from '@/store/toast'
+import { downloadPdf } from '@/lib/download-pdf'
 
 const TODAY = new Date()
 
@@ -107,13 +112,53 @@ const TIPOS_EVENTO = [
 ]
 
 export default function PrescricaoPage() {
+  const params = useParams()
+  const caseId = params.id as string
+  const { addToast } = useToast()
   const [dataEvento, setDataEvento] = useState('')
   const [tipoEvento, setTipoEvento] = useState('concessao')
+  const [saving, setSaving] = useState(false)
+  const [exporting, setExporting] = useState(false)
+
+  useEffect(() => {
+    api.get(`/cases/${caseId}`).then((r) => {
+      const c = r.data.case
+      if (c?.createdAt && !dataEvento) {
+        setDataEvento(c.createdAt.split('T')[0])
+      }
+    }).catch(() => {})
+  }, [caseId, dataEvento])
 
   const parsedDate = dataEvento ? parseISO(dataEvento) : null
   const isValidDate = parsedDate && isValid(parsedDate) && parsedDate <= TODAY
   const prazos = isValidDate ? calcPrazos(parsedDate!) : null
   const tipoLabel = TIPOS_EVENTO.find((t) => t.value === tipoEvento)?.label
+
+  const handleSave = async () => {
+    if (!prazos || !parsedDate) return
+    setSaving(true)
+    try {
+      const text = prazos.map((p) =>
+        `${p.label}: ${p.daysLeft >= 0 ? `${p.daysLeft} dias restantes` : `${Math.abs(p.daysLeft)} dias expirados`} (vencimento: ${format(p.expiresAt, 'dd/MM/yyyy')})`
+      ).join('\n')
+      await api.post(`/cases/${caseId}/notes`, {
+        type: 'CALCULO',
+        content: `📅 **Prescrição e Decadência**\n**Data do evento:** ${format(parsedDate, 'dd/MM/yyyy')}\n**Tipo:** ${tipoLabel}\n\n${text}`,
+      })
+      addToast({ type: 'success', title: 'Salvo', message: 'Cálculo salvo como anotação do caso.' })
+    } catch {
+      addToast({ type: 'error', title: 'Erro', message: 'Não foi possível salvar a anotação.' })
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleExport = async () => {
+    setExporting(true)
+    const ok = await downloadPdf(caseId, `prescricao-${caseId}.pdf`)
+    if (!ok) addToast({ type: 'error', title: 'Erro', message: 'Não foi possível gerar o PDF.' })
+    setExporting(false)
+  }
 
   return (
     <div className="mx-auto max-w-5xl space-y-6 px-4 sm:px-0">
@@ -293,6 +338,27 @@ export default function PrescricaoPage() {
               </div>
             )
           })}
+
+          {/* Actions */}
+          <div className="flex gap-3">
+            <Button
+              onClick={handleSave}
+              loading={saving}
+              className="flex-1 bg-slate-900 font-semibold text-white hover:bg-slate-800"
+            >
+              <Save className="h-4 w-4" />
+              Salvar como Anotação
+            </Button>
+            <Button
+              variant="outline"
+              onClick={handleExport}
+              loading={exporting}
+              className="flex-1"
+            >
+              <FileDown className="h-4 w-4" />
+              Exportar PDF
+            </Button>
+          </div>
 
           {/* Legal Disclaimer */}
           <div className="flex gap-3 rounded-xl border border-amber-200 bg-amber-50/50 px-4 py-4">
