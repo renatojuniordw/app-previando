@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import api from '@/lib/api'
 import { useToast } from '@/store/toast'
 import { LayoutDashboard, RefreshCw } from 'lucide-react'
@@ -53,6 +53,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
+  const hasDataRef = useRef(false)
   const { addToast } = useToast()
 
   const fetchData = useCallback(async (isRefresh = false) => {
@@ -60,15 +61,16 @@ export default function DashboardPage() {
     try {
       const r = await api.get('/dashboard/summary')
       setData(r.data)
+      hasDataRef.current = true
       setError(false)
     } catch {
-      if (!data) setError(true)
+      if (!hasDataRef.current) setError(true)
       addToast({ type: 'error', title: 'Erro ao carregar dashboard' })
     } finally {
       setLoading(false)
       if (isRefresh) setRefreshing(false)
     }
-  }, [addToast, data])
+  }, [addToast])
 
   useEffect(() => { fetchData() }, [fetchData])
 
