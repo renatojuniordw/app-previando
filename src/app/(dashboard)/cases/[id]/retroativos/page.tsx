@@ -12,7 +12,6 @@ import {
   History,
   Calendar,
   Trash2,
-  Loader2,
   ChevronDown,
   ChevronUp,
   ShieldAlert,
@@ -21,8 +20,9 @@ import {
   TrendingUp,
   Banknote,
   Receipt,
-  PercentCircle,
+  CirclePercent,
 } from 'lucide-react'
+import { Skeleton } from '@/components/ui/Skeleton'
 
 export default function RetroativosPage() {
   const {
@@ -56,11 +56,19 @@ export default function RetroativosPage() {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center py-24">
-        <Loader2 className="h-8 w-8 animate-spin text-amber-500" />
-        <p className="mt-4 animate-pulse font-sans text-sm font-medium text-slate-500">
-          Carregando painel de retroativos...
-        </p>
+      <div className="mx-auto max-w-5xl space-y-6 px-4 sm:px-0">
+        <div className="flex items-start justify-between gap-4">
+          <div className="space-y-2">
+            <Skeleton variant="text" className="w-64 h-8" />
+            <Skeleton variant="text" className="w-96 h-4" />
+          </div>
+        </div>
+        <div className="rounded-2xl border border-slate-200 p-6 space-y-4">
+          <Skeleton variant="rectangular" className="w-full h-32" />
+          <div className="grid grid-cols-4 gap-4">
+            <Skeleton variant="rectangular" className="h-20" count={4} />
+          </div>
+        </div>
       </div>
     )
   }
@@ -99,8 +107,8 @@ export default function RetroativosPage() {
 
       {/* Empty State */}
       {retroativos.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-250 bg-white py-20 text-center shadow-sm">
-          <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-2xl border border-amber-100 bg-amber-50 shadow-xs">
+        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-white py-20 text-center shadow-sm">
+          <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-2xl border border-amber-100 bg-amber-50 shadow-sm">
             <History className="h-8 w-8 text-amber-500" />
           </div>
           <h2 className="mb-2 font-serif text-lg font-bold text-slate-900">
@@ -199,7 +207,7 @@ export default function RetroativosPage() {
 
                   <KpiCell
                     label="Total Corrigido (INPC)"
-                    icon={<PercentCircle className="h-4 w-4 text-emerald-500" />}
+                    icon={<CirclePercent className="h-4 w-4 text-emerald-500" />}
                     highlight="emerald"
                     border="right"
                   >
@@ -227,7 +235,7 @@ export default function RetroativosPage() {
                   <div className="grid grid-cols-2 gap-0 border-t border-slate-100">
                     <KpiCell
                       label={`Honorários Advocatícios (${formatPercentage(Number(retro.percentualHonorarios))})`}
-                      icon={<PercentCircle className="h-4 w-4 text-indigo-500" />}
+                      icon={<CirclePercent className="h-4 w-4 text-indigo-500" />}
                       highlight="indigo"
                       border="right"
                     >
