@@ -39,6 +39,13 @@ const PLANO_LABELS: Record<PlanoContribuicao, string> = {
   BAIXA_RENDA: 'Baixa Renda',
 }
 
+const CATEGORIA_LABELS: Record<string, string> = {
+  CI: 'Contribuinte Individual',
+  FACULTATIVO: 'Facultativo',
+  MEI: 'MEI',
+  SEGURADO_ESPECIAL: 'Segurado Especial',
+}
+
 export default function GpsPage() {
   const params = useParams()
   const caseId = params.id as string
@@ -349,7 +356,7 @@ export default function GpsPage() {
                 className="flex flex-col items-start justify-between gap-3 px-6 py-4 transition-colors hover:bg-slate-50/60 sm:flex-row sm:items-center"
               >
                 <div className="flex flex-wrap items-center gap-x-3 gap-y-1 font-sans text-sm">
-                  <span className="font-bold text-slate-800">{g.categoria}</span>
+                  <span className="font-bold text-slate-800">{CATEGORIA_LABELS[g.categoria] ?? g.categoria}</span>
                   <span className="text-slate-300" aria-hidden="true">·</span>
                   <span className="font-mono text-slate-600">{g.competencia}</span>
                   <span className="text-slate-300" aria-hidden="true">·</span>
