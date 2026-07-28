@@ -46,7 +46,7 @@ export function CnisHeader({
               className="hidden lg:inline-flex"
               aria-label={showPdfViewer ? 'Ocultar PDF original' : 'Exibir PDF original lado a lado'}
             >
-              {showPdfViewer ? <EyeOff className="w-4 h-4 text-slate-555" /> : <Eye className="w-4 h-4 text-slate-555" />}
+              {showPdfViewer ? <EyeOff className="w-4 h-4 text-slate-500" /> : <Eye className="w-4 h-4 text-slate-500" />}
               <span>{showPdfViewer ? 'Ocultar PDF' : 'Ver PDF Lado a Lado'}</span>
             </Button>
             <a
@@ -55,7 +55,7 @@ export function CnisHeader({
               rel="noopener noreferrer"
               className="flex lg:hidden items-center justify-center gap-2 font-sans font-medium border rounded-md transition-colors duration-200 bg-white text-slate-900 border-slate-300 hover:bg-slate-50 px-3 py-1.5 text-xs shadow-sm focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:outline-none"
             >
-              <ExternalLink className="w-4 h-4 text-slate-555" />
+              <ExternalLink className="w-4 h-4 text-slate-500" />
               <span>Abrir PDF Original</span>
             </a>
           </>
@@ -68,7 +68,7 @@ export function CnisHeader({
             onClick={onOpenDictionary}
             title="Dicionário de Indicadores"
           >
-            <BookOpen className="w-4 h-4 text-slate-555" />
+            <BookOpen className="w-4 h-4 text-slate-500" />
             <span>Dicionário</span>
           </Button>
         )}

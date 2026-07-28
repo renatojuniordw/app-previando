@@ -141,7 +141,7 @@ export default function CnisCasePage() {
         uploadError={uploadError}
         onSaveClick={() => editing.setShowSaveConfirmModal(true)}
         onDiscard={editing.discardChanges}
-        onCloseSucess={() => setShowSuccessBanner(false)}
+        onCloseSuccess={() => setShowSuccessBanner(false)}
       />
 
       {/* Tab bar — apenas quando CNIS está completo */}

@@ -6,10 +6,6 @@ import { useToast } from '@/store/toast'
 import { CnisData } from '@/types/cnis'
 import { isProcessingStatus } from '@/lib/cnis-status'
 
-/**
- * O CNIS pertence ao cliente (1 por segurado) — este hook opera sempre por clientId,
- * nunca por caseId, mesmo quando usado a partir de uma tela de caso específico.
- */
 export function useCnis(clientId: string) {
   const [cnis, setCnis] = useState<CnisData | null>(null)
   const [loading, setLoading] = useState(true)
@@ -19,11 +15,17 @@ export function useCnis(clientId: string) {
 
   const pollRef = useRef<NodeJS.Timeout | null>(null)
   const stuckRef = useRef<NodeJS.Timeout | null>(null)
+  const abortRef = useRef<AbortController | null>(null)
 
   const load = useCallback(async () => {
     if (!clientId) return null
+
+    abortRef.current?.abort()
+    const controller = new AbortController()
+    abortRef.current = controller
+
     try {
-      const r = await api.get(`/cnis/${clientId}`)
+      const r = await api.get(`/cnis/${clientId}`, { signal: controller.signal })
       const cnisDoc = r.data.cnisDocument
       setCnis(cnisDoc)
       return cnisDoc as CnisData | null
@@ -36,6 +38,7 @@ export function useCnis(clientId: string) {
 
   useEffect(() => {
     load()
+    return () => abortRef.current?.abort()
   }, [load])
 
   useEffect(() => {
@@ -51,7 +54,7 @@ export function useCnis(clientId: string) {
           setShowSuccessBanner(true)
           setStuckWarning(false)
           setTimeout(() => setShowSuccessBanner(false), 5000)
-          sendBrowserNotification('Previando - CNIS Concluído', 'O processamento do CNIS do segurado foi concluído com sucesso.')
+          sendBrowserNotification('Previando - CNIS Concluído', 'O processamento do CNIS foi concluído com sucesso.')
         } else if (updated.processingStatus === 'FAILED') {
           sendBrowserNotification('Previando - Falha no CNIS', `Ocorreu uma falha no processamento do CNIS: ${updated.processingError || 'Erro desconhecido'}`)
         }
@@ -60,7 +63,7 @@ export function useCnis(clientId: string) {
         if (pollRef.current) clearInterval(pollRef.current)
         if (stuckRef.current) clearTimeout(stuckRef.current)
       }
-    }, 3000)
+    }, 5000)
 
     return () => {
       if (pollRef.current) clearInterval(pollRef.current)

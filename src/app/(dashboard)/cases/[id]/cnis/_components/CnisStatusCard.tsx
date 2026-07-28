@@ -37,13 +37,13 @@ export function CnisStatusCard({
 
   if (cnis.processingStatus === 'FAILED') {
     return (
-      <div className="bg-white border border-slate-200/85 rounded-2xl p-6 shadow-sm">
+      <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
         <div className="border border-red-200 bg-red-50/20 rounded-2xl p-5 flex flex-col gap-4">
           <div className="flex items-start gap-3">
             <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" aria-hidden="true" />
             <div>
-              <p className="font-sans text-sm font-bold text-red-805">Falha no Processamento</p>
-              <p className="font-sans text-xs text-red-750 mt-1 leading-relaxed font-semibold">
+              <p className="font-sans text-sm font-bold text-red-700">Falha no Processamento</p>
+              <p className="font-sans text-xs text-red-600 mt-1 leading-relaxed font-semibold">
                 {cnis.processingError
                   ? cnis.processingError.replace(/^Error:\s*/i, '')
                   : 'Ocorreu um erro inesperado ao tentar ler este arquivo CNIS.'}
@@ -57,7 +57,7 @@ export function CnisStatusCard({
               onClick={onReprocessClick} 
               className="flex items-center gap-1.5"
             >
-              <RefreshCw className="w-3.5 h-3.5 animate-spin-once" />
+              <RefreshCw className="w-3.5 h-3.5 animate-spin" />
               Reprocessar
             </Button>
             <Button 

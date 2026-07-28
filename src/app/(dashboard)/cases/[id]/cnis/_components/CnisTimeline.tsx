@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { CalendarDays } from 'lucide-react'
 import type { CnisExtractedData } from '@/types/cnis'
 
@@ -8,116 +8,55 @@ interface Props {
   data: CnisExtractedData
 }
 
-interface TimelineSegment {
-  type: 'contribuicao' | 'gap'
-  start: string
-  end: string
-  label: string
-  empregador?: string
-}
-
-function parseAnoMes(competencia: string): number {
+function parseAnoMes(competencia: string): { ano: number; mes: number } {
   const [ano, mes] = competencia.split('-').map(Number)
-  return ano * 12 + (mes - 1)
-}
-
-function formatAnoMes(valor: number): string {
-  const ano = Math.floor(valor / 12)
-  const mes = (valor % 12) + 1
-  return `${ano}-${String(mes).padStart(2, '0')}`
+  return { ano, mes }
 }
 
 export function CnisTimeline({ data }: Props) {
-  const [showAll, setShowAll] = useState(false)
-
-  const { segments, totalMeses, contribuicaoMeses, gapMeses, percentual } = useMemo(() => {
+  const { anos, totalMeses, contribuicaoMeses, gapMeses, percentual } = useMemo(() => {
     if (!data.periodos || data.periodos.length === 0) {
-      return { segments: [], totalMeses: 0, contribuicaoMeses: 0, gapMeses: 0, percentual: 0 }
+      return { anos: [], totalMeses: 0, contribuicaoMeses: 0, gapMeses: 0, percentual: 0 }
     }
 
-    // Collect all salary months across all periods
-    const allMonths = new Set<number>()
+    const monthsByAno = new Map<number, Set<number>>()
     for (const p of data.periodos) {
       for (const s of p.salarios ?? []) {
-        allMonths.add(parseAnoMes(s.competencia))
+        const { ano, mes } = parseAnoMes(s.competencia)
+        if (!monthsByAno.has(ano)) monthsByAno.set(ano, new Set())
+        monthsByAno.get(ano)!.add(mes)
       }
     }
 
-    if (allMonths.size === 0) {
-      return { segments: [], totalMeses: 0, contribuicaoMeses: 0, gapMeses: 0, percentual: 0 }
+    if (monthsByAno.size === 0) {
+      return { anos: [], totalMeses: 0, contribuicaoMeses: 0, gapMeses: 0, percentual: 0 }
     }
 
-    const sorted = Array.from(allMonths).sort((a, b) => a - b)
-    const minMonth = sorted[0]
-    const maxMonth = sorted[sorted.length - 1]
-    const totalMeses = maxMonth - minMonth + 1
+    const sortedAnos = Array.from(monthsByAno.keys()).sort((a, b) => a - b)
+    const anos = sortedAnos.map((ano) => {
+      const meses = monthsByAno.get(ano)!
+      return { ano, meses: meses.size, total: 12 }
+    })
 
-    // Build segments: contribution blocks + gaps
-    const contribuicaoSet = new Set(sorted)
-    const segments: TimelineSegment[] = []
-    let i = minMonth
-    while (i <= maxMonth) {
-      if (contribuicaoSet.has(i)) {
-        const segStart = i
-        let segEnd = i
-        const employersInBlock = new Set<string>()
-        // Find the end of this contribution block
-        while (i <= maxMonth && contribuicaoSet.has(i)) {
-          // Find which employer(s) for this month
-          for (const p of data.periodos ?? []) {
-            for (const s of p.salarios ?? []) {
-              if (parseAnoMes(s.competencia) === i) {
-                employersInBlock.add(p.empregador || 'Sem identificação')
-              }
-            }
-          }
-          segEnd = i
-          i++
-        }
-        const meses = segEnd - segStart + 1
-        const label = meses >= 12
-          ? `${Math.floor(meses / 12)}a ${meses % 12}m`
-          : `${meses}m`
-        segments.push({
-          type: 'contribuicao',
-          start: formatAnoMes(segStart),
-          end: formatAnoMes(segEnd),
-          label,
-          empregador: employersInBlock.size > 0 ? Array.from(employersInBlock).join(', ') : undefined,
-        })
-      } else {
-        const gapStart = i
-        while (i <= maxMonth && !contribuicaoSet.has(i)) {
-          i++
-        }
-        const gapEnd = i - 1
-        const meses = gapEnd - gapStart + 1
-        segments.push({
-          type: 'gap',
-          start: formatAnoMes(gapStart),
-          end: formatAnoMes(gapEnd),
-          label: meses >= 12
-            ? `${Math.floor(meses / 12)}a ${meses % 12}m`
-            : `${meses}m`,
-        })
-      }
+    let totalContrib = 0
+    for (const p of data.periodos) {
+      totalContrib += p.salarios?.length ?? 0
     }
 
-    const contribuicaoMeses = sorted.length
-    const gapMeses = totalMeses - contribuicaoMeses
-    const percentual = Math.round((contribuicaoMeses / totalMeses) * 100)
+    const firstAno = sortedAnos[0]
+    const lastAno = sortedAnos[sortedAnos.length - 1]
+    const totalMesesCalc = (lastAno - firstAno + 1) * 12
+    const contribMeses = totalContrib
+    const gapMesesCalc = totalMesesCalc - contribMeses
+    const pct = Math.round((contribMeses / totalMesesCalc) * 100)
 
-    return { segments, totalMeses, contribuicaoMeses, gapMeses, percentual }
+    return { anos, totalMeses: totalMesesCalc, contribuicaoMeses: contribMeses, gapMeses: gapMesesCalc, percentual: pct }
   }, [data])
 
-  if (segments.length === 0) {
-    return null
-  }
-
-  const maxSegments = showAll ? segments.length : 20
+  if (anos.length === 0) return null
 
   return (
-    <div className="bg-white border border-slate-200 rounded-xl p-6 space-y-4">
+    <div className="bg-white border border-slate-200 rounded-xl p-6 space-y-5">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <CalendarDays className="w-4 h-4 text-slate-500" />
@@ -130,7 +69,7 @@ export function CnisTimeline({ data }: Props) {
         </span>
       </div>
 
-      {/* Mini barra de percentual */}
+      {/* Barra de percentual geral */}
       <div className="flex items-center gap-3">
         <div className="flex-1 h-3 bg-slate-100 rounded-full overflow-hidden">
           <div
@@ -143,68 +82,50 @@ export function CnisTimeline({ data }: Props) {
         </span>
       </div>
 
-      {/* Timeline horizontal */}
-      <div className="overflow-x-auto pb-2 -mx-1">
-        <div className="relative min-w-[600px] px-1">
-          <div className="flex items-end gap-0.5" style={{ height: '48px' }}>
-            {segments.slice(0, maxSegments).map((seg, i) => {
-              const width = Math.max(4, 100 / segments.length)
-              const isGap = seg.type === 'gap'
-              return (
-                <div
-                  key={i}
-                  className="group relative flex flex-col items-center justify-end transition-all"
-                  style={{ width: `${width}%`, minWidth: '4px' }}
-                >
-                  <div
-                    className={`w-full rounded-t transition-all duration-200 ${
-                      isGap
-                        ? 'bg-rose-200 hover:bg-rose-300'
-                        : 'bg-emerald-400 hover:bg-emerald-500'
-                    }`}
-                    style={{ height: isGap ? '24px' : '48px' }}
-                  />
-                  {/* Tooltip */}
-                  <div className="absolute bottom-full mb-1.5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
-                    <div className={`px-2 py-1 rounded-lg text-xs font-medium whitespace-nowrap shadow-lg ${
-                      isGap ? 'bg-rose-50 text-rose-700 border border-rose-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                    }`}>
-                      <p className="font-bold">{isGap ? 'Gap' : seg.empregador || 'Contribuição'}</p>
-                      <p>{seg.start} a {seg.end}</p>
-                      <p className="font-bold">{seg.label}</p>
-                    </div>
-                  </div>
+      {/* Grade anual */}
+      <div className="overflow-x-auto -mx-1 pb-1">
+        <div className="min-w-[500px] space-y-1">
+          {anos.map(({ ano, meses, total }) => {
+            return (
+              <div key={ano} className="flex items-center gap-3">
+                <span className="font-mono text-[11px] font-bold text-slate-500 w-10 shrink-0 text-right">
+                  {ano}
+                </span>
+                <div className="flex-1 h-6 bg-slate-100 rounded-md overflow-hidden flex">
+                  {Array.from({ length: 12 }, (_, mes) => {
+                    const contrib = mes + 1 <= meses
+                    return (
+                      <div
+                        key={mes}
+                        className={`flex-1 transition-colors ${
+                          contrib
+                            ? meses >= 10 ? 'bg-emerald-500' : meses >= 7 ? 'bg-emerald-400' : meses >= 4 ? 'bg-amber-400' : 'bg-rose-300'
+                            : 'bg-slate-100'
+                        } ${contrib ? 'hover:brightness-110' : ''}`}
+                        aria-label={`${ano}-${String(mes + 1).padStart(2, '0')}: ${contrib ? 'Contribuiu' : 'Sem contribuição'}`}
+                      />
+                    )
+                  })}
                 </div>
-              )
-            })}
-          </div>
-
-          {/* Labels */}
-          <div className="flex justify-between mt-1">
-            <span className="font-sans text-[10px] text-slate-400">{segments[0]?.start}</span>
-            <span className="font-sans text-[10px] text-slate-400">{segments[segments.length - 1]?.end}</span>
-          </div>
+                <span className="font-sans text-[10px] text-slate-400 w-12 shrink-0">
+                  {meses}/{total}
+                </span>
+              </div>
+            )
+          })}
         </div>
       </div>
 
-      {segments.length > 20 && (
-        <button
-          onClick={() => setShowAll(!showAll)}
-          className="text-xs font-bold text-amber-600 hover:text-amber-700 transition-colors"
-        >
-          {showAll ? 'Mostrar menos' : `Mostrar todos (${segments.length} segmentos)`}
-        </button>
-      )}
-
       {/* Legenda */}
-      <div className="flex items-center gap-4 text-xs text-slate-500">
+      <div className="flex flex-wrap items-center gap-4 text-xs text-slate-500">
+        <span className="font-sans text-[10px] uppercase font-bold text-slate-400 tracking-wider">Legenda:</span>
         <div className="flex items-center gap-1.5">
-          <div className="w-3 h-3 rounded-sm bg-emerald-400" />
-          <span>Contribuição</span>
+          <div className="w-4 h-4 rounded bg-emerald-500" />
+          <span>Contribuiu</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <div className="w-3 h-3 rounded-sm bg-rose-200" />
-          <span>Gap</span>
+          <div className="w-4 h-4 rounded bg-slate-100 border border-slate-200" />
+          <span>Sem contribuição</span>
         </div>
       </div>
     </div>

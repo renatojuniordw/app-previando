@@ -67,10 +67,10 @@ export function CnisExtractedDataView({
   const seguradoCard = (
     <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm space-y-5">
       <div className="flex items-center gap-2.5 pb-2 border-b border-slate-100">
-        <div className="w-8 h-8 rounded-lg bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-600 shadow-xs">
-          <User className="w-4.5 h-4.5" aria-hidden="true" />
+        <div className="w-8 h-8 rounded-lg bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-600 shadow-sm">
+          <User className="w-4 h-4" aria-hidden="true" />
         </div>
-        <h2 className="font-serif font-bold text-base text-slate-850">
+        <h2 className="font-serif font-bold text-base text-slate-800">
           Dados do Segurado
         </h2>
       </div>
@@ -92,10 +92,10 @@ export function CnisExtractedDataView({
     <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm space-y-5">
       <div className="flex items-center justify-between pb-2 border-b border-slate-100">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-600 shadow-xs">
-            <FileText className="w-4.5 h-4.5" aria-hidden="true" />
+          <div className="w-8 h-8 rounded-lg bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-600 shadow-sm">
+            <FileText className="w-4 h-4" aria-hidden="true" />
           </div>
-          <h2 className="font-serif font-bold text-base text-slate-850">
+          <h2 className="font-serif font-bold text-base text-slate-800">
             Documento CNIS
           </h2>
         </div>
@@ -104,11 +104,11 @@ export function CnisExtractedDataView({
 
       <div className="space-y-3.5">
         <div className="flex items-center justify-between text-xs">
-          <span className="text-slate-455 font-semibold flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5" /> Enviado em:</span>
+          <span className="text-slate-400 font-semibold flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5" /> Enviado em:</span>
           <span className="font-mono font-bold text-slate-700">{formatDate(cnisCreatedAt)}</span>
         </div>
         <div className="flex items-center justify-between text-xs">
-          <span className="text-slate-455 font-semibold flex items-center gap-1.5"><CheckCircle2 className="w-3.5 h-3.5" /> Atualizado:</span>
+          <span className="text-slate-400 font-semibold flex items-center gap-1.5"><CheckCircle2 className="w-3.5 h-3.5" /> Atualizado:</span>
           <span className="font-mono font-bold text-slate-700">{formatDate(cnisUpdatedAt)}</span>
         </div>
 
@@ -140,10 +140,10 @@ export function CnisExtractedDataView({
     <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-5">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-600 shadow-xs">
-            <Briefcase className="w-4.5 h-4.5" aria-hidden="true" />
+          <div className="w-8 h-8 rounded-lg bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-600 shadow-sm">
+            <Briefcase className="w-4 h-4" aria-hidden="true" />
           </div>
-          <h2 className="font-serif font-bold text-base text-slate-850">
+          <h2 className="font-serif font-bold text-base text-slate-800">
             Histórico de Vínculos
           </h2>
           <span className="font-sans text-[10px] font-extrabold text-slate-500 bg-slate-100 border border-slate-200/50 px-2 py-0.5 rounded-md whitespace-nowrap">
@@ -153,7 +153,7 @@ export function CnisExtractedDataView({
         <div className="flex flex-wrap items-center gap-2">
           <div className="hidden sm:flex items-center gap-2">
             <Button variant="outline" size="sm" onClick={onExportCSV} className="flex items-center gap-1">
-              <FileSpreadsheet className="w-3.5 h-3.5 text-slate-550" />
+              <FileSpreadsheet className="w-3.5 h-3.5 text-slate-500" />
               <span>Exportar CSV</span>
             </Button>
             <Button variant="outline" size="sm" onClick={expandAll}>
@@ -177,7 +177,7 @@ export function CnisExtractedDataView({
                 <div className="fixed inset-0 z-10" onClick={() => setShowMobileToolbar(false)} />
                 <div className="absolute right-0 top-full mt-1 z-20 w-44 bg-white border border-slate-200 rounded-lg shadow-lg py-1">
                   <button onClick={() => { onExportCSV(); setShowMobileToolbar(false) }} className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 text-left transition-colors">
-                    <FileSpreadsheet className="w-4 h-4 text-slate-550" />
+                    <FileSpreadsheet className="w-4 h-4 text-slate-500" />
                     Exportar CSV
                   </button>
                   <button onClick={() => { expandAll(); setShowMobileToolbar(false) }} className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 text-left transition-colors">
@@ -203,14 +203,14 @@ export function CnisExtractedDataView({
       </div>
 
       <div className="relative">
-        <Search className="w-4.5 h-4.5 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" aria-hidden="true" />
+        <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" aria-hidden="true" />
         <input
           type="text"
           value={searchQuery}
           onChange={e => setSearchQuery(e.target.value)}
           placeholder="Buscar por empresa, data de início ou fim..."
           aria-label="Filtrar vínculos do histórico"
-          className="w-full pl-10 pr-4 h-10 border border-slate-200/80 rounded-xl text-sm font-sans focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus-visible:ring-2 transition-all placeholder:text-slate-400 shadow-xs"
+          className="w-full pl-10 pr-4 h-10 border border-slate-200/80 rounded-xl text-sm font-sans focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus-visible:ring-2 transition-all placeholder:text-slate-400 shadow-sm"
         />
       </div>
 
@@ -283,14 +283,14 @@ function EditableField({ label, value, currentValue, onSave, onOpenEdit }: {
   label: string; value: string; currentValue: string; onSave: (v: string) => void; onOpenEdit: (label: string, currentValue: string, onSave: (v: string) => void) => void
 }) {
   return (
-    <div className="bg-slate-50/50 border border-slate-200/60 rounded-xl p-4 relative group hover:border-slate-350 transition-all duration-300">
-      <span className="font-sans text-[10px] uppercase font-extrabold tracking-wider text-slate-400 block mb-1">{label}</span>
-      <div className="flex items-center justify-between gap-2">
-        <span className="font-sans font-bold text-slate-800 text-sm truncate">{value}</span>
-        <button
-          onClick={() => onOpenEdit(label, currentValue, onSave)}
-          className="opacity-50 group-hover:opacity-100 group-focus-within:opacity-100 focus:opacity-100 hover:text-amber-600 transition-opacity p-1 text-slate-455 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 rounded-md"
-          title={`Editar ${label.toLowerCase()}`}
+      <div className="bg-slate-50/50 border border-slate-200/60 rounded-xl p-4 relative hover:border-slate-300 transition-all duration-300">
+        <span className="font-sans text-[10px] uppercase font-extrabold tracking-wider text-slate-400 block mb-1">{label}</span>
+        <div className="flex items-center justify-between gap-2">
+          <span className="font-sans font-bold text-slate-800 text-sm truncate">{value}</span>
+          <button
+            onClick={() => onOpenEdit(label, currentValue, onSave)}
+            className="hover:text-amber-600 transition-colors p-1 text-slate-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 rounded-md"
+            title={`Editar ${label.toLowerCase()}`}
         >
           <Edit3 className="w-3.5 h-3.5" />
         </button>

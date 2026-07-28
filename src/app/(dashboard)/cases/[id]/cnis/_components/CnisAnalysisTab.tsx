@@ -23,10 +23,10 @@ export function CnisAnalysisTab({ data }: Props) {
 
   return (
     <div className="space-y-6">
+      <CnisSalaryChart data={data} />
       <CnisStatsCard data={data} />
       <CnisTimeline data={data} />
       <CnisHealthScore data={data} />
-      <CnisSalaryChart data={data} />
     </div>
   )
 }
