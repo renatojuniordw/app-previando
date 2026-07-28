@@ -1,16 +1,21 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import api from '@/lib/api'
+import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts'
 import { ClientSwitcher } from '@/components/ClientSwitcher'
 import { Badge } from '@/components/ui/Badge'
+import { Button } from '@/components/ui/Button'
+import { TableSkeleton } from '@/components/ui/Skeleton'
 import { maskCPF } from '@/lib/sanitize'
 import { formatDate, cn } from '@/lib/utils'
 import { EmptyState } from '@/components/ui/EmptyState'
-import { Search, Plus, User, FileText, Phone, Mail, Upload, Lock, AlertTriangle, Check, X, Trash2 } from 'lucide-react'
+import { Search, Plus, User, FileText, Phone, Mail, Upload, Lock, AlertTriangle, Check, X, Trash2, ArrowUpDown, ArrowUp, ArrowDown, ChevronLeft, ChevronRight } from 'lucide-react'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { ActionsDropdown } from '@/components/ui/ActionsDropdown'
+import { Tooltip } from '@/components/ui/Tooltip'
 import { MobileCardList } from '@/components/ui/MobileCardList'
 import { DeleteClientModal } from '@/components/client/DeleteClientModal'
 import { useToast } from '@/store/toast'
@@ -27,6 +32,11 @@ interface Client {
   active: boolean
 }
 
+interface SortConfig {
+  key: 'name' | 'priority' | 'createdAt'
+  order: 'asc' | 'desc'
+}
+
 const PRIORITY_BADGE: Record<string, 'red' | 'yellow' | 'slate'> = {
   CRITICAL: 'red',
   ATTENTION: 'yellow',
@@ -39,18 +49,119 @@ const PRIORITY_LABELS: Record<string, string> = {
   NORMAL: 'Normal',
 }
 
+const PRIORITY_FILTERS = [
+  { value: '', label: 'Todas' },
+  { value: 'CRITICAL', label: 'Crítico' },
+  { value: 'ATTENTION', label: 'Atenção' },
+  { value: 'NORMAL', label: 'Normal' },
+]
+
+const ACTIVE_FILTERS = [
+  { value: '', label: 'Todos' },
+  { value: 'true', label: 'Ativos' },
+  { value: 'false', label: 'Bloqueados' },
+]
+
+const SORT_OPTIONS: { key: SortConfig['key']; label: string }[] = [
+  { key: 'name', label: 'Nome' },
+  { key: 'priority', label: 'Prioridade' },
+  { key: 'createdAt', label: 'Data' },
+]
+
 export default function ClientsListPage() {
   const [clients, setClients] = useState<Client[]>([])
   const [total, setTotal] = useState(0)
+  const [totalPages, setTotalPages] = useState(1)
+  const [page, setPage] = useState(1)
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
+  const [priorityFilter, setPriorityFilter] = useState('')
+  const [activeFilter, setActiveFilter] = useState('')
+  const [sort, setSort] = useState<SortConfig>({ key: 'name', order: 'asc' })
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [deletingClient, setDeletingClient] = useState<Client | null>(null)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [bulkLoading, setBulkLoading] = useState(false)
+  const router = useRouter()
+  const searchRef = useRef<HTMLInputElement>(null)
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>()
   const { addToast } = useToast()
 
+  useKeyboardShortcuts([
+    { keys: ['N'], description: 'Novo cliente', action: () => router.push('/clients/new') },
+    { keys: ['I'], description: 'Importar clientes', action: () => router.push('/clients/import') },
+    { keys: ['/'], description: 'Focar busca', action: () => searchRef.current?.focus(), enabled: true },
+  ])
+
   const blockedCount = clients.filter((c) => !c.active).length
+
+  const load = useCallback(async (opts?: {
+    q?: string
+    p?: number
+    priority?: string
+    active?: string
+    sort?: SortConfig
+  }) => {
+    setLoading(true)
+    const params: Record<string, string> = {
+      search: opts?.q ?? search,
+      page: String(opts?.p ?? page),
+      limit: '50',
+      sortBy: opts?.sort?.key ?? sort.key,
+      sortOrder: opts?.sort?.order ?? sort.order,
+    }
+    if (opts?.priority ?? priorityFilter) params.priority = opts?.priority ?? priorityFilter
+    if (opts?.active ?? activeFilter) params.active = opts?.active ?? activeFilter
+
+    try {
+      const r = await api.get('/clients', { params })
+      setClients(r.data.clients)
+      setTotal(r.data.total)
+      setTotalPages(r.data.totalPages)
+      if (opts?.p) setPage(opts.p)
+    } catch {
+      // silent
+    } finally {
+      setLoading(false)
+    }
+  }, [search, page, priorityFilter, activeFilter, sort])
+
+  useEffect(() => {
+    load()
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleSearch = (value: string) => {
+    setSearch(value)
+    clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(() => {
+      load({ q: value, p: 1 })
+      setPage(1)
+    }, 300)
+  }
+
+  const handlePriorityChange = (value: string) => {
+    setPriorityFilter(value)
+    load({ priority: value, p: 1 })
+    setPage(1)
+  }
+
+  const handleActiveChange = (value: string) => {
+    setActiveFilter(value)
+    load({ active: value, p: 1 })
+    setPage(1)
+  }
+
+  const handleSort = (key: SortConfig['key']) => {
+    const order = sort.key === key && sort.order === 'asc' ? 'desc' : 'asc'
+    setSort({ key, order })
+    load({ sort: { key, order }, p: 1 })
+    setPage(1)
+  }
+
+  const handlePageChange = (newPage: number) => {
+    if (newPage < 1 || newPage > totalPages) return
+    load({ p: newPage })
+  }
 
   const toggleSelect = (id: string) => {
     setSelectedIds((prev) => {
@@ -75,7 +186,7 @@ export default function ClientsListPage() {
       await api.post('/clients/bulk', { ids: Array.from(selectedIds), action })
       addToast({ type: 'success', title: 'Feito', message: 'Clientes atualizados com sucesso.' })
       setSelectedIds(new Set())
-      load(search)
+      load()
     } catch (err) {
       const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error
       if (msg) addToast({ type: 'error', title: 'Não foi possível concluir', message: msg })
@@ -84,30 +195,38 @@ export default function ClientsListPage() {
     }
   }
 
-  const load = (q?: string) => {
-    setLoading(true)
-    api.get('/clients', { params: { search: q, limit: 50 } })
-      .then((r) => {
-        setClients(r.data.clients)
-        setTotal(r.data.total)
-      })
-      .catch(() => null)
-      .finally(() => setLoading(false))
+  const SortIcon = ({ columnKey }: { columnKey: SortConfig['key'] }) => {
+    if (sort.key !== columnKey) return <ArrowUpDown className="w-3 h-3 text-slate-300 group-hover:text-slate-500" />
+    return sort.order === 'asc'
+      ? <ArrowUp className="w-3 h-3 text-amber-600" />
+      : <ArrowDown className="w-3 h-3 text-amber-600" />
   }
 
-  useEffect(() => {
-    load()
-  }, [])
+  const selectAllRef = useRef<HTMLInputElement>(null)
+  const isSearching = search.length > 0
+  const isFiltered = priorityFilter || activeFilter || isSearching
+  const someSelected = selectedIds.size > 0 && selectedIds.size < clients.length
+  const allSelected = selectedIds.size === clients.length && clients.length > 0
 
-  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearch(e.target.value)
-    load(e.target.value)
+  useEffect(() => {
+    if (selectAllRef.current) selectAllRef.current.indeterminate = someSelected
+  }, [someSelected])
+
+  const countByPriority = {
+    CRITICAL: clients.filter((c) => c.priority === 'CRITICAL').length,
+    ATTENTION: clients.filter((c) => c.priority === 'ATTENTION').length,
+    NORMAL: clients.filter((c) => c.priority === 'NORMAL').length,
+  }
+
+  const countByActive = {
+    true: clients.filter((c) => c.active).length,
+    false: clients.filter((c) => !c.active).length,
   }
 
   return (
     <ErrorBoundary>
       <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6 lg:space-y-8 animate-fade-in">
-        
+
         {/* Header */}
         <div className="flex items-center gap-4 border-b border-slate-200 pb-6">
           <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center shadow-lg flex-shrink-0">
@@ -121,42 +240,125 @@ export default function ClientsListPage() {
           </div>
         </div>
 
-        {/* Control Area (Search & Action Buttons) */}
-        <div className="flex flex-col md:flex-row gap-4 items-center justify-between bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
-          {/* Search bar */}
-          <div className="relative w-full md:w-80">
-            <Search className="absolute left-3.5 top-3 w-4 h-4 text-slate-400" />
-            <input
-              value={search}
-              onChange={handleSearch}
-              placeholder="Buscar por nome ou CPF..."
-              aria-label="Buscar clientes"
-              className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-sans focus:outline-none focus:border-slate-400 focus:ring-1 focus:ring-slate-400 transition-all placeholder:text-slate-400 text-slate-900"
-            />
+        {/* Control Area */}
+        <div className="flex flex-col gap-4 bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
+          {/* Search + Actions */}
+          <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+            <div className="relative w-full md:w-80">
+              <Search className="absolute left-3.5 top-3 w-4 h-4 text-slate-400" />
+              <input
+                ref={searchRef}
+                value={search}
+                onChange={(e) => handleSearch(e.target.value)}
+                placeholder="Buscar por nome ou CPF... (/ para focar)"
+                aria-label="Buscar clientes"
+                className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-sans focus:outline-none focus:border-slate-400 focus:ring-1 focus:ring-slate-400 transition-all placeholder:text-slate-400 text-slate-900"
+              />
+            </div>
+
+            <div className="flex items-center gap-3 w-full md:w-auto">
+              {(total > 0 || isFiltered) && (
+                <Tooltip content="Atalho: N" position="bottom">
+                  <Link href="/clients/new">
+                    <Button variant="dark" size="md">
+                      <Plus className="w-4 h-4" />
+                      Novo Cliente
+                    </Button>
+                  </Link>
+                </Tooltip>
+              )}
+              <Tooltip content="Atalho: I" position="bottom">
+                <Link href="/clients/import">
+                  <Button variant="outline" size="md">
+                    <Upload className="w-4 h-4" />
+                    Importar
+                  </Button>
+                </Link>
+              </Tooltip>
+            </div>
           </div>
 
-          {/* Quick buttons */}
-          <div className="flex items-center gap-3 w-full md:w-auto">
-            <Link 
-              href="/clients/new" 
-              className="flex-1 md:flex-none inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-900 hover:bg-slate-850 text-white font-sans font-bold text-sm rounded-lg transition-colors duration-200 shadow-sm"
-            >
-              <Plus className="w-4 h-4" />
-              Novo Cliente
-            </Link>
-            <Link
-              href="/clients/import"
-              className="flex-1 md:flex-none inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 font-sans font-bold text-sm rounded-lg transition-all duration-200 shadow-sm"
-            >
-              <Upload className="w-4 h-4" />
-              Importar
-            </Link>
+          {/* Filters */}
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="font-sans text-xs font-bold text-slate-400 uppercase tracking-wider mr-1">Filtros</span>
+
+            <div className="flex gap-1">
+              {PRIORITY_FILTERS.map((f) => {
+                const count = f.value ? countByPriority[f.value as keyof typeof countByPriority] : clients.length
+                return (
+                  <button
+                    key={f.value}
+                    onClick={() => handlePriorityChange(f.value)}
+                    className={cn(
+                      'px-3 py-1.5 font-sans text-xs font-bold rounded-lg border transition-all',
+                      priorityFilter === f.value
+                        ? 'bg-slate-900 text-white border-slate-900 shadow-sm'
+                        : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                    )}
+                  >
+                    {f.label}{count > 0 && ` (${count})`}
+                  </button>
+                )
+              })}
+            </div>
+
+            <div className="w-px h-6 bg-slate-200" />
+
+            <div className="flex gap-1">
+              {ACTIVE_FILTERS.map((f) => {
+                const count = f.value !== '' ? countByActive[f.value as keyof typeof countByActive] : clients.length
+                return (
+                  <button
+                    key={f.value}
+                    onClick={() => handleActiveChange(f.value)}
+                    className={cn(
+                      'px-3 py-1.5 font-sans text-xs font-bold rounded-lg border transition-all',
+                      activeFilter === f.value
+                        ? 'bg-slate-900 text-white border-slate-900 shadow-sm'
+                        : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                    )}
+                  >
+                    {f.label}{count > 0 && ` (${count})`}
+                  </button>
+                )
+              })}
+            </div>
+
+            {isFiltered && (
+              <button
+                onClick={() => {
+                  setSearch('')
+                  setPriorityFilter('')
+                  setActiveFilter('')
+                  setSort({ key: 'name', order: 'asc' })
+                  load({ q: '', p: 1, priority: '', active: '', sort: { key: 'name', order: 'asc' } })
+                  setPage(1)
+                }}
+                className="px-3 py-1.5 font-sans text-xs font-bold text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg border border-transparent hover:border-red-200 transition-all"
+              >
+                Limpar filtros
+              </button>
+            )}
+          </div>
+
+          {/* Keyboard shortcuts hint */}
+          <div className="flex items-center gap-4 text-[11px] text-slate-400 font-medium font-sans border-t border-slate-100 pt-3">
+            <span className="text-slate-300 font-bold">Atalhos:</span>
+            <span><kbd className="px-1.5 py-0.5 bg-slate-100 border border-slate-200 rounded text-[10px] font-mono font-bold text-slate-600">N</kbd> Novo</span>
+            <span><kbd className="px-1.5 py-0.5 bg-slate-100 border border-slate-200 rounded text-[10px] font-mono font-bold text-slate-600">I</kbd> Importar</span>
+            <span><kbd className="px-1.5 py-0.5 bg-slate-100 border border-slate-200 rounded text-[10px] font-mono font-bold text-slate-600">/</kbd> Buscar</span>
+            <span><kbd className="px-1.5 py-0.5 bg-slate-100 border border-slate-200 rounded text-[10px] font-mono font-bold text-slate-600">?</kbd> Todos os atalhos</span>
           </div>
         </div>
 
-        {/* View Switcher Tabs */}
+        {/* View Switcher + Results count */}
         <div className="flex justify-between items-center bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
           <ClientSwitcher />
+          {!loading && (
+            <span className="font-sans text-xs font-semibold text-slate-400">
+              {isFiltered ? `${total} resultado${total === 1 ? '' : 's'}` : ''}
+            </span>
+          )}
         </div>
 
         {blockedCount > 0 && (
@@ -201,22 +403,44 @@ export default function ClientsListPage() {
         {/* Data Table / List */}
         <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
           {loading ? (
-            <div className="flex flex-col items-center justify-center py-20">
-              <div className="w-8 h-8 border-4 border-amber-500 border-t-transparent animate-spin rounded-full"></div>
-              <p className="font-sans font-medium text-slate-500 animate-pulse mt-4">Carregando clientes...</p>
+            <div className="p-6">
+              <TableSkeleton rows={6} columns={6} />
             </div>
           ) : clients.length === 0 ? (
-            <EmptyState
-              icon={User}
-              title="Nenhum cliente encontrado"
-              description="Comece adicionando seu primeiro cliente para gerenciar casos e analisar documentos."
-              action={
-                <Link href="/clients/new" className="inline-flex items-center justify-center gap-2 px-6 py-2.5 font-sans font-bold text-sm rounded-lg bg-slate-900 hover:bg-slate-800 text-white shadow-sm transition-colors duration-200">
-                  <Plus className="w-4 h-4" />
-                  Cadastrar Primeiro Cliente
-                </Link>
-              }
-            />
+            isFiltered ? (
+              <EmptyState
+                icon={Search}
+                title="Nenhum resultado encontrado"
+                description="Tente alterar os filtros ou buscar por outro termo."
+                action={
+                  <button
+                    onClick={() => {
+                      setSearch('')
+                      setPriorityFilter('')
+                      setActiveFilter('')
+                      setSort({ key: 'name', order: 'asc' })
+                      load({ q: '', p: 1, priority: '', active: '', sort: { key: 'name', order: 'asc' } })
+                      setPage(1)
+                    }}
+                    className="inline-flex items-center justify-center gap-2 px-6 py-2.5 font-sans font-bold text-sm rounded-lg bg-slate-900 hover:bg-slate-800 text-white shadow-sm transition-colors duration-200"
+                  >
+                    Limpar filtros
+                  </button>
+                }
+              />
+            ) : (
+              <EmptyState
+                icon={User}
+                title="Nenhum cliente cadastrado"
+                description="Comece adicionando seu primeiro cliente para gerenciar casos e analisar documentos."
+                action={
+                  <Link href="/clients/new" className="inline-flex items-center justify-center gap-2 px-6 py-2.5 font-sans font-bold text-sm rounded-lg bg-slate-900 hover:bg-slate-800 text-white shadow-sm transition-colors duration-200">
+                    <Plus className="w-4 h-4" />
+                    Cadastrar Primeiro Cliente
+                  </Link>
+                }
+              />
+            )
           ) : (
             <>
               {/* Desktop table */}
@@ -226,30 +450,50 @@ export default function ClientsListPage() {
                     <tr className="bg-slate-50/50 border-b border-slate-200">
                       <th className="px-4 py-4 w-10">
                         <input
+                          ref={selectAllRef}
                           type="checkbox"
                           aria-label="Selecionar todos"
-                          checked={selectedIds.size > 0 && selectedIds.size === clients.length}
+                          checked={allSelected}
                           onChange={toggleSelectAll}
                           className="w-4 h-4 rounded border-slate-300"
                         />
                       </th>
-                      <th className="px-6 py-4 font-sans font-bold text-[10px] text-slate-400 uppercase tracking-wider">Cliente</th>
-                      <th className="px-6 py-4 font-sans font-bold text-[10px] text-slate-400 uppercase tracking-wider">Contato</th>
-                      <th className="px-6 py-4 font-sans font-bold text-[10px] text-slate-400 uppercase tracking-wider">Prioridade</th>
+                      {(['name', 'priority', 'createdAt'] as const).map((key) => (
+                        <th
+                          key={key}
+                          onClick={() => handleSort(key)}
+                          className="px-6 py-4 font-sans font-bold text-[10px] text-slate-400 uppercase tracking-wider cursor-pointer select-none group"
+                        >
+                          <div className="flex items-center gap-1.5">
+                            {SORT_OPTIONS.find((o) => o.key === key)?.label}
+                            <SortIcon columnKey={key} />
+                          </div>
+                        </th>
+                      ))}
                       <th className="px-6 py-4 font-sans font-bold text-[10px] text-slate-400 uppercase tracking-wider">Casos Ativos</th>
-                      <th className="px-6 py-4 font-sans font-bold text-[10px] text-slate-400 uppercase tracking-wider">Cadastrado em</th>
+                      <th className="px-6 py-4 font-sans font-bold text-[10px] text-slate-400 uppercase tracking-wider">
+                        <div className="flex items-center gap-1.5">Contato</div>
+                      </th>
                       <th className="px-6 py-4 font-sans font-bold text-[10px] text-slate-400 uppercase tracking-wider text-right">Ações</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
                     {clients.map((client, index) => (
-                      <tr key={client.id} className={cn('hover:bg-slate-50/40 transition-colors group', !client.active && 'bg-slate-50/60')}>
+                      <tr
+                        key={client.id}
+                        onClick={() => router.push(`/clients/list/${client.id}`)}
+                        className={cn(
+                          'hover:bg-slate-50/40 transition-colors group cursor-pointer',
+                          !client.active && 'bg-slate-50/60'
+                        )}
+                      >
                         <td className="px-4 py-4">
                           <input
                             type="checkbox"
                             aria-label={`Selecionar ${client.name}`}
                             checked={selectedIds.has(client.id)}
-                            onChange={() => toggleSelect(client.id)}
+                            onChange={(e) => { e.stopPropagation(); toggleSelect(client.id) }}
+                            onClick={(e) => e.stopPropagation()}
                             className="w-4 h-4 rounded border-slate-300"
                           />
                         </td>
@@ -277,6 +521,25 @@ export default function ClientsListPage() {
                           </div>
                         </td>
                         <td className="px-6 py-4">
+                          <Badge variant={PRIORITY_BADGE[client.priority]}>
+                            {PRIORITY_LABELS[client.priority]}
+                          </Badge>
+                        </td>
+                        <td className="px-6 py-4 font-sans text-sm text-slate-500 font-medium whitespace-nowrap">
+                          {formatDate(client.createdAt)}
+                        </td>
+                        <td className="px-6 py-4 font-sans text-sm text-slate-500 font-medium">
+                          <div className="flex gap-1.5">
+                            {client.cases.length > 0 ? (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 font-sans font-bold text-xs bg-blue-50 text-blue-700 border border-blue-200 rounded-md">
+                                {client.cases.length}
+                              </span>
+                            ) : (
+                              <span className="font-sans text-xs text-slate-400">—</span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
                           <div className="flex flex-col gap-1">
                             {client.phone ? (
                               <div className="flex items-center gap-1.5 font-sans text-xs text-slate-650 font-medium">
@@ -294,59 +557,48 @@ export default function ClientsListPage() {
                             )}
                           </div>
                         </td>
-                        <td className="px-6 py-4">
-                          <Badge variant={PRIORITY_BADGE[client.priority]}>
-                            {PRIORITY_LABELS[client.priority]}
-                          </Badge>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="flex items-center gap-1.5">
-                            <FileText className="w-4 h-4 text-slate-400" />
-                            <span className="font-sans text-sm font-semibold text-slate-700">{client.cases.length}</span>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 font-sans text-sm text-slate-500 font-medium">
-                          {formatDate(client.createdAt)}
-                        </td>
                         <td className="px-6 py-4 text-right">
                           <div className="flex items-center justify-end gap-1">
                             <Link
                               href={`/clients/list/${client.id}`}
+                              onClick={(e) => e.stopPropagation()}
                               className="p-2 text-slate-450 hover:text-amber-700 hover:bg-amber-50 border border-transparent hover:border-amber-100 rounded-lg transition-all"
                               aria-label={`Ver detalhes de ${client.name}`}
                             >
                               <FileText className="w-4 h-4" aria-hidden="true" />
                             </Link>
-                            <ActionsDropdown
-                              showFirstVisitHint={index === 0}
-                              ariaLabel={`Ações para ${client.name}`}
-                              actions={[
-                                {
-                                  label: 'Editar cliente',
-                                  onClick: () => window.location.href = `/clients/list/${client.id}/edit`,
-                                },
-                                {
-                                  label: client.active ? 'Desativar cliente' : 'Ativar cliente',
-                                  onClick: async () => {
-                                    try {
-                                      await api.patch(`/clients/${client.id}/active`, { active: !client.active })
-                                      load(search)
-                                    } catch (err) {
-                                      const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error
-                                      if (msg) addToast({ type: 'error', title: 'Não foi possível concluir', message: msg })
-                                    }
+                            <span onClick={(e) => e.stopPropagation()}>
+                              <ActionsDropdown
+                                showFirstVisitHint={index === 0}
+                                ariaLabel={`Ações para ${client.name}`}
+                                actions={[
+                                  {
+                                    label: 'Editar cliente',
+                                    onClick: () => window.location.href = `/clients/list/${client.id}/edit`,
                                   },
-                                },
-                                {
-                                  label: 'Excluir cliente',
-                                  onClick: () => {
-                                    setDeletingClient(client)
-                                    setShowDeleteModal(true)
+                                  {
+                                    label: client.active ? 'Desativar cliente' : 'Ativar cliente',
+                                    onClick: async () => {
+                                      try {
+                                        await api.patch(`/clients/${client.id}/active`, { active: !client.active })
+                                        load()
+                                      } catch (err) {
+                                        const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error
+                                        if (msg) addToast({ type: 'error', title: 'Não foi possível concluir', message: msg })
+                                      }
+                                    },
                                   },
-                                  variant: 'danger',
-                                },
-                              ]}
-                            />
+                                  {
+                                    label: 'Excluir cliente',
+                                    onClick: () => {
+                                      setDeletingClient(client)
+                                      setShowDeleteModal(true)
+                                    },
+                                    variant: 'danger',
+                                  },
+                                ]}
+                              />
+                            </span>
                           </div>
                         </td>
                       </tr>
@@ -391,7 +643,7 @@ export default function ClientsListPage() {
                           onClick: async () => {
                             try {
                               await api.patch(`/clients/${client.id}/active`, { active: !client.active })
-                              load(search)
+                              load()
                             } catch (err) {
                               const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error
                               if (msg) addToast({ type: 'error', title: 'Não foi possível concluir', message: msg })
@@ -404,6 +656,55 @@ export default function ClientsListPage() {
                   ),
                 }))}
               />
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between px-6 py-4 border-t border-slate-200 bg-slate-50/30">
+                  <span className="font-sans text-xs text-slate-500 font-medium">
+                    Página {page} de {totalPages} ({total} clientes)
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => handlePageChange(page - 1)}
+                      disabled={page <= 1}
+                      className="inline-flex items-center gap-1 px-3 py-1.5 font-sans text-xs font-bold rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                    >
+                      <ChevronLeft className="w-3.5 h-3.5" />
+                      Anterior
+                    </button>
+                    <div className="flex items-center gap-1">
+                      {Array.from({ length: totalPages }, (_, i) => i + 1)
+                        .filter((p) => p === 1 || p === totalPages || Math.abs(p - page) <= 1)
+                        .map((p, idx, arr) => (
+                          <span key={p} className="flex items-center">
+                            {idx > 0 && arr[idx - 1] !== p - 1 && (
+                              <span className="px-1 font-sans text-xs text-slate-400">...</span>
+                            )}
+                            <button
+                              onClick={() => handlePageChange(p)}
+                              className={cn(
+                                'w-8 h-8 font-sans text-xs font-bold rounded-lg transition-all',
+                                p === page
+                                  ? 'bg-slate-900 text-white shadow-sm'
+                                  : 'text-slate-600 hover:bg-slate-100'
+                              )}
+                            >
+                              {p}
+                            </button>
+                          </span>
+                        ))}
+                    </div>
+                    <button
+                      onClick={() => handlePageChange(page + 1)}
+                      disabled={page >= totalPages}
+                      className="inline-flex items-center gap-1 px-3 py-1.5 font-sans text-xs font-bold rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                    >
+                      Próxima
+                      <ChevronRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              )}
             </>
           )}
         </div>
@@ -412,7 +713,7 @@ export default function ClientsListPage() {
           open={showDeleteModal}
           onClose={() => { setShowDeleteModal(false); setDeletingClient(null) }}
           client={deletingClient}
-          onDeleted={load}
+          onDeleted={() => load()}
         />
       </div>
     </ErrorBoundary>

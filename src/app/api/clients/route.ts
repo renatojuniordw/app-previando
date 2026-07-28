@@ -41,18 +41,27 @@ export async function GET(req: NextRequest) {
     const { searchParams } = req.nextUrl
     const search = searchParams.get('search')?.trim()
     const priority = searchParams.get('priority')
+    const active = searchParams.get('active')
+    const sortBy = searchParams.get('sortBy') ?? 'name'
+    const sortOrder = searchParams.get('sortOrder') ?? 'asc'
     const page = parseInt(searchParams.get('page') ?? '1')
     const limit = Math.min(parseInt(searchParams.get('limit') ?? '50'), 100)
     const skip = (page - 1) * limit
 
     const where: Record<string, unknown> = { userId: session.user.id }
     if (priority) where.priority = priority
+    if (active === 'true') where.active = true
+    if (active === 'false') where.active = false
     if (search) where.name = { contains: search, mode: 'insensitive' }
+
+    const orderBy: Record<string, string>[] = sortBy === 'priority'
+      ? [{ priority: sortOrder }, { name: 'asc' }]
+      : [{ [sortBy]: sortOrder }, { name: 'asc' }]
 
     const [clients, total] = await Promise.all([
       prisma.client.findMany({
         where,
-        orderBy: [{ priority: 'asc' }, { name: 'asc' }],
+        orderBy,
         skip,
         take: limit,
         select: {
@@ -79,7 +88,7 @@ export async function GET(req: NextRequest) {
 
     const safe = clients.map((c) => ({ ...c, cpf: '***.***.**-**' }))
 
-    return NextResponse.json({ clients: safe, total, page, limit }, {
+    return NextResponse.json({ clients: safe, total, page, limit, totalPages: Math.ceil(total / limit) }, {
       headers: { 'Cache-Control': 'private, max-age=0, stale-while-revalidate=30' },
     })
   } catch (err) {
