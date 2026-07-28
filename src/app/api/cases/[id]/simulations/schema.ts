@@ -8,7 +8,7 @@ export const runSimulationSchema = z.object({
   modalidade: z.enum([
     'PONTOS_86_96', 'PEDAGIO_50', 'PEDAGIO_100', 'IDADE_MINIMA_65_62',
     'TEMPO_CONTRIBUICAO', 'APOSENTADORIA_IDADE', 'APOSENTADORIA_ESPECIAL',
-    'HIBRIDA', 'AUXILIO_DOENCA_B31', 'AUXILIO_DOENCA_B91',
+    'APOSENTADORIA_PCD', 'HIBRIDA', 'AUXILIO_DOENCA_B31', 'AUXILIO_DOENCA_B91',
     'SALARIO_MATERNIDADE', 'AUXILIO_RECLUSAO', 'PENSAO_MORTE', 'BPC_LOAS',
   ]),
   tempoEspecialAnos: z.number().nonnegative().optional().default(0),

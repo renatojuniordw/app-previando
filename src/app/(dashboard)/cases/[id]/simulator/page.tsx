@@ -16,7 +16,6 @@ import {
   Scale,
   Calendar,
   ShieldAlert,
-  Loader2,
   Trash2,
   Compass,
   ArrowRight,
@@ -27,6 +26,7 @@ import {
   User,
   Target,
 } from 'lucide-react'
+import { Skeleton } from '@/components/ui/Skeleton'
 
 export default function SimulatorPage() {
   const { addToast } = useToast()
@@ -67,11 +67,20 @@ export default function SimulatorPage() {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center py-24">
-        <Loader2 className="h-8 w-8 animate-spin text-amber-500" />
-        <p className="mt-4 animate-pulse font-sans text-sm font-medium text-slate-500">
-          Carregando simulador de cenários...
-        </p>
+      <div className="mx-auto max-w-5xl space-y-6 px-4 sm:px-0">
+        <div className="flex items-start justify-between gap-4">
+          <div className="space-y-2">
+            <Skeleton variant="text" className="w-64 h-8" />
+            <Skeleton variant="text" className="w-96 h-4" />
+          </div>
+        </div>
+        <div className="rounded-2xl border border-slate-200 p-6 space-y-4">
+          <Skeleton variant="text" className="w-48 h-6" />
+          <Skeleton variant="rectangular" className="w-full h-32" />
+          <div className="grid grid-cols-4 gap-4">
+            <Skeleton variant="rectangular" className="h-20" count={4} />
+          </div>
+        </div>
       </div>
     )
   }
@@ -116,8 +125,8 @@ export default function SimulatorPage() {
 
       {/* Empty State */}
       {simulations.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-250 bg-white py-20 text-center shadow-sm">
-          <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-2xl border border-amber-100 bg-amber-50 shadow-xs">
+        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-white py-20 text-center shadow-sm">
+          <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-2xl border border-amber-100 bg-amber-50 shadow-sm">
             <Compass className="h-8 w-8 text-amber-500" />
           </div>
           <h2 className="mb-2 font-serif text-lg font-bold text-slate-900">
@@ -221,7 +230,7 @@ export default function SimulatorPage() {
 
                   {/* Arrow Divider */}
                   <div className="hidden items-center justify-center md:flex">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full border border-amber-200 bg-amber-50 text-amber-600 shadow-xs">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full border border-amber-200 bg-amber-50 text-amber-600 shadow-sm">
                       <ArrowRight className="h-5 w-5" aria-hidden="true" />
                     </div>
                   </div>
@@ -245,7 +254,7 @@ export default function SimulatorPage() {
                 {gain > 0 && (
                   <div className="flex items-center justify-between gap-4 border-t border-emerald-100 bg-emerald-50/30 px-6 py-4">
                     <div className="flex items-center gap-3">
-                      <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-emerald-200 bg-white text-emerald-600 shadow-xs">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-emerald-200 bg-white text-emerald-600 shadow-sm">
                         <TrendingUp className="h-4 w-4" aria-hidden="true" />
                       </div>
                       <div>
@@ -272,7 +281,7 @@ export default function SimulatorPage() {
                     <div className="flex items-center justify-between gap-4">
                       <div className="flex items-center gap-3">
                         <div className={cn(
-                          'flex h-9 w-9 items-center justify-center rounded-xl border shadow-xs',
+                          'flex h-9 w-9 items-center justify-center rounded-xl border shadow-sm',
                           paramsSim.elegivel
                             ? 'border-emerald-200 bg-white text-emerald-600'
                             : 'border-amber-200 bg-white text-amber-600'
