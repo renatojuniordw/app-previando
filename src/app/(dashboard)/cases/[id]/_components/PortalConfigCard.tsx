@@ -2,18 +2,10 @@
 
 import { useState, useEffect } from 'react'
 import { Card } from '@/components/ui/Card'
-import { Button } from '@/components/ui/Button'
 import api from '@/lib/api'
+import { useToast } from '@/store/toast'
 import {
-  Globe,
-  Check,
-  X,
-  Loader2,
-  ExternalLink,
-  Eye,
-  EyeOff,
-  Shield,
-  ShieldOff,
+  Globe, Check, Loader2, ExternalLink, Eye, Shield, ShieldOff,
 } from 'lucide-react'
 import type { CaseDetail } from '../_types'
 import { cn, formatDate } from '@/lib/utils'
@@ -32,44 +24,17 @@ const BASE_CONFIG_ITEMS: Array<{
   label: string
   description: string
 }> = [
-  {
-    key: 'showCalculations',
-    label: 'Meus cálculos',
-    description: 'RMI, RMA e modalidades selecionadas',
-  },
-  {
-    key: 'showRetroactives',
-    label: 'Retroativos',
-    description: 'Valores devidos e projeções financeiras',
-  },
-  {
-    key: 'showTimeline',
-    label: 'Linha do tempo',
-    description: 'Eventos do caso em ordem cronológica',
-  },
-  {
-    key: 'showDocuments',
-    label: 'Documentos do caso',
-    description: 'Arquivos compartilhados com o cliente',
-  },
-  {
-    key: 'showFaq',
-    label: 'Perguntas frequentes',
-    description: 'FAQ inteligente sobre o benefício',
-  },
-  {
-    key: 'showGlossary',
-    label: 'Glossário de termos',
-    description: 'Explicação de termos previdenciários',
-  },
-  {
-    key: 'showPdfExport',
-    label: 'Exportar relatório em PDF',
-    description: 'Download de relatório completo',
-  },
+  { key: 'showCalculations', label: 'Meus cálculos', description: 'RMI, RMA e modalidades' },
+  { key: 'showRetroactives', label: 'Retroativos', description: 'Valores devidos e projeções' },
+  { key: 'showTimeline', label: 'Linha do tempo', description: 'Eventos em ordem cronológica' },
+  { key: 'showDocuments', label: 'Documentos do caso', description: 'Arquivos para o cliente' },
+  { key: 'showFaq', label: 'Perguntas frequentes', description: 'FAQ sobre o benefício' },
+  { key: 'showGlossary', label: 'Glossário de termos', description: 'Termos previdenciários' },
+  { key: 'showPdfExport', label: 'Exportar PDF', description: 'Relatório completo' },
 ]
 
 export function PortalConfigCard({ caseId, benefitType, portalConfig, onUpdate }: Props) {
+  const { addToast } = useToast()
   const [config, setConfig] = useState<NonNullable<CaseDetail['portalConfig']>>(
     portalConfig ?? {
       showCalculations: true,
@@ -96,7 +61,7 @@ export function PortalConfigCard({ caseId, benefitType, portalConfig, onUpdate }
         {
           key: 'showBpcSocialAnalysis' as const,
           label: 'Análise socioeconômica (BPC)',
-          description: 'Renda familiar, per capita e status da análise social',
+          description: 'Renda familiar e análise social',
         },
       ]
     : BASE_CONFIG_ITEMS
@@ -105,25 +70,19 @@ export function PortalConfigCard({ caseId, benefitType, portalConfig, onUpdate }
 
   useEffect(() => {
     let cancelled = false
-    api
-      .get(`/cases/${caseId}/portal`)
-      .then((r) => {
-        if (!cancelled && r.data.link) {
-          setLink(r.data.link)
-          setExpiresAt(r.data.expiresAt ?? null)
-        }
-      })
-      .catch(() => {})
-    return () => {
-      cancelled = true
-    }
+    api.get(`/cases/${caseId}/portal`).then((r) => {
+      if (!cancelled && r.data.link) {
+        setLink(r.data.link)
+        setExpiresAt(r.data.expiresAt ?? null)
+      }
+    }).catch(() => {})
+    return () => { cancelled = true }
   }, [caseId])
 
   const toggle = async (key: keyof typeof config) => {
     const newConfig = { ...config, [key]: !config[key] }
     setConfig(newConfig)
     setSaveError(false)
-
     setSaving(true)
     try {
       await api.patch(`/cases/${caseId}/portal/config`, { [key]: newConfig[key] })
@@ -144,18 +103,15 @@ export function PortalConfigCard({ caseId, benefitType, portalConfig, onUpdate }
       setExpiresAt(r.data.expiresAt ?? null)
       onUpdate()
     } catch (err) {
-      const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error ?? 'Erro ao gerar link. Verifique se o NEXTAUTH_URL está configurado.'
-      alert(msg)
-      setLink(null)
+      const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error ?? 'Erro ao gerar link.'
+      addToast({ type: 'error', title: 'Erro', message: msg })
     } finally {
       setLoadingLink(false)
     }
   }
 
   const revokeLink = async () => {
-    if (!window.confirm('Revogar o acesso do cliente a este portal? O link atual deixará de funcionar.')) {
-      return
-    }
+    if (!window.confirm('Revogar o acesso do cliente a este portal? O link atual deixará de funcionar.')) return
     setLoadingLink(true)
     try {
       await api.delete(`/cases/${caseId}/portal`)
@@ -169,9 +125,9 @@ export function PortalConfigCard({ caseId, benefitType, portalConfig, onUpdate }
 
   return (
     <Card variant="light" className="p-0 overflow-hidden border-slate-200/80 shadow-sm bg-white">
-      <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+      <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
         <div className="flex items-center gap-2">
-          <div className="w-10 h-10 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center shrink-0 text-slate-550 shadow-xs">
+          <div className="w-10 h-10 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center shrink-0 text-slate-500 shadow-xs">
             <Globe className="w-5 h-5" />
           </div>
           <div>
@@ -181,166 +137,117 @@ export function PortalConfigCard({ caseId, benefitType, portalConfig, onUpdate }
                 <span className="flex items-center gap-1">
                   <Loader2 className="w-3 h-3 animate-spin text-amber-500" /> salvando...
                 </span>
-              ) : (
-                'Compartilhamento e Acesso'
-              )}
+              ) : 'Compartilhamento e Acesso'}
             </p>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
+          <button
             onClick={() => setShowPreview(true)}
-            className="font-sans font-bold text-xs h-9.5"
+            className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
           >
-            Ver como o cliente vê
-          </Button>
+            <Eye className="w-3.5 h-3.5" />
+            Preview
+          </button>
           {link ? (
             <a
               href={link}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 px-4.5 py-2.5 text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200 rounded-lg hover:bg-amber-100 transition-colors shadow-sm"
+              className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200 rounded-lg hover:bg-amber-100 transition-colors shadow-sm"
             >
               <ExternalLink className="w-3.5 h-3.5" />
               Abrir Portal
             </a>
           ) : (
-            <Button
-              variant="outline"
-              size="sm"
+            <button
               onClick={generateLink}
-              loading={loadingLink}
-              className="font-sans font-bold text-xs h-9.5"
+              disabled={loadingLink}
+              className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-50 transition-colors"
             >
-              <Eye className="w-3.5 h-3.5 mr-1.5" />
+              {loadingLink ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Eye className="w-3.5 h-3.5" />}
               Gerar Link
-            </Button>
+            </button>
           )}
         </div>
       </div>
 
-      <div className="p-6 space-y-6">
+      <div className="p-5 space-y-4">
         {saveError && (
-          <div className="p-4 bg-red-50 border border-red-150 rounded-xl">
-            <p className="text-xs text-red-800 leading-relaxed font-medium">
-              Não foi possível salvar a alteração. Tente novamente.
-            </p>
+          <div className="p-3 bg-red-50 border border-red-200 rounded-xl">
+            <p className="text-xs text-red-700 font-medium">Não foi possível salvar. Tente novamente.</p>
           </div>
         )}
 
         {!anyEnabled && (
-          <div className="p-4 bg-amber-50 border border-amber-150 rounded-xl">
-            <p className="text-xs text-amber-800 leading-relaxed font-medium">
-              Nenhuma informação está configurada como visível para o cliente no momento. Ative pelo menos uma das opções de compartilhamento para que o portal funcione corretamente.
-            </p>
+          <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl">
+            <p className="text-xs text-amber-800 font-medium">Nenhuma informação visível no momento. Ative pelo menos uma opção.</p>
           </div>
         )}
 
-        <div className="space-y-3">
-          <p className="font-sans text-[10px] uppercase font-extrabold tracking-wider text-slate-400 mb-1">
+        <div className="space-y-2">
+          <p className="font-sans text-[10px] uppercase font-extrabold tracking-wider text-slate-400">
             Informações Disponibilizadas
           </p>
-          <div className="grid grid-cols-1 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {configItems.map(({ key, label, description }) => (
               <button
                 key={key}
                 onClick={() => toggle(key)}
-                className="w-full flex items-center gap-3.5 p-4 rounded-xl border border-slate-200 hover:border-slate-350 hover:bg-slate-50/40 transition-all duration-300 text-left group"
+                className={cn(
+                  "flex items-center gap-3 p-3 rounded-xl border transition-all text-left",
+                  config[key]
+                    ? 'bg-emerald-50/50 border-emerald-200 hover:bg-emerald-50'
+                    : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'
+                )}
               >
                 <div
                   className={cn(
                     "w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-colors",
                     config[key]
                       ? 'bg-emerald-500 border-emerald-500 text-white'
-                      : 'border-slate-200 group-hover:border-slate-350'
+                      : 'border-slate-300'
                   )}
                 >
-                  {config[key] ? <Check className="w-3.5 h-3.5" /> : <X className="w-3 h-3 text-slate-300" />}
+                  {config[key] ? <Check className="w-3.5 h-3.5" /> : null}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className={cn("text-sm font-bold leading-tight", config[key] ? 'text-slate-800' : 'text-slate-400')}>
+                  <p className={cn("text-xs font-bold leading-tight", config[key] ? 'text-slate-800' : 'text-slate-500')}>
                     {label}
                   </p>
-                  <p className={cn("text-xs mt-1 font-medium", config[key] ? 'text-slate-500' : 'text-slate-400')}>
-                    {description}
-                  </p>
+                  <p className="text-[10px] mt-0.5 text-slate-400 font-medium leading-relaxed">{description}</p>
                 </div>
-                {config[key] ? (
-                  <Eye className="w-4 h-4 text-emerald-500 shrink-0" />
-                ) : (
-                  <EyeOff className="w-4 h-4 text-slate-300 shrink-0" />
-                )}
               </button>
             ))}
           </div>
         </div>
 
-        {link && (
-          <div className="p-4 bg-slate-50 rounded-xl border border-slate-200">
-            <div className="flex items-center justify-between mb-2">
-              <p className="font-sans text-[10px] uppercase font-extrabold tracking-wider text-slate-400">
-                Link de Acesso Direto
-              </p>
-              {expiresAt && (
-                <p className="font-sans text-[10px] text-slate-400">
-                  Válido até {formatDate(expiresAt)}
-                </p>
-              )}
-            </div>
-            <div className="flex items-center gap-2">
-              <code className="flex-1 text-xs text-slate-700 bg-white px-3 py-2 rounded-lg border border-slate-250 truncate font-mono">
-                {link}
-              </code>
-              <button
-                onClick={() => navigator.clipboard.writeText(link)}
-                className="shrink-0 px-4 py-2 text-xs font-bold text-slate-700 bg-white border border-slate-250 rounded-lg hover:border-slate-350 hover:bg-slate-50 transition-colors h-9.5 shadow-xs"
-              >
-                Copiar
-              </button>
-              <button
-                onClick={revokeLink}
-                className="shrink-0 px-4 py-2 text-xs font-bold text-red-700 bg-white border border-red-200 rounded-lg hover:border-red-350 hover:bg-red-50 transition-colors h-9.5 shadow-xs"
-              >
-                Revogar
-              </button>
-            </div>
-          </div>
-        )}
-
-        {config.showDocuments && (
-          <div className="pt-4 border-t border-slate-100">
-            <DocumentShareList caseId={caseId} />
-          </div>
-        )}
-
-        {/* Verificação de identidade */}
-        <div className="pt-4 border-t border-slate-100 space-y-3">
+        <div className="flex flex-col sm:flex-row gap-3">
           <button
             onClick={() => toggle('requireIdentity')}
-            className="w-full flex items-center gap-3.5 p-4 rounded-xl border border-slate-200 hover:border-slate-350 hover:bg-slate-50/40 transition-all duration-300 text-left group"
+            className={cn(
+              "flex items-center gap-3 p-3 rounded-xl border transition-all text-left flex-1",
+              config.requireIdentity
+                ? 'bg-amber-50/50 border-amber-200 hover:bg-amber-50'
+                : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'
+            )}
           >
             <div
               className={cn(
                 "w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-colors",
                 config.requireIdentity
                   ? 'bg-amber-500 border-amber-500 text-white'
-                  : 'border-slate-200 group-hover:border-slate-350'
+                  : 'border-slate-300'
               )}
             >
-              {config.requireIdentity ? (
-                <Check className="w-3.5 h-3.5" />
-              ) : (
-                <X className="w-3 h-3 text-slate-300" />
-              )}
+              {config.requireIdentity ? <Check className="w-3.5 h-3.5" /> : null}
             </div>
             <div className="flex-1 min-w-0">
-              <p className={cn("text-sm font-bold leading-tight", config.requireIdentity ? 'text-slate-800' : 'text-slate-400')}>
-                Exigir verificação de identidade
+              <p className={cn("text-xs font-bold leading-tight", config.requireIdentity ? 'text-slate-800' : 'text-slate-500')}>
+                {config.requireIdentity ? 'Identidade exigida' : 'Exigir verificação de identidade'}
               </p>
-              <p className={cn("text-xs mt-1 font-medium", config.requireIdentity ? 'text-slate-500' : 'text-slate-400')}>
-                Cliente informa CPF + data de nascimento para acessar dados sensíveis (retroativos, cálculos)
+              <p className="text-[10px] mt-0.5 text-slate-400 font-medium leading-relaxed">
+                CPF + data de nascimento para acessar dados sensíveis
               </p>
             </div>
             {config.requireIdentity ? (
@@ -349,19 +256,44 @@ export function PortalConfigCard({ caseId, benefitType, portalConfig, onUpdate }
               <ShieldOff className="w-4 h-4 shrink-0 text-slate-300" />
             )}
           </button>
+
+          {link && (
+            <div className="flex items-center gap-2 p-3 bg-slate-50 rounded-xl border border-slate-200 flex-1">
+              <div className="flex-1 min-w-0">
+                <p className="font-sans text-[10px] font-extrabold tracking-wider text-slate-400 uppercase">Link Ativo</p>
+                {expiresAt && (
+                  <p className="font-sans text-[10px] text-slate-400">Válido até {formatDate(expiresAt)}</p>
+                )}
+              </div>
+              <button
+                onClick={() => navigator.clipboard.writeText(link!)}
+                className="shrink-0 px-3 py-1.5 text-xs font-bold text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
+              >
+                Copiar
+              </button>
+              <button
+                onClick={revokeLink}
+                className="shrink-0 px-3 py-1.5 text-xs font-bold text-red-600 bg-white border border-red-200 rounded-lg hover:bg-red-50 transition-colors"
+              >
+                Revogar
+              </button>
+            </div>
+          )}
         </div>
 
+        {config.showDocuments && (
+          <div className="pt-3 border-t border-slate-100">
+            <DocumentShareList caseId={caseId} />
+          </div>
+        )}
+
         <p className="text-[10px] text-slate-400 leading-relaxed font-medium">
-          O cliente acessa os dados via link único com validade de 30 dias. Respeita a LGPD — você controla exatamente o que é compartilhado.
+          Link único com validade de 30 dias. Respeita a LGPD — você controla o que é compartilhado.
         </p>
       </div>
 
       {showPreview && (
-        <PortalPreviewModal
-          caseId={caseId}
-          config={config}
-          onClose={() => setShowPreview(false)}
-        />
+        <PortalPreviewModal caseId={caseId} config={config} onClose={() => setShowPreview(false)} />
       )}
     </Card>
   )

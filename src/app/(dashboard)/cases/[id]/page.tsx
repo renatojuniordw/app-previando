@@ -43,12 +43,13 @@ export default function CaseOverviewPage() {
     <div className="space-y-6 max-w-5xl mx-auto">
       <CaseInfoCard
         caseData={caseData}
+        clientName={caseData.client.name}
         onStatusChangeClick={() => setShowStatusModal(true)}
         onExportPDF={handleExportPDF}
         onEditClick={() => setShowEditModal(true)}
       />
 
-      <ActivitySummary counts={caseData._count} />
+      <ActivitySummary counts={caseData._count} caseId={caseData.id} />
 
       <SuccessAnalysisCard
         caseId={caseData.id}

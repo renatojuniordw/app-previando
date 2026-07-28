@@ -32,7 +32,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
         client: { select: { id: true, name: true, phone: true, email: true, cnisDocument: true } },
         opinions: { orderBy: { createdAt: 'desc' }, select: { id: true, status: true, createdAt: true } },
         checklists: { orderBy: { createdAt: 'desc' }, take: 1 },
-        _count: { select: { caseNotes: true } },
+        _count: { select: { caseNotes: true, calculations: true, checklists: true } },
       },
     })
 

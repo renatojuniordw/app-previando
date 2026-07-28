@@ -14,6 +14,7 @@ interface Props {
   onStatusChangeClick: () => void
   onExportPDF: () => void
   onEditClick?: () => void
+  clientName?: string
 }
 
 const PRIORITY_BADGE_STYLE: Record<string, string> = {
@@ -28,7 +29,7 @@ const PRIORITY_LABEL: Record<string, string> = {
   NORMAL: 'Normal',
 }
 
-export function CaseInfoCard({ caseData, onStatusChangeClick, onExportPDF, onEditClick }: Props) {
+export function CaseInfoCard({ caseData, onStatusChangeClick, onExportPDF, onEditClick, clientName }: Props) {
   const openUpgradeModal = useUpgradeModal((s) => s.openModal)
   const isOverdue = caseData.deadlineDate ? new Date(caseData.deadlineDate) < new Date() : false
   const deadlineColor = isOverdue ? 'text-red-600' : 'text-slate-800'
@@ -60,15 +61,28 @@ export function CaseInfoCard({ caseData, onStatusChangeClick, onExportPDF, onEdi
       </div>
       <div className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-6 bg-white">
         <div className="space-y-5">
+          {clientName && (
+            <InfoField icon={<Shield className="w-4 h-4" />} label="Cliente">
+              <p className="font-sans font-bold text-sm text-slate-800">{clientName}</p>
+            </InfoField>
+          )}
           <InfoField icon={<Shield className="w-4 h-4" />} label="Benefício">
             <p className="font-sans font-bold text-sm text-slate-800 leading-snug">
               {BENEFIT_LABELS[caseData.benefitType] ?? caseData.benefitType}
             </p>
           </InfoField>
           <InfoField icon={<Activity className="w-4 h-4" />} label="Status">
-            <span className="inline-flex items-center px-2.5 py-1 rounded-md border text-[9px] font-extrabold uppercase tracking-wider bg-slate-50 text-slate-655 border-slate-200 mt-1">
-              {STATUS_OPTIONS.find((s) => s.value === caseData.status)?.label ?? caseData.status}
-            </span>
+            <div className="flex items-center gap-2 mt-1">
+              <button
+                onClick={onStatusChangeClick}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border-2 border-dashed border-slate-300 text-[10px] font-extrabold uppercase tracking-wider bg-slate-50 text-slate-700 hover:bg-amber-50 hover:text-amber-700 hover:border-amber-300 transition-all cursor-pointer group"
+                title="Clique para alterar o status"
+              >
+                {STATUS_OPTIONS.find((s) => s.value === caseData.status)?.label ?? caseData.status}
+                <Edit className="w-3 h-3 text-slate-400 group-hover:text-amber-600 transition-colors" />
+              </button>
+              <span className="font-sans text-[9px] text-slate-400 font-medium italic">clique para alterar</span>
+            </div>
           </InfoField>
           <InfoField icon={<AlertCircle className="w-4 h-4" />} label="Prioridade">
             <span className={cn(
@@ -117,7 +131,7 @@ export function CaseInfoCard({ caseData, onStatusChangeClick, onExportPDF, onEdi
         <div className="mx-6 mb-6 p-4 border-l-4 border-amber-500 bg-amber-50/15 rounded-r-xl relative group">
           <p className="font-sans text-xs text-amber-800 whitespace-pre-wrap leading-relaxed">{caseData.notes}</p>
           <button 
-            className="absolute top-2.5 right-2.5 p-1.5 bg-white/70 hover:bg-white border border-amber-100 rounded text-amber-700 opacity-0 group-hover:opacity-100 transition-opacity shadow-xs"
+            className="absolute top-2.5 right-2.5 p-1.5 bg-white/70 hover:bg-white border border-amber-100 rounded text-amber-700 shadow-xs"
             onClick={() => onEditClick?.()}
             title="Editar notas"
           >
