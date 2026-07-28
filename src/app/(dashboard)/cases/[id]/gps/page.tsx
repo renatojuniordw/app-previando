@@ -58,9 +58,13 @@ export default function GpsPage() {
   const [successMsg, setSuccessMsg] = useState('')
 
   const loadHistory = async () => {
-    const r = await api.get(`/cases/${caseId}/gps`)
-    setHistory(r.data.guias || [])
-    return r.data
+    try {
+      const r = await api.get(`/cases/${caseId}/gps`)
+      setHistory(r.data.guias || [])
+      return r.data
+    } catch {
+      return null
+    }
   }
 
   useEffect(() => {
@@ -98,6 +102,7 @@ export default function GpsPage() {
         competencia,
       })
       setResult(res.data)
+      setSalario('')
       setCompetencia('')
       setSuccessMsg('Guia calculada e salva com sucesso.')
       await loadHistory()
@@ -306,10 +311,16 @@ export default function GpsPage() {
             </ResultCell>
           </div>
 
-          <div className="px-6 py-4">
+          <div className="flex items-center justify-between px-6 py-4">
             <p className="font-sans text-sm leading-relaxed text-slate-600">
               {result.descricao}
             </p>
+            <button
+              onClick={() => { setResult(null); setSuccessMsg('') }}
+              className="shrink-0 rounded-lg border border-slate-200 px-3 py-2 font-sans text-xs font-bold text-slate-600 transition-colors hover:bg-slate-50"
+            >
+              Nova guia
+            </button>
           </div>
         </div>
       )}
