@@ -60,4 +60,14 @@ describe('buildCSP', () => {
     const directives = csp.split('; ')
     expect(directives.length).toBeGreaterThan(5)
   })
+
+  it('inclui unsafe-eval em development', async () => {
+    vi.stubEnv('NODE_ENV', 'development')
+    vi.resetModules()
+    const { buildCSP: buildCSPDev } = await import('@/lib/csp')
+    const csp = buildCSPDev('dev-nonce')
+    expect(csp).toContain("'unsafe-eval'")
+    expect(csp).toContain("ws: wss:")
+    vi.unstubAllEnvs()
+  })
 })

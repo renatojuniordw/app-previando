@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import { parseCSVContent, parseBirthDate, ParsedClientRow } from '@/lib/client-import-parser'
+import { parseCSVContent, parseBirthDate, parseExcelContent } from '@/lib/client-import-parser'
+import type { ParsedClientRow } from '@/lib/client-import-parser'
 
 describe('parseBirthDate', () => {
   it('parse YYYY-MM-DD', () => {
@@ -108,5 +109,40 @@ João,,`
 João,11144477735,15/05/1990`
     const rows = parseCSVContent(csv)
     expect(rows[0].dataNascimento).toBe('1990-05-15')
+  })
+})
+
+describe('parseExcelContent', () => {
+  it('parses .xlsx buffer with valid data', async () => {
+    const ExcelJS = await import('exceljs')
+
+    const wb = new ExcelJS.Workbook()
+    const ws = wb.addWorksheet('Clientes')
+    ws.addRow(['nome', 'cpf', 'data_nascimento', 'telefone'])
+    ws.addRow(['José', '11144477735', '1990-05-15', '11988887777'])
+    ws.addRow(['Maria', '22233344455', '1985-10-20', ''])
+
+    const buffer = await wb.xlsx.writeBuffer() as ArrayBuffer
+    const rows = await parseExcelContent(buffer)
+
+    expect(rows).toHaveLength(2)
+    expect(rows[0].nome).toBe('José')
+    expect(rows[0].cpf).toBe('11144477735')
+    expect(rows[0].dataNascimento).toBe('1990-05-15')
+    expect(rows[0].telefone).toBe('11988887777')
+    expect(rows[1].nome).toBe('Maria')
+    expect(rows[1].cpf).toBe('22233344455')
+    expect(rows[1].dataNascimento).toBe('1985-10-20')
+    expect(rows[1].telefone).toBe('')
+  })
+
+  it('returns empty array for empty worksheet', async () => {
+    const ExcelJS = await import('exceljs')
+
+    const wb = new ExcelJS.Workbook()
+    const buffer = await wb.xlsx.writeBuffer() as ArrayBuffer
+    const rows = await parseExcelContent(buffer)
+
+    expect(rows).toEqual([])
   })
 })

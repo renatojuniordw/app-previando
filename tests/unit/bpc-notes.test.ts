@@ -1,9 +1,20 @@
-import { describe, it, expect } from 'vitest'
-import { formatRelatoSocialText } from '@/lib/bpc-notes'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+
+vi.mock('@/lib/prisma', () => ({
+  prisma: {
+    caseNote: {
+      findFirst: vi.fn(),
+      create: vi.fn(),
+    },
+  },
+}))
+
+import { formatRelatoSocialText, saveBpcToNotes } from '@/lib/bpc-notes'
+import { prisma } from '@/lib/prisma'
 import type { RelatoSocial } from '@/types/bpc-social'
 
 describe('formatRelatoSocialText', () => {
-  it('deve formatar relato com dominio e itens respondidos', () => {
+  it('formats relato with domain and answered items', () => {
     const relato: RelatoSocial = {
       dominios: [
         {
@@ -28,7 +39,7 @@ describe('formatRelatoSocialText', () => {
     expect(text).toContain('[1 de 2 perguntas respondidas]')
   })
 
-  it('deve ignorar dominio sem respostas', () => {
+  it('skips domain with no answers', () => {
     const relato: RelatoSocial = {
       dominios: [
         {
@@ -61,7 +72,7 @@ describe('formatRelatoSocialText', () => {
     expect(text).toContain('[1 de 3 perguntas respondidas]')
   })
 
-  it('deve formatar multiple dominios', () => {
+  it('formats multiple domains', () => {
     const relato: RelatoSocial = {
       dominios: [
         {
@@ -94,14 +105,14 @@ describe('formatRelatoSocialText', () => {
     expect(text).toContain('[3 de 3 perguntas respondidas]')
   })
 
-  it('deve lidar com relato vazio', () => {
+  it('handles empty relato', () => {
     const relato: RelatoSocial = { dominios: [] }
     const text = formatRelatoSocialText(relato)
     expect(text).toContain('RELATO DE AVALIAÇÃO SOCIAL')
     expect(text).toContain('[0 de 0 perguntas respondidas]')
   })
 
-  it('deve filtrar respostas com apenas espacos', () => {
+  it('filters whitespace-only answers', () => {
     const relato: RelatoSocial = {
       dominios: [
         {
@@ -122,5 +133,91 @@ describe('formatRelatoSocialText', () => {
     expect(text).toContain('P2')
     expect(text).not.toContain('P1')
     expect(text).toContain('[1 de 2 perguntas respondidas]')
+  })
+})
+
+describe('saveBpcToNotes', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('creates first note with version 1 when no prior notes exist', async () => {
+    vi.mocked(prisma.caseNote.findFirst).mockResolvedValue(null)
+    vi.mocked(prisma.caseNote.create).mockResolvedValue({} as any)
+
+    await saveBpcToNotes('case-1', 'user-1', 'pre-analysis', 'Conteúdo da análise')
+
+    expect(prisma.caseNote.findFirst).toHaveBeenCalledWith({
+      where: { caseId: 'case-1' },
+      orderBy: { version: 'desc' },
+      select: { version: true },
+    })
+    expect(prisma.caseNote.create).toHaveBeenCalledWith({
+      data: {
+        caseId: 'case-1',
+        userId: 'user-1',
+        type: 'BPC_ANALYSIS',
+        content: '[BPC/LOAS — Pré-Análise de Viabilidade]\n\nConteúdo da análise',
+        version: 1,
+      },
+    })
+  })
+
+  it('increments version when prior notes exist', async () => {
+    vi.mocked(prisma.caseNote.findFirst).mockResolvedValue({ version: 3 })
+    vi.mocked(prisma.caseNote.create).mockResolvedValue({} as any)
+
+    await saveBpcToNotes('case-1', 'user-1', 'laudo', 'Laudo médico')
+
+    expect(prisma.caseNote.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ version: 4 }),
+      })
+    )
+  })
+
+  it('uses raw tipo when not found in LABELS mapping', async () => {
+    vi.mocked(prisma.caseNote.findFirst).mockResolvedValue(null)
+    vi.mocked(prisma.caseNote.create).mockResolvedValue({} as any)
+
+    await saveBpcToNotes('case-1', 'user-1', 'unknown_type', 'Test')
+
+    expect(prisma.caseNote.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        content: '[BPC/LOAS — unknown_type]\n\nTest',
+      }),
+    })
+  })
+
+  it('uses all known label mappings', async () => {
+    const labels: Record<string, string> = {
+      'pre-analysis': 'Pré-Análise de Viabilidade',
+      'laudo': 'Análise de Laudo Médico',
+      'social': 'Relato de Avaliação Social',
+      'medical': 'Perguntas — Perícia Médica',
+      'checklist': 'Checklist de Documentação',
+    }
+
+    for (const [tipo, expected] of Object.entries(labels)) {
+      vi.mocked(prisma.caseNote.findFirst).mockResolvedValue(null)
+      vi.mocked(prisma.caseNote.create).mockResolvedValue({} as any)
+
+      await saveBpcToNotes('case-1', 'user-1', tipo, 'Content')
+
+      expect(prisma.caseNote.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            content: `[BPC/LOAS — ${expected}]\n\nContent`,
+          }),
+        })
+      )
+    }
+  })
+
+  it('does not throw when prisma create fails', async () => {
+    vi.mocked(prisma.caseNote.findFirst).mockResolvedValue(null)
+    vi.mocked(prisma.caseNote.create).mockRejectedValue(new Error('DB error'))
+
+    await expect(saveBpcToNotes('case-1', 'user-1', 'social', 'Content')).resolves.toBeUndefined()
   })
 })

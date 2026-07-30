@@ -138,6 +138,56 @@ describe('calculatePrevidenciario', () => {
     expect(result.rmi).toBeGreaterThan(0)
     expect(result.memoriaCalculo.mediaSimples).toBeGreaterThan(0)
   })
+
+  it('handles CNIS with empty periodos array', () => {
+    const result = calculatePrevidenciario({
+      birthDate: '1960-05-15',
+      gender: 'M',
+      dib: '2025-06-01',
+      modalidade: 'APOSENTADORIA_IDADE',
+      extractedData: { periodos: [] },
+      salarioMinimo: 1518.00,
+      tetoPrevidenciario: 8157.41,
+    })
+    expect(result.elegivel).toBeDefined()
+  })
+
+  it('handles CNIS with periodos that have null inicio/fim', () => {
+    const cnisIncompleto: import('@/services/cnis/types').CnisExtractedData = {
+      periodos: [
+        {
+          empregador: 'Emp X',
+          inicio: null,
+          fim: null,
+          salarios: [],
+          gaps: [],
+        },
+      ],
+    }
+    const result = calculatePrevidenciario({
+      birthDate: '1960-05-15',
+      gender: 'M',
+      dib: '2025-06-01',
+      modalidade: 'APOSENTADORIA_IDADE',
+      extractedData: cnisIncompleto,
+      salarioMinimo: 1518.00,
+      tetoPrevidenciario: 8157.41,
+    })
+    expect(result.elegivel).toBeDefined()
+  })
+
+  it('calculates age with day precision (edge case: ref day < birth day)', () => {
+    const result = calculatePrevidenciario({
+      birthDate: '1960-05-15',
+      gender: 'M',
+      dib: '2025-05-10',
+      modalidade: 'APOSENTADORIA_IDADE',
+      extractedData: null,
+      salarioMinimo: 1518.00,
+      tetoPrevidenciario: 8157.41,
+    })
+    expect(result.idadeNaApuracao).toBe(64)
+  })
 })
 
 describe('projectSimulations', () => {
